@@ -38,7 +38,7 @@ class IdeaVaultActivity : AppCompatActivity() {
                 IdeaVaultScreen(
                     onBackPressed = { finish() },
                     controller = controller, // Pass the initialized controller
-                    apiService = apiService
+                    apiService = apiService,
                 )
             }
         }

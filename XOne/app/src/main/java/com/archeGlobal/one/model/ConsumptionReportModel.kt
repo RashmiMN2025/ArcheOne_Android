@@ -7,35 +7,36 @@ data class ConsumptionReportModel(
     val stockCategories: List<ConsumptionStockCategory> = emptyList(),
     val usageCategories: List<UsageCategory> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 enum class ConsumptionTab {
-    STOCK, USAGE
+    STOCK,
+    USAGE,
 }
 
 data class ConsumptionStockCategory(
     val id: String,
     val title: String,
-    val items: List<ConsumptionStockItem>
+    val items: List<ConsumptionStockItem>,
 )
 
 data class ConsumptionStockItem(
     val name: String,
     val quantity: Double,
-    val color: String = "#4FC3F7" // Default blue color
+    val color: String = "#4FC3F7", // Default blue color
 )
 
 data class UsageCategory(
     val id: String,
     val title: String,
-    val items: List<UsageItem>
+    val items: List<UsageItem>,
 )
 
 data class UsageItem(
     val name: String,
     val quantity: Double,
-    val color: String = "#F44336" // Default red color
+    val color: String = "#F44336", // Default red color
 )
 
 // Extension functions to convert API data to consumption report data
@@ -50,33 +51,36 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
             ConsumptionStockCategory(
                 id = "all_stock",
                 title = "All Stock",
-                items = this.map { stockItem ->
-                    ConsumptionStockItem(
-                        name = stockItem.itemName,
-                        quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
-                        color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0)
-                    )
-                }
-            )
+                items =
+                    this.map { stockItem ->
+                        ConsumptionStockItem(
+                            name = stockItem.itemName,
+                            quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
+                            color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0),
+                        )
+                    },
+            ),
         )
     }
 
     // Add categories by type in specific order
     // Map desired order to potential category name variations
-    val categoryOrder = listOf(
-        "Stationary" to listOf("stationary", "stationery"),
-        "Party Essentials" to listOf("party essentials", "party", "party_essentials"),
-        "HK Essentials" to listOf("hk essentials", "hk", "hk_essentials", "housekeeping", "hk_consumables")
-    )
+    val categoryOrder =
+        listOf(
+            "Stationary" to listOf("stationary", "stationery"),
+            "Party Essentials" to listOf("party essentials", "party", "party_essentials"),
+            "HK Essentials" to listOf("hk essentials", "hk", "hk_essentials", "housekeeping", "hk_consumables"),
+        )
 
     categoryOrder.forEach { (displayName, searchNames) ->
         // Find matching category (case-insensitive)
-        val matchingCategory = groupedByCategory.keys.find { categoryKey ->
-            searchNames.any { searchName ->
-                categoryKey.lowercase().contains(searchName.lowercase()) ||
-                    searchName.lowercase().contains(categoryKey.lowercase())
+        val matchingCategory =
+            groupedByCategory.keys.find { categoryKey ->
+                searchNames.any { searchName ->
+                    categoryKey.lowercase().contains(searchName.lowercase()) ||
+                        searchName.lowercase().contains(categoryKey.lowercase())
+                }
             }
-        }
 
         matchingCategory?.let { categoryKey ->
             val items = groupedByCategory[categoryKey]!!
@@ -84,27 +88,29 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
                 ConsumptionStockCategory(
                     id = displayName.lowercase().replace(" ", "_"),
                     title = "$displayName Stock",
-                    items = items.map { stockItem ->
-                        ConsumptionStockItem(
-                            name = stockItem.itemName,
-                            quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
-                            color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0)
-                        )
-                    }
-                )
+                    items =
+                        items.map { stockItem ->
+                            ConsumptionStockItem(
+                                name = stockItem.itemName,
+                                quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
+                                color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0),
+                            )
+                        },
+                ),
             )
         }
     }
 
     // Add any remaining categories not in the specified order
-    val processedCategories = categoryOrder.flatMap { (_, searchNames) ->
-        groupedByCategory.keys.filter { categoryKey ->
-            searchNames.any { searchName ->
-                categoryKey.lowercase().contains(searchName.lowercase()) ||
-                    searchName.lowercase().contains(categoryKey.lowercase())
+    val processedCategories =
+        categoryOrder.flatMap { (_, searchNames) ->
+            groupedByCategory.keys.filter { categoryKey ->
+                searchNames.any { searchName ->
+                    categoryKey.lowercase().contains(searchName.lowercase()) ||
+                        searchName.lowercase().contains(categoryKey.lowercase())
+                }
             }
         }
-    }
 
     groupedByCategory.forEach { (category, items) ->
         if (!processedCategories.contains(category)) {
@@ -112,14 +118,15 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
                 ConsumptionStockCategory(
                     id = category.lowercase().replace(" ", "_"),
                     title = "$category Stock",
-                    items = items.map { stockItem ->
-                        ConsumptionStockItem(
-                            name = stockItem.itemName,
-                            quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
-                            color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0)
-                        )
-                    }
-                )
+                    items =
+                        items.map { stockItem ->
+                            ConsumptionStockItem(
+                                name = stockItem.itemName,
+                                quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
+                                color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0),
+                            )
+                        },
+                ),
             )
         }
     }
@@ -138,33 +145,36 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
             UsageCategory(
                 id = "all_usage",
                 title = "All Usage",
-                items = this.map { stockItem ->
-                    UsageItem(
-                        name = stockItem.itemName,
-                        quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
-                        color = "#F44336" // Red color for usage
-                    )
-                }
-            )
+                items =
+                    this.map { stockItem ->
+                        UsageItem(
+                            name = stockItem.itemName,
+                            quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
+                            color = "#F44336", // Red color for usage
+                        )
+                    },
+            ),
         )
     }
 
     // Add categories by type in specific order
     // Map desired order to potential category name variations
-    val categoryOrder = listOf(
-        "Stationary" to listOf("stationary", "stationery"),
-        "Party Essentials" to listOf("party essentials", "party", "party_essentials"),
-        "HK Essentials" to listOf("hk essentials", "hk", "hk_essentials", "housekeeping", "hk_consumables")
-    )
+    val categoryOrder =
+        listOf(
+            "Stationary" to listOf("stationary", "stationery"),
+            "Party Essentials" to listOf("party essentials", "party", "party_essentials"),
+            "HK Essentials" to listOf("hk essentials", "hk", "hk_essentials", "housekeeping", "hk_consumables"),
+        )
 
     categoryOrder.forEach { (displayName, searchNames) ->
         // Find matching category (case-insensitive)
-        val matchingCategory = groupedByCategory.keys.find { categoryKey ->
-            searchNames.any { searchName ->
-                categoryKey.lowercase().contains(searchName.lowercase()) ||
-                    searchName.lowercase().contains(categoryKey.lowercase())
+        val matchingCategory =
+            groupedByCategory.keys.find { categoryKey ->
+                searchNames.any { searchName ->
+                    categoryKey.lowercase().contains(searchName.lowercase()) ||
+                        searchName.lowercase().contains(categoryKey.lowercase())
+                }
             }
-        }
 
         matchingCategory?.let { categoryKey ->
             val items = groupedByCategory[categoryKey]!!
@@ -172,27 +182,29 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
                 UsageCategory(
                     id = displayName.lowercase().replace(" ", "_") + "_usage",
                     title = "$displayName Usage",
-                    items = items.map { stockItem ->
-                        UsageItem(
-                            name = stockItem.itemName,
-                            quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
-                            color = "#F44336" // Red color for usage
-                        )
-                    }
-                )
+                    items =
+                        items.map { stockItem ->
+                            UsageItem(
+                                name = stockItem.itemName,
+                                quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
+                                color = "#F44336", // Red color for usage
+                            )
+                        },
+                ),
             )
         }
     }
 
     // Add any remaining categories not in the specified order
-    val processedCategories = categoryOrder.flatMap { (_, searchNames) ->
-        groupedByCategory.keys.filter { categoryKey ->
-            searchNames.any { searchName ->
-                categoryKey.lowercase().contains(searchName.lowercase()) ||
-                    searchName.lowercase().contains(categoryKey.lowercase())
+    val processedCategories =
+        categoryOrder.flatMap { (_, searchNames) ->
+            groupedByCategory.keys.filter { categoryKey ->
+                searchNames.any { searchName ->
+                    categoryKey.lowercase().contains(searchName.lowercase()) ||
+                        searchName.lowercase().contains(categoryKey.lowercase())
+                }
             }
         }
-    }
 
     groupedByCategory.forEach { (category, items) ->
         if (!processedCategories.contains(category)) {
@@ -200,14 +212,15 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
                 UsageCategory(
                     id = category.lowercase().replace(" ", "_") + "_usage",
                     title = "$category Usage",
-                    items = items.map { stockItem ->
-                        UsageItem(
-                            name = stockItem.itemName,
-                            quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
-                            color = "#F44336" // Red color for usage
-                        )
-                    }
-                )
+                    items =
+                        items.map { stockItem ->
+                            UsageItem(
+                                name = stockItem.itemName,
+                                quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
+                                color = "#F44336", // Red color for usage
+                            )
+                        },
+                ),
             )
         }
     }
@@ -215,10 +228,9 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
     return categories
 }
 
-private fun getStockColor(quantity: Int): String {
-    return when {
+private fun getStockColor(quantity: Int): String =
+    when {
         quantity == 0 -> "#E0E0E0" // Grey for zero stock
         quantity < 10 -> "#F44336" // Red for low stock
         else -> "#4FC3F7" // Blue for good stock
     }
-}

@@ -29,26 +29,38 @@ data class TravelRequest(
     val employeeName: String? = null, // Name of the employee who requested the travel
     val employeeEmail: String? = null, // Email of the employee who requested the travel
     val employeeId: String? = null, // ID of the employee who requested the travel
-    val employeeMobile: String? = null // Mobile number of the employee who requested the travel
+    val employeeMobile: String? = null, // Mobile number of the employee who requested the travel
+    // Cab booking fields
+    val travelType: String? = null, // Local Travel or Out of Local Station
+    val cabType: String? = null, // Cab type (5 Seats, 7 Seats)
+    val travelDate: String? = null, // Travel date for cab
+    val duration: String? = null, // Duration of cab (4 Hours, 8 Hours)
+    val pickupLocations: List<String>? = null, // List of pickup locations
+    val pickupMapDetails: List<String>? = null, // Map details for pickup locations
+    val dropLocation: String? = null, // Drop location
+    val dropMapDetails: String? = null, // Map details for drop location
+    val additionalMembers: String? = null, // Additional members for cab
+    val projectId: String? = null, // Project ID
+    val opportunityId: String? = null, // Opportunity ID
+    val crmId: String? = null, // CRM ID
 ) {
     /**
      * Check if this is a multi-destination travel request
      */
-    fun isMultiDestination(): Boolean {
-        return travelDestinations != null && travelDestinations.size > 1
-    }
+    fun isMultiDestination(): Boolean = travelDestinations != null && travelDestinations.size > 1
 
     /**
      * Get all destinations for multi-destination travel
      */
-    fun getAllDestinations(): List<TravelDestination> {
-        return travelDestinations ?: emptyList()
-    }
+    fun getAllDestinations(): List<TravelDestination> = travelDestinations ?: emptyList()
 }
 
 /**
  * Represents the possible statuses of a travel request
  */
 enum class TravelStatus {
-    APPROVED, REJECTED, PENDING
+    APPROVED,
+    REJECTED,
+    PENDING,
+    CANCELLED,
 }

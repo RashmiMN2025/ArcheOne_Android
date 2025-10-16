@@ -29,31 +29,35 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 @Composable
 fun AboutMeScreen(
     controller: AboutMeController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
-                            WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
-                            WelcomeBackgroundBottom // Dark Grey (0xFF474749)
-                        )
-                    )
-                )
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
+                                        WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
+                                        WelcomeBackgroundBottom, // Dark Grey (0xFF474749)
+                                    ),
+                            ),
+                    ),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 // Top AppBar
                 CenterAlignedTopAppBar(
@@ -62,7 +66,7 @@ fun AboutMeScreen(
                             "About Me",
                             fontSize = 20.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                     },
                     navigationIcon = {
@@ -70,43 +74,46 @@ fun AboutMeScreen(
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = Color.Black,
-                        navigationIconContentColor = Color.Black
-                    )
+                    colors =
+                        TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = Color.Transparent,
+                            titleContentColor = Color.Black,
+                            navigationIconContentColor = Color.Black,
+                        ),
                 )
 
                 // Content
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .verticalScroll(scrollState)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .verticalScroll(scrollState)
+                            .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     // Single Card containing all sections
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         color = Color.White,
-                        shadowElevation = 2.dp
+                        shadowElevation = 2.dp,
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                            verticalArrangement = Arrangement.spacedBy(24.dp),
                         ) {
                             // Personal Details Section
                             SectionContent(
                                 icon = R.drawable.personaldetails,
                                 title = "Personal Details",
-                                items = listOf(
-                                    LabeledInfo("PAN Number", controller.model.panNumber),
-                                    LabeledInfo("UAN Number", controller.model.uanNumber),
-                                    LabeledInfo("Aadhar Number", controller.model.aadharNumber),
-                                    LabeledInfo("Blood Group", controller.model.bloodGroup)
-                                )
+                                items =
+                                    listOf(
+                                        LabeledInfo("PAN Number", controller.model.panNumber),
+                                        LabeledInfo("UAN Number", controller.model.uanNumber),
+                                        LabeledInfo("Aadhar Number", controller.model.aadharNumber),
+                                        LabeledInfo("Blood Group", controller.model.bloodGroup),
+                                    ),
                             )
 
                             Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
@@ -115,18 +122,19 @@ fun AboutMeScreen(
                             SectionContent(
                                 icon = R.drawable.reporting,
                                 title = "Reporting Structure",
-                                items = listOf(
-                                    LabeledInfo(
-                                        label = "Reporting Manager",
-                                        value = controller.model.reportingManager,
-                                        icon = R.drawable.profile // Custom icon for Reporting Manager
+                                items =
+                                    listOf(
+                                        LabeledInfo(
+                                            label = "Reporting Manager",
+                                            value = controller.model.reportingManager,
+                                            icon = R.drawable.profile, // Custom icon for Reporting Manager
+                                        ),
+                                        LabeledInfo(
+                                            label = "Divisional Head",
+                                            value = controller.model.divisionalHead,
+                                            icon = R.drawable.account, // Custom icon for Divisional Head
+                                        ),
                                     ),
-                                    LabeledInfo(
-                                        label = "Divisional Head",
-                                        value = controller.model.divisionalHead,
-                                        icon = R.drawable.account // Custom icon for Divisional Head
-                                    )
-                                )
                             )
 
                             Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
@@ -135,11 +143,12 @@ fun AboutMeScreen(
                             SectionContent(
                                 icon = R.drawable.building1,
                                 title = "Work Information",
-                                items = listOf(
-                                    LabeledInfo("Department", controller.model.department),
-                                    LabeledInfo("Designation", controller.model.designation),
-                                    LabeledInfo("Location", controller.model.location)
-                                )
+                                items =
+                                    listOf(
+                                        LabeledInfo("Department", controller.model.department),
+                                        LabeledInfo("Designation", controller.model.designation),
+                                        LabeledInfo("Location", controller.model.location),
+                                    ),
                             )
                         }
                     }
@@ -153,7 +162,7 @@ data class LabeledInfo(
     val label: String,
     val value: String,
     val showPersonIcon: Boolean = false,
-    val icon: Int? = null
+    val icon: Int? = null,
 )
 
 @Composable
@@ -161,21 +170,21 @@ fun SectionContent(
     icon: Int,
     title: String,
     items: List<LabeledInfo>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
+        modifier = modifier,
     ) {
         // Section Title with Icon
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier.padding(bottom = 24.dp),
         ) {
             Icon(
                 painter = painterResource(id = icon),
                 contentDescription = title,
                 tint = Color(0xFFE53935),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -183,15 +192,16 @@ fun SectionContent(
                 fontSize = 16.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.Black,
             )
         }
 
         // Section Content
         Column(
             verticalArrangement = Arrangement.spacedBy(18.dp),
-            modifier = modifier
-                .padding(start = 24.dp)
+            modifier =
+                modifier
+                    .padding(start = 24.dp),
         ) {
             items.forEach { item ->
                 Column {
@@ -200,17 +210,17 @@ fun SectionContent(
                         fontSize = 15.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Gray
+                        color = Color.Gray,
                     )
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (item.icon != null) {
                             Icon(
                                 painter = painterResource(id = item.icon), // Use custom icon if provided
                                 contentDescription = null,
                                 tint = Color(0xFFE53935),
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         } else if (item.showPersonIcon) {
@@ -218,7 +228,7 @@ fun SectionContent(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
                                 tint = Color(0xFFE53935),
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
@@ -227,7 +237,7 @@ fun SectionContent(
                             fontSize = 17.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.Black
+                            color = Color.Black,
                         )
                     }
                 }

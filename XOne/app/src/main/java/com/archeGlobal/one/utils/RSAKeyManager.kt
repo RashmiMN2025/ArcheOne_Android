@@ -10,8 +10,9 @@ import java.security.PublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 
-class RSAKeyManager(private val context: Context) {
-
+class RSAKeyManager(
+    private val context: Context,
+) {
     companion object {
         private const val TAG = "RSAKeyManager"
         private const val RSA_ALGORITHM = "RSA"
@@ -20,8 +21,8 @@ class RSAKeyManager(private val context: Context) {
     /**
      * Load public key from PEM file in assets
      */
-    fun loadPublicKeyFromPEM(fileName: String): PublicKey? {
-        return try {
+    fun loadPublicKeyFromPEM(fileName: String): PublicKey? =
+        try {
             val pemString = loadPEMFromAssets(fileName)
             val keyData = parsePEMToDER(pemString)
 
@@ -39,13 +40,12 @@ class RSAKeyManager(private val context: Context) {
             Log.e(TAG, "Error loading public key from $fileName.pem: ${e.message}", e)
             null
         }
-    }
 
     /**
      * Load private key from PEM file in assets
      */
-    fun loadPrivateKeyFromPEM(fileName: String): PrivateKey? {
-        return try {
+    fun loadPrivateKeyFromPEM(fileName: String): PrivateKey? =
+        try {
             val pemString = loadPEMFromAssets(fileName)
             val keyData = parsePEMToDER(pemString)
 
@@ -63,13 +63,12 @@ class RSAKeyManager(private val context: Context) {
             Log.e(TAG, "Error loading private key from $fileName.pem: ${e.message}", e)
             null
         }
-    }
 
     /**
      * Load PEM file content from assets
      */
-    private fun loadPEMFromAssets(fileName: String): String {
-        return try {
+    private fun loadPEMFromAssets(fileName: String): String =
+        try {
             val inputStream = context.assets.open("$fileName.pem")
             val content = inputStream.bufferedReader().use { it.readText() }
             inputStream.close()
@@ -79,25 +78,25 @@ class RSAKeyManager(private val context: Context) {
             Log.e(TAG, "Failed to read PEM file: $fileName.pem", e)
             throw e
         }
-    }
 
     /**
      * Parse PEM format to DER format
      */
-    private fun parsePEMToDER(pemString: String): ByteArray? {
-        return try {
-            var pem = pemString
-                .replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "")
-                .replace("-----BEGIN RSA PRIVATE KEY-----", "")
-                .replace("-----END RSA PRIVATE KEY-----", "")
-                .replace("-----BEGIN PUBLIC KEY-----", "")
-                .replace("-----END PUBLIC KEY-----", "")
-                .replace("-----BEGIN RSA PUBLIC KEY-----", "")
-                .replace("-----END RSA PUBLIC KEY-----", "")
-                .replace("\n", "")
-                .replace("\r", "")
-                .trim()
+    private fun parsePEMToDER(pemString: String): ByteArray? =
+        try {
+            var pem =
+                pemString
+                    .replace("-----BEGIN PRIVATE KEY-----", "")
+                    .replace("-----END PRIVATE KEY-----", "")
+                    .replace("-----BEGIN RSA PRIVATE KEY-----", "")
+                    .replace("-----END RSA PRIVATE KEY-----", "")
+                    .replace("-----BEGIN PUBLIC KEY-----", "")
+                    .replace("-----END PUBLIC KEY-----", "")
+                    .replace("-----BEGIN RSA PUBLIC KEY-----", "")
+                    .replace("-----END RSA PUBLIC KEY-----", "")
+                    .replace("\n", "")
+                    .replace("\r", "")
+                    .trim()
 
             val keyData = Base64.decode(pem, Base64.DEFAULT)
             Log.d(TAG, "Successfully parsed PEM key, data size: ${keyData.size} bytes")
@@ -106,19 +105,14 @@ class RSAKeyManager(private val context: Context) {
             Log.e(TAG, "Failed to decode base64 PEM data: ${e.message}", e)
             null
         }
-    }
 
     /**
      * Get the client private key
      */
-    fun getClientPrivateKey(): PrivateKey? {
-        return loadPrivateKeyFromPEM("client_private_key")
-    }
+    fun getClientPrivateKey(): PrivateKey? = loadPrivateKeyFromPEM("client_private_key")
 
     /**
      * Get the server public key
      */
-    fun getServerPublicKey(): PublicKey? {
-        return loadPublicKeyFromPEM("server_public_key")
-    }
+    fun getServerPublicKey(): PublicKey? = loadPublicKeyFromPEM("server_public_key")
 }

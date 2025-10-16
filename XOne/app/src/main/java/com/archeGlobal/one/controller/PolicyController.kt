@@ -15,7 +15,7 @@ import okhttp3.*
 
 class PolicyController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) {
     private val _isLoading = mutableStateOf(true)
     val isLoading: State<Boolean> = _isLoading
@@ -39,13 +39,14 @@ class PolicyController(
                 val response = RetrofitClient.apiService.getPolicies()
                 if (response.isSuccessful && response.body() != null) {
                     val policyResponses = response.body()!!
-                    val transformedPolicies = policyResponses.map { policyResponse ->
-                        PolicyModel.Policy(
-                            policyName = policyResponse.name,
-                            filePath = policyResponse.pdfUrl,
-                            previewUrl = policyResponse.previewUrl
-                        )
-                    }
+                    val transformedPolicies =
+                        policyResponses.map { policyResponse ->
+                            PolicyModel.Policy(
+                                policyName = policyResponse.name,
+                                filePath = policyResponse.pdfUrl,
+                                previewUrl = policyResponse.previewUrl,
+                            )
+                        }
                     _model.value = PolicyModel(policies = transformedPolicies)
                     Log.d("PolicyController", "Loaded ${transformedPolicies.size} policies from API")
                 } else {
@@ -62,7 +63,9 @@ class PolicyController(
             } catch (e: Exception) {
                 // Try to load from cache if API call fails
                 try {
-                    val policiesData = com.archeGlobal.one.controller.OtpVerificationController.getPoliciesData()
+                    val policiesData =
+                        com.archeGlobal.one.controller.OtpVerificationController
+                            .getPoliciesData()
                     if (policiesData != null) {
                         _model.value = PolicyModel(policies = policiesData)
                         Log.d("PolicyController", "Loaded ${policiesData.size} policies from cache after API error")
@@ -81,15 +84,16 @@ class PolicyController(
 
     fun onPolicyClick(policy: PolicyModel.Policy) {
         // Use WebViewActivity for viewing PDFs with PDF.js
-        val intent = Intent(context, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", policy.filePath)
-            putExtra("title", policy.policyName)
-            putExtra("isPdf", true)
-            putExtra("showSosButton", policy.showSosButton)
-            // Add flag to use PDF.js viewer
-            putExtra("usePdfJs", true)
-            putExtra("isFloorMap", true) // This will use the PDF.js viewer implementation
-        }
+        val intent =
+            Intent(context, WebViewActivity::class.java).apply {
+                putExtra("fileUrl", policy.filePath)
+                putExtra("title", policy.policyName)
+                putExtra("isPdf", true)
+                putExtra("showSosButton", policy.showSosButton)
+                // Add flag to use PDF.js viewer
+                putExtra("usePdfJs", true)
+                putExtra("isFloorMap", true) // This will use the PDF.js viewer implementation
+            }
         context.startActivity(intent)
     }
 

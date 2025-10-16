@@ -52,18 +52,19 @@ class ChatActivity : ComponentActivity() {
                             onChatClick = { /* Already on Chat screen */ },
                             onSOSClick = { navigator.navigateToSOS(true) },
                             onProfileClick = { navigator.navigateToProfile() },
-                            isUsingPrideIcon = isUsingPrideIcon
+                            isUsingPrideIcon = isUsingPrideIcon,
                         )
-                    }
+                    },
                 ) { paddingValues ->
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
                     ) {
                         NavHost(
                             navController = navController,
-                            startDestination = "chat"
+                            startDestination = "chat",
                         ) {
                             composable("chat") {
                                 // Call onChatScreenEnter when entering the chat screen
@@ -72,7 +73,7 @@ class ChatActivity : ComponentActivity() {
                                 ChatScreen(
                                     viewModel = chatController.viewModel,
                                     navController = navController,
-                                    onBackPressed = { onBackPressedDispatcher.onBackPressed() }
+                                    onBackPressed = { onBackPressedDispatcher.onBackPressed() },
                                 )
                             }
                         }

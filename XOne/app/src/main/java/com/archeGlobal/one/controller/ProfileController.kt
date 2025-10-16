@@ -31,7 +31,7 @@ import java.io.FileOutputStream
 
 class ProfileController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
     private var isDataLoaded = false
@@ -63,35 +63,36 @@ class ProfileController(
         Log.d("ProfileController", "Loading profile data: $userData")
         Log.d("ProfileController", "Profile picture URL: ${userData?.profilePic}")
 
-        model = ProfileModel(
-            name = userData?.name ?: "",
-            email = userData?.email ?: "",
-            profilePicture = userData?.profilePic,
-            version = getAppVersion(),
-            lastLoginTime = userDataManager.getLastLoginTime()?.let { formatLastLoginTime(it) } ?: ""
-        )
+        model =
+            ProfileModel(
+                name = userData?.name ?: "",
+                email = userData?.email ?: "",
+                profilePicture = userData?.profilePic,
+                version = getAppVersion(),
+                lastLoginTime = userDataManager.getLastLoginTime()?.let { formatLastLoginTime(it) } ?: "",
+            )
     }
 
     // Function to get the app version dynamically
-    private fun getAppVersion(): String {
-        return try {
+    private fun getAppVersion(): String =
+        try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             "Version ${packageInfo.versionName}"
         } catch (e: PackageManager.NameNotFoundException) {
             Log.e("ProfileController", "Error getting app version", e)
             "Version 1.0" // Fallback version
         }
-    }
 
-    private fun formatLastLoginTime(timestamp: Long): String {
-        return try {
+    private fun formatLastLoginTime(timestamp: Long): String =
+        try {
             val date = java.util.Date(timestamp)
-            android.text.format.DateFormat.format("dd MMM yyyy 'at' hh:mm a", date).toString()
+            android.text.format.DateFormat
+                .format("dd MMM yyyy 'at' hh:mm a", date)
+                .toString()
         } catch (e: Exception) {
             Log.e("ProfileController", "Error formatting last login time", e)
             ""
         }
-    }
 
     fun onAboutMeClick() {
         // Navigate to About Me screen
@@ -168,160 +169,174 @@ class ProfileController(
             Log.d("ProfileController", "Call URL: ${call.request().url}")
             Log.d("ProfileController", "Call Method: ${call.request().method}")
 
-            call.enqueue(object : Callback<ProfilePictureResponse> {
-                override fun onResponse(call: Call<ProfilePictureResponse>, response: Response<ProfilePictureResponse>) {
-                    // Log the raw response for debugging
-                    Log.d("ProfileController", "Response received - Code: ${response.code()}")
+            call.enqueue(
+                object : Callback<ProfilePictureResponse> {
+                    override fun onResponse(
+                        call: Call<ProfilePictureResponse>,
+                        response: Response<ProfilePictureResponse>,
+                    ) {
+                        // Log the raw response for debugging
+                        Log.d("ProfileController", "Response received - Code: ${response.code()}")
 
-                    // Log raw response body if available
-                    try {
-                        response.body()?.let {
-                            Log.d("ProfileController", "Raw response body: $it")
+                        // Log raw response body if available
+                        try {
+                            response.body()?.let {
+                                Log.d("ProfileController", "Raw response body: $it")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("ProfileController", "Error logging raw response: ${e.message}")
                         }
-                    } catch (e: Exception) {
-                        Log.e("ProfileController", "Error logging raw response: ${e.message}")
-                    }
 
-                    if (response.isSuccessful && response.body() != null) {
-                        val responseBody = response.body()!!
+                        if (response.isSuccessful && response.body() != null) {
+                            val responseBody = response.body()!!
 
-                        Log.d("ProfileController", "Upload response received: $responseBody")
-                        Log.d("ProfileController", "Response status: ${responseBody.status}")
-                        Log.d("ProfileController", "Response message: ${responseBody.message}")
-                        Log.d("ProfileController", "Response filePath: ${responseBody.filePath}")
+                            Log.d("ProfileController", "Upload response received: $responseBody")
+                            Log.d("ProfileController", "Response status: ${responseBody.status}")
+                            Log.d("ProfileController", "Response message: ${responseBody.message}")
+                            Log.d("ProfileController", "Response filePath: ${responseBody.filePath}")
 
-                        // Check for success status
-                        if (responseBody.status == 200) {
-                            // Get the profile picture URL from the response
-                            val profilePicUrl = responseBody.filePath
+                            // Check for success status
+                            if (responseBody.status == 200) {
+                                // Get the profile picture URL from the response
+                                val profilePicUrl = responseBody.filePath
 
-                            // First, check if the URL is null
-                            if (profilePicUrl != null && profilePicUrl.isNotEmpty()) {
-                                Log.d("ProfileController", "Found profile picture URL: $profilePicUrl")
+                                // First, check if the URL is null
+                                if (profilePicUrl != null && profilePicUrl.isNotEmpty()) {
+                                    Log.d("ProfileController", "Found profile picture URL: $profilePicUrl")
 
-                                // Display a success message first
-                                Toast.makeText(context, "Profile picture updated successfully!", Toast.LENGTH_SHORT).show()
+                                    // Display a success message first
+                                    Toast.makeText(context, "Profile picture updated successfully!", Toast.LENGTH_SHORT).show()
 
-                                // Log the success for debugging
-                                Log.d("ProfileController", "Profile picture upload successful. URL: $profilePicUrl")
+                                    // Log the success for debugging
+                                    Log.d("ProfileController", "Profile picture upload successful. URL: $profilePicUrl")
 
-                                // Update the model and UI immediately
-                                try {
-                                    // First update the model
-                                    model = model.copy(profilePicture = profilePicUrl)
-                                    Log.d("ProfileController", "Updated model.profilePicture: ${model.profilePicture}")
-
-                                    // Update the user data in UserDataManager
-                                    userDataManager.updateProfilePicture(profilePicUrl)
-                                    Log.d("ProfileController", "Updated profile picture in UserDataManager")
-
-                                    // Store the profile picture URL in shared preferences for persistence
-                                    val sharedPrefs = context.getSharedPreferences("profile_data", Context.MODE_PRIVATE)
-                                    sharedPrefs.edit().putString("profile_picture_url", profilePicUrl).apply()
-                                    Log.d("ProfileController", "Saved profile picture URL to shared preferences")
-
-                                    // Invalidate image cache to force a reload
+                                    // Update the model and UI immediately
                                     try {
-                                        com.archeGlobal.one.utils.ImageCache.invalidateProfileImageCache()
-                                        Log.d("ProfileController", "Invalidated profile image cache")
-                                    } catch (e: Exception) {
-                                        Log.e("ProfileController", "Error invalidating image cache: ${e.message}", e)
-                                    }
+                                        // First update the model
+                                        model = model.copy(profilePicture = profilePicUrl)
+                                        Log.d("ProfileController", "Updated model.profilePicture: ${model.profilePicture}")
 
-                                    // Use a safer approach to update the HomeController
-                                    try {
-                                        if (homeController != null) {
-                                            homeController?.updateProfilePicture(profilePicUrl)
-                                            Log.d("ProfileController", "Updated HomeController with new profile picture")
+                                        // Update the user data in UserDataManager
+                                        userDataManager.updateProfilePicture(profilePicUrl)
+                                        Log.d("ProfileController", "Updated profile picture in UserDataManager")
+
+                                        // Store the profile picture URL in shared preferences for persistence
+                                        val sharedPrefs = context.getSharedPreferences("profile_data", Context.MODE_PRIVATE)
+                                        sharedPrefs.edit().putString("profile_picture_url", profilePicUrl).apply()
+                                        Log.d("ProfileController", "Saved profile picture URL to shared preferences")
+
+                                        // Invalidate image cache to force a reload
+                                        try {
+                                            com.archeGlobal.one.utils.ImageCache
+                                                .invalidateProfileImageCache()
+                                            Log.d("ProfileController", "Invalidated profile image cache")
+                                        } catch (e: Exception) {
+                                            Log.e("ProfileController", "Error invalidating image cache: ${e.message}", e)
+                                        }
+
+                                        // Use a safer approach to update the HomeController
+                                        try {
+                                            if (homeController != null) {
+                                                homeController?.updateProfilePicture(profilePicUrl)
+                                                Log.d("ProfileController", "Updated HomeController with new profile picture")
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e("ProfileController", "Error updating HomeController: ${e.message}", e)
+                                            // Continue execution - don't crash
+                                        }
+
+                                        // Refresh the UI immediately
+                                        try {
+                                            // Notify any listeners that the profile picture has changed
+                                            val intent = android.content.Intent("com.archeGlobal.one.PROFILE_PICTURE_UPDATED")
+                                            intent.putExtra("profile_picture_url", profilePicUrl)
+                                            // Use a simpler approach instead of LocalBroadcastManager
+                                            context.sendBroadcast(intent)
+                                            Log.d("ProfileController", "Sent broadcast to refresh UI")
+                                        } catch (e: Exception) {
+                                            Log.e("ProfileController", "Error sending broadcast: ${e.message}", e)
                                         }
                                     } catch (e: Exception) {
-                                        Log.e("ProfileController", "Error updating HomeController: ${e.message}", e)
-                                        // Continue execution - don't crash
+                                        Log.e("ProfileController", "Error updating profile data: ${e.message}", e)
+                                    }
+                                } else {
+                                    // URL is null but upload was successful
+                                    Log.e("ProfileController", "Profile picture filePath is null or empty in response")
+                                    Log.d("ProfileController", "Response status: ${responseBody.status}, message: ${responseBody.message}")
+
+                                    // Despite missing URL, tell the user upload was successful
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            "Profile picture uploaded successfully. Changes will appear after restart.",
+                                            Toast.LENGTH_LONG,
+                                        ).show()
+
+                                    // Attempt to generate a fallback URL from the user's email
+                                    try {
+                                        val userData = userDataManager.getUserData()
+                                        val email = userData?.email
+                                        val employeeId = userData?.employeeId
+
+                                        if (!email.isNullOrEmpty()) {
+                                            // Construct a URL similar to the expected format based on the API documentation
+                                            val fallbackUrl = "https://dev.arche.global:7000/download_doc/$email?fileName=${employeeId ?: ""}-profile_pic.jpg"
+                                            Log.d("ProfileController", "Generated fallback URL: $fallbackUrl")
+
+                                            // Store this URL for next app start
+                                            val sharedPrefs = context.getSharedPreferences("profile_data", Context.MODE_PRIVATE)
+                                            sharedPrefs.edit().putString("profile_picture_url", fallbackUrl).apply()
+                                            Log.d("ProfileController", "Saved fallback URL to preferences")
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("ProfileController", "Failed to generate fallback URL: ${e.message}", e)
                                     }
 
-                                    // Refresh the UI immediately
-                                    try {
-                                        // Notify any listeners that the profile picture has changed
-                                        val intent = android.content.Intent("com.archeGlobal.one.PROFILE_PICTURE_UPDATED")
-                                        intent.putExtra("profile_picture_url", profilePicUrl)
-                                        // Use a simpler approach instead of LocalBroadcastManager
-                                        context.sendBroadcast(intent)
-                                        Log.d("ProfileController", "Sent broadcast to refresh UI")
-                                    } catch (e: Exception) {
-                                        Log.e("ProfileController", "Error sending broadcast: ${e.message}", e)
-                                    }
-                                } catch (e: Exception) {
-                                    Log.e("ProfileController", "Error updating profile data: ${e.message}", e)
+                                    // Return to home after a delay
+                                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                        try {
+                                            navigator.navigateToHome()
+                                        } catch (e: Exception) {
+                                            Log.e("ProfileController", "Failed to navigate home: ${e.message}", e)
+                                        }
+                                    }, 2000)
                                 }
                             } else {
-                                // URL is null but upload was successful
-                                Log.e("ProfileController", "Profile picture filePath is null or empty in response")
-                                Log.d("ProfileController", "Response status: ${responseBody.status}, message: ${responseBody.message}")
-
-                                // Despite missing URL, tell the user upload was successful
-                                Toast.makeText(context, "Profile picture uploaded successfully. Changes will appear after restart.", Toast.LENGTH_LONG).show()
-
-                                // Attempt to generate a fallback URL from the user's email
-                                try {
-                                    val userData = userDataManager.getUserData()
-                                    val email = userData?.email
-                                    val employeeId = userData?.employeeId
-
-                                    if (!email.isNullOrEmpty()) {
-                                        // Construct a URL similar to the expected format based on the API documentation
-                                        val fallbackUrl = "https://dev.arche.global:7000/download_doc/$email?fileName=${employeeId ?: ""}-profile_pic.jpg"
-                                        Log.d("ProfileController", "Generated fallback URL: $fallbackUrl")
-
-                                        // Store this URL for next app start
-                                        val sharedPrefs = context.getSharedPreferences("profile_data", Context.MODE_PRIVATE)
-                                        sharedPrefs.edit().putString("profile_picture_url", fallbackUrl).apply()
-                                        Log.d("ProfileController", "Saved fallback URL to preferences")
-                                    }
-                                } catch (e: Exception) {
-                                    Log.e("ProfileController", "Failed to generate fallback URL: ${e.message}", e)
-                                }
-
-                                // Return to home after a delay
-                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                    try {
-                                        navigator.navigateToHome()
-                                    } catch (e: Exception) {
-                                        Log.e("ProfileController", "Failed to navigate home: ${e.message}", e)
-                                    }
-                                }, 2000)
+                                // Error response from server
+                                Toast.makeText(context, "Error: ${responseBody.message}", Toast.LENGTH_SHORT).show()
+                                Log.e("ProfileController", "API error status: ${responseBody.status}, message: ${responseBody.message}")
                             }
                         } else {
-                            // Error response from server
-                            Toast.makeText(context, "Error: ${responseBody.message}", Toast.LENGTH_SHORT).show()
-                            Log.e("ProfileController", "API error status: ${responseBody.status}, message: ${responseBody.message}")
-                        }
-                    } else {
-                        // HTTP error response
-                        val errorMsg = "Profile picture upload failed: ${response.code()} ${response.message()}"
-                        Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-                        Log.e("ProfileController", errorMsg)
+                            // HTTP error response
+                            val errorMsg = "Profile picture upload failed: ${response.code()} ${response.message()}"
+                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                            Log.e("ProfileController", errorMsg)
 
-                        try {
-                            val errorBody = response.errorBody()?.string() ?: "No error body"
-                            Log.e("ProfileController", "Error body: $errorBody")
-                        } catch (e: Exception) {
-                            Log.e("ProfileController", "Error reading error body", e)
+                            try {
+                                val errorBody = response.errorBody()?.string() ?: "No error body"
+                                Log.e("ProfileController", "Error body: $errorBody")
+                            } catch (e: Exception) {
+                                Log.e("ProfileController", "Error reading error body", e)
+                            }
                         }
                     }
-                }
 
-                override fun onFailure(call: Call<ProfilePictureResponse>, t: Throwable) {
-                    // Network error - log detailed error information
-                    val errorMsg = "Network error during profile picture upload: ${t.message}"
-                    Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-                    Log.e("ProfileController", errorMsg, t)
+                    override fun onFailure(
+                        call: Call<ProfilePictureResponse>,
+                        t: Throwable,
+                    ) {
+                        // Network error - log detailed error information
+                        val errorMsg = "Network error during profile picture upload: ${t.message}"
+                        Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                        Log.e("ProfileController", errorMsg, t)
 
-                    // Log the request details that failed
-                    Log.e("ProfileController", "Failed request URL: ${call.request().url}")
-                    Log.e("ProfileController", "Failed request method: ${call.request().method}")
-                    Log.e("ProfileController", "Failed request headers: ${call.request().headers}")
-                }
-            })
+                        // Log the request details that failed
+                        Log.e("ProfileController", "Failed request URL: ${call.request().url}")
+                        Log.e("ProfileController", "Failed request method: ${call.request().method}")
+                        Log.e("ProfileController", "Failed request headers: ${call.request().headers}")
+                    }
+                },
+            )
         } catch (e: Exception) {
             Log.e("ProfileController", "Error preparing multipart request", e)
             Toast.makeText(context, "Failed to prepare multipart request", Toast.LENGTH_SHORT).show()
@@ -336,33 +351,47 @@ class ProfileController(
             Toast.makeText(context, "User data not available", Toast.LENGTH_SHORT).show()
             return
         }
-        val params = mapOf(
-            "email" to email,
-            "employeeId" to employeeId,
-            "documentType" to "profile_pic"
-        )
+        val params =
+            mapOf(
+                "email" to email,
+                "employeeId" to employeeId,
+                "documentType" to "profile_pic",
+            )
         // Assuming you have a deleteDoc endpoint in your ApiService:
-        RetrofitClient.apiService.deleteDoc(params).enqueue(object : Callback<ProfilePictureResponse> {
-            override fun onResponse(call: Call<ProfilePictureResponse>, response: Response<ProfilePictureResponse>) {
-                if (response.isSuccessful) {
-                    Toast.makeText(context, "Profile photo deleted", Toast.LENGTH_SHORT).show()
-                    // Remove from model and UserDataManager
-                    model = model.copy(profilePicture = null)
-                    userDataManager.updateProfilePicture(null)
-                    com.archeGlobal.one.utils.ImageCache.invalidateProfileImageCache()
-                    onSuccess()
-                } else {
+        RetrofitClient.apiService.deleteDoc(params).enqueue(
+            object : Callback<ProfilePictureResponse> {
+                override fun onResponse(
+                    call: Call<ProfilePictureResponse>,
+                    response: Response<ProfilePictureResponse>,
+                ) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(context, "Profile photo deleted", Toast.LENGTH_SHORT).show()
+                        // Remove from model and UserDataManager
+                        model = model.copy(profilePicture = null)
+                        userDataManager.updateProfilePicture(null)
+                        com.archeGlobal.one.utils.ImageCache
+                            .invalidateProfileImageCache()
+                        onSuccess()
+                    } else {
+                        Toast.makeText(context, "Failed to delete photo", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call<ProfilePictureResponse>,
+                    t: Throwable,
+                ) {
                     Toast.makeText(context, "Failed to delete photo", Toast.LENGTH_SHORT).show()
                 }
-            }
-            override fun onFailure(call: Call<ProfilePictureResponse>, t: Throwable) {
-                Toast.makeText(context, "Failed to delete photo", Toast.LENGTH_SHORT).show()
-            }
-        })
+            },
+        )
     }
 
-    private fun getFileFromUri(context: Context, uri: Uri): File? {
-        return try {
+    private fun getFileFromUri(
+        context: Context,
+        uri: Uri,
+    ): File? =
+        try {
             val contentResolver = context.contentResolver
 
             // Try to get the file's MIME type
@@ -370,11 +399,12 @@ class ProfileController(
             Log.d("ProfileController", "File MIME type: $mimeType")
 
             // Determine file extension based on MIME type
-            val extension = when {
-                mimeType.contains("jpeg") || mimeType.contains("jpg") -> ".jpg"
-                mimeType.contains("png") -> ".png"
-                else -> ".jpg" // Default to jpg
-            }
+            val extension =
+                when {
+                    mimeType.contains("jpeg") || mimeType.contains("jpg") -> ".jpg"
+                    mimeType.contains("png") -> ".png"
+                    else -> ".jpg" // Default to jpg
+                }
 
             val inputStream = contentResolver.openInputStream(uri)
             val file = File(context.cacheDir, "profile_picture$extension")
@@ -398,7 +428,6 @@ class ProfileController(
             Log.e("ProfileController", "Error processing file: ${e.message}", e)
             null
         }
-    }
 
     fun onLogoutClick() {
         val userData = userDataManager.getUserData()
@@ -418,13 +447,15 @@ class ProfileController(
         val logoutRequest = LogoutRequest(email, deviceId = deviceInfo.deviceId)
         Log.d("ProfileController", "Calling encrypted logout API with email: $email")
 
-        val encryptedAPIHelper = com.archeGlobal.one.utils.EncryptedAPIHelper(context)
+        val encryptedAPIHelper =
+            com.archeGlobal.one.utils
+                .EncryptedAPIHelper(context)
         encryptedAPIHelper.makeEncryptedCall(
             endpoint = "logout",
             method = "POST",
             request = logoutRequest,
             responseClass = LogoutResponse::class.java,
-            withAuthHeader = true
+            withAuthHeader = true,
         ) { response, error ->
             if (error != null) {
                 Log.e("ProfileController", "Logout API error: ${error.errorMessage}")
@@ -446,7 +477,8 @@ class ProfileController(
         userDataManager.setIsLoggedIn(false)
         userDataManager.setHasLoggedIn(true)
         // Preserve that this is not a first-time user (important for showing fingerprint option)
-        com.archeGlobal.one.utils.setFirstTimeLogin(context, false)
+        com.archeGlobal.one.utils
+            .setFirstTimeLogin(context, false)
         // Remove token and clear seen services so New stickers can appear on next login
         userDataManager.preferencesManager.clearAuthToken()
         userDataManager.preferencesManager.clearSeenServices()
@@ -507,7 +539,8 @@ class ProfileController(
             // Invalidate image cache to force a reload
             try {
                 // Clear the image cache to force a fresh load
-                com.archeGlobal.one.utils.ImageCache.invalidateProfileImageCache()
+                com.archeGlobal.one.utils.ImageCache
+                    .invalidateProfileImageCache()
                 Log.d("ProfileController", "Invalidated profile image cache for: $profilePicUrl")
             } catch (e: Exception) {
                 Log.e("ProfileController", "Error invalidating image cache: ${e.message}", e)
@@ -530,7 +563,7 @@ class ProfileController(
             } catch (e: Exception) {
                 Log.e("ProfileController", "Error forcing navigation refresh: ${e.message}", e)
             }
-            */
+             */
 
             Log.d("ProfileController", "Broadcast of profile picture update completed successfully")
         } catch (e: Exception) {
@@ -560,8 +593,8 @@ class ProfileController(
         uploadProfilePicture(uri)
     }
 
-    private fun convertBitmapToFile(bitmap: Bitmap): File? {
-        return try {
+    private fun convertBitmapToFile(bitmap: Bitmap): File? =
+        try {
             // Create a file to write the bitmap data
             val file = File(context.cacheDir, "profile_photo.jpg")
             file.createNewFile()
@@ -583,7 +616,6 @@ class ProfileController(
             Log.e("ProfileController", "Error converting bitmap to file: ${e.message}", e)
             null
         }
-    }
 
     companion object {
         private var homeController: HomeController? = null

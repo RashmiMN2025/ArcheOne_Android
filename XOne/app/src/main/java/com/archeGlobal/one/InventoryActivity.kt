@@ -19,12 +19,13 @@ class InventoryActivity : ComponentActivity() {
 
         setContent {
             XOneTheme {
-                val controller: InventoryController = viewModel {
-                    InventoryController(this@InventoryActivity, navigator)
-                }
+                val controller: InventoryController =
+                    viewModel {
+                        InventoryController(this@InventoryActivity, navigator)
+                    }
                 InventoryScreen(
                     model = controller.model,
-                    controller = controller
+                    controller = controller,
                 )
             }
         }

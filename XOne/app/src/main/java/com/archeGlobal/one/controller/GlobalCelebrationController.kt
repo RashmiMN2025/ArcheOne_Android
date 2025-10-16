@@ -17,7 +17,7 @@ import com.archeGlobal.one.utils.UserDataManager
 class GlobalCelebrationController(
     private val context: Context,
     private val navigator: Navigator,
-    private val parentController: GreetingsController? = null
+    private val parentController: GreetingsController? = null,
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
 
@@ -66,12 +66,13 @@ class GlobalCelebrationController(
         val allImages = ArrayList<String>(subcategory.files)
         val message = subcategory.message
         val category = subcategory.name
-        val intent = Intent(context, GlobalCelebrationDetailActivity::class.java).apply {
-            putExtra("imageUrl", firstImage)
-            putStringArrayListExtra("allGreetings", allImages)
-            putExtra("message", message)
-            putExtra("category", category)
-        }
+        val intent =
+            Intent(context, GlobalCelebrationDetailActivity::class.java).apply {
+                putExtra("imageUrl", firstImage)
+                putStringArrayListExtra("allGreetings", allImages)
+                putExtra("message", message)
+                putExtra("category", category)
+            }
         context.startActivity(intent)
     }
 
@@ -79,7 +80,7 @@ class GlobalCelebrationController(
         greetingUrl: String,
         allGreetings: List<String>,
         message: String,
-        category: String
+        category: String,
     ) {
         navigator.navigateToGreetingDetail(greetingUrl, allGreetings, message, category)
     }
@@ -94,7 +95,7 @@ class GlobalCelebrationController(
                 activity.finish()
                 activity.overridePendingTransition(
                     R.anim.slide_in_left,
-                    R.anim.slide_out_right
+                    R.anim.slide_out_right,
                 )
             }
         }

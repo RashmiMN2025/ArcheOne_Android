@@ -26,7 +26,7 @@ class ConsumptionReportActivity : ComponentActivity() {
             XOneTheme {
                 ConsumptionReportScreen(
                     model = controller.model,
-                    controller = controller
+                    controller = controller,
                 )
             }
         }
@@ -36,7 +36,7 @@ class ConsumptionReportActivity : ComponentActivity() {
         finish()
         overridePendingTransition(
             R.anim.slide_in_left,
-            R.anim.slide_out_right
+            R.anim.slide_out_right,
         )
     }
 }

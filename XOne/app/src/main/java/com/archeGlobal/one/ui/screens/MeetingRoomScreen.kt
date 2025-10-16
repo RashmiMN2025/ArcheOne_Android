@@ -10,7 +10,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -67,7 +72,7 @@ fun MeetingRoomScreen(
     startDate: String,
     endDate: String,
     onBackPressed: () -> Unit,
-    onSubmit: () -> Unit = {}
+    onSubmit: () -> Unit = {},
 ) {
     val context = LocalContext.current  // Added for Toast
     val userDataManager = remember { UserDataManager.getInstance(context) }
@@ -139,27 +144,30 @@ fun MeetingRoomScreen(
             )
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 // Header
                 TopAppBar(
                     title = {
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "MeetSpace",
@@ -167,7 +175,7 @@ fun MeetingRoomScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 20.sp,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     },
@@ -176,43 +184,47 @@ fun MeetingRoomScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
                     actions = {
                         Spacer(modifier = Modifier.width(48.dp)) // Balance the navigation icon
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        ),
                 )
 
                 // Content
                 Card(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                     shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState()),
                     ) {
                         // Room Image
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(210.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(210.dp),
                             shape = RectangleShape,
                             colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                         ) {
                             Box(
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
                             ) {
                                 // Placeholder image
                                 Image(
@@ -222,145 +234,149 @@ fun MeetingRoomScreen(
                                     ),
                                     contentDescription = "${room.name} Meeting Room",
                                     modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
+                                    contentScale = ContentScale.Crop,
                                 )
 
                                 // Dark overlay for text readability
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize(),
                                 )
                             }
                         }
 
                         Column(
-                            modifier = Modifier
-                                .padding(start = 20.dp, end = 20.dp, top = 30.dp, bottom = 20.dp),
-                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                            modifier =
+                                Modifier
+                                    .padding(start = 20.dp, end = 20.dp, top = 30.dp, bottom = 20.dp),
+                            verticalArrangement = Arrangement.spacedBy(20.dp),
                         ) {
                             Text(
                                 text = "Room Details",
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.Black
+                                color = Color.Black,
                             )
 
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                             ) {
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp),
                                 ) {
                                     // Room Name
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.mroomname),
                                             contentDescription = "Room",
                                             tint = Color.Gray,
-                                            modifier = Modifier.size(30.dp)
+                                            modifier = Modifier.size(30.dp),
                                         )
                                         Text(
                                             text = "Name: ${room.name}",
                                             fontSize = 18.sp,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
-                                            color = Color.Gray
+                                            color = Color.Gray,
                                         )
                                     }
 
                                     // Room Type
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.mroomtype),
                                             contentDescription = "Type",
                                             tint = Color.Gray,
-                                            modifier = Modifier.size(30.dp)
+                                            modifier = Modifier.size(30.dp),
                                         )
                                         Text(
                                             text = "Type: ${room.room_type}",
                                             fontSize = 18.sp,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
-                                            color = Color.Gray
+                                            color = Color.Gray,
                                         )
                                     }
 
                                     // Equipment
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.equipment),
                                             contentDescription = "Equipment",
                                             tint = Color.Gray,
-                                            modifier = Modifier.size(30.dp)
+                                            modifier = Modifier.size(30.dp),
                                         )
                                         Text(
                                             text = "Equipment: ${room.equipment}",
                                             fontSize = 18.sp,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
-                                            color = Color.Gray
+                                            color = Color.Gray,
                                         )
                                     }
 
                                     // Capacity
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.capacity),
                                             contentDescription = "Capacity",
                                             tint = Color.Gray,
-                                            modifier = Modifier.size(30.dp)
+                                            modifier = Modifier.size(30.dp),
                                         )
                                         Text(
                                             text = "Capacity: ${room.capacity} Seats",
                                             fontSize = 18.sp,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
-                                            color = Color.Gray
+                                            color = Color.Gray,
                                         )
                                     }
 
-
                                     // Facilities Row
                                     Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 16.dp),
-                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 16.dp),
+                                        horizontalArrangement = Arrangement.SpaceEvenly,
                                     ) {
                                         // Helpdesk
                                         Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally
+                                            horizontalAlignment = Alignment.CenterHorizontally,
                                         ) {
                                             Box(
-                                                modifier = Modifier
-                                                    .size(50.dp)
-                                                    .background(Color(0xFFF6F4EE), CircleShape),
-                                                contentAlignment = Alignment.Center
+                                                modifier =
+                                                    Modifier
+                                                        .size(50.dp)
+                                                        .background(Color(0xFFF6F4EE), CircleShape),
+                                                contentAlignment = Alignment.Center,
                                             ) {
                                                 Icon(
                                                     painter = painterResource(id = R.drawable.meethelpdesk),
                                                     contentDescription = "Helpdesk",
                                                     tint = Color.Black,
-                                                    modifier = Modifier.size(24.dp)
+                                                    modifier = Modifier.size(24.dp),
                                                 )
                                             }
                                             Spacer(modifier = Modifier.height(4.dp))
@@ -369,32 +385,34 @@ fun MeetingRoomScreen(
                                                 fontSize = 14.sp,
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                color = Color.Gray
+                                                color = Color.Gray,
                                             )
                                         }
 
                                         Divider(
                                             color = Color.LightGray,
-                                            modifier = Modifier
-                                                .width(1.dp)
-                                                .height(50.dp)
+                                            modifier =
+                                                Modifier
+                                                    .width(1.dp)
+                                                    .height(50.dp),
                                         )
 
                                         // Pantry
                                         Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally
+                                            horizontalAlignment = Alignment.CenterHorizontally,
                                         ) {
                                             Box(
-                                                modifier = Modifier
-                                                    .size(50.dp)
-                                                    .background(Color(0xFFF6F4EE), CircleShape),
-                                                contentAlignment = Alignment.Center
+                                                modifier =
+                                                    Modifier
+                                                        .size(50.dp)
+                                                        .background(Color(0xFFF6F4EE), CircleShape),
+                                                contentAlignment = Alignment.Center,
                                             ) {
                                                 Icon(
                                                     painter = painterResource(id = R.drawable.panatry),
                                                     contentDescription = "Pantry",
                                                     tint = Color.Black,
-                                                    modifier = Modifier.size(24.dp)
+                                                    modifier = Modifier.size(24.dp),
                                                 )
                                             }
                                             Spacer(modifier = Modifier.height(4.dp))
@@ -403,32 +421,34 @@ fun MeetingRoomScreen(
                                                 fontSize = 14.sp,
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                color = Color.Gray
+                                                color = Color.Gray,
                                             )
                                         }
 
                                         Divider(
                                             color = Color.LightGray,
-                                            modifier = Modifier
-                                                .width(1.dp)
-                                                .height(50.dp)
+                                            modifier =
+                                                Modifier
+                                                    .width(1.dp)
+                                                    .height(50.dp),
                                         )
 
                                         // Facility
                                         Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally
+                                            horizontalAlignment = Alignment.CenterHorizontally,
                                         ) {
                                             Box(
-                                                modifier = Modifier
-                                                    .size(50.dp)
-                                                    .background(Color(0xFFF6F4EE), CircleShape),
-                                                contentAlignment = Alignment.Center
+                                                modifier =
+                                                    Modifier
+                                                        .size(50.dp)
+                                                        .background(Color(0xFFF6F4EE), CircleShape),
+                                                contentAlignment = Alignment.Center,
                                             ) {
                                                 Icon(
                                                     painter = painterResource(id = R.drawable.facility),
                                                     contentDescription = "Facility",
                                                     tint = Color.Black,
-                                                    modifier = Modifier.size(24.dp)
+                                                    modifier = Modifier.size(24.dp),
                                                 )
                                             }
                                             Spacer(modifier = Modifier.height(4.dp))
@@ -437,7 +457,7 @@ fun MeetingRoomScreen(
                                                 fontSize = 14.sp,
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                color = Color.Gray
+                                                color = Color.Gray,
                                             )
                                         }
                                     }
@@ -452,7 +472,7 @@ fun MeetingRoomScreen(
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.Black
+                                color = Color.Black,
                             )
 
                             // Booking Details Card
@@ -460,100 +480,101 @@ fun MeetingRoomScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                             ) {
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                        horizontalArrangement = Arrangement.SpaceBetween,
                                     ) {
                                         // User info
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.username),
                                                 contentDescription = "User",
                                                 tint = Color.Gray,
-                                                modifier = Modifier.size(24.dp)
+                                                modifier = Modifier.size(24.dp),
                                             )
                                             Text(
                                                 text = userName,
                                                 fontSize = 15.sp,
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                color = Color.Gray
+                                                color = Color.Gray,
                                             )
                                         }
 
                                         // Location info
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.meetroomlocation),
                                                 contentDescription = "Location",
                                                 tint = Color.Gray,
-                                                modifier = Modifier.size(24.dp)
+                                                modifier = Modifier.size(24.dp),
                                             )
                                             Text(
                                                 text = "$location",
                                                 fontSize = 15.sp,
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                color = Color.Gray
+                                                color = Color.Gray,
                                             )
                                         }
                                     }
 
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                        horizontalArrangement = Arrangement.SpaceBetween,
                                     ) {
                                         // Date info
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.meetcalender),
                                                 contentDescription = "Date",
                                                 tint = Color.Gray,
-                                                modifier = Modifier.size(24.dp)
+                                                modifier = Modifier.size(24.dp),
                                             )
                                             Text(
                                                 text = "$date",
                                                 fontSize = 15.sp,
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                color = Color.Gray
+                                                color = Color.Gray,
                                             )
                                         }
 
                                         // Time info
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.meettime),
                                                 contentDescription = "Time",
                                                 tint = Color.Gray,
-                                                modifier = Modifier.size(24.dp)
+                                                modifier = Modifier.size(24.dp),
                                             )
                                             Text(
                                                 text = "$fromTime \n$toTime",
                                                 fontSize = 15.sp,
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                color = Color.Gray
+                                                color = Color.Gray,
                                             )
                                         }
                                     }
@@ -652,21 +673,24 @@ fun MeetingRoomScreen(
                                         color = Color.LightGray,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
-                                    ) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(100.dp),
+                                    )
+                                },
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(100.dp),
                                 maxLines = 4,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color.LightGray,
-                                    focusedBorderColor = Color.LightGray,
-                                    cursorColor = Color.Gray,
-                                    unfocusedTextColor = Color.Black,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedContainerColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(12.dp)
+                                colors =
+                                    OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.LightGray,
+                                        focusedBorderColor = Color.LightGray,
+                                        cursorColor = Color.Gray,
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = Color.White,
+                                    ),
+                                shape = RoundedCornerShape(12.dp),
                             )
 
                                 // Search for Attendees
@@ -1245,24 +1269,25 @@ fun MeetingRoomScreen(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
                                     text = "Refreshment Required?",
                                     fontSize = 16.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Switch(
                                     checked = refreshmentRequired,
                                     onCheckedChange = { refreshmentRequired = it },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color.White,
-                                        checkedTrackColor = Color(0xFFDD3825),
-                                        uncheckedThumbColor = Color.White,
-                                        uncheckedTrackColor = Color.LightGray
-                                    )
+                                    colors =
+                                        SwitchDefaults.colors(
+                                            checkedThumbColor = Color.White,
+                                            checkedTrackColor = Color(0xFFDD3825),
+                                            uncheckedThumbColor = Color.White,
+                                            uncheckedTrackColor = Color.LightGray,
+                                        ),
                                 )
                             }
                             if (refreshmentRequired) {
@@ -1296,24 +1321,25 @@ fun MeetingRoomScreen(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
                                     text = "Additional Requests?",
                                     fontSize = 16.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Switch(
                                     checked = additionalRequests,
                                     onCheckedChange = { additionalRequests = it },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color.White,
-                                        checkedTrackColor = Color(0xFFDD3825),
-                                        uncheckedThumbColor = Color.White,
-                                        uncheckedTrackColor = Color.LightGray
-                                    )
+                                    colors =
+                                        SwitchDefaults.colors(
+                                            checkedThumbColor = Color.White,
+                                            checkedTrackColor = Color(0xFFDD3825),
+                                            uncheckedThumbColor = Color.White,
+                                            uncheckedTrackColor = Color.LightGray,
+                                        ),
                                 )
                             }
                             if (additionalRequests) {
@@ -1452,7 +1478,7 @@ fun MeetingRoomScreen(
                                     text = "Submit",
                                     fontSize = 18.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
                                 )
                             }
                         }

@@ -13,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class XOneApplication : Application() {
-
     lateinit var userDataManager: UserDataManager
         private set
 
@@ -72,16 +71,12 @@ class XOneApplication : Application() {
         }
     }
 
-    fun getAppLifecycleObserver(): AppLifecycleObserver {
-        return appLifecycleObserver
-    }
+    fun getAppLifecycleObserver(): AppLifecycleObserver = appLifecycleObserver
 
     companion object {
         private var instance: XOneApplication? = null
 
-        fun getInstance(): XOneApplication {
-            return instance ?: throw IllegalStateException("Application not created yet")
-        }
+        fun getInstance(): XOneApplication = instance ?: throw IllegalStateException("Application not created yet")
     }
 
     init {

@@ -27,7 +27,7 @@ class TodoActivity : ComponentActivity() {
             XOneTheme {
                 TodoScreen(
                     controller = controller,
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }

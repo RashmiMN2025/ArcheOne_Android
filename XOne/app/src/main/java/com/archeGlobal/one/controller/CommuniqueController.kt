@@ -14,7 +14,7 @@ import kotlinx.coroutines.*
 
 class CommuniqueController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) {
     private val _isLoading = mutableStateOf(true)
     val isLoading: State<Boolean> = _isLoading
@@ -55,15 +55,16 @@ class CommuniqueController(
 
     fun onCommuniqueClick(communique: CommuniqueModel.Communique) {
         // Use WebViewActivity for viewing PDFs with PDF.js
-        val intent = Intent(context, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", communique.filePath)
-            putExtra("title", communique.communiqueName)
-            putExtra("isPdf", true)
-            putExtra("showSosButton", communique.showSosButton)
-            // Add flag to use PDF.js viewer
-            putExtra("usePdfJs", true)
-            putExtra("isFloorMap", true) // This will use the PDF.js viewer implementation
-        }
+        val intent =
+            Intent(context, WebViewActivity::class.java).apply {
+                putExtra("fileUrl", communique.filePath)
+                putExtra("title", communique.communiqueName)
+                putExtra("isPdf", true)
+                putExtra("showSosButton", communique.showSosButton)
+                // Add flag to use PDF.js viewer
+                putExtra("usePdfJs", true)
+                putExtra("isFloorMap", true) // This will use the PDF.js viewer implementation
+            }
         context.startActivity(intent)
     }
 

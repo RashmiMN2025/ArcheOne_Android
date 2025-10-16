@@ -26,7 +26,7 @@ class PolicyActivity : ComponentActivity() {
                     model = controller.model.value,
                     onPolicyClick = controller::onPolicyClick,
                     onBackClick = controller::onBackClick,
-                    isLoading = controller.isLoading.value
+                    isLoading = controller.isLoading.value,
                 )
             }
         }
@@ -41,7 +41,7 @@ class PolicyActivity : ComponentActivity() {
         finish()
         overridePendingTransition(
             R.anim.slide_in_left, // enter animation for previous activity
-            R.anim.slide_out_right // exit animation for current activity
+            R.anim.slide_out_right, // exit animation for current activity
         )
     }
 }

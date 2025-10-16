@@ -40,7 +40,7 @@ class SOSActivity : ComponentActivity() {
                 WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                 WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or
-                WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
+                WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
         )
 
         // Make status bar completely transparent
@@ -69,9 +69,10 @@ class SOSActivity : ComponentActivity() {
                 SOSScreen(
                     controller = controller,
                     onNavigateToRaiseConcern = {
-                        val intent = Intent(this, RaiseConcernActivity::class.java).apply {
-                            putExtra("source", "sos")
-                        }
+                        val intent =
+                            Intent(this, RaiseConcernActivity::class.java).apply {
+                                putExtra("source", "sos")
+                            }
                         startActivity(intent)
                     },
                     onBackPressed = { finish() },
@@ -80,13 +81,11 @@ class SOSActivity : ComponentActivity() {
                         intent.putExtra("blog", blog)
                         startActivity(intent)
                     },
-
                     onNavigateToEmergencyContact = {
                         Log.d("SOSActivity", "onNavigateToEmergencyContact callback triggered")
                         navigator.navigateToLocations(showHeader)
                     },
-
-                    showHeader = showHeader // Pass the showHeader value dynamically
+                    showHeader = showHeader, // Pass the showHeader value dynamically
                 )
             }
         }

@@ -30,7 +30,7 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 fun UserDocumentsScreen(
     controller: UserDocumentsController,
     context: Context,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
 ) {
     // Get documents from the controller
     val documents by controller.userDocuments.observeAsState(emptyList())
@@ -69,60 +69,65 @@ fun UserDocumentsScreen(
     var selectedDocument by remember { mutableStateOf<String?>(null) }
 
     // File picker launcher
-    val filePickerLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let { selectedUri ->
-            selectedDocument?.let { docName ->
-                controller.uploadDocument(docName, selectedUri) { _ ->
-                    selectedDocument = null
+    val filePickerLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.GetContent(),
+        ) { uri: Uri? ->
+            uri?.let { selectedUri ->
+                selectedDocument?.let { docName ->
+                    controller.uploadDocument(docName, selectedUri) { _ ->
+                        selectedDocument = null
+                    }
                 }
             }
         }
-    }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFE0DCD1), // Light Beige
-                        Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749) // Dark Gray
-                    )
-                )
-            )
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                Color(0xFFE0DCD1), // Light Beige
+                                Color(0xFFC8C8CA), // Light Gray
+                                Color(0xFF474749), // Dark Gray
+                            ),
+                    ),
+                ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
         ) {
             // Header with back button and title
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 35.dp, bottom = 10.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 35.dp, bottom = 10.dp),
             ) {
                 IconButton(onClick = onBackPressed) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",
-                        tint = Color.Black
+                        tint = Color.Black,
                     )
                 }
                 Box(
                     modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = "Documents",
                         color = Color.Black,
                         fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
                 Box(modifier = Modifier.width(48.dp))
@@ -133,18 +138,20 @@ fun UserDocumentsScreen(
             // Documents card
             Box {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp, horizontal = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp, horizontal = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         errorMessage?.let { error ->
                             Text(
@@ -152,24 +159,28 @@ fun UserDocumentsScreen(
                                 color = Color.Red,
                                 fontSize = 14.sp,
                                 fontFamily = GraphikFontFamily,
-                                modifier = Modifier.padding(vertical = 8.dp)
+                                modifier = Modifier.padding(vertical = 8.dp),
                             )
                         }
 
                         val requiredDocs = listOf("PAN Card", "ID Card", "Medical Insurance Card", "Company Name Change Letter")
                         val docMap = documents.associateBy { it.document_name }
-                        val docsToShow = requiredDocs.map { docName ->
-                            val existingDoc = docMap[docName]
-                            if (existingDoc != null) {
-                                existingDoc // Use the document from API with actual doc_data
-                            } else {
-                                UserDocument(docName, "") // Create empty document for display
+                        val docsToShow =
+                            requiredDocs.map { docName ->
+                                val existingDoc = docMap[docName]
+                                if (existingDoc != null) {
+                                    existingDoc // Use the document from API with actual doc_data
+                                } else {
+                                    UserDocument(docName, "") // Create empty document for display
+                                }
                             }
-                        }
 
                         docsToShow.forEach { document ->
                             val isUploaded = !document.doc_data.isNullOrBlank()
-                            Log.d("UserDocumentsScreen", "Document: ${document.document_name}, doc_data: '${document.doc_data}', isUploaded: $isUploaded")
+                            Log.d(
+                                "UserDocumentsScreen",
+                                "Document: ${document.document_name}, doc_data: '${document.doc_data}', isUploaded: $isUploaded",
+                            )
                             DocumentItem(
                                 document = document,
                                 isUploaded = isUploaded,
@@ -182,7 +193,12 @@ fun UserDocumentsScreen(
                                 onDeleteClick = {
                                     controller.deleteDocument(document) { success ->
                                         if (success) {
-                                            Toast.makeText(context, "${document.document_name} deleted successfully", Toast.LENGTH_SHORT).show()
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "${document.document_name} deleted successfully",
+                                                    Toast.LENGTH_SHORT,
+                                                ).show()
                                         } else {
                                             Toast.makeText(context, "Failed to delete ${document.document_name}", Toast.LENGTH_SHORT).show()
                                         }
@@ -190,39 +206,43 @@ fun UserDocumentsScreen(
                                 },
                                 onShareClick = {
                                     controller.shareDocument(document)
-                                }
+                                },
                             )
 
                             if (document != docsToShow.last()) {
                                 Divider(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
                                     color = Color.LightGray,
-                                    thickness = 1.5.dp
+                                    thickness = 1.5.dp,
                                 )
                             }
                         }
 
                         Divider(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
                             color = Color.LightGray,
-                            thickness = 1.5.dp
+                            thickness = 1.5.dp,
                         )
 
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(5.dp),
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 2.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 2.dp),
                             ) {
                                 Text(
                                     text = "Note: You can only upload PDF files. The file size limit is 5MB.",
@@ -232,7 +252,7 @@ fun UserDocumentsScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                    modifier = Modifier.padding(top = 4.dp)
+                                    modifier = Modifier.padding(top = 4.dp),
                                 )
                             }
                         }
@@ -242,10 +262,11 @@ fun UserDocumentsScreen(
                 // Loading overlay
                 if (isLoading) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White.copy(alpha = 0.7f)),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(Color.White.copy(alpha = 0.7f)),
+                        contentAlignment = Alignment.Center,
                     ) {
                         UniversalLoader(isLoading = true)
                     }
@@ -262,52 +283,54 @@ fun DocumentItem(
     onViewClick: () -> Unit,
     onUploadClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    onShareClick: () -> Unit
+    onShareClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(20.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.profiledoc),
                 contentDescription = null,
                 tint = Color(0xFFDD3825),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
             Text(
                 text = document.document_name,
                 modifier = Modifier.padding(start = 12.dp),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black
+                color = Color.Black,
             )
         }
 
         Row(
-            modifier = Modifier
-                .padding(top = 12.dp)
-                .padding(start = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier
+                    .padding(top = 12.dp)
+                    .padding(start = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Card(
                 modifier = Modifier.padding(end = 32.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                onClick = onViewClick
+                onClick = onViewClick,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
+                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp),
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.view11),
                         contentDescription = "View",
                         tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(22.dp),
                     )
                     Text(
                         text = "View",
@@ -315,25 +338,26 @@ fun DocumentItem(
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
-                        color = Color.Black
+                        color = Color.Black,
                     )
                 }
             }
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                onClick = if (isUploaded) {
-                    if (document.document_name in listOf("Medical Insurance Card", "Company Name Change Letter")) {
-                        onShareClick
+                onClick =
+                    if (isUploaded) {
+                        if (document.document_name in listOf("Medical Insurance Card", "Company Name Change Letter")) {
+                            onShareClick
+                        } else {
+                            onDeleteClick
+                        }
                     } else {
-                        onDeleteClick
-                    }
-                } else {
-                    onUploadClick
-                }
+                        onUploadClick
+                    },
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
+                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp),
                 ) {
                     if (isUploaded) {
                         if (document.document_name in listOf("Medical Insurance Card", "Company Name Change Letter")) {
@@ -341,7 +365,7 @@ fun DocumentItem(
                                 painter = painterResource(id = R.drawable.share2), // Assume you have a share icon in drawable
                                 contentDescription = "Share",
                                 tint = Color(0xFFDD3825),
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(22.dp),
                             )
                             Text(
                                 text = "Share",
@@ -349,14 +373,14 @@ fun DocumentItem(
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.Black
+                                color = Color.Black,
                             )
                         } else {
                             Icon(
                                 painter = painterResource(id = R.drawable.delete),
                                 contentDescription = "Delete",
                                 tint = Color(0xFFDD3825),
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(22.dp),
                             )
                             Text(
                                 text = "Delete",
@@ -364,24 +388,25 @@ fun DocumentItem(
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.Black
+                                color = Color.Black,
                             )
                         }
                     } else {
                         Box(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .background(
-                                    color = Color(0xFFDD3825),
-                                    shape = androidx.compose.foundation.shape.CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
+                            modifier =
+                                Modifier
+                                    .size(20.dp)
+                                    .background(
+                                        color = Color(0xFFDD3825),
+                                        shape = androidx.compose.foundation.shape.CircleShape,
+                                    ),
+                            contentAlignment = Alignment.Center,
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_upload_circle),
                                 contentDescription = "Upload",
                                 tint = Color.White,
-                                modifier = Modifier.size(12.dp)
+                                modifier = Modifier.size(12.dp),
                             )
                         }
                         Text(
@@ -390,7 +415,7 @@ fun DocumentItem(
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
-                            color = Color.Black
+                            color = Color.Black,
                         )
                     }
                 }

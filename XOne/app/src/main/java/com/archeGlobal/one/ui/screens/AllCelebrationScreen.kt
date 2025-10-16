@@ -28,7 +28,7 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 @Composable
 fun AllCelebrationScreen(
     controller: HomeController,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
 ) {
     val celebrationData = controller.celebrationData.collectAsState().value
     var selectedTab by remember { mutableStateOf("Today") }
@@ -38,34 +38,37 @@ fun AllCelebrationScreen(
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        backgroundModel.topColor,
-                        backgroundModel.middleColor,
-                        backgroundModel.bottomColor
-                    )
-                )
-            )
-            .padding(statusBarPadding)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    brush =
+                        Brush.verticalGradient(
+                            colors =
+                                listOf(
+                                    backgroundModel.topColor,
+                                    backgroundModel.middleColor,
+                                    backgroundModel.bottomColor,
+                                ),
+                        ),
+                ).padding(statusBarPadding),
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             // Header
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBackPressed) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color.Black
+                        tint = Color.Black,
                     )
                 }
 
@@ -76,7 +79,7 @@ fun AllCelebrationScreen(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 // Empty space for balance
@@ -85,21 +88,22 @@ fun AllCelebrationScreen(
 
             // Tab selector
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 TabButton(
                     text = "Today",
                     isSelected = selectedTab == "Today",
-                    onClick = { selectedTab = "Today" }
+                    onClick = { selectedTab = "Today" },
                 )
 
                 TabButton(
                     text = "Tomorrow",
                     isSelected = selectedTab == "Tomorrow",
-                    onClick = { selectedTab = "Tomorrow" }
+                    onClick = { selectedTab = "Tomorrow" },
                 )
             }
 
@@ -107,66 +111,71 @@ fun AllCelebrationScreen(
 
             // Content
             LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .pointerInput(Unit) {
-                        detectHorizontalDragGestures(
-                            onDragEnd = { /* Handle drag end */ },
-                            onHorizontalDrag = { _, dragAmount ->
-                                if (dragAmount > 50) {
-                                    // Swiped from left to right - go to Today
-                                    selectedTab = "Today"
-                                } else if (dragAmount < -50) {
-                                    // Swiped from right to left - go to Tomorrow
-                                    selectedTab = "Tomorrow"
-                                }
-                            }
-                        )
-                    },
-                contentPadding = PaddingValues(horizontal = 16.dp)
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures(
+                                onDragEnd = { /* Handle drag end */ },
+                                onHorizontalDrag = { _, dragAmount ->
+                                    if (dragAmount > 50) {
+                                        // Swiped from left to right - go to Today
+                                        selectedTab = "Today"
+                                    } else if (dragAmount < -50) {
+                                        // Swiped from right to left - go to Tomorrow
+                                        selectedTab = "Tomorrow"
+                                    }
+                                },
+                            )
+                        },
+                contentPadding = PaddingValues(horizontal = 16.dp),
             ) {
-                val itemsToShow = if (selectedTab == "Today") {
-                    celebrationData?.today ?: emptyList()
-                } else {
-                    celebrationData?.tomorrow ?: emptyList()
-                }
+                val itemsToShow =
+                    if (selectedTab == "Today") {
+                        celebrationData?.today ?: emptyList()
+                    } else {
+                        celebrationData?.tomorrow ?: emptyList()
+                    }
 
                 items(itemsToShow) { item ->
                     CelebrationItem(
                         item = item,
                         onWishesClick = { controller.onCelebrationWishesClick(item.email, item.employeeName, item.celebrationType) },
-                        modifier = Modifier.padding(vertical = 6.dp)
+                        modifier = Modifier.padding(vertical = 6.dp),
                     )
                 }
             }
 
             // Page indicator
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp),
-                horizontalArrangement = Arrangement.Center
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 32.dp),
+                horizontalArrangement = Arrangement.Center,
             ) {
                 // Today indicator
                 Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(
-                            color = if (selectedTab == "Today") Color(0xFFDD3825) else Color.Gray.copy(alpha = 0.3f),
-                            shape = androidx.compose.foundation.shape.CircleShape
-                        )
+                    modifier =
+                        Modifier
+                            .size(8.dp)
+                            .background(
+                                color = if (selectedTab == "Today") Color(0xFFDD3825) else Color.Gray.copy(alpha = 0.3f),
+                                shape = androidx.compose.foundation.shape.CircleShape,
+                            ),
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // Tomorrow indicator
                 Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(
-                            color = if (selectedTab == "Tomorrow") Color(0xFFDD3825) else Color.Gray.copy(alpha = 0.3f),
-                            shape = androidx.compose.foundation.shape.CircleShape
-                        )
+                    modifier =
+                        Modifier
+                            .size(8.dp)
+                            .background(
+                                color = if (selectedTab == "Tomorrow") Color(0xFFDD3825) else Color.Gray.copy(alpha = 0.3f),
+                                shape = androidx.compose.foundation.shape.CircleShape,
+                            ),
                 )
             }
         }
@@ -178,21 +187,22 @@ private fun TabButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Button(
         onClick = onClick,
         modifier = modifier,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFFFF6B6B) else Color.White,
-            contentColor = if (isSelected) Color.White else Color.Gray
-        ),
-        shape = RoundedCornerShape(20.dp)
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = if (isSelected) Color(0xFFFF6B6B) else Color.White,
+                contentColor = if (isSelected) Color.White else Color.Gray,
+            ),
+        shape = RoundedCornerShape(20.dp),
     ) {
         Text(
             text = text,
             fontSize = 14.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
         )
     }
 }

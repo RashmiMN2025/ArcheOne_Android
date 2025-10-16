@@ -26,7 +26,7 @@ import kotlinx.coroutines.withContext
 
 class AssetController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) {
     var model by mutableStateOf(AssetModel(isLoading = true))
         private set
@@ -59,50 +59,54 @@ class AssetController(
         if (userData != null) {
             // If we have user data but no asset details
             if (assetDetails.isNullOrEmpty()) {
-                model = model.copy(
-                    name = userData.name,
-                    employeeId = userData.employeeId,
-                    mobile = userData.mobile,
-                    email = userData.email,
-                    location = userData.location,
-                    department = userData.department,
-                    designation = userData.designation,
-                    error = "No asset details found",
-                    isLoading = false
-                )
+                model =
+                    model.copy(
+                        name = userData.name,
+                        employeeId = userData.employeeId,
+                        mobile = userData.mobile,
+                        email = userData.email,
+                        location = userData.location,
+                        department = userData.department,
+                        designation = userData.designation,
+                        error = "No asset details found",
+                        isLoading = false,
+                    )
             } else {
                 // Map the asset details to a list of AssetDetails objects
-                val assetDetailsList = assetDetails.map { asset ->
-                    Log.d("AssetController", "Mapping asset: hostname=${asset.hostname}")
-                    AssetDetails(
-                        serialNo = asset.serial_number,
-                        deviceModel = asset.model,
-                        dateOfIssue = formatDate(asset.date_of_issue),
-                        configuration = asset.configuration,
-                        assetType = asset.asset_type,
-                        purchaseDate = formatDate(asset.purchase_date ?: ""),
-                        hostName = asset.hostname ?: ""
-                    )
-                }
+                val assetDetailsList =
+                    assetDetails.map { asset ->
+                        Log.d("AssetController", "Mapping asset: hostname=${asset.hostname}")
+                        AssetDetails(
+                            serialNo = asset.serial_number,
+                            deviceModel = asset.model,
+                            dateOfIssue = formatDate(asset.date_of_issue),
+                            configuration = asset.configuration,
+                            assetType = asset.asset_type,
+                            purchaseDate = formatDate(asset.purchase_date ?: ""),
+                            hostName = asset.hostname ?: "",
+                        )
+                    }
 
                 // Update the model with the list of asset details
-                model = model.copy(
-                    name = userData.name,
-                    employeeId = userData.employeeId,
-                    mobile = userData.mobile,
-                    email = userData.email,
-                    location = userData.location,
-                    department = userData.department,
-                    designation = userData.designation,
-                    assetDetails = assetDetailsList, // Assign the list here
-                    isLoading = false
-                )
+                model =
+                    model.copy(
+                        name = userData.name,
+                        employeeId = userData.employeeId,
+                        mobile = userData.mobile,
+                        email = userData.email,
+                        location = userData.location,
+                        department = userData.department,
+                        designation = userData.designation,
+                        assetDetails = assetDetailsList, // Assign the list here
+                        isLoading = false,
+                    )
             }
         } else {
-            model = model.copy(
-                error = "User data not found",
-                isLoading = false
-            )
+            model =
+                model.copy(
+                    error = "User data not found",
+                    isLoading = false,
+                )
         }
     }
 
@@ -174,14 +178,15 @@ class AssetController(
         Log.d("AssetController", "- Description: '$description'")
 
         // Create SOS request with "Technical Issue" category for asset issues
-        val request = SOSRequest(
-            name = name,
-            email = email,
-            mobile = mobile,
-            category = "Asset Related Issue",
-            query = description,
-            anonymous = false // Asset issues are not anonymous since they're tied to specific assets
-        )
+        val request =
+            SOSRequest(
+                name = name,
+                email = email,
+                mobile = mobile,
+                category = "Asset Related Issue",
+                query = description,
+                anonymous = false, // Asset issues are not anonymous since they're tied to specific assets
+            )
 
         Log.d("AssetController", "Created encrypted SOS request: $request")
 
@@ -190,19 +195,21 @@ class AssetController(
                 Log.d("AssetController", "Sending encrypted asset issue request")
 
                 // Use encrypted API service similar to SOSController
-                val response = encryptedApiService.encryptedRequest(
-                    endpoint = "sos",
-                    method = "POST",
-                    body = request,
-                    responseClass = EncryptedSOSResponse::class.java,
-                    withAuthHeader = true
-                )
+                val response =
+                    encryptedApiService.encryptedRequest(
+                        endpoint = "sos",
+                        method = "POST",
+                        body = request,
+                        responseClass = EncryptedSOSResponse::class.java,
+                        withAuthHeader = true,
+                    )
 
                 // Convert EncryptedSOSResponse to SOSResponse
-                val sosResponse = SOSResponse(
-                    status = response.status == 200,
-                    message = response.message
-                )
+                val sosResponse =
+                    SOSResponse(
+                        status = response.status == 200,
+                        message = response.message,
+                    )
 
                 withContext(Dispatchers.Main) {
                     if (sosResponse.status) {
@@ -217,22 +224,28 @@ class AssetController(
             } catch (e: APIError) {
                 Log.e("AssetController", "API Error submitting encrypted asset issue: ${e.message}")
                 withContext(Dispatchers.Main) {
-                    val errorMessage = when (e) {
-                        is APIError.Unauthorized -> "Authentication error. Please login again."
-                        is APIError.BadRequest -> "Invalid request. Please check your information."
-                        is APIError.ServerError -> "Server error. Please try again later."
-                        is APIError.EncryptionFailed -> "Security error. Please try again."
-                        is APIError.DecryptionFailed -> "Security error. Please try again."
-                        is APIError.SSLPinningFailed -> "Network security error. Please try again."
-                        is APIError.DecodingError -> "Response processing error. Please try again."
-                        else -> "Unable to submit asset issue. Please try again."
-                    }
+                    val errorMessage =
+                        when (e) {
+                            is APIError.Unauthorized -> "Authentication error. Please login again."
+                            is APIError.BadRequest -> "Invalid request. Please check your information."
+                            is APIError.ServerError -> "Server error. Please try again later."
+                            is APIError.EncryptionFailed -> "Security error. Please try again."
+                            is APIError.DecryptionFailed -> "Security error. Please try again."
+                            is APIError.SSLPinningFailed -> "Network security error. Please try again."
+                            is APIError.DecodingError -> "Response processing error. Please try again."
+                            else -> "Unable to submit asset issue. Please try again."
+                        }
                     Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Log.e("AssetController", "Exception during encrypted asset issue submission", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Unable to submit asset issue. Please check your internet connection and try again.", Toast.LENGTH_SHORT).show()
+                    Toast
+                        .makeText(
+                            context,
+                            "Unable to submit asset issue. Please check your internet connection and try again.",
+                            Toast.LENGTH_SHORT,
+                        ).show()
                 }
             }
         }
@@ -244,10 +257,11 @@ class AssetController(
 
     fun navigateToTrackTickets() {
         // Navigate directly to HomeActivity with track_tickets as the target
-        val intent = Intent(context, TrackTicketsActivity::class.java).apply {
-            putExtra("ticketCategory", "Asset Related Issue")
-            putExtra("source", "asset")
-        }
+        val intent =
+            Intent(context, TrackTicketsActivity::class.java).apply {
+                putExtra("ticketCategory", "Asset Related Issue")
+                putExtra("source", "asset")
+            }
         Log.d("AssetController", "Starting TrackTicketsActivity with ticketCategory=Asset Related Issue")
         context.startActivity(intent)
         // Apply forward animation

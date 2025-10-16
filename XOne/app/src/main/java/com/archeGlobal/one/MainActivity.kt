@@ -43,13 +43,13 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
-                    Manifest.permission.POST_NOTIFICATIONS
+                    Manifest.permission.POST_NOTIFICATIONS,
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    NOTIFICATION_PERMISSION_CODE
+                    NOTIFICATION_PERMISSION_CODE,
                 )
             }
         }
@@ -82,21 +82,22 @@ class MainActivity : ComponentActivity() {
                         // This is the first launch, so just finish the app when back is pressed
                         finish()
                     }
-                }
+                },
             )
         }
 
         val navigator = AndroidNavigator(this)
 
         // Create a custom WelcomeController that marks first launch as complete
-        welcomeController = object : WelcomeController(navigator) {
-            override fun onXOneClick() {
-                // Mark first launch as complete
-                preferencesManager.setFirstLaunchComplete()
-                // Continue with normal navigation
-                super.onXOneClick()
+        welcomeController =
+            object : WelcomeController(navigator) {
+                override fun onXOneClick() {
+                    // Mark first launch as complete
+                    preferencesManager.setFirstLaunchComplete()
+                    // Continue with normal navigation
+                    super.onXOneClick()
+                }
             }
-        }
 
         homeController = HomeController(navigator, this)
         locationsController = LocationsController(this)
@@ -117,10 +118,11 @@ class MainActivity : ComponentActivity() {
             XOneTheme {
                 Scaffold { padding ->
                     Surface(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        color = MaterialTheme.colorScheme.background
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(padding),
+                        color = MaterialTheme.colorScheme.background,
                     ) {
                         // Set the start destination based on whether we should show the welcome screen
                         val startDestination = if (showWelcomeScreen) "welcome" else "home"
@@ -128,7 +130,7 @@ class MainActivity : ComponentActivity() {
                         NavHost(navController = navController, startDestination = startDestination) {
                             composable("welcome") {
                                 WelcomeScreen(
-                                    onXOneClick = welcomeController::onXOneClick
+                                    onXOneClick = welcomeController::onXOneClick,
                                 )
                             }
 
@@ -158,7 +160,7 @@ class MainActivity : ComponentActivity() {
                                     // Pass event data and visibility state
                                     eventData = eventData,
                                     showEventPopup = showEventPopup,
-                                    onDismissEventPopup = homeController::dismissEventPopup
+                                    onDismissEventPopup = homeController::dismissEventPopup,
                                 )
                             }
 
@@ -179,7 +181,7 @@ class MainActivity : ComponentActivity() {
                                     controller = locationsController,
                                     isEmergencyContact = isEmergencyContact,
                                     showHeader = true,
-                                    onBackToHome = { navController.navigate("home") { popUpTo("home") { inclusive = true } } }
+                                    onBackToHome = { navController.navigate("home") { popUpTo("home") { inclusive = true } } },
                                 )
                             }
 
@@ -188,38 +190,38 @@ class MainActivity : ComponentActivity() {
                                 enterTransition = {
                                     slideIntoContainer(
                                         towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                        animationSpec = tween(300)
+                                        animationSpec = tween(300),
                                     )
                                 },
                                 exitTransition = {
                                     slideOutOfContainer(
                                         towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                        animationSpec = tween(300)
+                                        animationSpec = tween(300),
                                     )
                                 },
                                 popEnterTransition = {
                                     slideIntoContainer(
                                         towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                        animationSpec = tween(300)
+                                        animationSpec = tween(300),
                                     )
                                 },
                                 popExitTransition = {
                                     slideOutOfContainer(
                                         towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                        animationSpec = tween(300)
+                                        animationSpec = tween(300),
                                     )
-                                }
+                                },
                             ) {
                                 BusinessCardScreen(
                                     businessCard = businessCardController.businessCard,
                                     controller = businessCardController,
-                                    onBackPressed = { navController.popBackStack() }
+                                    onBackPressed = { navController.popBackStack() },
                                 )
                             }
 
                             composable("core_values") {
                                 CoreValuesScreen(
-                                    onBackPressed = { navController.popBackStack() }
+                                    onBackPressed = { navController.popBackStack() },
                                 )
                             }
                         }

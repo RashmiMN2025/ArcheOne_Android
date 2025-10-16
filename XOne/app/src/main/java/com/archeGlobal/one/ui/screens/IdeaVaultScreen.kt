@@ -54,7 +54,7 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 fun IdeaVaultScreen(
     onBackPressed: () -> Unit,
     controller: IdeaVaultController,
-    apiService: ApiService
+    apiService: ApiService,
 ) {
     val employeeData = controller.employeeData
     val isSubmitting = controller.isSubmitting
@@ -62,45 +62,51 @@ fun IdeaVaultScreen(
     val context = LocalContext.current
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFE0DCD1),
-                            Color(0xFFC8C8CA),
-                            Color(0xFF474749)
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors =
+                                listOf(
+                                    Color(0xFFE0DCD1),
+                                    Color(0xFFC8C8CA),
+                                    Color(0xFF474749),
+                                ),
+                        ),
+                    ),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier =
+                    Modifier
+                        .fillMaxSize(),
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(bottom = 15.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding()
+                            .padding(bottom = 15.dp),
                 ) {
                     IconButton(
                         onClick = onBackPressed,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .align(Alignment.CenterStart)
-                            .padding(start = 10.dp)
+                        modifier =
+                            Modifier
+                                .size(48.dp)
+                                .align(Alignment.CenterStart)
+                                .padding(start = 10.dp),
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
                             contentDescription = "Back",
-                            tint = Color.Black
+                            tint = Color.Black,
                         )
                     }
 
@@ -110,7 +116,7 @@ fun IdeaVaultScreen(
                         fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center),
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -118,23 +124,26 @@ fun IdeaVaultScreen(
 
                 // Scrollable Content
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp),
                 ) {
                     item {
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0))
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0)),
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
                             ) {
                                 Text(
                                     text = "Your go-to spot for sharing those brilliant ideas, quirky thoughts, and game-changing suggestions!",
@@ -143,10 +152,11 @@ fun IdeaVaultScreen(
                                     fontWeight = FontWeight.Medium,
                                     fontStyle = FontStyle.Italic,
                                     color = Color.Black,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 5.dp),
-                                    lineHeight = 22.sp
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 5.dp),
+                                    lineHeight = 22.sp,
                                 )
 
                                 Text(
@@ -156,10 +166,11 @@ fun IdeaVaultScreen(
                                     fontWeight = FontWeight.Medium,
                                     fontStyle = FontStyle.Italic,
                                     color = Color.Gray,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 5.dp),
-                                    lineHeight = 22.sp
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 5.dp),
+                                    lineHeight = 22.sp,
                                 )
 
                                 Text(
@@ -169,10 +180,11 @@ fun IdeaVaultScreen(
                                     fontWeight = FontWeight.Medium,
                                     fontStyle = FontStyle.Italic,
                                     color = Color.Gray,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 20.dp),
-                                    lineHeight = 22.sp
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 20.dp),
+                                    lineHeight = 22.sp,
                                 )
 
                                 Text(
@@ -182,8 +194,9 @@ fun IdeaVaultScreen(
                                     fontWeight = FontWeight.Medium,
                                     fontStyle = FontStyle.Italic,
                                     color = Color.Gray,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth(),
                                 )
                             }
                         }
@@ -191,34 +204,38 @@ fun IdeaVaultScreen(
 
                     item {
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0))
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0)),
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
                             ) {
                                 // Dropdown Menu for Categories
                                 var expanded by remember { mutableStateOf(false) }
                                 var selectedCategory by remember { mutableStateOf("Select Category") }
-                                val categories = listOf(
-                                    "UI/UX",
-                                    "Performance",
-                                    "Features",
-                                    "Bug Report",
-                                    "Suggestions",
-                                    "Share an Idea",
-                                    "Other"
-                                )
+                                val categories =
+                                    listOf(
+                                        "UI/UX",
+                                        "Performance",
+                                        "Features",
+                                        "Bug Report",
+                                        "Suggestions",
+                                        "Share an Idea",
+                                        "Other",
+                                    )
 
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 16.dp)
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 16.dp),
                                 ) {
                                     OutlinedTextField(
                                         value = selectedCategory,
@@ -227,87 +244,94 @@ fun IdeaVaultScreen(
                                         placeholder = {
                                             Text(
                                                 "Select Category",
-                                            color = Color.LightGray,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal,
-                                            ) },
+                                                color = Color.LightGray,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Normal,
+                                            )
+                                        },
                                         trailingIcon = {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.dropdown),
                                                 contentDescription = "Dropdown",
                                                 tint = Color.Gray,
-                                                modifier = Modifier.size(15.dp)
+                                                modifier = Modifier.size(15.dp),
                                             )
                                         },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { expanded = true },
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            unfocusedBorderColor = Color.LightGray,
-                                            focusedBorderColor = Color.LightGray,
-                                            cursorColor = Color.Gray,
-                                            unfocusedTextColor = Color.Black,
-                                            unfocusedContainerColor = Color.White,
-                                            focusedContainerColor = Color.White
-                                        ),
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .clickable { expanded = true },
+                                        colors =
+                                            OutlinedTextFieldDefaults.colors(
+                                                unfocusedBorderColor = Color.LightGray,
+                                                focusedBorderColor = Color.LightGray,
+                                                cursorColor = Color.Gray,
+                                                unfocusedTextColor = Color.Black,
+                                                unfocusedContainerColor = Color.White,
+                                                focusedContainerColor = Color.White,
+                                            ),
                                         shape = RoundedCornerShape(12.dp),
-                                        textStyle = TextStyle(
-                                            fontSize = 16.sp,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal,
-                                            color = if (selectedCategory == "Select Category") Color.LightGray else Color.Black // Gray for placeholder, black for selected text
-                                        )
+                                        textStyle =
+                                            TextStyle(
+                                                fontSize = 16.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Normal,
+                                                color = if (selectedCategory == "Select Category") Color.LightGray else Color.Black, // Gray for placeholder, black for selected text
+                                            ),
                                     )
 
                                     // Invisible clickable box over the TextField to trigger dropdown
                                     Box(
-                                        modifier = Modifier
-                                            .matchParentSize()
-                                            .clickable { expanded = true }
+                                        modifier =
+                                            Modifier
+                                                .matchParentSize()
+                                                .clickable { expanded = true },
                                     )
 
                                     // Dropdown menu as a dialog
                                     if (expanded) {
                                         Dialog(
                                             onDismissRequest = { expanded = false },
-                                            properties = DialogProperties(
-                                                dismissOnBackPress = true,
-                                                dismissOnClickOutside = true,
-                                                usePlatformDefaultWidth = false
-                                            )
+                                            properties =
+                                                DialogProperties(
+                                                    dismissOnBackPress = true,
+                                                    dismissOnClickOutside = true,
+                                                    usePlatformDefaultWidth = false,
+                                                ),
                                         ) {
                                             Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(horizontal = 16.dp)
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = 16.dp),
                                             ) {
                                                 Card(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     shape = RoundedCornerShape(8.dp),
-                                                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                                                    colors = CardDefaults.cardColors(containerColor = Color.White),
                                                 ) {
                                                     Column(
-                                                        modifier = Modifier.fillMaxWidth()
+                                                        modifier = Modifier.fillMaxWidth(),
                                                     ) {
                                                         categories.forEach { category ->
                                                             Column(
-                                                                modifier = Modifier.fillMaxWidth()
+                                                                modifier = Modifier.fillMaxWidth(),
                                                             ) {
                                                                 Text(
                                                                     text = category,
-                                                                    modifier = Modifier
-                                                                        .fillMaxWidth()
-                                                                        .clickable {
-                                                                            selectedCategory =
-                                                                                category
-                                                                            expanded = false
-                                                                        }
-                                                                        .padding(
-                                                                            vertical = 16.dp,
-                                                                            horizontal = 16.dp
-                                                                        ),
+                                                                    modifier =
+                                                                        Modifier
+                                                                            .fillMaxWidth()
+                                                                            .clickable {
+                                                                                selectedCategory =
+                                                                                    category
+                                                                                expanded = false
+                                                                            }.padding(
+                                                                                vertical = 16.dp,
+                                                                                horizontal = 16.dp,
+                                                                            ),
                                                                     fontSize = 16.sp,
-                                                                    color = Color.Black
+                                                                    color = Color.Black,
                                                                 )
 
                                                                 // Add divider between items except for the last one
@@ -315,7 +339,7 @@ fun IdeaVaultScreen(
                                                                     Divider(
                                                                         color = Color.LightGray,
                                                                         thickness = 1.dp,
-                                                                        modifier = Modifier.fillMaxWidth()
+                                                                        modifier = Modifier.fillMaxWidth(),
                                                                     )
                                                                 }
                                                             }
@@ -339,26 +363,30 @@ fun IdeaVaultScreen(
                                             "Submit an idea or Feedback",
                                             color = Color.LightGray,
                                             fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal
+                                            fontWeight = FontWeight.Normal,
                                         )
                                     },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(160.dp), // Taller text field for feedback
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.LightGray,
-                                        cursorColor = Color.Gray,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedContainerColor = Color.White
-                                    ),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(160.dp),
+                                    // Taller text field for feedback
+                                    colors =
+                                        OutlinedTextFieldDefaults.colors(
+                                            unfocusedBorderColor = Color.LightGray,
+                                            focusedBorderColor = Color.LightGray,
+                                            cursorColor = Color.Gray,
+                                            unfocusedContainerColor = Color.White,
+                                            focusedContainerColor = Color.White,
+                                        ),
                                     shape = RoundedCornerShape(12.dp),
-                                    textStyle = TextStyle(
-                                        fontSize = 16.sp,
-                                        color = Color.Black,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium
-                                    )
+                                    textStyle =
+                                        TextStyle(
+                                            fontSize = 16.sp,
+                                            color = Color.Black,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                        ),
                                 )
 
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -368,13 +396,14 @@ fun IdeaVaultScreen(
                                     onClick = {
                                         controller.submitFeedback(
                                             category = selectedCategory,
-                                            feedback = feedbackText
+                                            feedback = feedbackText,
                                         ) { message, isError ->
-                                            Toast.makeText(
-                                                context,
-                                                message,
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    message,
+                                                    Toast.LENGTH_SHORT,
+                                                ).show()
 
                                             // Clear fields after successful submission
                                             if (!isError) {
@@ -383,17 +412,19 @@ fun IdeaVaultScreen(
                                             }
                                         }
                                     },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(52.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFDD3825),
-                                        disabledContainerColor = Color(0xFFDD3825), // keep red even when disabled
-                                        contentColor = Color.White,
-                                        disabledContentColor = Color.White
-                                    ),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(52.dp),
+                                    colors =
+                                        ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFFDD3825),
+                                            disabledContainerColor = Color(0xFFDD3825), // keep red even when disabled
+                                            contentColor = Color.White,
+                                            disabledContentColor = Color.White,
+                                        ),
                                     shape = RoundedCornerShape(24.dp),
-                                    enabled = !isSubmitting
+                                    enabled = !isSubmitting,
                                 ) {
                                     Text(
                                         text = if (isSubmitting) "Submit" else "Submit",
@@ -401,7 +432,7 @@ fun IdeaVaultScreen(
                                         modifier = Modifier.padding(vertical = 8.dp),
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium,
-                                        color = Color.White
+                                        color = Color.White,
                                     )
                                 }
                             }

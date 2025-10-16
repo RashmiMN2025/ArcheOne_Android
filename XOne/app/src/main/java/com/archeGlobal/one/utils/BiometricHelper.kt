@@ -6,69 +6,80 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 
-class BiometricHelper(private val context: Context) {
+class BiometricHelper(
+    private val context: Context,
+) {
     private val biometricManager = BiometricManager.from(context)
     private val preferencesManager = PreferencesManager(context)
 
-    fun canUseBiometric(): Boolean {
-        return when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
+    fun canUseBiometric(): Boolean =
+        when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
             BiometricManager.BIOMETRIC_SUCCESS -> true
             else -> false
         }
-    }
 
     fun showBiometricPrompt(
         activity: FragmentActivity,
         title: String = "Fingerprint Authentication",
         subtitle: String = "Log in using your fingerprint",
         onSuccess: () -> Unit,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
     ) {
         val executor = ContextCompat.getMainExecutor(context)
 
-        val biometricPrompt = BiometricPrompt(
-            activity,
-            executor,
-            object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    super.onAuthenticationSucceeded(result)
-                    onSuccess()
-                }
+        val biometricPrompt =
+            BiometricPrompt(
+                activity,
+                executor,
+                object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        super.onAuthenticationSucceeded(result)
+                        onSuccess()
+                    }
 
-                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                    super.onAuthenticationError(errorCode, errString)
-                    // Handle user cancellation vs system errors differently
-                    when (errorCode) {
-                        BiometricPrompt.ERROR_USER_CANCELED,
-                        BiometricPrompt.ERROR_NEGATIVE_BUTTON -> {
-                            // User deliberately cancelled - don't bypass, just show error
-                            onError("Authentication cancelled")
-                        }
-                        else -> {
-                            // System error - show the actual error message
-                            onError(errString.toString())
+                    override fun onAuthenticationError(
+                        errorCode: Int,
+                        errString: CharSequence,
+                    ) {
+                        super.onAuthenticationError(errorCode, errString)
+                        // Handle user cancellation vs system errors differently
+                        when (errorCode) {
+                            BiometricPrompt.ERROR_USER_CANCELED,
+                            BiometricPrompt.ERROR_NEGATIVE_BUTTON,
+                            -> {
+                                // User deliberately cancelled - don't bypass, just show error
+                                onError("Authentication cancelled")
+                            }
+                            else -> {
+                                // System error - show the actual error message
+                                onError(errString.toString())
+                            }
                         }
                     }
-                }
-            }
-        )
+                },
+            )
 
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(title)
-            .setSubtitle(subtitle)
-            .setNegativeButtonText("Cancel")
-            .build()
+        val promptInfo =
+            BiometricPrompt.PromptInfo
+                .Builder()
+                .setTitle(title)
+                .setSubtitle(subtitle)
+                .setNegativeButtonText("Cancel")
+                .build()
 
         biometricPrompt.authenticate(promptInfo)
     }
 
-    fun saveCredentials(email: String, mobile: String, employeeId: String, token: String) {
+    fun saveCredentials(
+        email: String,
+        mobile: String,
+        employeeId: String,
+        token: String,
+    ) {
         preferencesManager.saveBiometricCredentials(email, mobile, employeeId, token)
     }
 
-    fun getStoredCredentialsWithToken(): Quad<String, String, String, String>? {
-        return preferencesManager.getBiometricCredentialsWithToken()
-    }
+    fun getStoredCredentialsWithToken(): Quad<String, String, String, String>? = preferencesManager.getBiometricCredentialsWithToken()
 
     fun getStoredCredentials(): Triple<String, String, String>? {
         val credentials = preferencesManager.getBiometricCredentialsWithToken()
@@ -79,9 +90,7 @@ class BiometricHelper(private val context: Context) {
         }
     }
 
-    fun isBiometricEnabled(): Boolean {
-        return preferencesManager.isBiometricEnabled()
-    }
+    fun isBiometricEnabled(): Boolean = preferencesManager.isBiometricEnabled()
 
     fun enableBiometric() {
         preferencesManager.setBiometricEnabled(true)

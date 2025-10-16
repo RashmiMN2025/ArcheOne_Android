@@ -23,7 +23,7 @@ class MyDocumentsActivity : ComponentActivity() {
                 MyDocumentsScreen(
                     controller = controller,
                     context = this,
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }

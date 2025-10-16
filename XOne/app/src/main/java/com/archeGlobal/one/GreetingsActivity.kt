@@ -25,20 +25,22 @@ class GreetingsActivity : ComponentActivity() {
             XOneTheme {
                 ResponsiveGreetingsScreen(
                     controller = controller,
-                    onBackPressed = { // Check if we came from a child screen (Global Celebration/Regional Festivals)
+                    onBackPressed = {
+                        // Check if we came from a child screen (Global Celebration/Regional Festivals)
                         val parentActivity = intent.getStringExtra("parent_activity")
                         if (parentActivity == "home") {
                             // Navigate back to Home instead of previous activity
-                            val homeIntent = Intent(this@GreetingsActivity, HomeActivity::class.java).apply {
-                                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                            }
+                            val homeIntent =
+                                Intent(this@GreetingsActivity, HomeActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                }
                             startActivity(homeIntent)
                             finish()
                         } else {
                             // Normal back behavior
                             finish()
                         }
-                    }
+                    },
                 )
             }
         }
@@ -48,7 +50,7 @@ class GreetingsActivity : ComponentActivity() {
         finish()
         overridePendingTransition(
             R.anim.slide_in_left, // enter animation for previous activity
-            R.anim.slide_out_right // exit animation for current activity
+            R.anim.slide_out_right, // exit animation for current activity
         )
     }
 }

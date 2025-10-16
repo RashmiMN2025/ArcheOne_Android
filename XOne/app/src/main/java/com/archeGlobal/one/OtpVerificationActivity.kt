@@ -47,18 +47,23 @@ class OtpVerificationActivity : AppCompatActivity() {
                 override fun handleOnBackPressed() {
                     if (showUpdateDialog) {
                         // Prevent back press when update dialog is shown
-                        CustomToast.show(this@OtpVerificationActivity, "Please update the app to continue.", android.widget.Toast.LENGTH_SHORT)
+                        CustomToast.show(
+                            this@OtpVerificationActivity,
+                            "Please update the app to continue.",
+                            android.widget.Toast.LENGTH_SHORT,
+                        )
                     } else {
                         // Navigate back to login screen with extra to force original login form
-                        val intent = Intent(this@OtpVerificationActivity, LoginActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                            putExtra("forceOriginalLogin", true)
-                        }
+                        val intent =
+                            Intent(this@OtpVerificationActivity, LoginActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                putExtra("forceOriginalLogin", true)
+                            }
                         startActivity(intent)
                         finish()
                     }
                 }
-            }
+            },
         )
 
         setContent {
@@ -68,7 +73,7 @@ class OtpVerificationActivity : AppCompatActivity() {
                     email = email,
                     mobile = mobile,
                     employeeId = employeeId,
-                    stayLoggedIn = stayLoggedIn
+                    stayLoggedIn = stayLoggedIn,
                 )
 
                 // Update Required Dialog
@@ -87,9 +92,10 @@ class OtpVerificationActivity : AppCompatActivity() {
 
                             // Launch Play Store intent
                             val packageName = packageName
-                            val playStoreIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            }
+                            val playStoreIntent =
+                                Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
 
                             try {
                                 if (playStoreIntent.resolveActivity(packageManager) != null) {
@@ -106,7 +112,7 @@ class OtpVerificationActivity : AppCompatActivity() {
                                 launchWebFallback()
                             }
                         },
-                        onDismiss = { }
+                        onDismiss = { },
                     )
                 }
             }
@@ -117,10 +123,11 @@ class OtpVerificationActivity : AppCompatActivity() {
         super.onResume()
         // If returning from Play Store and shouldNavigateToLogin is true, navigate to LoginActivity
         if (shouldNavigateToLogin) {
-            val loginIntent = Intent(this, LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                putExtra("forceOriginalLogin", true)
-            }
+            val loginIntent =
+                Intent(this, LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    putExtra("forceOriginalLogin", true)
+                }
             startActivity(loginIntent)
             finish()
         }
@@ -128,9 +135,10 @@ class OtpVerificationActivity : AppCompatActivity() {
 
     private fun launchWebFallback() {
         val packageName = packageName
-        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
+        val webIntent =
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
         try {
             if (webIntent.resolveActivity(packageManager) != null) {
                 startActivity(webIntent)

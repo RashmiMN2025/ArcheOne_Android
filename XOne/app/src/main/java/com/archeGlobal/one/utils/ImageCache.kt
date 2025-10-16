@@ -38,14 +38,15 @@ object ImageCache {
     fun createProfileImageRequest(
         context: Context,
         url: String?,
-        forceRefresh: Boolean = false
+        forceRefresh: Boolean = false,
     ): ImageRequest {
         try {
             val safeUrl = url ?: ""
             val cacheKey = getCacheKey(safeUrl)
             Log.d(TAG, "Creating profile image request for: $url with cache key: $cacheKey")
 
-            return ImageRequest.Builder(context)
+            return ImageRequest
+                .Builder(context)
                 .data(safeUrl)
                 .crossfade(true)
                 .placeholder(com.archeGlobal.one.R.drawable.ic_person)
@@ -59,7 +60,8 @@ object ImageCache {
             Log.e(TAG, "Error creating profile image request", e)
 
             // Fallback to basic request with placeholder
-            return ImageRequest.Builder(context)
+            return ImageRequest
+                .Builder(context)
                 .data("")
                 .placeholder(com.archeGlobal.one.R.drawable.ic_person)
                 .error(com.archeGlobal.one.R.drawable.ic_person)
@@ -70,7 +72,5 @@ object ImageCache {
     /**
      * Creates a cache key that includes version for proper invalidation
      */
-    private fun getCacheKey(url: String): String {
-        return "profile_${url}_${_profileImageVersion.value}"
-    }
+    private fun getCacheKey(url: String): String = "profile_${url}_${_profileImageVersion.value}"
 }

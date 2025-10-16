@@ -43,65 +43,84 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
         setContent {
             XOneTheme {
                 com.archeGlobal.one.ui.screens.GlobalCelebrationDetailScreen(
-                    subcategory = com.archeGlobal.one.model.GreetingSubcategory(
-                        id = 0, // You may want to pass the real id
-                        name = category,
-                        files = allGreetings,
-                        message = editableMessage
-                    ),
+                    subcategory =
+                        com.archeGlobal.one.model.GreetingSubcategory(
+                            id = 0, // You may want to pass the real id
+                            name = category,
+                            files = allGreetings,
+                            message = editableMessage,
+                        ),
                     onBackPressed = { finish() },
                     onSendGreeting = { imageUrl, message -> sendGreeting(imageUrl, message, category) },
-                    onSendInOutlook = { imageUrl, message -> sendGreetingInOutlook(imageUrl, message, category) }
+                    onSendInOutlook = { imageUrl, message -> sendGreetingInOutlook(imageUrl, message, category) },
                 )
             }
         }
     }
 
-    private fun sendGreeting(imageUrl: String, message: String, category: String) {
-        android.widget.Toast.makeText(this, "Preparing greeting to send...", android.widget.Toast.LENGTH_SHORT).show()
+    private fun sendGreeting(
+        imageUrl: String,
+        message: String,
+        category: String,
+    ) {
+        android.widget.Toast
+            .makeText(this, "Preparing greeting to send...", android.widget.Toast.LENGTH_SHORT)
+            .show()
         downloadImageAndShare(imageUrl, message, category)
     }
 
-    private fun sendGreetingInOutlook(imageUrl: String, message: String, category: String) {
+    private fun sendGreetingInOutlook(
+        imageUrl: String,
+        message: String,
+        category: String,
+    ) {
         // This will open the Outlook app with the greeting and message
         downloadImageAndShareOutlook(imageUrl, message, category)
     }
 
-    private fun downloadImageAndShare(imageUrl: String, message: String, category: String) {
+    private fun downloadImageAndShare(
+        imageUrl: String,
+        message: String,
+        category: String,
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val imageLoader = ImageLoader(this@GlobalCelebrationDetailActivity)
-                val request = ImageRequest.Builder(this@GlobalCelebrationDetailActivity)
-                    .data(imageUrl)
-                    .allowHardware(false)
-                    .build()
+                val request =
+                    ImageRequest
+                        .Builder(this@GlobalCelebrationDetailActivity)
+                        .data(imageUrl)
+                        .allowHardware(false)
+                        .build()
                 val result = imageLoader.execute(request)
-                val imageBitmap = result.drawable?.let { drawable ->
-                    when (drawable) {
-                        is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
-                        else -> {
-                            val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 512
-                            val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 512
-                            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                            val canvas = android.graphics.Canvas(bitmap)
-                            drawable.setBounds(0, 0, canvas.width, canvas.height)
-                            drawable.draw(canvas)
-                            bitmap
+                val imageBitmap =
+                    result.drawable?.let { drawable ->
+                        when (drawable) {
+                            is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
+                            else -> {
+                                val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 512
+                                val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 512
+                                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                                val canvas = android.graphics.Canvas(bitmap)
+                                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                                drawable.draw(canvas)
+                                bitmap
+                            }
                         }
                     }
-                }
                 val imageUri = saveBitmapToCache(imageBitmap)
                 withContext(Dispatchers.Main) {
                     if (imageUri != null) {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "image/jpeg"
-                            putExtra(Intent.EXTRA_STREAM, imageUri)
-                            putExtra(Intent.EXTRA_SUBJECT, category)
-                            if (message.isNotEmpty()) {
-                                putExtra(Intent.EXTRA_TEXT, message)
+                        val intent =
+                            Intent(Intent.ACTION_SEND).apply {
+                                type = "image/jpeg"
+                                putExtra(Intent.EXTRA_STREAM, imageUri)
+                                putExtra(Intent.EXTRA_SUBJECT, category)
+                                if (message.isNotEmpty()) {
+                                    putExtra(Intent.EXTRA_TEXT, message)
+                                }
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
                         startActivity(Intent.createChooser(intent, "Send Greeting"))
                     } else {
                         shareLinkOnly(imageUrl, message, category)
@@ -114,41 +133,59 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
                 }
             }
         }
-    } private fun downloadImageAndShareOutlook(imageUrl: String, message: String, category: String) {
-        android.widget.Toast.makeText(this, "Preparing email for Outlook...", android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    private fun downloadImageAndShareOutlook(
+        imageUrl: String,
+        message: String,
+        category: String,
+    ) {
+        android.widget.Toast
+            .makeText(this, "Preparing email for Outlook...", android.widget.Toast.LENGTH_SHORT)
+            .show()
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val imageLoader = ImageLoader(this@GlobalCelebrationDetailActivity)
-                val request = ImageRequest.Builder(this@GlobalCelebrationDetailActivity)
-                    .data(imageUrl)
-                    .allowHardware(false)
-                    .build()
+                val request =
+                    ImageRequest
+                        .Builder(this@GlobalCelebrationDetailActivity)
+                        .data(imageUrl)
+                        .allowHardware(false)
+                        .build()
                 val result = imageLoader.execute(request)
-                val originalBitmap = result.drawable?.let { drawable ->
-                    when (drawable) {
-                        is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
-                        else -> {
-                            val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 512
-                            val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 512
-                            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                            val canvas = android.graphics.Canvas(bitmap)
-                            drawable.setBounds(0, 0, canvas.width, canvas.height)
-                            drawable.draw(canvas)
-                            bitmap
+                val originalBitmap =
+                    result.drawable?.let { drawable ->
+                        when (drawable) {
+                            is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
+                            else -> {
+                                val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 512
+                                val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 512
+                                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                                val canvas = android.graphics.Canvas(bitmap)
+                                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                                drawable.draw(canvas)
+                                bitmap
+                            }
                         }
                     }
-                }
 
                 if (originalBitmap == null) {
                     withContext(Dispatchers.Main) {
-                        android.widget.Toast.makeText(this@GlobalCelebrationDetailActivity, "Could not load image.", android.widget.Toast.LENGTH_SHORT).show()
+                        android.widget.Toast
+                            .makeText(
+                                this@GlobalCelebrationDetailActivity,
+                                "Could not load image.",
+                                android.widget.Toast.LENGTH_SHORT,
+                            ).show()
                         shareLinkOnly(imageUrl, message, category)
                     }
                     return@launch
                 }
 
                 // Get user data for footer
-                val userDataManager = com.archeGlobal.one.utils.UserDataManager.getInstance(this@GlobalCelebrationDetailActivity)
+                val userDataManager =
+                    com.archeGlobal.one.utils.UserDataManager
+                        .getInstance(this@GlobalCelebrationDetailActivity)
                 val userData = userDataManager.getUserData()
                 val userName = userData?.name ?: "Your Name"
                 val userDesignation = userData?.designation ?: "Your Designation"
@@ -163,49 +200,68 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
 
                 withContext(Dispatchers.Main) {
                     // Primary Attempt: Pure HTML
-                    val pureHtmlIntent = Intent(Intent.ACTION_SEND).apply {
-                        setPackage("com.microsoft.office.outlook")
-                        type = "text/html"
-                        putExtra(Intent.EXTRA_SUBJECT, category)
-                        // For text/html, EXTRA_HTML_TEXT is the primary content.
-                        // EXTRA_TEXT can serve as a fallback if HTML isn't rendered.
-                        putExtra(Intent.EXTRA_TEXT, message) // Plain text version of the message
-                        putExtra(Intent.EXTRA_HTML_TEXT, htmlEmailContent)
-                    }
+                    val pureHtmlIntent =
+                        Intent(Intent.ACTION_SEND).apply {
+                            setPackage("com.microsoft.office.outlook")
+                            type = "text/html"
+                            putExtra(Intent.EXTRA_SUBJECT, category)
+                            // For text/html, EXTRA_HTML_TEXT is the primary content.
+                            // EXTRA_TEXT can serve as a fallback if HTML isn't rendered.
+                            putExtra(Intent.EXTRA_TEXT, message) // Plain text version of the message
+                            putExtra(Intent.EXTRA_HTML_TEXT, htmlEmailContent)
+                        }
 
                     try {
                         startActivity(pureHtmlIntent)
                         android.util.Log.d("GlobalCelebrationDetailActivity", "Attempted Outlook with pure HTML intent.")
                     } catch (e: Exception) {
-                        android.util.Log.e("GlobalCelebrationDetailActivity", "Outlook pure HTML intent failed: ${e.message}. Falling back to attachment method.", e)
+                        android.util.Log.e(
+                            "GlobalCelebrationDetailActivity",
+                            "Outlook pure HTML intent failed: ${e.message}. Falling back to attachment method.",
+                            e,
+                        )
 
                         // Fallback Strategy: Send as image attachment with clear instructions.
                         if (imageUriForAttachment != null) {
-                            val attachmentIntent = Intent(Intent.ACTION_SEND).apply {
-                                setPackage("com.microsoft.office.outlook")
-                                type = "image/jpeg"
-                                putExtra(Intent.EXTRA_SUBJECT, category)
-                                val instructionMessage = """
-                                    $message
-                                    
-                                    ---
-                                    The image is attached. To add it to your email body:
-                                    1. Tap and hold the image attachment.
-                                    2. Select "Add to Body" or a similar option.
-                                """.trimIndent()
-                                putExtra(Intent.EXTRA_TEXT, instructionMessage)
-                                putExtra(Intent.EXTRA_STREAM, imageUriForAttachment)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
+                            val attachmentIntent =
+                                Intent(Intent.ACTION_SEND).apply {
+                                    setPackage("com.microsoft.office.outlook")
+                                    type = "image/jpeg"
+                                    putExtra(Intent.EXTRA_SUBJECT, category)
+                                    val instructionMessage =
+                                        """
+                                        $message
+                                        
+                                        ---
+                                        The image is attached. To add it to your email body:
+                                        1. Tap and hold the image attachment.
+                                        2. Select "Add to Body" or a similar option.
+                                        """.trimIndent()
+                                    putExtra(Intent.EXTRA_TEXT, instructionMessage)
+                                    putExtra(Intent.EXTRA_STREAM, imageUriForAttachment)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
                             try {
                                 startActivity(attachmentIntent)
-                                android.widget.Toast.makeText(this@GlobalCelebrationDetailActivity, "Image attached. Tap & hold to add to body.", android.widget.Toast.LENGTH_LONG).show()
+                                android.widget.Toast
+                                    .makeText(
+                                        this@GlobalCelebrationDetailActivity,
+                                        "Image attached. Tap & hold to add to body.",
+                                        android.widget.Toast.LENGTH_LONG,
+                                    ).show()
                             } catch (e2: Exception) {
-                                android.util.Log.e("GlobalCelebrationDetailActivity", "Outlook attachment fallback intent failed: ${e2.message}", e2)
+                                android.util.Log.e(
+                                    "GlobalCelebrationDetailActivity",
+                                    "Outlook attachment fallback intent failed: ${e2.message}",
+                                    e2,
+                                )
                                 shareLinkOnly(imageUrl, message, category) // Ultimate fallback
                             }
                         } else {
-                            android.util.Log.e("GlobalCelebrationDetailActivity", "Image URI for attachment was null, falling back to link only.")
+                            android.util.Log.e(
+                                "GlobalCelebrationDetailActivity",
+                                "Image URI for attachment was null, falling back to link only.",
+                            )
                             shareLinkOnly(imageUrl, message, category)
                         }
                     }
@@ -256,10 +312,11 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
         if (scaledBitmap.config != targetConfig) {
             val finalBitmap = Bitmap.createBitmap(newWidth, newHeight, targetConfig)
             val canvas = android.graphics.Canvas(finalBitmap)
-            val paint = android.graphics.Paint().apply {
-                isFilterBitmap = true
-                isAntiAlias = true
-            }
+            val paint =
+                android.graphics.Paint().apply {
+                    isFilterBitmap = true
+                    isAntiAlias = true
+                }
             canvas.drawBitmap(scaledBitmap, 0f, 0f, paint)
             if (scaledBitmap != bitmap && scaledBitmap != finalBitmap && !scaledBitmap.isRecycled) {
                 scaledBitmap.recycle()
@@ -278,7 +335,7 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
         imageUrl: String,
         userName: String,
         userDesignation: String,
-        userMobile: String
+        userMobile: String,
     ): String {
         val sanitizedMessage = message.replace("\n", "<br />")
         // Use the public URL for the signature icon
@@ -286,61 +343,67 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
         val signatureImgTag = """<img src="$iconUrl" width="90" height="80" alt="User Icon" style="vertical-align: middle;"/>"""
 
         return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-            <style>
-                body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; padding: 0; background-color: #f8f8f8; }
-                .email-container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; }
-                .message-text { margin-bottom: 50px; line-height: 1.6; color: #333333; }
-                .image-container { text-align: center; margin-bottom: 30px; }
-                .footer-text { font-size:12px; color:#777777; text-align:center; margin-top:20px; }
-            </style>
-        </head>
-        <body>
-            <div class="email-container">
-                <div class="message-text">
-                    $sanitizedMessage
-                    <br /><br />
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; padding: 0; background-color: #f8f8f8; }
+                    .email-container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; }
+                    .message-text { margin-bottom: 50px; line-height: 1.6; color: #333333; }
+                    .image-container { text-align: center; margin-bottom: 30px; }
+                    .footer-text { font-size:12px; color:#777777; text-align:center; margin-top:20px; }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="message-text">
+                        $sanitizedMessage
+                        <br /><br />
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="$imageUrl" width="300" style="display:block; margin-top:10px;" /> 
+                        <br /> <br />
+                    </div>
+                    
+                    <p style="margin-top: 20px;">Best Regards,</p>
+                    
+                    <table style="margin-top: 10px;">
+                        <tr>
+                            <td style="vertical-align: middle;">
+                                $signatureImgTag
+                            </td>
+                            <td style="padding-left: 18px; vertical-align: middle;">
+                                <strong>$userName</strong><br/>
+                                $userDesignation<br/>
+                                $userMobile
+                            </td>
+                        </tr>
+                    </table>
                 </div>
-                
-                <div class="image-container">
-                    <img src="$imageUrl" width="300" style="display:block; margin-top:10px;" /> 
-                    <br /> <br />
-                </div>
-                
-                <p style="margin-top: 20px;">Best Regards,</p>
-                
-                <table style="margin-top: 10px;">
-                    <tr>
-                        <td style="vertical-align: middle;">
-                            $signatureImgTag
-                        </td>
-                        <td style="padding-left: 18px; vertical-align: middle;">
-                            <strong>$userName</strong><br/>
-                            $userDesignation<br/>
-                            $userMobile
-                        </td>
-                    </tr>
-                </table>
-            </div>
-        </body>
-        </html>
-        """.trimIndent()
+            </body>
+            </html>
+            """.trimIndent()
     }
 
-    private fun shareLinkOnly(imageUrl: String, message: String, category: String) {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, category)
-            val shareText = if (message.isNotEmpty()) {
-                "$message\n\n$imageUrl"
-            } else {
-                imageUrl
+    private fun shareLinkOnly(
+        imageUrl: String,
+        message: String,
+        category: String,
+    ) {
+        val intent =
+            Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, category)
+                val shareText =
+                    if (message.isNotEmpty()) {
+                        "$message\n\n$imageUrl"
+                    } else {
+                        imageUrl
+                    }
+                putExtra(Intent.EXTRA_TEXT, shareText)
             }
-            putExtra(Intent.EXTRA_TEXT, shareText)
-        }
         startActivity(Intent.createChooser(intent, "Send Greeting"))
     }
 
@@ -355,7 +418,7 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
             return FileProvider.getUriForFile(
                 this,
                 "$packageName.provider",
-                file
+                file,
             )
         } catch (e: Exception) {
             android.util.Log.e("GlobalCelebrationDetailActivity", "Error saving bitmap: ", e)

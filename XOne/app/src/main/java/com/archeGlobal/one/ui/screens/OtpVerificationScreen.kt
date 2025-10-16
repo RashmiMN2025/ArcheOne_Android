@@ -47,7 +47,7 @@ fun OtpVerificationScreen(
     email: String,
     mobile: String,
     employeeId: String,
-    stayLoggedIn: Boolean
+    stayLoggedIn: Boolean,
 ) {
     val otpDigits = remember { mutableStateListOf("", "", "", "", "", "") }
     val focusRequesters = List(6) { remember { FocusRequester() } }
@@ -75,34 +75,35 @@ fun OtpVerificationScreen(
     LaunchedEffect(errorMessage) {
         errorMessage?.let { message ->
             // Format long messages with line breaks for better visibility
-            val formattedMessage = if (message.length > 50) {
-                // Split long messages into multiple lines
-                val words = message.split(" ")
-                val lines = mutableListOf<String>()
-                var currentLine = ""
+            val formattedMessage =
+                if (message.length > 50) {
+                    // Split long messages into multiple lines
+                    val words = message.split(" ")
+                    val lines = mutableListOf<String>()
+                    var currentLine = ""
 
-                for (word in words) {
-                    if ((currentLine + word).length > 35) {
-                        if (currentLine.isNotEmpty()) {
-                            lines.add(currentLine.trim())
-                            currentLine = word + " "
+                    for (word in words) {
+                        if ((currentLine + word).length > 35) {
+                            if (currentLine.isNotEmpty()) {
+                                lines.add(currentLine.trim())
+                                currentLine = word + " "
+                            } else {
+                                lines.add(word)
+                            }
                         } else {
-                            lines.add(word)
+                            currentLine += "$word "
                         }
-                    } else {
-                        currentLine += "$word "
                     }
-                }
 
-                if (currentLine.isNotEmpty()) {
-                    lines.add(currentLine.trim())
-                }
+                    if (currentLine.isNotEmpty()) {
+                        lines.add(currentLine.trim())
+                    }
 
-                // Join with newlines to create multi-line toast
-                lines.joinToString("\n")
-            } else {
-                message
-            }
+                    // Join with newlines to create multi-line toast
+                    lines.joinToString("\n")
+                } else {
+                    message
+                }
 
             CustomToast.showErrorToast(context, formattedMessage)
             errorMessage = null
@@ -110,35 +111,39 @@ fun OtpVerificationScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    focusManager.clearFocus()
-                })
-            }
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
+                },
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFE0DCD1), // Light Beige
-                            Color(0xFFC8C8CA), // Light Gray
-                            Color(0xFF474749) // Dark Gray
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors =
+                                listOf(
+                                    Color(0xFFE0DCD1), // Light Beige
+                                    Color(0xFFC8C8CA), // Light Gray
+                                    Color(0xFF474749), // Dark Gray
+                                ),
+                        ),
+                    ),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                 verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(modifier = Modifier.height(50.dp))
 
@@ -151,13 +156,13 @@ fun OtpVerificationScreen(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Email,
                         contentDescription = "Email Icon",
                         tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(28.dp),
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
@@ -165,15 +170,16 @@ fun OtpVerificationScreen(
                         fontSize = 22.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
+                        color = Color.Black,
                     )
                 }
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp, 16.dp, 32.dp, 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp, 16.dp, 32.dp, 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
                         text = "Enter the 6-digit OTP sent to your registered email",
@@ -182,15 +188,16 @@ fun OtpVerificationScreen(
                         fontWeight = FontWeight.Normal,
                         color = Color.DarkGray,
                         lineHeight = 18.sp,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
 
                 // OTP code label (left aligned)
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 8.dp, bottom = 4.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 8.dp, bottom = 4.dp),
                 ) {
                     Text(
                         text = "OTP code",
@@ -198,16 +205,17 @@ fun OtpVerificationScreen(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
-                        modifier = Modifier.align(Alignment.CenterStart)
+                        modifier = Modifier.align(Alignment.CenterStart),
                     )
                 }
 
                 // 6-digit OTP input boxes
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
                     for (i in 0 until 6) {
                         OutlinedTextField(
@@ -224,45 +232,48 @@ fun OtpVerificationScreen(
                                     focusRequesters[i - 1].requestFocus()
                                 }
                             },
-                            modifier = Modifier
-                                .width(50.dp)
-                                .height(50.dp)
-                                .focusRequester(focusRequesters[i])
-                                .onFocusChanged { focusState ->
-                                    if (focusState.isFocused) {
-                                        focusedIndex = i
-                                    }
-                                }
-                                .border(
-                                    width = 1.5.dp,
-                                    color = if (focusedIndex == i) Color(0xFFDD3825) else Color.White,
-                                    shape = MaterialTheme.shapes.medium
+                            modifier =
+                                Modifier
+                                    .width(50.dp)
+                                    .height(50.dp)
+                                    .focusRequester(focusRequesters[i])
+                                    .onFocusChanged { focusState ->
+                                        if (focusState.isFocused) {
+                                            focusedIndex = i
+                                        }
+                                    }.border(
+                                        width = 1.5.dp,
+                                        color = if (focusedIndex == i) Color(0xFFDD3825) else Color.White,
+                                        shape = MaterialTheme.shapes.medium,
+                                    ),
+                            textStyle =
+                                TextStyle(
+                                    fontSize = 20.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center,
                                 ),
-                            textStyle = TextStyle(
-                                fontSize = 20.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                color = Color.Black,
-                                textAlign = TextAlign.Center
-                            ),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = if (i == 5) ImeAction.Done else ImeAction.Next
-                            ),
+                            keyboardOptions =
+                                KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = if (i == 5) ImeAction.Done else ImeAction.Next,
+                                ),
                             enabled = !isLoading,
                             shape = MaterialTheme.shapes.medium,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
-                                disabledContainerColor = Color.White,
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black,
-                                disabledTextColor = Color.Black,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent
-                            )
+                            colors =
+                                TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White,
+                                    disabledContainerColor = Color.White,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    disabledTextColor = Color.Black,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent,
+                                ),
                         )
                     }
                 }
@@ -273,10 +284,11 @@ fun OtpVerificationScreen(
 
                 // Timer and Resend OTP Row
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = "Resend OTP in $formattedTime",
@@ -285,7 +297,7 @@ fun OtpVerificationScreen(
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
                         modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Start
+                        textAlign = TextAlign.Start,
                     )
 
                     // Resend OTP button (enabled only when timer is 0)
@@ -303,24 +315,26 @@ fun OtpVerificationScreen(
                             }
                         },
                         enabled = timeLeft == 0,
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                            .height(36.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFEFE0DF),
-                            contentColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFEFE0DF),
-                            disabledContentColor = Color(0xFFDD3825)
-                        ),
+                        modifier =
+                            Modifier
+                                .padding(start = 8.dp)
+                                .height(36.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFEFE0DF),
+                                contentColor = Color(0xFFDD3825),
+                                disabledContainerColor = Color(0xFFEFE0DF),
+                                disabledContentColor = Color(0xFFDD3825),
+                            ),
                         border = BorderStroke(1.dp, Color(0xFFDD3825)),
-                        shape = MaterialTheme.shapes.medium
+                        shape = MaterialTheme.shapes.medium,
                     ) {
                         Text(
                             text = "Resend OTP",
                             color = Color(0xFFDD3825),
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                 }
@@ -367,7 +381,7 @@ fun OtpVerificationScreen(
                             deviceId = deviceId,
                             platform = platform,
                             osVersion = osVersion,
-                            stayLoggedIn = stayLoggedIn
+                            stayLoggedIn = stayLoggedIn,
                         ) { message, isError ->
                             isLoading = false
                             if (isError) {
@@ -375,68 +389,74 @@ fun OtpVerificationScreen(
                             }
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth(0.97f)
-                        .height(65.dp)
-                        .padding(top = 16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFDD3825),
-                        disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
-                    ),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(0.97f)
+                            .height(65.dp)
+                            .padding(top = 16.dp),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825),
+                            disabledContainerColor = Color(0xFFDD3825), // Keep same color when disabled
+                        ),
                     shape = MaterialTheme.shapes.medium,
-                    enabled = !isLoading
+                    enabled = !isLoading,
                 ) {
                     Text(
                         "Verify OTP",
                         color = Color.White,
                         fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     )
                 }
 
                 Spacer(modifier = Modifier.height(22.dp))
 
-                val goBackText = buildAnnotatedString {
-                    val start = length
-                    append("Go Back")
-                    addStyle(
-                        style = SpanStyle(
-                            color = Color.Black,
-                            textDecoration = TextDecoration.Underline,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
-                        ),
-                        start = start,
-                        end = length
-                    )
-                    addStringAnnotation(
-                        tag = "go_back",
-                        annotation = "go_back",
-                        start = start,
-                        end = length
-                    )
-                }
+                val goBackText =
+                    buildAnnotatedString {
+                        val start = length
+                        append("Go Back")
+                        addStyle(
+                            style =
+                                SpanStyle(
+                                    color = Color.Black,
+                                    textDecoration = TextDecoration.Underline,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                ),
+                            start = start,
+                            end = length,
+                        )
+                        addStringAnnotation(
+                            tag = "go_back",
+                            annotation = "go_back",
+                            start = start,
+                            end = length,
+                        )
+                    }
                 ClickableText(
                     text = goBackText,
-                    style = TextStyle(
-                        fontSize = 20.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Black
-                    ),
+                    style =
+                        TextStyle(
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Black,
+                        ),
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     onClick = { offset ->
-                        goBackText.getStringAnnotations(
-                            tag = "go_back",
-                            start = offset,
-                            end = offset
-                        )
-                            .firstOrNull()?.let {
+                        goBackText
+                            .getStringAnnotations(
+                                tag = "go_back",
+                                start = offset,
+                                end = offset,
+                            ).firstOrNull()
+                            ?.let {
                                 val activity = context as? android.app.Activity
                                 activity?.finish()
                             }
-                    }
+                    },
                 )
             }
             // Replace the existing loading indicator with UniversalLoader

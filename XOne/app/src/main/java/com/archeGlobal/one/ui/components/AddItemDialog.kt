@@ -46,7 +46,7 @@ fun AddItemDialog(
     onUnitChanged: (String) -> Unit,
     onStockSuppliedDateChanged: (String) -> Unit,
     onStockSuppliedTimeChanged: (String) -> Unit,
-    onUpdateStock: () -> Unit
+    onUpdateStock: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
     val showCloseButton by remember {
@@ -58,42 +58,47 @@ fun AddItemDialog(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false
-        )
+        properties =
+            DialogProperties(
+                usePlatformDefaultWidth = false,
+            ),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF6F4EE))
-                .systemBarsPadding()
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF6F4EE))
+                    .systemBarsPadding(),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState),
             ) {
                 // Header spacing
                 Spacer(modifier = Modifier.height(80.dp))
 
                 // Title based on mode
                 Text(
-                    text = when (model.mode) {
-                        DialogMode.ADD -> "Add New Inventory Item"
-                        DialogMode.UPDATE -> "Update Inventory"
-                    },
+                    text =
+                        when (model.mode) {
+                            DialogMode.ADD -> "Add New Inventory Item"
+                            DialogMode.UPDATE -> "Update Inventory"
+                        },
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 25.sp,
                     color = Color.Black,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp)
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
                 )
 
                 // Content
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
                 ) {
                     Spacer(modifier = Modifier.height(32.dp))
 
@@ -105,7 +110,7 @@ fun AddItemDialog(
                                 label = "Location",
                                 selectedValue = model.selectedLocation,
                                 options = model.locations,
-                                onValueSelected = onLocationSelected
+                                onValueSelected = onLocationSelected,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -115,7 +120,7 @@ fun AddItemDialog(
                                 label = "Category Type",
                                 selectedValue = model.selectedType,
                                 options = model.types,
-                                onValueSelected = onTypeSelected
+                                onValueSelected = onTypeSelected,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -125,7 +130,7 @@ fun AddItemDialog(
                                 label = "Access Type",
                                 selectedValue = model.selectedAccessType,
                                 options = listOf("Admin", "User"),
-                                onValueSelected = onAccessTypeSelected
+                                onValueSelected = onAccessTypeSelected,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -135,7 +140,7 @@ fun AddItemDialog(
                                 label = "Item Name",
                                 value = model.selectedItem,
                                 onValueChange = onItemSelected,
-                                placeholder = "Enter item name"
+                                placeholder = "Enter item name",
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -145,7 +150,7 @@ fun AddItemDialog(
                                 label = "Unit",
                                 value = model.unit,
                                 onValueChange = onUnitChanged,
-                                placeholder = "Enter unit"
+                                placeholder = "Enter unit",
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -155,7 +160,7 @@ fun AddItemDialog(
                                 label = "Brand",
                                 value = model.brand,
                                 onValueChange = onBrandChanged,
-                                placeholder = "Enter brand name"
+                                placeholder = "Enter brand name",
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -165,7 +170,7 @@ fun AddItemDialog(
                                 label = "Opening Stock",
                                 value = model.existingStock,
                                 onValueChange = onExistingStockChanged,
-                                placeholder = "Enter opening stock quantity"
+                                placeholder = "Enter opening stock quantity",
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -175,7 +180,7 @@ fun AddItemDialog(
                                 label = "Added By",
                                 value = model.updatedBy,
                                 onValueChange = onUpdatedByChanged,
-                                placeholder = "Enter your name"
+                                placeholder = "Enter your name",
                             )
                         }
                         DialogMode.UPDATE -> {
@@ -185,7 +190,7 @@ fun AddItemDialog(
                                 label = "Location",
                                 value = model.selectedLocation,
                                 onValueChange = { },
-                                readOnly = true
+                                readOnly = true,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -195,7 +200,7 @@ fun AddItemDialog(
                                 label = "Type",
                                 value = model.selectedType,
                                 onValueChange = { },
-                                readOnly = true
+                                readOnly = true,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -205,7 +210,7 @@ fun AddItemDialog(
                                 label = "Item",
                                 value = model.selectedItem,
                                 onValueChange = { },
-                                readOnly = true
+                                readOnly = true,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -215,7 +220,7 @@ fun AddItemDialog(
                                 label = "Quantity Update Type",
                                 selectedValue = model.quantityUpdateType,
                                 options = model.quantityUpdateTypes,
-                                onValueSelected = onQuantityUpdateTypeSelected
+                                onValueSelected = onQuantityUpdateTypeSelected,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -225,7 +230,7 @@ fun AddItemDialog(
                                 label = "Existing Stock",
                                 value = model.existingStock,
                                 onValueChange = { },
-                                readOnly = true
+                                readOnly = true,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -242,11 +247,12 @@ fun AddItemDialog(
                                 label = stockQuantityLabel,
                                 value = model.newStockQuantity,
                                 onValueChange = onNewStockQuantityChanged,
-                                placeholder = if (model.quantityUpdateType == "Update Used Quantity") {
-                                    "Enter quantity used"
-                                } else {
-                                    "Enter stock to add"
-                                }
+                                placeholder =
+                                    if (model.quantityUpdateType == "Update Used Quantity") {
+                                        "Enter quantity used"
+                                    } else {
+                                        "Enter stock to add"
+                                    },
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -256,7 +262,7 @@ fun AddItemDialog(
                                 label = "Brand",
                                 value = model.brand,
                                 onValueChange = { },
-                                readOnly = true
+                                readOnly = true,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -266,7 +272,7 @@ fun AddItemDialog(
                                 label = "Unit",
                                 value = model.unit,
                                 onValueChange = { },
-                                readOnly = true
+                                readOnly = true,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -275,7 +281,7 @@ fun AddItemDialog(
                             StockSuppliedDateField(
                                 label = "Stock Supplied Date",
                                 value = model.stockSuppliedDate,
-                                onValueChange = onStockSuppliedDateChanged
+                                onValueChange = onStockSuppliedDateChanged,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -285,7 +291,7 @@ fun AddItemDialog(
                                 label = "Updated By",
                                 value = model.updatedBy,
                                 onValueChange = onUpdatedByChanged,
-                                placeholder = "Enter updated by"
+                                placeholder = "Enter updated by",
                             )
                         }
                     }
@@ -295,48 +301,53 @@ fun AddItemDialog(
                     // Side by side buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         // Action Button (left) - text changes based on mode
                         Button(
                             onClick = onUpdateStock,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryRed,
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(52.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = PrimaryRed,
+                                    contentColor = Color.White,
+                                ),
+                            shape = RoundedCornerShape(12.dp),
                         ) {
                             Text(
-                                text = when (model.mode) {
-                                    DialogMode.ADD -> "Add Item"
-                                    DialogMode.UPDATE -> "Update Stock"
-                                },
+                                text =
+                                    when (model.mode) {
+                                        DialogMode.ADD -> "Add Item"
+                                        DialogMode.UPDATE -> "Update Stock"
+                                    },
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp
+                                fontSize = 18.sp,
                             )
                         }
 
                         // Cancel Button (right)
                         Button(
                             onClick = onDismiss,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Gray,
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(52.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color.Gray,
+                                    contentColor = Color.White,
+                                ),
+                            shape = RoundedCornerShape(12.dp),
                         ) {
                             Text(
                                 text = "Cancel",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp
+                                fontSize = 18.sp,
                             )
                         }
                     }
@@ -350,36 +361,38 @@ fun AddItemDialog(
                 // Horizontal background bar when scrolled down
                 if (isScrolledDown) {
                     Box(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .fillMaxWidth()
-                            .height(65.dp)
-                            .background(
-                                color = Color.Gray.copy(alpha = 0.7f)
-                            )
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopCenter)
+                                .fillMaxWidth()
+                                .height(65.dp)
+                                .background(
+                                    color = Color.Gray.copy(alpha = 0.7f),
+                                ),
                     )
                 }
 
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(20.dp)
-                        .size(35.dp)
-                        .background(
-                            color = if (isScrolledDown) Color.Gray.copy(alpha = 0.8f) else Color.Gray.copy(alpha = 0.3f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(20.dp)
+                            .size(35.dp)
+                            .background(
+                                color = if (isScrolledDown) Color.Gray.copy(alpha = 0.8f) else Color.Gray.copy(alpha = 0.3f),
+                                shape = CircleShape,
+                            ),
+                    contentAlignment = Alignment.Center,
                 ) {
                     IconButton(
                         onClick = onDismiss,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
                             tint = if (isScrolledDown) Color.White else Color.Gray,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(18.dp),
                         )
                     }
                 }
@@ -394,7 +407,7 @@ private fun UpdateInventoryDropdown(
     label: String,
     selectedValue: String,
     options: List<String>,
-    onValueSelected: (String) -> Unit
+    onValueSelected: (String) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -405,12 +418,12 @@ private fun UpdateInventoryDropdown(
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
             color = Color.Black,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = 12.dp),
         )
 
         ExposedDropdownMenuBox(
             expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
+            onExpandedChange = { expanded = !expanded },
         ) {
             OutlinedTextField(
                 value = selectedValue,
@@ -420,33 +433,36 @@ private fun UpdateInventoryDropdown(
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
                         contentDescription = "Dropdown",
-                        tint = PrimaryRed
+                        tint = PrimaryRed,
                     )
                 },
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier =
+                    Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                        .height(56.dp),
                 shape = RoundedCornerShape(20.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
-                textStyle = TextStyle(
-                    fontFamily = GraphikFontFamily,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                colors =
+                    OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                    ),
+                textStyle =
+                    TextStyle(
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
             )
 
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.background(Color.White)
+                modifier = Modifier.background(Color.White),
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
@@ -455,13 +471,13 @@ private fun UpdateInventoryDropdown(
                                 text = option,
                                 fontFamily = GraphikFontFamily,
                                 fontSize = 16.sp,
-                                color = Color.Black
+                                color = Color.Black,
                             )
                         },
                         onClick = {
                             onValueSelected(option)
                             expanded = false
-                        }
+                        },
                     )
                 }
             }
@@ -475,7 +491,7 @@ private fun UpdateInventoryTextField(
     value: String,
     onValueChange: (String) -> Unit,
     readOnly: Boolean = false,
-    placeholder: String = ""
+    placeholder: String = "",
 ) {
     Column {
         Text(
@@ -484,43 +500,47 @@ private fun UpdateInventoryTextField(
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
             color = Color.Black,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = 12.dp),
         )
 
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             readOnly = readOnly,
-            placeholder = if (placeholder.isNotEmpty()) {
-                {
-                    Text(
-                        text = placeholder,
-                        color = Color.Gray,
-                        fontFamily = GraphikFontFamily,
-                        fontSize = 16.sp
-                    )
-                }
-            } else {
-                null
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            placeholder =
+                if (placeholder.isNotEmpty()) {
+                    {
+                        Text(
+                            text = placeholder,
+                            color = Color.Gray,
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 16.sp,
+                        )
+                    }
+                } else {
+                    null
+                },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
-            ),
-            textStyle = TextStyle(
-                fontFamily = GraphikFontFamily,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            ),
-            singleLine = true
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                ),
+            textStyle =
+                TextStyle(
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                ),
+            singleLine = true,
         )
     }
 }
@@ -529,7 +549,7 @@ private fun UpdateInventoryTextField(
 private fun StockSuppliedDateField(
     label: String,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val calendar = java.util.Calendar.getInstance()
@@ -537,16 +557,17 @@ private fun StockSuppliedDateField(
     val month = calendar.get(java.util.Calendar.MONTH)
     val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
 
-    val datePickerDialog = android.app.DatePickerDialog(
-        context,
-        { _, selectedYear, selectedMonth, selectedDay ->
-            val formattedDate = String.format("%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear)
-            onValueChange(formattedDate)
-        },
-        year,
-        month,
-        day
-    )
+    val datePickerDialog =
+        android.app.DatePickerDialog(
+            context,
+            { _, selectedYear, selectedMonth, selectedDay ->
+                val formattedDate = String.format("%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear)
+                onValueChange(formattedDate)
+            },
+            year,
+            month,
+            day,
+        )
     // Set minimum date to today (only present/future dates allowed)
     datePickerDialog.datePicker.minDate = calendar.timeInMillis
 
@@ -557,27 +578,28 @@ private fun StockSuppliedDateField(
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
             color = Color.Black,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = 12.dp),
         )
 
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .clickable {
-                    datePickerDialog.show()
-                }
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(
+                        color = Color.White,
+                        shape = RoundedCornerShape(12.dp),
+                    ).clickable {
+                        datePickerDialog.show()
+                    },
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = if (value.isNotEmpty()) value else "Select date",
@@ -585,14 +607,14 @@ private fun StockSuppliedDateField(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = if (value.isNotEmpty()) Color.Black else Color.Gray,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
 
                 Icon(
                     painter = painterResource(id = R.drawable.calendar_3x),
                     contentDescription = "Calendar",
                     tint = Color.Gray,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }

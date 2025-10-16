@@ -27,7 +27,7 @@ class MonthDetailActivity : ComponentActivity() {
                 MonthDetailScreen(
                     month = month,
                     controller = controller,
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }

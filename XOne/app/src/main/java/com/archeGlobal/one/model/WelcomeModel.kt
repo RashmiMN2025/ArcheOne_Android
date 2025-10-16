@@ -7,12 +7,15 @@ data class WelcomeModel(
     val subtitle: String = "XOne",
     val description1: String = "Your one-stop solution",
     val description2: String = "for everything",
-    val buttons: List<Button> = listOf(
-        Button("Login to XOne"),
-        Button("Login to Pulse")
-    )
+    val buttons: List<Button> =
+        listOf(
+            Button("Login to XOne"),
+            Button("Login to Pulse"),
+        ),
 ) {
-    data class Button(val text: String)
+    data class Button(
+        val text: String,
+    )
 
     companion object {
         // Function to determine the dynamic subtitle based on the time of day

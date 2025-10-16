@@ -62,7 +62,8 @@ class WebViewActivity : ComponentActivity() {
         val isSpecialDocument = title == "PAN Card" || title == "Medical Insurance Card"
 
         // Special handling for Floor Map PDFs
-        val isFloorMap = title == "Floor Map" || title.contains("Floor Map", ignoreCase = true) || title.contains("Location", ignoreCase = true)
+        val isFloorMap =
+            title == "Floor Map" || title.contains("Floor Map", ignoreCase = true) || title.contains("Location", ignoreCase = true)
 
         // Flag to track if we should use offline mode (no PDF.js)
         val useOfflineMode = intent.getBooleanExtra("useOfflineMode", false)
@@ -78,34 +79,37 @@ class WebViewActivity : ComponentActivity() {
             setContent {
                 XOneTheme {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color(0xFFE0DCD1), // Light Grey/Beige
-                                        Color(0xFFC8C8CA), // Medium Grey
-                                        Color(0xFF474749) // Dark Grey
-                                    )
-                                )
-                            )
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(
+                                    brush =
+                                        Brush.verticalGradient(
+                                            colors =
+                                                listOf(
+                                                    Color(0xFFE0DCD1), // Light Grey/Beige
+                                                    Color(0xFFC8C8CA), // Medium Grey
+                                                    Color(0xFF474749), // Dark Grey
+                                                ),
+                                        ),
+                                ),
                     ) {
                         Column(
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
                         ) {
                             // Top app bar with gradient background
                             TopAppBar(
                                 title = {
                                     Box(
                                         modifier = Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.Center
+                                        contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
                                             text = title,
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Medium,
                                             fontFamily = GraphikFontFamily,
-                                            color = Color.Black
+                                            color = Color.Black,
                                         )
                                     }
                                 },
@@ -114,7 +118,7 @@ class WebViewActivity : ComponentActivity() {
                                         Icon(
                                             imageVector = Icons.Default.ArrowBack,
                                             contentDescription = "Back",
-                                            tint = Color.Black
+                                            tint = Color.Black,
                                         )
                                     }
                                 },
@@ -122,9 +126,10 @@ class WebViewActivity : ComponentActivity() {
                                     // Empty spacer for balance
                                     Spacer(modifier = Modifier.width(48.dp))
                                 },
-                                colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = Color.Transparent
-                                )
+                                colors =
+                                    TopAppBarDefaults.topAppBarColors(
+                                        containerColor = Color.Transparent,
+                                    ),
                             )
 
                             // WebView content
@@ -136,9 +141,10 @@ class WebViewActivity : ComponentActivity() {
                                         loadDataWithBaseURL(null, rawHtmlContent, "text/html", "UTF-8", null)
                                     }
                                 },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(1f)
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .weight(1f),
                             )
                         }
                     }
@@ -147,40 +153,46 @@ class WebViewActivity : ComponentActivity() {
             return
         }
 
-        Log.d("WebViewActivity", "Loading URL: $fileUrl, isPdf: $isPdf, isLocalFile: $isLocalFile, hasBase64: ${base64Data != null}, isSpecialDocument: $isSpecialDocument, isFloorMap: $isFloorMap, useOfflineMode: $useOfflineMode")
+        Log.d(
+            "WebViewActivity",
+            "Loading URL: $fileUrl, isPdf: $isPdf, isLocalFile: $isLocalFile, hasBase64: ${base64Data != null}, isSpecialDocument: $isSpecialDocument, isFloorMap: $isFloorMap, useOfflineMode: $useOfflineMode",
+        )
 
         setContent {
             MaterialTheme {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFFE0DCD1), // Light Grey/Beige
-                                    Color(0xFFC8C8CA), // Medium Grey
-                                    Color(0xFF474749) // Dark Grey
-                                )
-                            )
-                        )
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush =
+                                    Brush.verticalGradient(
+                                        colors =
+                                            listOf(
+                                                Color(0xFFE0DCD1), // Light Grey/Beige
+                                                Color(0xFFC8C8CA), // Medium Grey
+                                                Color(0xFF474749), // Dark Grey
+                                            ),
+                                    ),
+                            ),
                 ) {
                     // Main content
                     Column(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     ) {
                         // Top app bar
                         TopAppBar(
                             title = {
                                 Box(
                                     modifier = Modifier.fillMaxWidth(),
-                                    contentAlignment = Alignment.Center
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
                                         text = title,
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Medium,
                                         fontFamily = GraphikFontFamily,
-                                        color = Color.Black
+                                        color = Color.Black,
                                     )
                                 }
                             },
@@ -189,7 +201,7 @@ class WebViewActivity : ComponentActivity() {
                                     Icon(
                                         imageVector = Icons.Default.ArrowBack,
                                         contentDescription = "Back",
-                                        tint = Color.Black
+                                        tint = Color.Black,
                                     )
                                 }
                             },
@@ -200,21 +212,23 @@ class WebViewActivity : ComponentActivity() {
                                         try {
                                             Log.d("WebViewActivity", "Navigating to SOS from policy")
                                             // Create intent for SOSActivity with special flags
-                                            val intent = Intent(this@WebViewActivity, SOSActivity::class.java).apply {
-                                                // Don't use FLAG_ACTIVITY_NEW_TASK as it can cause issues with parcelable objects
-                                                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                            val intent =
+                                                Intent(this@WebViewActivity, SOSActivity::class.java).apply {
+                                                    // Don't use FLAG_ACTIVITY_NEW_TASK as it can cause issues with parcelable objects
+                                                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION
 
-                                                // Set showHeader to false to ensure we don't get navigation conflicts
-                                                putExtra("showHeader", false)
-                                                putExtra("fromPdfViewer", true)
-                                                putExtra("preventWhiteBar", true)
-                                                // Add this to track when opened from policy
-                                                putExtra("fromPolicy", true)
-                                            }
+                                                    // Set showHeader to false to ensure we don't get navigation conflicts
+                                                    putExtra("showHeader", false)
+                                                    putExtra("fromPdfViewer", true)
+                                                    putExtra("preventWhiteBar", true)
+                                                    // Add this to track when opened from policy
+                                                    putExtra("fromPolicy", true)
+                                                }
 
                                             // Force current activity to have proper display settings
                                             window.statusBarColor = android.graphics.Color.TRANSPARENT
-                                            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+                                            androidx.core.view.WindowCompat
+                                                .setDecorFitsSystemWindows(window, false)
 
                                             // Start activity with no animation
                                             startActivity(intent)
@@ -225,17 +239,18 @@ class WebViewActivity : ComponentActivity() {
                                         }
                                     }) {
                                         Box(
-                                            modifier = Modifier
-                                                .size(40.dp)
-                                                .background(Color(0xFFDD3825), shape = androidx.compose.foundation.shape.CircleShape),
-                                            contentAlignment = Alignment.Center
+                                            modifier =
+                                                Modifier
+                                                    .size(40.dp)
+                                                    .background(Color(0xFFDD3825), shape = androidx.compose.foundation.shape.CircleShape),
+                                            contentAlignment = Alignment.Center,
                                         ) {
                                             Text(
                                                 text = "SOS",
                                                 color = Color.White,
                                                 fontWeight = FontWeight.Medium,
                                                 fontFamily = GraphikFontFamily,
-                                                fontSize = 12.sp
+                                                fontSize = 12.sp,
                                             )
                                         }
                                     }
@@ -244,12 +259,13 @@ class WebViewActivity : ComponentActivity() {
                                     IconButton(onClick = {
                                         try {
                                             Log.d("WebViewActivity", "Sharing content: $fileUrl")
-                                            val shareIntent = Intent().apply {
-                                                action = Intent.ACTION_SEND
-                                                type = "text/plain"
-                                                putExtra(Intent.EXTRA_TEXT, "$title\n\n$fileUrl")
-                                                putExtra(Intent.EXTRA_SUBJECT, title)
-                                            }
+                                            val shareIntent =
+                                                Intent().apply {
+                                                    action = Intent.ACTION_SEND
+                                                    type = "text/plain"
+                                                    putExtra(Intent.EXTRA_TEXT, "$title\n\n$fileUrl")
+                                                    putExtra(Intent.EXTRA_SUBJECT, title)
+                                                }
                                             startActivity(Intent.createChooser(shareIntent, "Share Article"))
                                         } catch (e: Exception) {
                                             Log.e("WebViewActivity", "Error sharing content: ${e.message}", e)
@@ -260,7 +276,7 @@ class WebViewActivity : ComponentActivity() {
                                             painter = painterResource(id = R.drawable.share),
                                             contentDescription = "Share",
                                             tint = Color.Black,
-                                            modifier = Modifier.size(22.dp)
+                                            modifier = Modifier.size(22.dp),
                                         )
                                     }
                                 } else {
@@ -268,24 +284,29 @@ class WebViewActivity : ComponentActivity() {
                                     Spacer(modifier = Modifier.width(48.dp))
                                 }
                             },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent
-                            )
+                            colors =
+                                TopAppBarDefaults.topAppBarColors(
+                                    containerColor = Color.Transparent,
+                                ),
                         )
 
                         // WebView Card that takes full width
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                                .padding(0.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .padding(0.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
+                            shape =
+                                androidx.compose.foundation.shape
+                                    .RoundedCornerShape(0.dp),
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .fillMaxWidth()
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .fillMaxWidth(),
                             ) {
                                 // Loading indicator
                                 var isLoading by remember { mutableStateOf(true) }
@@ -297,16 +318,18 @@ class WebViewActivity : ComponentActivity() {
 
                                 // WebView for content display
                                 AndroidView(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .fillMaxWidth()
-                                        .padding(0.dp),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize()
+                                            .fillMaxWidth()
+                                            .padding(0.dp),
                                     factory = { context ->
                                         WebView(context).apply {
-                                            layoutParams = android.view.ViewGroup.LayoutParams(
-                                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                                            )
+                                            layoutParams =
+                                                android.view.ViewGroup.LayoutParams(
+                                                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                                )
                                             settings.apply {
                                                 javaScriptEnabled = true
                                                 allowFileAccess = true
@@ -347,92 +370,125 @@ class WebViewActivity : ComponentActivity() {
                                                 mediaPlaybackRequiresUserGesture = false
                                             }
 
-                                            webViewClient = object : WebViewClient() {
-                                                private var pageLoaded = false
+                                            webViewClient =
+                                                object : WebViewClient() {
+                                                    private var pageLoaded = false
 
-                                                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                                                    return false
-                                                }
+                                                    override fun shouldOverrideUrlLoading(
+                                                        view: WebView,
+                                                        request: WebResourceRequest,
+                                                    ): Boolean = false
 
-                                                override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
-                                                    Log.e("WebViewActivity", "SSL Error: ${error.primaryError} on URL: ${error.url}")
+                                                    override fun onReceivedSslError(
+                                                        view: WebView,
+                                                        handler: SslErrorHandler,
+                                                        error: SslError,
+                                                    ) {
+                                                        Log.e("WebViewActivity", "SSL Error: ${error.primaryError} on URL: ${error.url}")
 
-                                                    // Auto-proceed for arche.global domains (About Us content)
-                                                    val url = error.url ?: ""
-                                                    if (url.contains("arche.global")) {
-                                                        Log.w("WebViewActivity", "Auto-proceeding with SSL error for arche.global domain")
-                                                        handler.proceed()
-                                                        return
+                                                        // Auto-proceed for arche.global domains (About Us content)
+                                                        val url = error.url ?: ""
+                                                        if (url.contains("arche.global")) {
+                                                            Log.w(
+                                                                "WebViewActivity",
+                                                                "Auto-proceeding with SSL error for arche.global domain",
+                                                            )
+                                                            handler.proceed()
+                                                            return
+                                                        }
+
+                                                        // Create an alert dialog to inform the user for other domains
+                                                        val builder = AlertDialog.Builder(context)
+                                                        builder.setTitle("SSL Certificate Error")
+
+                                                        // Customize message based on the type of SSL error
+                                                        val errorMessage =
+                                                            when (error.primaryError) {
+                                                                SslError.SSL_NOTYETVALID -> "The certificate is not yet valid."
+                                                                SslError.SSL_EXPIRED -> "The certificate has expired."
+                                                                SslError.SSL_IDMISMATCH -> "The certificate hostname does not match."
+                                                                SslError.SSL_UNTRUSTED -> "The certificate authority is not trusted."
+                                                                SslError.SSL_DATE_INVALID -> "The certificate date is invalid."
+                                                                else -> "An unknown SSL error occurred."
+                                                            }
+
+                                                        builder.setMessage(
+                                                            "A security issue was detected with the website's SSL certificate: $errorMessage\n\nDo you want to proceed anyway? (Not recommended)",
+                                                        )
+                                                        builder.setPositiveButton("Proceed") { _, _ ->
+                                                            handler.proceed() // Allow the user to proceed (use with caution)
+                                                        }
+                                                        builder.setNegativeButton("Cancel") { _, _ ->
+                                                            handler.cancel() // Cancel the request
+                                                            Toast
+                                                                .makeText(
+                                                                    context,
+                                                                    "Connection aborted due to SSL error.",
+                                                                    Toast.LENGTH_LONG,
+                                                                ).show()
+                                                        }
+                                                        builder.setCancelable(false) // Prevent dismissing the dialog without a choice
+                                                        builder.show()
                                                     }
 
-                                                    // Create an alert dialog to inform the user for other domains
-                                                    val builder = AlertDialog.Builder(context)
-                                                    builder.setTitle("SSL Certificate Error")
+                                                    override fun shouldInterceptRequest(
+                                                        view: WebView?,
+                                                        request: WebResourceRequest?,
+                                                    ): android.webkit.WebResourceResponse? {
+                                                        val isPersonal = intent.getBooleanExtra("isPersonal", false)
+                                                        val documentTitle = intent.getStringExtra("title") ?: ""
 
-                                                    // Customize message based on the type of SSL error
-                                                    val errorMessage = when (error.primaryError) {
-                                                        SslError.SSL_NOTYETVALID -> "The certificate is not yet valid."
-                                                        SslError.SSL_EXPIRED -> "The certificate has expired."
-                                                        SslError.SSL_IDMISMATCH -> "The certificate hostname does not match."
-                                                        SslError.SSL_UNTRUSTED -> "The certificate authority is not trusted."
-                                                        SslError.SSL_DATE_INVALID -> "The certificate date is invalid."
-                                                        else -> "An unknown SSL error occurred."
+                                                        if (isPersonal && request?.url != null) {
+                                                            Log.d(
+                                                                "WebViewActivity",
+                                                                "Intercepting request for UserDocuments: ${request.url}",
+                                                            )
+
+                                                            // Check if the URL pattern suggests it might return HTML error content
+                                                            val url = request.url.toString()
+                                                            if (url.contains("download_doc") && url.contains("dev.arche.global")) {
+                                                                Log.d("WebViewActivity", "Detected potential document download URL: $url")
+                                                            }
+                                                        }
+
+                                                        return super.shouldInterceptRequest(view, request)
                                                     }
 
-                                                    builder.setMessage("A security issue was detected with the website's SSL certificate: $errorMessage\n\nDo you want to proceed anyway? (Not recommended)")
-                                                    builder.setPositiveButton("Proceed") { _, _ ->
-                                                        handler.proceed() // Allow the user to proceed (use with caution)
-                                                    }
-                                                    builder.setNegativeButton("Cancel") { _, _ ->
-                                                        handler.cancel() // Cancel the request
-                                                        Toast.makeText(context, "Connection aborted due to SSL error.", Toast.LENGTH_LONG).show()
-                                                    }
-                                                    builder.setCancelable(false) // Prevent dismissing the dialog without a choice
-                                                    builder.show()
-                                                }
+                                                    override fun onPageStarted(
+                                                        view: WebView?,
+                                                        url: String?,
+                                                        favicon: android.graphics.Bitmap?,
+                                                    ) {
+                                                        super.onPageStarted(view, url, favicon)
+                                                        isLoading = true
+                                                        pageLoaded = false
+                                                        Log.d("WebViewActivity", "Page started loading: $url")
 
-                                                override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
-                                                    val isPersonal = intent.getBooleanExtra("isPersonal", false)
-                                                    val documentTitle = intent.getStringExtra("title") ?: ""
+                                                        // Check if this is a UserDocuments screen
+                                                        val isPersonal = intent.getBooleanExtra("isPersonal", false)
+                                                        val documentTitle = intent.getStringExtra("title") ?: ""
 
-                                                    if (isPersonal && request?.url != null) {
-                                                        Log.d("WebViewActivity", "Intercepting request for UserDocuments: ${request.url}")
-
-                                                        // Check if the URL pattern suggests it might return HTML error content
-                                                        val url = request.url.toString()
-                                                        if (url.contains("download_doc") && url.contains("dev.arche.global")) {
-                                                            Log.d("WebViewActivity", "Detected potential document download URL: $url")
+                                                        // For UserDocuments, check if URL might lead to HTML content
+                                                        if (isPersonal && url != null) {
+                                                            Log.d("WebViewActivity", "UserDocuments page started loading: $url")
                                                         }
                                                     }
 
-                                                    return super.shouldInterceptRequest(view, request)
-                                                }
+                                                    override fun onPageFinished(
+                                                        view: WebView?,
+                                                        url: String?,
+                                                    ) {
+                                                        super.onPageFinished(view, url)
+                                                        pageLoaded = true
+                                                        isLoading = false
 
-                                                override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                                                    super.onPageStarted(view, url, favicon)
-                                                    isLoading = true
-                                                    pageLoaded = false
-                                                    Log.d("WebViewActivity", "Page started loading: $url")
-
-                                                    // Check if this is a UserDocuments screen
-                                                    val isPersonal = intent.getBooleanExtra("isPersonal", false)
-                                                    val documentTitle = intent.getStringExtra("title") ?: ""
-
-                                                    // For UserDocuments, check if URL might lead to HTML content
-                                                    if (isPersonal && url != null) {
-                                                        Log.d("WebViewActivity", "UserDocuments page started loading: $url")
-                                                    }
-                                                }
-
-                                                override fun onPageFinished(view: WebView?, url: String?) {
-                                                    super.onPageFinished(view, url)
-                                                    pageLoaded = true
-                                                    isLoading = false
-
-                                                    // Check if this is a blog or case study from arche.global and inject responsive CSS
-                                                    if (url != null && url.contains("arche.global") && (url.contains("/blog/") || url.contains("/case-studies/"))) {
-                                                        view?.evaluateJavascript(
-                                                            """
+                                                        // Check if this is a blog or case study from arche.global and inject responsive CSS
+                                                        if (url != null &&
+                                                            url.contains("arche.global") &&
+                                                            (url.contains("/blog/") || url.contains("/case-studies/"))
+                                                        ) {
+                                                            view?.evaluateJavascript(
+                                                                """
                                                             (function() {
                                                                 // Check if viewport meta tag already exists
                                                                 var existingViewport = document.querySelector('meta[name="viewport"]');
@@ -482,230 +538,263 @@ class WebViewActivity : ComponentActivity() {
                                                                 document.getElementsByTagName('head')[0].appendChild(style);
                                                             })();
                                                         """,
-                                                            null
-                                                        )
-                                                        Log.d("WebViewActivity", "Injected responsive CSS for blog/case study: $url")
-                                                    }
+                                                                null,
+                                                            )
+                                                            Log.d("WebViewActivity", "Injected responsive CSS for blog/case study: $url")
+                                                        }
 
-                                                    // Check if this is a UserDocuments screen and if the page contains HTML error content
-                                                    val isPersonal = intent.getBooleanExtra("isPersonal", false)
-                                                    val documentTitle = intent.getStringExtra("title") ?: ""
+                                                        // Check if this is a UserDocuments screen and if the page contains HTML error content
+                                                        val isPersonal = intent.getBooleanExtra("isPersonal", false)
+                                                        val documentTitle = intent.getStringExtra("title") ?: ""
 
-                                                    if (isPersonal && view != null) {
-                                                        // Add a delay to ensure the page is fully loaded
+                                                        if (isPersonal && view != null) {
+                                                            // Add a delay to ensure the page is fully loaded
+                                                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                                                // Inject JavaScript to check if the page contains HTML error content
+                                                                view.evaluateJavascript(
+                                                                    """
+                                                                    (function() {
+                                                                        try {
+                                                                            var bodyText = document.body ? document.body.innerText : '';
+                                                                            var htmlContent = document.documentElement ? document.documentElement.innerHTML : '';
+                                                                            
+                                                                            // Check if this looks like an HTML page rather than a PDF
+                                                                            var isHtmlContent = (htmlContent.includes('<html') || htmlContent.includes('<!DOCTYPE')) && 
+                                                                                              htmlContent.includes('<body') &&
+                                                                                              !htmlContent.includes('application/pdf') &&
+                                                                                              !htmlContent.includes('pdf.js') &&
+                                                                                              !htmlContent.includes('pdfobject') &&
+                                                                                              bodyText.length < 2000;
+                                                                            
+                                                                            // Also check if the content looks like server error or plain text
+                                                                            var hasPlainTextContent = bodyText.length > 0 && bodyText.length < 1000 && 
+                                                                                                     !bodyText.includes('PDF') &&
+                                                                                                     (bodyText.includes('error') || bodyText.includes('not found') || 
+                                                                                                      bodyText.includes('file') || bodyText.includes('server') ||
+                                                                                                      htmlContent.length < 5000);
+                                                                            
+                                                                            if (isHtmlContent || hasPlainTextContent) {
+                                                                                return JSON.stringify({
+                                                                                    isError: true,
+                                                                                    content: bodyText.trim()
+                                                                                });
+                                                                            }
+                                                                            
+                                                                            return JSON.stringify({isError: false});
+                                                                        } catch (e) {
+                                                                            return JSON.stringify({isError: false});
+                                                                        }
+                                                                    })();
+                                                                    """.trimIndent(),
+                                                                ) { result ->
+                                                                    try {
+                                                                        Log.d("WebViewActivity", "JavaScript result: $result")
+                                                                        // Remove quotes from the result and parse JSON
+                                                                        val cleanResult = result?.replace("\\\"", "\"")?.trim('"') ?: ""
+                                                                        if (cleanResult.isNotEmpty() && cleanResult.startsWith("{")) {
+                                                                            val resultObj = JSONObject(cleanResult)
+                                                                            if (resultObj.getBoolean("isError")) {
+                                                                                val htmlErrorContent = resultObj.getString("content")
+                                                                                Log.d(
+                                                                                    "WebViewActivity",
+                                                                                    "Detected HTML error content for document: $documentTitle",
+                                                                                )
+                                                                                Log.d(
+                                                                                    "WebViewActivity",
+                                                                                    "Content length: ${htmlErrorContent.length}",
+                                                                                )
+
+                                                                                // Create a formatted HTML display for the error content
+                                                                                val formattedHtml =
+                                                                                    """
+                                                                                    <!DOCTYPE html>
+                                                                                    <html>
+                                                                                    <head>
+                                                                                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                                        <style>
+                                                                                            body {
+                                                                                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                                                                                margin: 0;
+                                                                                                padding: 20px;
+                                                                                                background-color: #f5f5f5;
+                                                                                                color: #333;
+                                                                                                line-height: 1.6;
+                                                                                            }
+                                                                                            .container {
+                                                                                                background-color: white;
+                                                                                                padding: 30px;
+                                                                                                border-radius: 12px;
+                                                                                                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                                                                                max-width: 100%;
+                                                                                                margin: 0 auto;
+                                                                                            }
+                                                                                            .header {
+                                                                                                color: #dd3825;
+                                                                                                font-size: 20px;
+                                                                                                font-weight: bold;
+                                                                                                margin-bottom: 20px;
+                                                                                                text-align: center;
+                                                                                                border-bottom: 2px solid #dd3825;
+                                                                                                padding-bottom: 10px;
+                                                                                            }
+                                                                                            .content {
+                                                                                                white-space: pre-wrap;
+                                                                                                font-size: 13px;
+                                                                                                background-color: #f8f9fa;
+                                                                                                padding: 20px;
+                                                                                                border-radius: 8px;
+                                                                                                border-left: 4px solid #dd3825;
+                                                                                                margin-bottom: 20px;
+                                                                                                font-family: 'Courier New', monospace;
+                                                                                                overflow-x: auto;
+                                                                                            }
+                                                                                            .message {
+                                                                                                text-align: center;
+                                                                                                color: #666;
+                                                                                                font-size: 16px;
+                                                                                                font-weight: 500;
+                                                                                                background-color: #fff3cd;
+                                                                                                padding: 15px;
+                                                                                                border-radius: 8px;
+                                                                                                border: 1px solid #ffeaa7;
+                                                                                            }
+                                                                                        </style>
+                                                                                    </head>
+                                                                                    <body>
+                                                                                        <div class="container">
+                                                                                            <div class="header">Document Response</div>
+                                                                                            <div class="content">${htmlErrorContent.replace(
+                                                                                        "<",
+                                                                                        "<",
+                                                                                    ).replace(">", ">").replace("\n", "<br>")}</div>
+                                                                                            <div class="message">
+                                                                                                ⚠️ No document found for $documentTitle<br>
+                                                                                                Please upload the document to view it here.
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </body>
+                                                                                    </html>
+                                                                                    """.trimIndent()
+
+                                                                                // Load the formatted HTML content
+                                                                                view.loadDataWithBaseURL(
+                                                                                    null,
+                                                                                    formattedHtml,
+                                                                                    "text/html",
+                                                                                    "UTF-8",
+                                                                                    null,
+                                                                                )
+                                                                            }
+                                                                        }
+                                                                    } catch (e: Exception) {
+                                                                        Log.e(
+                                                                            "WebViewActivity",
+                                                                            "Error parsing JavaScript result: ${e.message}",
+                                                                        )
+                                                                    }
+                                                                }
+                                                            }, 1000) // Reduced delay to 1 second
+
+                                                            // Also try an immediate check
+                                                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                                                view.evaluateJavascript("document.readyState") { readyState ->
+                                                                    Log.d("WebViewActivity", "Document ready state: $readyState")
+                                                                }
+                                                            }, 500)
+                                                        }
+
+                                                        // Delay hiding the loader to ensure content is actually rendered
                                                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                                            // Inject JavaScript to check if the page contains HTML error content
-                                                            view.evaluateJavascript(
+                                                            if (pageLoaded) {
+                                                                isLoading = false
+                                                            }
+                                                        }, 1000) // 1 second delay
+
+                                                        Log.d("WebViewActivity", "Page finished loading: $url")
+
+                                                        // Special handling for SAP portal
+                                                        if (url?.contains("businessbydesign.cloud.sap") == true) {
+                                                            view?.evaluateJavascript(
                                                                 """
                                                                 (function() {
-                                                                    try {
-                                                                        var bodyText = document.body ? document.body.innerText : '';
-                                                                        var htmlContent = document.documentElement ? document.documentElement.innerHTML : '';
-                                                                        
-                                                                        // Check if this looks like an HTML page rather than a PDF
-                                                                        var isHtmlContent = (htmlContent.includes('<html') || htmlContent.includes('<!DOCTYPE')) && 
-                                                                                          htmlContent.includes('<body') &&
-                                                                                          !htmlContent.includes('application/pdf') &&
-                                                                                          !htmlContent.includes('pdf.js') &&
-                                                                                          !htmlContent.includes('pdfobject') &&
-                                                                                          bodyText.length < 2000;
-                                                                        
-                                                                        // Also check if the content looks like server error or plain text
-                                                                        var hasPlainTextContent = bodyText.length > 0 && bodyText.length < 1000 && 
-                                                                                                 !bodyText.includes('PDF') &&
-                                                                                                 (bodyText.includes('error') || bodyText.includes('not found') || 
-                                                                                                  bodyText.includes('file') || bodyText.includes('server') ||
-                                                                                                  htmlContent.length < 5000);
-                                                                        
-                                                                        if (isHtmlContent || hasPlainTextContent) {
-                                                                            return JSON.stringify({
-                                                                                isError: true,
-                                                                                content: bodyText.trim()
-                                                                            });
+                                                                    var meta = document.querySelector('meta[name="viewport"]');
+                                                                    if (!meta) {
+                                                                        meta = document.createElement('meta');
+                                                                        meta.name = 'viewport';
+                                                                        document.head.appendChild(meta);
+                                                                    }
+                                                                    meta.content = 'width=1024, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes';
+                                                                    
+                                                                    // Add styles for SAP portal
+                                                                    var style = document.createElement('style');
+                                                                    style.textContent = `
+                                                                        body {
+                                                                            margin: 0 !important;
+                                                                            padding: 0 !important;
+                                                                            min-width: 1024px !important;
+                                                                            min-height: 100vh !important;
+                                                                            width: 100% !important;
+                                                                            height: 100% !important;
+                                                                            overflow: auto !important;
                                                                         }
-                                                                        
-                                                                        return JSON.stringify({isError: false});
-                                                                    } catch (e) {
-                                                                        return JSON.stringify({isError: false});
+                                                                        #shell {
+                                                                            width: 100% !important;
+                                                                            height: 100% !important;
+                                                                            position: absolute !important;
+                                                                            top: 0 !important;
+                                                                            left: 0 !important;
+                                                                        }
+                                                                        iframe {
+                                                                            width: 100% !important;
+                                                                            height: 100% !important;
+                                                                            position: absolute !important;
+                                                                            top: 0 !important;
+                                                                            left: 0 !important;
+                                                                            border: none !important;
+                                                                        }
+                                                                    `;
+                                                                    document.head.appendChild(style);
+                                                                    
+                                                                    // Force visibility of main container
+                                                                    var mainContainer = document.querySelector('#shell') || document.body;
+                                                                    if (mainContainer) {
+                                                                        mainContainer.style.display = 'block';
+                                                                        mainContainer.style.visibility = 'visible';
+                                                                        mainContainer.style.opacity = '1';
                                                                     }
                                                                 })();
-                                                                """.trimIndent()
-                                                            ) { result ->
-                                                                try {
-                                                                    Log.d("WebViewActivity", "JavaScript result: $result")
-                                                                    // Remove quotes from the result and parse JSON
-                                                                    val cleanResult = result?.replace("\\\"", "\"")?.trim('"') ?: ""
-                                                                    if (cleanResult.isNotEmpty() && cleanResult.startsWith("{")) {
-                                                                        val resultObj = JSONObject(cleanResult)
-                                                                        if (resultObj.getBoolean("isError")) {
-                                                                            val htmlErrorContent = resultObj.getString("content")
-                                                                            Log.d("WebViewActivity", "Detected HTML error content for document: $documentTitle")
-                                                                            Log.d("WebViewActivity", "Content length: ${htmlErrorContent.length}")
-
-                                                                            // Create a formatted HTML display for the error content
-                                                                            val formattedHtml = """
-                                                                                <!DOCTYPE html>
-                                                                                <html>
-                                                                                <head>
-                                                                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                                                                    <style>
-                                                                                        body {
-                                                                                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                                                                                            margin: 0;
-                                                                                            padding: 20px;
-                                                                                            background-color: #f5f5f5;
-                                                                                            color: #333;
-                                                                                            line-height: 1.6;
-                                                                                        }
-                                                                                        .container {
-                                                                                            background-color: white;
-                                                                                            padding: 30px;
-                                                                                            border-radius: 12px;
-                                                                                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                                                                            max-width: 100%;
-                                                                                            margin: 0 auto;
-                                                                                        }
-                                                                                        .header {
-                                                                                            color: #dd3825;
-                                                                                            font-size: 20px;
-                                                                                            font-weight: bold;
-                                                                                            margin-bottom: 20px;
-                                                                                            text-align: center;
-                                                                                            border-bottom: 2px solid #dd3825;
-                                                                                            padding-bottom: 10px;
-                                                                                        }
-                                                                                        .content {
-                                                                                            white-space: pre-wrap;
-                                                                                            font-size: 13px;
-                                                                                            background-color: #f8f9fa;
-                                                                                            padding: 20px;
-                                                                                            border-radius: 8px;
-                                                                                            border-left: 4px solid #dd3825;
-                                                                                            margin-bottom: 20px;
-                                                                                            font-family: 'Courier New', monospace;
-                                                                                            overflow-x: auto;
-                                                                                        }
-                                                                                        .message {
-                                                                                            text-align: center;
-                                                                                            color: #666;
-                                                                                            font-size: 16px;
-                                                                                            font-weight: 500;
-                                                                                            background-color: #fff3cd;
-                                                                                            padding: 15px;
-                                                                                            border-radius: 8px;
-                                                                                            border: 1px solid #ffeaa7;
-                                                                                        }
-                                                                                    </style>
-                                                                                </head>
-                                                                                <body>
-                                                                                    <div class="container">
-                                                                                        <div class="header">Document Response</div>
-                                                                                        <div class="content">${htmlErrorContent.replace("<", "<").replace(">", ">").replace("\n", "<br>")}</div>
-                                                                                        <div class="message">
-                                                                                            ⚠️ No document found for $documentTitle<br>
-                                                                                            Please upload the document to view it here.
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </body>
-                                                                                </html>
-                                                                            """.trimIndent()
-
-                                                                            // Load the formatted HTML content
-                                                                            view.loadDataWithBaseURL(null, formattedHtml, "text/html", "UTF-8", null)
-                                                                        }
-                                                                    }
-                                                                } catch (e: Exception) {
-                                                                    Log.e("WebViewActivity", "Error parsing JavaScript result: ${e.message}")
-                                                                }
-                                                            }
-                                                        }, 1000) // Reduced delay to 1 second
-
-                                                        // Also try an immediate check
-                                                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                                            view.evaluateJavascript("document.readyState") { readyState ->
-                                                                Log.d("WebViewActivity", "Document ready state: $readyState")
-                                                            }
-                                                        }, 500)
-                                                    }
-
-                                                    // Delay hiding the loader to ensure content is actually rendered
-                                                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                                        if (pageLoaded) {
-                                                            isLoading = false
+                                                                """.trimIndent(),
+                                                                null,
+                                                            )
                                                         }
-                                                    }, 1000) // 1 second delay
+                                                    }
 
-                                                    Log.d("WebViewActivity", "Page finished loading: $url")
-
-                                                    // Special handling for SAP portal
-                                                    if (url?.contains("businessbydesign.cloud.sap") == true) {
-                                                        view?.evaluateJavascript(
-                                                            """
-                                                            (function() {
-                                                                var meta = document.querySelector('meta[name="viewport"]');
-                                                                if (!meta) {
-                                                                    meta = document.createElement('meta');
-                                                                    meta.name = 'viewport';
-                                                                    document.head.appendChild(meta);
-                                                                }
-                                                                meta.content = 'width=1024, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes';
-                                                                
-                                                                // Add styles for SAP portal
-                                                                var style = document.createElement('style');
-                                                                style.textContent = `
-                                                                    body {
-                                                                        margin: 0 !important;
-                                                                        padding: 0 !important;
-                                                                        min-width: 1024px !important;
-                                                                        min-height: 100vh !important;
-                                                                        width: 100% !important;
-                                                                        height: 100% !important;
-                                                                        overflow: auto !important;
-                                                                    }
-                                                                    #shell {
-                                                                        width: 100% !important;
-                                                                        height: 100% !important;
-                                                                        position: absolute !important;
-                                                                        top: 0 !important;
-                                                                        left: 0 !important;
-                                                                    }
-                                                                    iframe {
-                                                                        width: 100% !important;
-                                                                        height: 100% !important;
-                                                                        position: absolute !important;
-                                                                        top: 0 !important;
-                                                                        left: 0 !important;
-                                                                        border: none !important;
-                                                                    }
-                                                                `;
-                                                                document.head.appendChild(style);
-                                                                
-                                                                // Force visibility of main container
-                                                                var mainContainer = document.querySelector('#shell') || document.body;
-                                                                if (mainContainer) {
-                                                                    mainContainer.style.display = 'block';
-                                                                    mainContainer.style.visibility = 'visible';
-                                                                    mainContainer.style.opacity = '1';
-                                                                }
-                                                            })();
-                                                            """.trimIndent(),
-                                                            null
-                                                        )
+                                                    override fun onReceivedError(
+                                                        view: WebView,
+                                                        errorCode: Int,
+                                                        description: String,
+                                                        failingUrl: String,
+                                                    ) {
+                                                        Toast
+                                                            .makeText(
+                                                                context,
+                                                                "Error loading content: $description",
+                                                                Toast.LENGTH_LONG,
+                                                            ).show()
+                                                        Log.e("WebViewActivity", "Error loading content: $description, URL: $failingUrl")
                                                     }
                                                 }
 
-                                                override fun onReceivedError(view: WebView, errorCode: Int, description: String, failingUrl: String) {
-                                                    Toast.makeText(context, "Error loading content: $description", Toast.LENGTH_LONG).show()
-                                                    Log.e("WebViewActivity", "Error loading content: $description, URL: $failingUrl")
+                                            webChromeClient =
+                                                object : WebChromeClient() {
+                                                    override fun onProgressChanged(
+                                                        view: WebView?,
+                                                        newProgress: Int,
+                                                    ) {
+                                                        super.onProgressChanged(view, newProgress)
+                                                        Log.d("WebViewActivity", "Loading progress: $newProgress%")
+                                                    }
                                                 }
-                                            }
-
-                                            webChromeClient = object : WebChromeClient() {
-                                                override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                                                    super.onProgressChanged(view, newProgress)
-                                                    Log.d("WebViewActivity", "Loading progress: $newProgress%")
-                                                }
-                                            }
 
                                             // Set initial scale
                                             setInitialScale(100)
@@ -729,16 +818,18 @@ class WebViewActivity : ComponentActivity() {
                                                         Log.d("WebViewActivity", "Using special PDF handling for: $title")
 
                                                         if (base64Data != null && base64Data.isNotEmpty()) {
-                                                            val pureBase64 = if (base64Data.contains(",")) {
-                                                                base64Data.substring(base64Data.indexOf(",") + 1)
-                                                            } else {
-                                                                base64Data
-                                                            }
+                                                            val pureBase64 =
+                                                                if (base64Data.contains(",")) {
+                                                                    base64Data.substring(base64Data.indexOf(",") + 1)
+                                                                } else {
+                                                                    base64Data
+                                                                }
 
                                                             Log.d("WebViewActivity", "Base64 data length: ${pureBase64.length}")
 
                                                             // Use PDF.js for robust rendering with fallback
-                                                            val htmlWrapper = """
+                                                            val htmlWrapper =
+                                                                """
                                                                 <!DOCTYPE html>
                                                                 <html>
                                                                 <head>
@@ -887,10 +978,19 @@ class WebViewActivity : ComponentActivity() {
                                                                     </script>
                                                                 </body>
                                                                 </html>
-                                                            """.trimIndent()
+                                                                """.trimIndent()
 
-                                                            loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
-                                                            Log.d("WebViewActivity", "Loaded document using PDF.js with fit-to-width scaling")
+                                                            loadDataWithBaseURL(
+                                                                "https://example.com",
+                                                                htmlWrapper,
+                                                                "text/html",
+                                                                "UTF-8",
+                                                                null,
+                                                            )
+                                                            Log.d(
+                                                                "WebViewActivity",
+                                                                "Loaded document using PDF.js with fit-to-width scaling",
+                                                            )
                                                             return@apply
                                                         } else if (isFloorMap && isPdf) {
                                                             // For Floor Map PDFs without base64 data, try to load and convert the file
@@ -899,14 +999,22 @@ class WebViewActivity : ComponentActivity() {
                                                                 val file = java.io.File(actualPath)
 
                                                                 if (file.exists()) {
-                                                                    Log.d("WebViewActivity", "Floor Map PDF file exists at: ${file.absolutePath}, size: ${file.length()} bytes")
+                                                                    Log.d(
+                                                                        "WebViewActivity",
+                                                                        "Floor Map PDF file exists at: ${file.absolutePath}, size: ${file.length()} bytes",
+                                                                    )
 
                                                                     // Read the file bytes
                                                                     val bytes = file.readBytes()
-                                                                    val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT)
+                                                                    val base64 =
+                                                                        android.util.Base64.encodeToString(
+                                                                            bytes,
+                                                                            android.util.Base64.DEFAULT,
+                                                                        )
 
                                                                     // Use PDF.js for rendering
-                                                                    val htmlWrapper = """
+                                                                    val htmlWrapper =
+                                                                        """
                                                                         <!DOCTYPE html>
                                                                         <html>
                                                                         <head>
@@ -1055,10 +1163,19 @@ class WebViewActivity : ComponentActivity() {
                                                                             </script>
                                                                         </body>
                                                                         </html>
-                                                                    """.trimIndent()
+                                                                        """.trimIndent()
 
-                                                                    loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
-                                                                    Log.d("WebViewActivity", "Loaded Floor Map PDF using PDF.js with fit-to-width scaling")
+                                                                    loadDataWithBaseURL(
+                                                                        "https://example.com",
+                                                                        htmlWrapper,
+                                                                        "text/html",
+                                                                        "UTF-8",
+                                                                        null,
+                                                                    )
+                                                                    Log.d(
+                                                                        "WebViewActivity",
+                                                                        "Loaded Floor Map PDF using PDF.js with fit-to-width scaling",
+                                                                    )
                                                                     return@apply
                                                                 }
                                                             } catch (e: Exception) {
@@ -1081,13 +1198,15 @@ class WebViewActivity : ComponentActivity() {
 
                                                         // Try direct base64 loading first if available
                                                         if (base64Data != null && base64Data.isNotEmpty()) {
-                                                            val pureBase64 = if (base64Data.contains(",")) {
-                                                                base64Data.substring(base64Data.indexOf(",") + 1)
-                                                            } else {
-                                                                base64Data
-                                                            }
+                                                            val pureBase64 =
+                                                                if (base64Data.contains(",")) {
+                                                                    base64Data.substring(base64Data.indexOf(",") + 1)
+                                                                } else {
+                                                                    base64Data
+                                                                }
 
-                                                            val htmlWrapper = """
+                                                            val htmlWrapper =
+                                                                """
                                                                 <!DOCTYPE html>
                                                                 <html>
                                                                 <head>
@@ -1100,7 +1219,7 @@ class WebViewActivity : ComponentActivity() {
                                                                     <iframe src="data:application/pdf;base64,$pureBase64" width="100%" height="100%" style="border: none;"></iframe>
                                                                 </body>
                                                                 </html>
-                                                            """.trimIndent()
+                                                                """.trimIndent()
 
                                                             loadDataWithBaseURL(null, htmlWrapper, "text/html", "UTF-8", null)
                                                             Log.d("WebViewActivity", "Loaded PDF directly using base64 data")
@@ -1122,23 +1241,35 @@ class WebViewActivity : ComponentActivity() {
                                                             val file = java.io.File(actualPath)
 
                                                             if (file.exists()) {
-                                                                Log.d("WebViewActivity", "PDF file exists at: ${file.absolutePath}, size: ${file.length()} bytes")
-                                                                // Try Content URI approach
-                                                                val contentUri = androidx.core.content.FileProvider.getUriForFile(
-                                                                    context,
-                                                                    context.applicationContext.packageName + ".provider",
-                                                                    file
+                                                                Log.d(
+                                                                    "WebViewActivity",
+                                                                    "PDF file exists at: ${file.absolutePath}, size: ${file.length()} bytes",
                                                                 )
+                                                                // Try Content URI approach
+                                                                val contentUri =
+                                                                    androidx.core.content.FileProvider.getUriForFile(
+                                                                        context,
+                                                                        context.applicationContext.packageName + ".provider",
+                                                                        file,
+                                                                    )
 
                                                                 if (isSpecialDocument) {
                                                                     // For PAN and Medical Insurance documents, try direct data URI loading first
                                                                     try {
-                                                                        Log.d("WebViewActivity", "Special document fallback - loading directly")
+                                                                        Log.d(
+                                                                            "WebViewActivity",
+                                                                            "Special document fallback - loading directly",
+                                                                        )
                                                                         val bytes = file.readBytes()
-                                                                        val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT)
+                                                                        val base64 =
+                                                                            android.util.Base64.encodeToString(
+                                                                                bytes,
+                                                                                android.util.Base64.DEFAULT,
+                                                                            )
 
                                                                         // Use PDF.js for robust rendering
-                                                                        val htmlWrapper = """
+                                                                        val htmlWrapper =
+                                                                            """
                                                                             <!DOCTYPE html>
                                                                             <html>
                                                                             <head>
@@ -1213,13 +1344,26 @@ class WebViewActivity : ComponentActivity() {
                                                                                 </script>
                                                                             </body>
                                                                             </html>
-                                                                        """.trimIndent()
+                                                                            """.trimIndent()
 
-                                                                        loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
-                                                                        Log.d("WebViewActivity", "Loaded special document fallback using PDF.js")
+                                                                        loadDataWithBaseURL(
+                                                                            "https://example.com",
+                                                                            htmlWrapper,
+                                                                            "text/html",
+                                                                            "UTF-8",
+                                                                            null,
+                                                                        )
+                                                                        Log.d(
+                                                                            "WebViewActivity",
+                                                                            "Loaded special document fallback using PDF.js",
+                                                                        )
                                                                         return@postDelayed
                                                                     } catch (e: Exception) {
-                                                                        Log.e("WebViewActivity", "Error in special document direct loading: ${e.message}", e)
+                                                                        Log.e(
+                                                                            "WebViewActivity",
+                                                                            "Error in special document direct loading: ${e.message}",
+                                                                            e,
+                                                                        )
                                                                     }
                                                                 }
 
@@ -1234,13 +1378,18 @@ class WebViewActivity : ComponentActivity() {
                                                                         val bytes = file.readBytes()
                                                                         if (bytes.isNotEmpty()) {
                                                                             // Convert to base64
-                                                                            val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT)
+                                                                            val base64 =
+                                                                                android.util.Base64.encodeToString(
+                                                                                    bytes,
+                                                                                    android.util.Base64.DEFAULT,
+                                                                                )
 
                                                                             // Create a data URI
                                                                             val dataUri = "data:application/pdf;base64,$base64"
 
                                                                             // Load using an HTML wrapper with PDF.js
-                                                                            val htmlWrapper = """
+                                                                            val htmlWrapper =
+                                                                                """
                                                                                 <!DOCTYPE html>
                                                                                 <html>
                                                                                 <head>
@@ -1253,23 +1402,42 @@ class WebViewActivity : ComponentActivity() {
                                                                                     <iframe src="$dataUri" width="100%" height="100%" style="border: none;"></iframe>
                                                                                 </body>
                                                                                 </html>
-                                                                            """.trimIndent()
+                                                                                """.trimIndent()
 
-                                                                            loadDataWithBaseURL(null, htmlWrapper, "text/html", "UTF-8", null)
-                                                                            Log.d("WebViewActivity", "Loaded PDF using data URI fallback approach")
+                                                                            loadDataWithBaseURL(
+                                                                                null,
+                                                                                htmlWrapper,
+                                                                                "text/html",
+                                                                                "UTF-8",
+                                                                                null,
+                                                                            )
+                                                                            Log.d(
+                                                                                "WebViewActivity",
+                                                                                "Loaded PDF using data URI fallback approach",
+                                                                            )
                                                                         }
                                                                     } catch (e: Exception) {
-                                                                        Log.e("WebViewActivity", "Error in fallback PDF loading: ${e.message}", e)
+                                                                        Log.e(
+                                                                            "WebViewActivity",
+                                                                            "Error in fallback PDF loading: ${e.message}",
+                                                                            e,
+                                                                        )
                                                                     }
                                                                 }, 2000) // 5 seconds fallback timer
                                                             } else {
                                                                 Log.e("WebViewActivity", "PDF file doesn't exist at: $actualPath")
-                                                                Toast.makeText(context, "Error: PDF file not found", Toast.LENGTH_LONG).show()
+                                                                Toast
+                                                                    .makeText(
+                                                                        context,
+                                                                        "Error: PDF file not found",
+                                                                        Toast.LENGTH_LONG,
+                                                                    ).show()
                                                             }
                                                         }, 500)
                                                     } else {
                                                         // For images, create an HTML wrapper with proper image display
-                                                        val htmlWrapper = """
+                                                        val htmlWrapper =
+                                                            """
                                                             <!DOCTYPE html>
                                                             <html>
                                                             <head>
@@ -1299,7 +1467,7 @@ class WebViewActivity : ComponentActivity() {
                                                                 <img src="$fileUrl" alt="Document Image">
                                                             </body>
                                                             </html>
-                                                        """.trimIndent()
+                                                            """.trimIndent()
 
                                                         loadDataWithBaseURL(null, htmlWrapper, "text/html", "UTF-8", null)
                                                         Log.d("WebViewActivity", "Loading image file: $fileUrl")
@@ -1308,7 +1476,8 @@ class WebViewActivity : ComponentActivity() {
                                                     // For remote PDF files
                                                     if (isFloorMap) {
                                                         // For Floor Map PDFs, use the same PDF.js implementation as policies
-                                                        val htmlWrapper = """
+                                                        val htmlWrapper =
+                                                            """
                                                             <!DOCTYPE html>
                                                             <html>
                                                             <head>
@@ -1427,10 +1596,13 @@ class WebViewActivity : ComponentActivity() {
                                                                 </script>
                                                             </body>
                                                             </html>
-                                                        """.trimIndent()
+                                                            """.trimIndent()
 
                                                         loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
-                                                        Log.d("WebViewActivity", "Loading Floor Map PDF using policy-style PDF.js viewer with fit-to-width: $fileUrl")
+                                                        Log.d(
+                                                            "WebViewActivity",
+                                                            "Loading Floor Map PDF using policy-style PDF.js viewer with fit-to-width: $fileUrl",
+                                                        )
                                                     } else {
                                                         // Use Google Docs viewer for other PDF types
                                                         loadUrl("https://docs.google.com/viewer?url=$fileUrl&embedded=true")
@@ -1443,10 +1615,15 @@ class WebViewActivity : ComponentActivity() {
                                                 }
                                             } catch (e: Exception) {
                                                 Log.e("WebViewActivity", "Error loading URL: ${e.message}")
-                                                Toast.makeText(context, "Failed to load the content: ${e.message}", Toast.LENGTH_LONG).show()
+                                                Toast
+                                                    .makeText(
+                                                        context,
+                                                        "Failed to load the content: ${e.message}",
+                                                        Toast.LENGTH_LONG,
+                                                    ).show()
                                             }
                                         }
-                                    }
+                                    },
                                 )
                             }
                         }

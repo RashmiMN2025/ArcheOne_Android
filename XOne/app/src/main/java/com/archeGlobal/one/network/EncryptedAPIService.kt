@@ -22,8 +22,9 @@ import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.TimeUnit
 
-class EncryptedAPIService private constructor(private val context: Context) {
-
+class EncryptedAPIService private constructor(
+    private val context: Context,
+) {
     companion object {
         private const val TAG = "EncryptedAPIService"
         private const val TIMEOUT_SECONDS = 120L
@@ -31,11 +32,10 @@ class EncryptedAPIService private constructor(private val context: Context) {
         @Volatile
         private var INSTANCE: EncryptedAPIService? = null
 
-        fun getInstance(context: Context): EncryptedAPIService {
-            return INSTANCE ?: synchronized(this) {
+        fun getInstance(context: Context): EncryptedAPIService =
+            INSTANCE ?: synchronized(this) {
                 INSTANCE ?: EncryptedAPIService(context.applicationContext).also { INSTANCE = it }
             }
-        }
     }
 
     private val baseUrl = RetrofitClient.BASE_URL
@@ -44,20 +44,23 @@ class EncryptedAPIService private constructor(private val context: Context) {
     private val preferencesManager = PreferencesManager(context)
 
     private val okHttpClient: OkHttpClient by lazy {
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
+        val loggingInterceptor =
+            HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
 
-        OkHttpClient.Builder()
+        OkHttpClient
+            .Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor { chain ->
                 val request = chain.request()
-                val newRequest = request.newBuilder()
-                    .header("Content-Type", "application/json")
-                    .build()
+                val newRequest =
+                    request
+                        .newBuilder()
+                        .header("Content-Type", "application/json")
+                        .build()
                 chain.proceed(newRequest)
-            }
-            .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            }.connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .build()
@@ -71,9 +74,9 @@ class EncryptedAPIService private constructor(private val context: Context) {
         method: String,
         body: T,
         responseClass: Class<R>,
-        withAuthHeader: Boolean = false
-    ): R {
-        return withContext(Dispatchers.IO) {
+        withAuthHeader: Boolean = false,
+    ): R =
+        withContext(Dispatchers.IO) {
             try {
                 // Generate random AES key and IV
                 val aesKey = AESEncryption.generateRandomKey()
@@ -82,22 +85,26 @@ class EncryptedAPIService private constructor(private val context: Context) {
 
                 // Encrypt the request body
                 val jsonData = gson.toJson(body).toByteArray(Charsets.UTF_8)
-                val encryptedData = aes.encrypt(jsonData)
-                    ?: throw APIError.EncryptionFailed
+                val encryptedData =
+                    aes.encrypt(jsonData)
+                        ?: throw APIError.EncryptionFailed
 
                 // Get server public key and encrypt the AES key
-                val serverPublicKey = rsaKeyManager.getServerPublicKey()
-                    ?: throw APIError.InvalidKey
+                val serverPublicKey =
+                    rsaKeyManager.getServerPublicKey()
+                        ?: throw APIError.InvalidKey
 
-                val encryptedAESKey = RSAEncryption.encrypt(aesKey, serverPublicKey)
-                    ?: throw APIError.EncryptionFailed
+                val encryptedAESKey =
+                    RSAEncryption.encrypt(aesKey, serverPublicKey)
+                        ?: throw APIError.EncryptionFailed
 
                 // Create encrypted payload
-                val payload = EncryptedPayload(
-                    encryptedData = Base64.encodeToString(encryptedData, Base64.DEFAULT),
-                    encryptedKey = Base64.encodeToString(encryptedAESKey, Base64.DEFAULT),
-                    initializationVector = Base64.encodeToString(iv, Base64.DEFAULT)
-                )
+                val payload =
+                    EncryptedPayload(
+                        encryptedData = Base64.encodeToString(encryptedData, Base64.DEFAULT),
+                        encryptedKey = Base64.encodeToString(encryptedAESKey, Base64.DEFAULT),
+                        initializationVector = Base64.encodeToString(iv, Base64.DEFAULT),
+                    )
 
                 // Create HTTP request
                 val request = createRequest(endpoint, method, gson.toJson(payload), withAuthHeader)
@@ -111,17 +118,23 @@ class EncryptedAPIService private constructor(private val context: Context) {
             } catch (e: Exception) {
                 Log.e(TAG, "Unexpected error in encrypted request: ${e.message}", e)
                 // Provide a more user-friendly error message
-                val userFriendlyMessage = when {
-                    e.message?.contains("timeout", ignoreCase = true) == true -> "Request timed out. Please check your internet connection and try again."
-                    e.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your internet connection."
-                    e.message?.contains("connection", ignoreCase = true) == true -> "Connection failed. Please check your internet connection."
-                    e.message?.contains("ssl", ignoreCase = true) == true -> "Secure connection failed. Please try again."
-                    else -> "Unable to connect to server. Please try again."
-                }
+                val userFriendlyMessage =
+                    when {
+                        e.message?.contains(
+                            "timeout",
+                            ignoreCase = true,
+                        ) == true -> "Request timed out. Please check your internet connection and try again."
+                        e.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your internet connection."
+                        e.message?.contains(
+                            "connection",
+                            ignoreCase = true,
+                        ) == true -> "Connection failed. Please check your internet connection."
+                        e.message?.contains("ssl", ignoreCase = true) == true -> "Secure connection failed. Please try again."
+                        else -> "Unable to connect to server. Please try again."
+                    }
                 throw APIError.UnknownError(-1, userFriendlyMessage)
             }
         }
-    }
 
     /**
      * Make a regular (non-encrypted) API request
@@ -131,9 +144,9 @@ class EncryptedAPIService private constructor(private val context: Context) {
         method: String,
         body: T?,
         responseClass: Class<R>,
-        withAuthHeader: Boolean = false
-    ): R {
-        return withContext(Dispatchers.IO) {
+        withAuthHeader: Boolean = false,
+    ): R =
+        withContext(Dispatchers.IO) {
             try {
                 val requestBody = if (body != null) gson.toJson(body) else null
                 val request = createRequest(endpoint, method, requestBody, withAuthHeader)
@@ -145,23 +158,29 @@ class EncryptedAPIService private constructor(private val context: Context) {
             } catch (e: Exception) {
                 Log.e(TAG, "Unexpected error in plain request: ${e.message}", e)
                 // Provide a more user-friendly error message
-                val userFriendlyMessage = when {
-                    e.message?.contains("timeout", ignoreCase = true) == true -> "Request timed out. Please check your internet connection and try again."
-                    e.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your internet connection."
-                    e.message?.contains("connection", ignoreCase = true) == true -> "Connection failed. Please check your internet connection."
-                    e.message?.contains("ssl", ignoreCase = true) == true -> "Secure connection failed. Please try again."
-                    else -> "Unable to connect to server. Please try again."
-                }
+                val userFriendlyMessage =
+                    when {
+                        e.message?.contains(
+                            "timeout",
+                            ignoreCase = true,
+                        ) == true -> "Request timed out. Please check your internet connection and try again."
+                        e.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your internet connection."
+                        e.message?.contains(
+                            "connection",
+                            ignoreCase = true,
+                        ) == true -> "Connection failed. Please check your internet connection."
+                        e.message?.contains("ssl", ignoreCase = true) == true -> "Secure connection failed. Please try again."
+                        else -> "Unable to connect to server. Please try again."
+                    }
                 throw APIError.UnknownError(-1, userFriendlyMessage)
             }
         }
-    }
 
     private fun createRequest(
         endpoint: String,
         method: String,
         bodyJson: String?,
-        withAuthHeader: Boolean
+        withAuthHeader: Boolean,
     ): Request {
         val url = "${baseUrl.removeSuffix("/")}/$endpoint"
         val requestBuilder = Request.Builder().url(url)
@@ -175,11 +194,12 @@ class EncryptedAPIService private constructor(private val context: Context) {
         }
 
         // Add body for non-GET requests
-        val requestBody: RequestBody? = if (bodyJson != null) {
-            bodyJson.toRequestBody("application/json".toMediaTypeOrNull())
-        } else {
-            null
-        }
+        val requestBody: RequestBody? =
+            if (bodyJson != null) {
+                bodyJson.toRequestBody("application/json".toMediaTypeOrNull())
+            } else {
+                null
+            }
 
         when (method.uppercase()) {
             "GET" -> requestBuilder.get()
@@ -192,7 +212,10 @@ class EncryptedAPIService private constructor(private val context: Context) {
         return requestBuilder.build()
     }
 
-    private fun <R> handleResponse(response: Response, responseClass: Class<R>): R {
+    private fun <R> handleResponse(
+        response: Response,
+        responseClass: Class<R>,
+    ): R {
         val responseBody = response.body?.string() ?: throw APIError.DecodingError
 
         Log.d(TAG, "Response status: ${response.code}")
@@ -406,7 +429,10 @@ class EncryptedAPIService private constructor(private val context: Context) {
         }
     }
 
-    private fun <R> handlePlainResponse(response: Response, responseClass: Class<R>): R {
+    private fun <R> handlePlainResponse(
+        response: Response,
+        responseClass: Class<R>,
+    ): R {
         val responseBody = response.body?.string() ?: throw APIError.DecodingError
 
         Log.d(TAG, "Response status: ${response.code}")
@@ -535,16 +561,19 @@ class EncryptedAPIService private constructor(private val context: Context) {
             val iv = Base64.decode(encryptedPayload.initializationVector, Base64.DEFAULT)
 
             // Decrypt the AES key using client private key
-            val clientPrivateKey = rsaKeyManager.getClientPrivateKey()
-                ?: throw APIError.InvalidKey
+            val clientPrivateKey =
+                rsaKeyManager.getClientPrivateKey()
+                    ?: throw APIError.InvalidKey
 
-            val aesKey = RSAEncryption.decrypt(encryptedKey, clientPrivateKey)
-                ?: throw APIError.DecryptionFailed
+            val aesKey =
+                RSAEncryption.decrypt(encryptedKey, clientPrivateKey)
+                    ?: throw APIError.DecryptionFailed
 
             // Decrypt the response data using AES
             val aes = AESEncryption(aesKey, iv)
-            val decryptedData = aes.decrypt(encryptedData)
-                ?: throw APIError.DecryptionFailed
+            val decryptedData =
+                aes.decrypt(encryptedData)
+                    ?: throw APIError.DecryptionFailed
 
             val result = String(decryptedData, Charsets.UTF_8)
             Log.d(TAG, "Decrypted response: $result") // Log the decrypted response

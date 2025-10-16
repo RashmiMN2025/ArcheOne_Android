@@ -8,7 +8,7 @@ import com.archeGlobal.one.navigation.Navigator
 
 class ChatController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) {
     val viewModel: ChatViewModel by lazy {
         ViewModelProvider.NewInstanceFactory().create(ChatViewModel::class.java)

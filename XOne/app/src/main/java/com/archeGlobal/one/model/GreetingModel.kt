@@ -10,16 +10,16 @@ data class GreetingModel(
     val message: String = "",
     val searchQuery: String = "",
     val subcategories: List<GreetingSubcategory> = emptyList(),
-    val selectedSubcategory: GreetingSubcategory? = null
+    val selectedSubcategory: GreetingSubcategory? = null,
 )
 
 data class GreetingCategory(
     val title: String,
-    val imageUrl: String
+    val imageUrl: String,
 )
 
 data class GreetingImage(
-    val url: String
+    val url: String,
 )
 
 data class ApiGreetingCategory(
@@ -28,12 +28,12 @@ data class ApiGreetingCategory(
     val files: List<String>,
     val message: String,
     @SerializedName("subfolder")
-    val subfolder: List<GreetingSubcategory>? = null
+    val subfolder: List<GreetingSubcategory>? = null,
 )
 
 data class GreetingSubcategory(
     val id: Int,
     val name: String,
     val files: List<String>,
-    val message: String
+    val message: String,
 )

@@ -35,11 +35,12 @@ class ChatViewModel : ViewModel() {
         lastUserQuestion = text
 
         // Add user message
-        val userMessage = Message(
-            content = text,
-            isUser = true,
-            timestamp = Date()
-        )
+        val userMessage =
+            Message(
+                content = text,
+                isUser = true,
+                timestamp = Date(),
+            )
         messages.add(userMessage)
 
         // Clear input field
@@ -73,11 +74,12 @@ class ChatViewModel : ViewModel() {
         // First add the selected question as a user message
         lastUserQuestion = question
 
-        val userMessage = Message(
-            content = question,
-            isUser = true,
-            timestamp = Date()
-        )
+        val userMessage =
+            Message(
+                content = question,
+                isUser = true,
+                timestamp = Date(),
+            )
         messages.add(userMessage)
 
         // Show typing indicator
@@ -149,33 +151,43 @@ class ChatViewModel : ViewModel() {
             }
 
             // Check if we have 5+ words matching overall
-            val overallMatchingWords = relatedFAQs.maxOfOrNull { faq ->
-                val questionWords = faq.question.lowercase().split(Regex("\\s+")).filter { it.length > 2 }
-                var matchingWordsCount = 0
-                queryWords.forEach { queryWord ->
-                    questionWords.forEach { questionWord ->
-                        if (questionWord == queryWord || questionWord.contains(queryWord) || queryWord.contains(questionWord)) {
-                            matchingWordsCount++
+            val overallMatchingWords =
+                relatedFAQs.maxOfOrNull { faq ->
+                    val questionWords =
+                        faq.question
+                            .lowercase()
+                            .split(Regex("\\s+"))
+                            .filter { it.length > 2 }
+                    var matchingWordsCount = 0
+                    queryWords.forEach { queryWord ->
+                        questionWords.forEach { questionWord ->
+                            if (questionWord == queryWord || questionWord.contains(queryWord) || queryWord.contains(questionWord)) {
+                                matchingWordsCount++
+                            }
                         }
                     }
-                }
-                matchingWordsCount
-            } ?: 0
+                    matchingWordsCount
+                } ?: 0
 
             // Check for high-quality matches (when 5+ words match)
-            val highQualityMatches = relatedFAQs.filter { faq ->
-                val questionWords = faq.question.lowercase().split(Regex("\\s+")).filter { it.length > 2 }
+            val highQualityMatches =
+                relatedFAQs.filter { faq ->
+                    val questionWords =
+                        faq.question
+                            .lowercase()
+                            .split(Regex("\\s+"))
+                            .filter { it.length > 2 }
 
-                var matchingWordsCount = 0
-                queryWords.forEach { queryWord ->
-                    questionWords.forEach { questionWord ->
-                        if (questionWord == queryWord || questionWord.contains(queryWord) || queryWord.contains(questionWord)) {
-                            matchingWordsCount++
+                    var matchingWordsCount = 0
+                    queryWords.forEach { queryWord ->
+                        questionWords.forEach { questionWord ->
+                            if (questionWord == queryWord || questionWord.contains(queryWord) || queryWord.contains(questionWord)) {
+                                matchingWordsCount++
+                            }
                         }
                     }
+                    matchingWordsCount >= 5
                 }
-                matchingWordsCount >= 5
-            }
 
             // If we have exactly 1 word in the query AND it matches, keep current logic
             if (queryWords.size == 1 && overallMatchingWords >= 1) {
@@ -187,9 +199,10 @@ class ChatViewModel : ViewModel() {
                     }
                     return Pair(faqList.toString(), false)
                 }
-                val response = relatedFAQs.joinToString("\n\n") { faq ->
-                    "${faq.question}\n\n\n${faq.answer}"
-                }
+                val response =
+                    relatedFAQs.joinToString("\n\n") { faq ->
+                        "${faq.question}\n\n\n${faq.answer}"
+                    }
                 return Pair(response, false)
             }
 
@@ -223,9 +236,10 @@ class ChatViewModel : ViewModel() {
 
             // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
             // Add proper spacing (two blank lines) between question and answer
-            val response = relatedFAQs.joinToString("\n\n") { faq ->
-                "${faq.question}\n\n\n${faq.answer}"
-            }
+            val response =
+                relatedFAQs.joinToString("\n\n") { faq ->
+                    "${faq.question}\n\n\n${faq.answer}"
+                }
             return Pair(response, false)
         }
 
@@ -233,7 +247,12 @@ class ChatViewModel : ViewModel() {
         return Pair(FAQ_MESSAGE, true)
     }
 
-    private fun addBotMessage(text: String, showMoreCategories: Boolean = false, showFAQs: Boolean = false, includeUserQuestion: Boolean = false) {
+    private fun addBotMessage(
+        text: String,
+        showMoreCategories: Boolean = false,
+        showFAQs: Boolean = false,
+        includeUserQuestion: Boolean = false,
+    ) {
         // Check if user input is a single word (like "report")
         val isSingleWord = lastUserQuestion.trim().split("\\s+".toRegex()).size == 1
 
@@ -241,23 +260,26 @@ class ChatViewModel : ViewModel() {
         val containsFormattedFAQ = text.contains("\n\n\n") // Check if it already has triple newline format
 
         // Don't include user question if we want to show FAQs (to ensure FAQ categories display properly)
-        val shouldIncludeUserQuestion = includeUserQuestion && !showFAQs && !isSingleWord && lastUserQuestion.isNotEmpty() && !containsFormattedFAQ
+        val shouldIncludeUserQuestion =
+            includeUserQuestion && !showFAQs && !isSingleWord && lastUserQuestion.isNotEmpty() && !containsFormattedFAQ
 
-        val botMessageContent = if (shouldIncludeUserQuestion) {
-            // Only include the user question for multi-word queries when the response isn't already a formatted FAQ and we're not showing FAQs
-            "$lastUserQuestion\n\n\n$text"
-        } else {
-            // For single-word queries, FAQ responses, or when showing FAQs, just use the text as is
-            text
-        }
+        val botMessageContent =
+            if (shouldIncludeUserQuestion) {
+                // Only include the user question for multi-word queries when the response isn't already a formatted FAQ and we're not showing FAQs
+                "$lastUserQuestion\n\n\n$text"
+            } else {
+                // For single-word queries, FAQ responses, or when showing FAQs, just use the text as is
+                text
+            }
 
-        val botMessage = Message(
-            content = botMessageContent,
-            isUser = false,
-            timestamp = Date(),
-            showMoreCategories = showMoreCategories,
-            showFAQs = showFAQs
-        )
+        val botMessage =
+            Message(
+                content = botMessageContent,
+                isUser = false,
+                timestamp = Date(),
+                showMoreCategories = showMoreCategories,
+                showFAQs = showFAQs,
+            )
         messages.add(botMessage)
     }
 
@@ -267,7 +289,9 @@ class ChatViewModel : ViewModel() {
     }
 
     fun loadMessages() {
-        addBotMessage("👋 Welcome to ArcheOne Assistant!\n\nI'm your personal support guide, ready to help you navigate through ArcheOne's features and services.")
+        addBotMessage(
+            "👋 Welcome to ArcheOne Assistant!\n\nI'm your personal support guide, ready to help you navigate through ArcheOne's features and services.",
+        )
 
         // Add support categories message
         addBotMessage("Here's what I can help you with:\nFeel free to ask any questions!", showFAQs = true)

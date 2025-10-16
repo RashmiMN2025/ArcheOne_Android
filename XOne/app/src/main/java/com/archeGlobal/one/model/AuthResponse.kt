@@ -5,5 +5,5 @@ data class AuthResponse(
     val token: String,
     val email: String,
     val employeeId: String,
-    val mobilePhone: String
+    val mobilePhone: String,
 )

@@ -45,7 +45,7 @@ fun SOSScreen(
     onFooterChatClick: () -> Unit = {},
     onFooterSOSClick: () -> Unit = {},
     onFooterProfileClick: () -> Unit = {},
-    showHeader: Boolean = false // Default to true
+    showHeader: Boolean = false, // Default to true
 ) {
     val sosBlogs by controller.sosBlogs.collectAsState()
     val pagerState = rememberPagerState()
@@ -53,12 +53,13 @@ fun SOSScreen(
     val scrollState = rememberScrollState()
 
     // Create FooterNavigationModel with SOS selected
-    val footerNavigation = FooterNavigationModel(
-        showHome = false,
-        showChat = false,
-        showSOS = true,
-        showProfile = false
-    )
+    val footerNavigation =
+        FooterNavigationModel(
+            showHome = false,
+            showChat = false,
+            showSOS = true,
+            showProfile = false,
+        )
 
     // Intercept back navigation (both swipe and back arrow)
     BackHandler(enabled = true) {
@@ -66,10 +67,11 @@ fun SOSScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         // Wrap with FooterScaffold for bottom navigation
         if (showHeader) {
@@ -78,39 +80,44 @@ fun SOSScreen(
                 onFooterHomeClick = onFooterHomeClick,
                 onFooterChatClick = onFooterChatClick,
                 onFooterSOSClick = onFooterSOSClick,
-                onFooterProfileClick = onFooterProfileClick
+                onFooterProfileClick = onFooterProfileClick,
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFFE0DCD1),
-                                    Color(0xFFC8C8CA),
-                                    Color(0xFF474749)
-                                )
-                            )
-                        )
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.linearGradient(
+                                    colors =
+                                        listOf(
+                                            Color(0xFFE0DCD1),
+                                            Color(0xFFC8C8CA),
+                                            Color(0xFF474749),
+                                        ),
+                                ),
+                            ),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(scrollState)
-                            .padding(bottom = 16.dp), // Add bottom padding to ensure content is visible above the navigation bar
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .verticalScroll(scrollState)
+                                .padding(bottom = 16.dp),
+                        // Add bottom padding to ensure content is visible above the navigation bar
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         // White Box for SOS Assistance & SOS Information
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFFF6F4EE))
-                                .padding(16.dp)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFFF6F4EE))
+                                    .padding(16.dp),
                         ) {
                             Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Spacer(modifier = Modifier.height(5.dp))
                                 // SOS Assistance
@@ -120,23 +127,23 @@ fun SOSScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 20.dp)
+                                    modifier = Modifier.padding(bottom = 20.dp),
                                 )
 
                                 SOSButton(
                                     text = "SOS Call",
-                                    onClick = { controller.makeSOSCall() }
+                                    onClick = { controller.makeSOSCall() },
                                 )
                                 SOSButton(
                                     text = "Raise a Concern",
-                                    onClick = { onNavigateToRaiseConcern() }
+                                    onClick = { onNavigateToRaiseConcern() },
                                 )
                                 SOSButton(
                                     text = "View Emergency Contact",
                                     onClick = {
                                         Log.d("SOSScreen", "View Emergency Contact button clicked")
                                         onNavigateToEmergencyContact()
-                                    }
+                                    },
                                 )
 
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -148,7 +155,7 @@ fun SOSScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black,
-                                    modifier = Modifier.padding(top = 20.dp, bottom = 10.dp)
+                                    modifier = Modifier.padding(top = 20.dp, bottom = 10.dp),
                                 )
 
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -157,41 +164,43 @@ fun SOSScreen(
                                 HorizontalPager(
                                     count = sosBlogs.size,
                                     state = pagerState,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
                                 ) { page ->
                                     SOSBlogItem(
                                         sosBlogs[page],
-                                        onClick = { onSOSBlogClick(sosBlogs[page]) }
+                                        onClick = { onSOSBlogClick(sosBlogs[page]) },
                                     )
                                 }
 
                                 // Pagination Dots
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 10.dp),
-                                    horizontalArrangement = Arrangement.Center
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 10.dp),
+                                    horizontalArrangement = Arrangement.Center,
                                 ) {
                                     sosBlogs.forEachIndexed { index, _ ->
                                         Box(
-                                            modifier = Modifier
-                                                .size(if (index == pagerState.currentPage) 15.dp else 15.dp) // Active dot is bigger
-                                                .padding(4.dp)
-                                                .background(
-                                                    color = if (index == pagerState.currentPage) {
-                                                        Color(
-                                                            0xFFDD3825
-                                                        )
-                                                    } else {
-                                                        Color.LightGray
+                                            modifier =
+                                                Modifier
+                                                    .size(if (index == pagerState.currentPage) 15.dp else 15.dp) // Active dot is bigger
+                                                    .padding(4.dp)
+                                                    .background(
+                                                        color =
+                                                            if (index == pagerState.currentPage) {
+                                                                Color(
+                                                                    0xFFDD3825,
+                                                                )
+                                                            } else {
+                                                                Color.LightGray
+                                                            },
+                                                        shape = CircleShape,
+                                                    ).clickable {
+                                                        coroutineScope.launch {
+                                                            pagerState.animateScrollToPage(index)
+                                                        }
                                                     },
-                                                    shape = CircleShape
-                                                )
-                                                .clickable {
-                                                    coroutineScope.launch {
-                                                        pagerState.animateScrollToPage(index)
-                                                    }
-                                                }
                                         )
                                     }
                                 }
@@ -202,35 +211,39 @@ fun SOSScreen(
             }
         } else {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
-                        )
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749)),
+                            ),
+                        ),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .padding(bottom = 16.dp), // Add bottom padding to ensure content is visible above the navigation bar
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .padding(bottom = 16.dp),
+                    // Add bottom padding to ensure content is visible above the navigation bar
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     // Header with back button
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .statusBarsPadding()
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .statusBarsPadding(),
                     ) {
                         IconButton(
                             onClick = onBackPressed,
-                            modifier = Modifier.align(Alignment.CenterStart)
+                            modifier = Modifier.align(Alignment.CenterStart),
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_back),
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
 
@@ -241,28 +254,30 @@ fun SOSScreen(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.align(Alignment.Center),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         )
 
                         // Add an invisible spacer with same size as back button for balance
                         Spacer(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .align(Alignment.CenterEnd)
+                            modifier =
+                                Modifier
+                                    .size(48.dp)
+                                    .align(Alignment.CenterEnd),
                         )
                     }
 
                     // White Box for SOS Assistance & SOS Information
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFFF6F4EE))
-                            .padding(16.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFF6F4EE))
+                                .padding(16.dp),
                     ) {
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Spacer(modifier = Modifier.height(5.dp))
                             // SOS Assistance
@@ -272,23 +287,23 @@ fun SOSScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black,
-                                modifier = Modifier.padding(bottom = 20.dp)
+                                modifier = Modifier.padding(bottom = 20.dp),
                             )
 
                             SOSButton(
                                 text = "SOS Call",
-                                onClick = { controller.makeSOSCall() }
+                                onClick = { controller.makeSOSCall() },
                             )
                             SOSButton(
                                 text = "Raise a Concern",
-                                onClick = { onNavigateToRaiseConcern() }
+                                onClick = { onNavigateToRaiseConcern() },
                             )
                             SOSButton(
                                 text = "View Emergency Contact",
                                 onClick = {
                                     Log.d("SOSScreen", "View Emergency Contact button clicked")
                                     onNavigateToEmergencyContact()
-                                }
+                                },
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -300,7 +315,7 @@ fun SOSScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black,
-                                modifier = Modifier.padding(top = 20.dp, bottom = 10.dp)
+                                modifier = Modifier.padding(top = 20.dp, bottom = 10.dp),
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -309,41 +324,43 @@ fun SOSScreen(
                             HorizontalPager(
                                 count = sosBlogs.size,
                                 state = pagerState,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
                             ) { page ->
                                 SOSBlogItem(
                                     sosBlogs[page],
-                                    onClick = { onSOSBlogClick(sosBlogs[page]) }
+                                    onClick = { onSOSBlogClick(sosBlogs[page]) },
                                 )
                             }
 
                             // Pagination Dots
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 10.dp),
-                                horizontalArrangement = Arrangement.Center
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 10.dp),
+                                horizontalArrangement = Arrangement.Center,
                             ) {
                                 sosBlogs.forEachIndexed { index, _ ->
                                     Box(
-                                        modifier = Modifier
-                                            .size(if (index == pagerState.currentPage) 15.dp else 15.dp) // Active dot is bigger
-                                            .padding(4.dp)
-                                            .background(
-                                                color = if (index == pagerState.currentPage) {
-                                                    Color(
-                                                        0xFFDD3825
-                                                    )
-                                                } else {
-                                                    Color.LightGray
+                                        modifier =
+                                            Modifier
+                                                .size(if (index == pagerState.currentPage) 15.dp else 15.dp) // Active dot is bigger
+                                                .padding(4.dp)
+                                                .background(
+                                                    color =
+                                                        if (index == pagerState.currentPage) {
+                                                            Color(
+                                                                0xFFDD3825,
+                                                            )
+                                                        } else {
+                                                            Color.LightGray
+                                                        },
+                                                    shape = CircleShape,
+                                                ).clickable {
+                                                    coroutineScope.launch {
+                                                        pagerState.animateScrollToPage(index)
+                                                    }
                                                 },
-                                                shape = CircleShape
-                                            )
-                                            .clickable {
-                                                coroutineScope.launch {
-                                                    pagerState.animateScrollToPage(index)
-                                                }
-                                            }
                                     )
                                 }
                             }
@@ -356,30 +373,38 @@ fun SOSScreen(
 }
 
 @Composable
-fun SOSBlogItem(blog: SosBlogModel, onClick: () -> Unit) {
+fun SOSBlogItem(
+    blog: SosBlogModel,
+    onClick: () -> Unit,
+) {
     Column(
-        modifier = Modifier
-            .width(320.dp) // Adjust width to match the design
-            .padding(horizontal = 16.dp)
-            .clickable { onClick() },
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier
+                .width(320.dp) // Adjust width to match the design
+                .padding(horizontal = 16.dp)
+                .clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Replace Image with AsyncImage to add placeholder
         AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(blog.imageUrl)
-                .crossfade(true)
-                .diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                .build(),
+            model =
+                ImageRequest
+                    .Builder(LocalContext.current)
+                    .data(blog.imageUrl)
+                    .crossfade(true)
+                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .build(),
             contentDescription = blog.name,
             contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .width(300.dp)
-                .height(200.dp)
-                .clip(RoundedCornerShape(16.dp)), // <-- Rounded corners added here,
+            modifier =
+                Modifier
+                    .width(300.dp)
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(16.dp)),
+            // <-- Rounded corners added here,
             error = painterResource(id = R.drawable.ic_image_placeholder),
-            placeholder = painterResource(id = R.drawable.ic_image_placeholder)
+            placeholder = painterResource(id = R.drawable.ic_image_placeholder),
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -389,7 +414,7 @@ fun SOSBlogItem(blog: SosBlogModel, onClick: () -> Unit) {
             fontWeight = FontWeight.Medium,
             color = Color.Black, // Explicitly set to black for consistency
             modifier = Modifier.padding(top = 8.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -401,30 +426,36 @@ fun SOSBlogItem(blog: SosBlogModel, onClick: () -> Unit) {
             lineHeight = 18.sp,
             maxLines = 3, // Restrict to 2 lines
             overflow = TextOverflow.Visible, // Show "..." if text is too long
-            modifier = Modifier
-                .padding(horizontal = 12.dp) // Add horizontal padding for alignment
-                .height(60.dp), // Fixed height for consistent alignment across pages
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            modifier =
+                Modifier
+                    .padding(horizontal = 12.dp) // Add horizontal padding for alignment
+                    .height(60.dp),
+            // Fixed height for consistent alignment across pages
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
     }
 }
 
 @Composable
-fun SOSButton(text: String, onClick: () -> Unit) {
+fun SOSButton(
+    text: String,
+    onClick: () -> Unit,
+) {
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .height(50.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+                .height(50.dp),
     ) {
         Text(
             text = text,
             color = Color.White,
             fontSize = 16.sp,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
     }
 }

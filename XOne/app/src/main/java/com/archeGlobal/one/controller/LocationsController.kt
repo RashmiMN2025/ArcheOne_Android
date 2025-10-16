@@ -12,7 +12,9 @@ import com.archeGlobal.one.model.*
 import com.archeGlobal.one.network.Office as NetworkOffice
 import com.archeGlobal.one.network.RegionalOffice as NetworkRegionalOffice
 
-class LocationsController(private val context: Context) {
+class LocationsController(
+    private val context: Context,
+) {
     private var _locationState by mutableStateOf(LocationScreenState())
     private var isEmergencyContact = false
     private var isDataLoaded = false
@@ -55,8 +57,8 @@ class LocationsController(private val context: Context) {
                                 address = office.address,
                                 email = office.email ?: "info@netcon.in",
                                 hasMultipleLocations = true,
-                                states = createIndianStates(office.regionaloffice)
-                            )
+                                states = createIndianStates(office.regionaloffice),
+                            ),
                         )
                         Log.d("LocationsController", "Added India location to the list")
                     }
@@ -68,8 +70,8 @@ class LocationsController(private val context: Context) {
                                 companyName = office.companyName ?: "Arche Global Pvt Ltd",
                                 address = office.address,
                                 email = office.email ?: "info@netcon.in",
-                                hasMultipleLocations = false
-                            )
+                                hasMultipleLocations = false,
+                            ),
                         )
                     }
                 }
@@ -99,21 +101,22 @@ class LocationsController(private val context: Context) {
         return stateMap.map { (stateName, offices) ->
             StateInfo(
                 name = stateName,
-                locations = offices.map { office ->
-                    LocationInfo(
-                        name = office.region, // Use exact region name from API
-                        companyName = office.companyName ?: "Arche Global Pvt Ltd",
-                        address = office.address,
-                        email = office.email ?: "info@netcon.in",
-                        hasFloorMap = !office.floorMap.isNullOrEmpty(),
-                        mapFileName = office.floorMap,
-                        hrName = office.hrName?.takeIf { it.isNotEmpty() },
-                        hrNumber = office.hrContact?.takeIf { it.isNotEmpty() },
-                        adminName = office.adminName?.takeIf { it.isNotEmpty() },
-                        adminNumber = office.adminContact?.takeIf { it.isNotEmpty() },
-                        redirection = office.redirection
-                    )
-                }
+                locations =
+                    offices.map { office ->
+                        LocationInfo(
+                            name = office.region, // Use exact region name from API
+                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
+                            address = office.address,
+                            email = office.email ?: "info@netcon.in",
+                            hasFloorMap = !office.floorMap.isNullOrEmpty(),
+                            mapFileName = office.floorMap,
+                            hrName = office.hrName?.takeIf { it.isNotEmpty() },
+                            hrNumber = office.hrContact?.takeIf { it.isNotEmpty() },
+                            adminName = office.adminName?.takeIf { it.isNotEmpty() },
+                            adminNumber = office.adminContact?.takeIf { it.isNotEmpty() },
+                            redirection = office.redirection,
+                        )
+                    },
             )
         }
     }
@@ -128,50 +131,55 @@ class LocationsController(private val context: Context) {
         if (location.states != null) {
             // This is for the main India location
             Log.d("LocationsController", "Location has states, showing state list")
-            _locationState = _locationState.copy(
-                selectedLocation = location,
-                showingStateList = true,
-                showingDetails = false
-            )
+            _locationState =
+                _locationState.copy(
+                    selectedLocation = location,
+                    showingStateList = true,
+                    showingDetails = false,
+                )
         } else {
             // For individual locations (including non-Indian locations)
             Log.d("LocationsController", "Location doesn't have states, showing details")
-            _locationState = _locationState.copy(
-                selectedLocation = location,
-                showingDetails = true,
-                showingStateList = false
-            )
+            _locationState =
+                _locationState.copy(
+                    selectedLocation = location,
+                    showingDetails = true,
+                    showingStateList = false,
+                )
         }
     }
 
     fun selectState(state: StateInfo) {
-        _locationState = _locationState.copy(
-            selectedState = state,
-            showingStateList = false,
-            showingDetails = true
-        )
+        _locationState =
+            _locationState.copy(
+                selectedState = state,
+                showingStateList = false,
+                showingDetails = true,
+            )
     }
 
     fun showFloorMap(mapUrl: String) {
         Log.d("LocationsController", "Attempting to open floor map in WebViewActivity: $mapUrl")
         try {
             // Open in the WebViewActivity to display PDF within the app
-            val intent = Intent(context, WebViewActivity::class.java).apply {
-                putExtra("fileUrl", mapUrl)
-                putExtra("title", "Floor Map") // Using just "Floor Map" as the title
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
+            val intent =
+                Intent(context, WebViewActivity::class.java).apply {
+                    putExtra("fileUrl", mapUrl)
+                    putExtra("title", "Floor Map") // Using just "Floor Map" as the title
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
 
             context.startActivity(intent)
             _locationState = _locationState.copy(showingFloorMap = true)
             Log.d("LocationsController", "Opened floor map in WebViewActivity")
         } catch (e: Exception) {
             Log.e("LocationsController", "Error opening floor map: ${e.message}")
-            Toast.makeText(
-                context,
-                "Unable to open PDF. Please check your connection or try again later.",
-                Toast.LENGTH_LONG
-            ).show()
+            Toast
+                .makeText(
+                    context,
+                    "Unable to open PDF. Please check your connection or try again later.",
+                    Toast.LENGTH_LONG,
+                ).show()
         }
     }
 
@@ -179,8 +187,8 @@ class LocationsController(private val context: Context) {
         _locationState = _locationState.copy(showingContactInfo = show)
     }
 
-    fun onBackPressed(): Boolean {
-        return when {
+    fun onBackPressed(): Boolean =
+        when {
             _locationState.showingContactInfo -> {
                 _locationState = _locationState.copy(showingContactInfo = false)
                 true
@@ -194,56 +202,60 @@ class LocationsController(private val context: Context) {
                 if (_locationState.selectedState != null) {
                     // Go back to India page
                     val indiaLocation = _locationState.locations.find { it.name == "India" }
-                    _locationState = _locationState.copy(
-                        showingDetails = false,
-                        showingStateList = true,
-                        selectedLocation = indiaLocation,
-                        selectedState = null
-                    )
+                    _locationState =
+                        _locationState.copy(
+                            showingDetails = false,
+                            showingStateList = true,
+                            selectedLocation = indiaLocation,
+                            selectedState = null,
+                        )
                 } else {
                     // For other countries or India itself, go back to main locations list
-                    _locationState = _locationState.copy(
-                        showingDetails = false,
-                        showingStateList = false,
-                        selectedLocation = null,
-                        selectedState = null
-                    )
+                    _locationState =
+                        _locationState.copy(
+                            showingDetails = false,
+                            showingStateList = false,
+                            selectedLocation = null,
+                            selectedState = null,
+                        )
                 }
                 true
             }
             _locationState.showingStateList -> {
                 // Always go back to main locations list when in state list view
-                _locationState = _locationState.copy(
-                    showingStateList = false,
-                    selectedLocation = null,
-                    selectedState = null
-                )
+                _locationState =
+                    _locationState.copy(
+                        showingStateList = false,
+                        selectedLocation = null,
+                        selectedState = null,
+                    )
                 true
             }
             else -> false
         }
-    }
 
     fun selectStateLocation(state: StateInfo) {
         // Handle all states consistently, including Tamil Nadu
         val location = state.locations.firstOrNull() ?: return
-        _locationState = _locationState.copy(
-            selectedLocation = location,
-            selectedState = state, // Always set the selectedState so back navigation works correctly
-            showingStateList = false,
-            showingDetails = true
-        )
+        _locationState =
+            _locationState.copy(
+                selectedLocation = location,
+                selectedState = state, // Always set the selectedState so back navigation works correctly
+                showingStateList = false,
+                showingDetails = true,
+            )
     }
 
     fun resetState() {
-        _locationState = _locationState.copy(
-            selectedLocation = null,
-            selectedState = null,
-            showingDetails = false,
-            showingStateList = false,
-            showingFloorMap = false,
-            showingContactInfo = false
-        )
+        _locationState =
+            _locationState.copy(
+                selectedLocation = null,
+                selectedState = null,
+                showingDetails = false,
+                showingStateList = false,
+                showingFloorMap = false,
+                showingContactInfo = false,
+            )
     }
 
     fun initializeLocations() {
@@ -265,8 +277,8 @@ class LocationsController(private val context: Context) {
                                 address = office.address,
                                 email = office.email ?: "info@netcon.in",
                                 hasMultipleLocations = true,
-                                states = createIndianStates(office.regionaloffice)
-                            )
+                                states = createIndianStates(office.regionaloffice),
+                            ),
                         )
                     }
                     else -> {
@@ -277,8 +289,8 @@ class LocationsController(private val context: Context) {
                                 companyName = office.companyName ?: "Arche Global Pvt Ltd",
                                 address = office.address,
                                 email = office.email ?: "info@netcon.in",
-                                hasMultipleLocations = false
-                            )
+                                hasMultipleLocations = false,
+                            ),
                         )
                     }
                 }
@@ -296,9 +308,7 @@ class LocationsController(private val context: Context) {
         Log.d("LocationsController", "Emergency contact mode set to $isEmergencyContact")
     }
 
-    fun isInEmergencyContactMode(): Boolean {
-        return isEmergencyContact
-    }
+    fun isInEmergencyContactMode(): Boolean = isEmergencyContact
 
     /**
      * Handles the back navigation when in emergency contact mode

@@ -8,19 +8,19 @@ import java.util.Locale
 /**
  * Helper function to map string status to TravelStatus enum
  */
-fun mapStringToTravelStatus(status: String): TravelStatus {
-    return when (status.lowercase()) {
+fun mapStringToTravelStatus(status: String): TravelStatus =
+    when (status.lowercase()) {
         "approved" -> TravelStatus.APPROVED
         "rejected" -> TravelStatus.REJECTED
+        "cancelled" -> TravelStatus.CANCELLED
         else -> TravelStatus.PENDING
     }
-}
 
 /**
  * Helper function to format date strings
  */
-fun formatDate(dateString: String): String {
-    return try {
+fun formatDate(dateString: String): String =
+    try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val outputFormat = SimpleDateFormat("d MMM yyyy", Locale.getDefault())
         val date = inputFormat.parse(dateString)
@@ -36,4 +36,3 @@ fun formatDate(dateString: String): String {
             dateString
         }
     }
-}

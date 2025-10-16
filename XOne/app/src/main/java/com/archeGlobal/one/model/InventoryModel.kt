@@ -11,13 +11,13 @@ data class InventoryModel(
     val types: List<String> = listOf("All", "Writing", "Paper", "Office Supplies", "Hygiene"),
     val inventoryItems: List<InventoryItem> = emptyList(),
     val allItems: List<InventoryItem> = emptyList(),
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )
 
 data class StockListResponse(
     val status: Int,
     val data: List<StockItem>,
-    @SerializedName("orderpending") val orderPending: Int = 0
+    @SerializedName("orderpending") val orderPending: Int = 0,
 )
 
 data class StockItem(
@@ -36,7 +36,7 @@ data class StockItem(
     @SerializedName("Updated_By_") val updatedBy: String,
     @SerializedName("Last_Updated_Date_Time") val lastUpdatedDateTime: String,
     @SerializedName("stock_supplied_date") val stockSuppliedDate: String,
-    @SerializedName("Utilization") val utilization: String
+    @SerializedName("Utilization") val utilization: String,
 )
 
 data class InventoryItem(
@@ -52,50 +52,52 @@ data class InventoryItem(
     val category: String,
     val location: String,
     val brand: String,
-    val totalStock: Double
+    val totalStock: Double,
 )
 
 // Extension function to convert StockItem to InventoryItem
-fun StockItem.toInventoryItem(): InventoryItem {
-    return InventoryItem(
+fun StockItem.toInventoryItem(): InventoryItem =
+    InventoryItem(
         id = itemId,
         name = itemName,
         itemNumber = itemId,
         unit = unit,
         closingStock = closingStock.toDoubleOrNull() ?: 0.0,
         updatedBy = updatedBy,
-        suppliedDate = if (stockSuppliedDate.isNullOrBlank()) {
-            "N/A" // 👈 Display null if not available
-        } else {
-            formatDateTime(stockSuppliedDate)
-        },
-        lastUpdated = if (lastUpdatedDateTime.isNullOrBlank()) {
-            "N/A" // 👈 Display null if not available
-        } else {
-            formatDateTime(lastUpdatedDateTime)
-        },
+        suppliedDate =
+            if (stockSuppliedDate.isNullOrBlank()) {
+                "N/A" // 👈 Display null if not available
+            } else {
+                formatDateTime(stockSuppliedDate)
+            },
+        lastUpdated =
+            if (lastUpdatedDateTime.isNullOrBlank()) {
+                "N/A" // 👈 Display null if not available
+            } else {
+                formatDateTime(lastUpdatedDateTime)
+            },
         iconName = getIconFromCategory(category),
         category = category,
         location = location,
         brand = brand,
-        totalStock = totalStock.toDoubleOrNull() ?: 0.0
+        totalStock = totalStock.toDoubleOrNull() ?: 0.0,
     )
-}
 
-private fun formatDateTime(dateTimeString: String): String {
-    return try {
+private fun formatDateTime(dateTimeString: String): String =
+    try {
         // Parse ISO date and format to readable format
         val instant = java.time.Instant.parse(dateTimeString)
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy 'at' hh:mm a")
-            .withZone(java.time.ZoneId.systemDefault())
+        val formatter =
+            java.time.format.DateTimeFormatter
+                .ofPattern("dd MMM yyyy 'at' hh:mm a")
+                .withZone(java.time.ZoneId.systemDefault())
         formatter.format(instant)
     } catch (e: Exception) {
         dateTimeString // Return original if parsing fails
     }
-}
 
-private fun getIconFromCategory(category: String): String {
-    return when (category.lowercase()) {
+private fun getIconFromCategory(category: String): String =
+    when (category.lowercase()) {
         "hk_consumables" -> "ic_handwash"
         "writing" -> "ic_pen"
         "paper" -> "ic_notepad"
@@ -103,4 +105,3 @@ private fun getIconFromCategory(category: String): String {
         "hygiene" -> "ic_tissues"
         else -> "ic_file"
     }
-}

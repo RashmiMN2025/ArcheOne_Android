@@ -16,7 +16,7 @@ import com.archeGlobal.one.utils.UserDataManager
 
 class OtpVerificationController(
     private val navigator: Navigator,
-    private val context: Context
+    private val context: Context,
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
     private val encryptedAPIHelper = EncryptedAPIHelper(context)
@@ -34,21 +34,22 @@ class OtpVerificationController(
         platform: String,
         osVersion: String,
         stayLoggedIn: Boolean,
-        callback: (String, Boolean) -> Unit
+        callback: (String, Boolean) -> Unit,
     ) {
-        val request = VerifyOtpRequest(
-            email = email,
-            mobile = mobile,
-            employeeId = employeeId,
-            otpFromUser = otpFromUser,
-            isBiometric = isBiometric,
-            appVersion = appVersion,
-            deviceModel = deviceModel,
-            deviceId = deviceId,
-            platform = platform,
-            osVersion = osVersion,
-            stayLoggedIn = stayLoggedIn
-        )
+        val request =
+            VerifyOtpRequest(
+                email = email,
+                mobile = mobile,
+                employeeId = employeeId,
+                otpFromUser = otpFromUser,
+                isBiometric = isBiometric,
+                appVersion = appVersion,
+                deviceModel = deviceModel,
+                deviceId = deviceId,
+                platform = platform,
+                osVersion = osVersion,
+                stayLoggedIn = stayLoggedIn,
+            )
         Log.d("OtpVerification", "Sending encrypted OTP verification request: $request")
 
         encryptedAPIHelper.makeEncryptedCall(
@@ -57,7 +58,7 @@ class OtpVerificationController(
             request = request,
             responseClass = OtpVerifyResponse::class.java,
             withAuthHeader = false,
-            handleTokenExpiration = false // Disable automatic navigation for OTP errors
+            handleTokenExpiration = false, // Disable automatic navigation for OTP errors
         ) { response, error ->
             if (error != null) {
                 Log.e("OtpVerification", "OTP verification failed: ${error.errorMessage}")
@@ -66,9 +67,12 @@ class OtpVerificationController(
 
                 // Check if error message contains 403 or update-related keywords
                 val errorMsg = error.errorMessage.lowercase()
-                val isForbiddenError = error is APIError.Forbidden || errorMsg.contains("403") || errorMsg.contains("forbidden") ||
-                    errorMsg.contains("update") ||
-                    errorMsg.contains("version")
+                val isForbiddenError =
+                    error is APIError.Forbidden ||
+                        errorMsg.contains("403") ||
+                        errorMsg.contains("forbidden") ||
+                        errorMsg.contains("update") ||
+                        errorMsg.contains("version")
 
                 if (isForbiddenError) {
                     Log.d("OtpVerification", "Detected 403/update-related error in OTP verification - showing update dialog")
@@ -101,7 +105,9 @@ class OtpVerificationController(
                                 Log.d("OtpVerification", "OTP verification and login successful for user: $email")
 
                                 if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
-                                    val mpinController = com.archeGlobal.one.controller.MpinController(context)
+                                    val mpinController =
+                                        com.archeGlobal.one.controller
+                                            .MpinController(context)
                                     if (mpinController.isMpinSet()) {
                                         // MPIN already set, go directly to Home
                                         navigator.navigateToHome(
@@ -109,7 +115,7 @@ class OtpVerificationController(
                                             true, // showBiometricPrompt for existing users
                                             email = email,
                                             mobile = mobile,
-                                            employeeId = employeeId
+                                            employeeId = employeeId,
                                         )
                                     } else {
                                         // MPIN not set, go to MPIN setup (for first-time users)
@@ -138,23 +144,26 @@ class OtpVerificationController(
         fromHome: Boolean = false,
         fromOtp: Boolean = false,
         shouldNavigateToHome: Boolean = true,
-        callback: (String, Boolean) -> Unit
+        callback: (String, Boolean) -> Unit,
     ) {
         val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
-        val request = LoginRequest(
-            email = email,
-            mobile = mobile,
-            employeeId = employeeId,
-            platform = deviceInfo.platform,
-            deviceModel = deviceInfo.deviceModel,
-            osVersion = deviceInfo.osVersion,
-            appVersion = deviceInfo.appVersion,
-            deviceId = deviceInfo.deviceId
-        )
+        val request =
+            LoginRequest(
+                email = email,
+                mobile = mobile,
+                employeeId = employeeId,
+                platform = deviceInfo.platform,
+                deviceModel = deviceInfo.deviceModel,
+                osVersion = deviceInfo.osVersion,
+                appVersion = deviceInfo.appVersion,
+                deviceId = deviceInfo.deviceId,
+            )
         Log.d("LoginProcess", "Sending encrypted login request with token: Bearer $token")
 
         // Store the token temporarily for the encrypted request
-        val preferencesManager = com.archeGlobal.one.utils.PreferencesManager(context)
+        val preferencesManager =
+            com.archeGlobal.one.utils
+                .PreferencesManager(context)
         preferencesManager.saveAuthToken(token)
 
         encryptedAPIHelper.makeEncryptedCall(
@@ -163,7 +172,7 @@ class OtpVerificationController(
             request = request,
             responseClass = VerifyOtpResponse::class.java,
             withAuthHeader = true, // This will use the token we just saved
-            handleTokenExpiration = false // Disable automatic navigation for login errors during OTP flow
+            handleTokenExpiration = false, // Disable automatic navigation for login errors during OTP flow
         ) { response, error ->
             if (error != null) {
                 Log.e("LoginProcess", "Login failed: ${error.errorMessage}")
@@ -172,9 +181,12 @@ class OtpVerificationController(
 
                 // Check if error message contains 403 or update-related keywords
                 val errorMsg = error.errorMessage.lowercase()
-                val isForbiddenError = error is APIError.Forbidden || errorMsg.contains("403") || errorMsg.contains("forbidden") ||
-                    errorMsg.contains("update") ||
-                    errorMsg.contains("version")
+                val isForbiddenError =
+                    error is APIError.Forbidden ||
+                        errorMsg.contains("403") ||
+                        errorMsg.contains("forbidden") ||
+                        errorMsg.contains("update") ||
+                        errorMsg.contains("version")
 
                 if (isForbiddenError) {
                     Log.d("LoginProcess", "Detected 403/update-related error in login - showing update dialog")
@@ -201,7 +213,9 @@ class OtpVerificationController(
                 }
 
                 // Clear session expired preserved data after successful login
-                val preferencesManager = com.archeGlobal.one.utils.PreferencesManager(context)
+                val preferencesManager =
+                    com.archeGlobal.one.utils
+                        .PreferencesManager(context)
                 preferencesManager.setString("session_expired_email", "")
                 preferencesManager.setString("session_expired_mobile", "")
                 preferencesManager.setString("session_expired_employee_id", "")
@@ -221,7 +235,12 @@ class OtpVerificationController(
         }
     }
 
-    fun resendOtp(email: String, mobile: String, employeeId: String, callback: (String) -> Unit) {
+    fun resendOtp(
+        email: String,
+        mobile: String,
+        employeeId: String,
+        callback: (String) -> Unit,
+    ) {
         val request = SendOtpRequest(email, mobile, employeeId)
 
         encryptedAPIHelper.makeEncryptedCall(
@@ -230,7 +249,7 @@ class OtpVerificationController(
             request = request,
             responseClass = SendOtpResponse::class.java,
             withAuthHeader = false,
-            handleTokenExpiration = false // Disable automatic navigation for resend OTP errors
+            handleTokenExpiration = false, // Disable automatic navigation for resend OTP errors
         ) { response, error ->
             if (error != null) {
                 Log.e("OtpVerification", "Resend OTP failed: ${error.errorMessage}")
@@ -246,12 +265,20 @@ class OtpVerificationController(
     companion object {
         // Helper methods to access user data from UserDataManager
         fun getUserData(): UserData? = UserDataManager.getInstance(XOneApplication.getInstance()).getUserData()
+
         fun getOfficesData(): List<Office>? = UserDataManager.getInstance(XOneApplication.getInstance()).getOfficesData()
+
         fun getPoliciesData(): List<PolicyModel.Policy>? = UserDataManager.getInstance(XOneApplication.getInstance()).getPoliciesData()
+
         fun getSosBlogsData(): List<SosBlogModel>? = UserDataManager.getInstance(XOneApplication.getInstance()).getSosBlogsData()
+
         fun getAssetDetails(): List<AssetDetail>? = UserDataManager.getInstance(XOneApplication.getInstance()).getAssetDetails()
-        fun getCommuniquesData(): List<CommuniqueModel.Communique>? = UserDataManager.getInstance(XOneApplication.getInstance()).getCommuniqueData()
-        fun getSmartCollateralData(): List<SmartCollateralCategory>? = UserDataManager.getInstance(XOneApplication.getInstance()).getSmartCollateralList()
+
+        fun getCommuniquesData(): List<CommuniqueModel.Communique>? =
+            UserDataManager.getInstance(XOneApplication.getInstance()).getCommuniqueData()
+
+        fun getSmartCollateralData(): List<SmartCollateralCategory>? =
+            UserDataManager.getInstance(XOneApplication.getInstance()).getSmartCollateralList()
 
         fun clearUserData() {
             UserDataManager.getInstance(XOneApplication.getInstance()).clearUserData()

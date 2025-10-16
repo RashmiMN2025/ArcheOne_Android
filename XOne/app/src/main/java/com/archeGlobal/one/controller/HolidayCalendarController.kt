@@ -26,9 +26,8 @@ import java.util.Locale
 class HolidayCalendarController(
     private val apiService: ApiService,
     private val userRepository: UserRepository,
-    private val context: Context
+    private val context: Context,
 ) : ViewModel() {
-
     // LiveData for holidays
     private val _holidays = MutableLiveData<NetworkResult<CalendarResponse>>()
     val holidays: LiveData<NetworkResult<CalendarResponse>> = _holidays
@@ -63,18 +62,14 @@ class HolidayCalendarController(
     }
 
     // Method to check if a holiday is hidden
-    fun isHolidayHidden(holiday: Holiday): Boolean {
-        return _hiddenHolidays.contains(holiday.date)
-    }
+    fun isHolidayHidden(holiday: Holiday): Boolean = _hiddenHolidays.contains(holiday.date)
 
     // Method to get filtered holidays that are not hidden
-    fun getVisibleHolidays(holidays: List<Holiday>): List<Holiday> {
-        return holidays.filter { !_hiddenHolidays.contains(it.date) }
-    }
+    fun getVisibleHolidays(holidays: List<Holiday>): List<Holiday> = holidays.filter { !_hiddenHolidays.contains(it.date) }
 
     // Method to get milestones for a specific date
-    fun getMilestonesForDate(date: String): List<Milestone> {
-        return _milestones.value?.filter {
+    fun getMilestonesForDate(date: String): List<Milestone> =
+        _milestones.value?.filter {
             try {
                 val milestoneDate = SimpleDateFormat("MM-dd-yyyy", Locale.US).parse(it.poDate)
                 val requestDate = SimpleDateFormat("dd-MM-yyyy", Locale.US).parse(date)
@@ -87,7 +82,6 @@ class HolidayCalendarController(
                 false
             }
         } ?: emptyList()
-    }
 
     // Method to get global events for a specific date
     fun getGlobalEventsForDate(date: String): List<GlobalEvent> {
@@ -101,19 +95,20 @@ class HolidayCalendarController(
 
         // Hard-coded test for specific API event dates to verify if our data is loaded correctly
         // The dates below are taken directly from the API response you provided
-        val knownDates = listOf(
-            "08-03-2025", // International Women's Day
-            "22-04-2025", // Earth Day
-            "07-04-2025", // World Health Day
-            "01-05-2025", // International Workers' day
-            "05-06-2025", // World Environment Day
-            "21-09-2025", // World Peace Day
-            "19-11-2025", // International Men's Day
-            "11-05-2025", // International Mother's Day
-            "15-06-2025", // International Father's Day
-            "11-04-2025", // International Pets Day
-            "28-06-2025" // LGBT Pride Day
-        )
+        val knownDates =
+            listOf(
+                "08-03-2025", // International Women's Day
+                "22-04-2025", // Earth Day
+                "07-04-2025", // World Health Day
+                "01-05-2025", // International Workers' day
+                "05-06-2025", // World Environment Day
+                "21-09-2025", // World Peace Day
+                "19-11-2025", // International Men's Day
+                "11-05-2025", // International Mother's Day
+                "15-06-2025", // International Father's Day
+                "11-04-2025", // International Pets Day
+                "28-06-2025", // LGBT Pride Day
+            )
 
         // Check if the requested date matches any known global event date
         if (knownDates.contains(date)) {
@@ -121,13 +116,14 @@ class HolidayCalendarController(
         }
 
         // First try parsing the request date
-        val requestDate = try {
-            val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-            LocalDate.parse(date, formatter)
-        } catch (e: Exception) {
-            Log.e("HolidayCalendarController", "Error parsing request date: $date - ${e.message}")
-            return emptyList()
-        }
+        val requestDate =
+            try {
+                val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                LocalDate.parse(date, formatter)
+            } catch (e: Exception) {
+                Log.e("HolidayCalendarController", "Error parsing request date: $date - ${e.message}")
+                return emptyList()
+            }
 
         // Safe access to global events
         if (_globalEvents.value.isNullOrEmpty()) {
@@ -146,60 +142,65 @@ class HolidayCalendarController(
         }
 
         // Find events matching this date
-        val events = _globalEvents.value?.filter { event ->
-            if (event.date.isNullOrEmpty()) {
-                Log.e("HolidayCalendarController", "Global event ${event.name} has null or empty date")
-                return@filter false
-            }
-
-            // FIRST: Try simple string equality for direct match
-            if (event.date == date) {
-                Log.d("HolidayCalendarController", "Direct string match for ${event.name}: ${event.date} == $date")
-                return@filter true
-            }
-
-            try {
-                val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-                val eventDate = LocalDate.parse(event.date, formatter)
-
-                // Extract day and month for simple comparison
-                val eventDay = eventDate.dayOfMonth
-                val eventMonth = eventDate.monthValue
-                val requestDay = requestDate.dayOfMonth
-                val requestMonth = requestDate.monthValue
-
-                // Compare day and month (ignore year for simplicity)
-                val matches = (eventDay == requestDay && eventMonth == requestMonth)
-                Log.d("HolidayCalendarController", "Comparing ${event.name}: day $eventDay/$eventMonth == $requestDay/$requestMonth => $matches")
-                matches
-            } catch (e: Exception) {
-                Log.e("HolidayCalendarController", "Error comparing dates for event ${event.name}: ${e.message}")
-                // Attempt direct string comparison as fallback
-                val eventDateParts = event.date.split("-")
-                val requestDateParts = date.split("-")
-
-                if (eventDateParts.size >= 2 && requestDateParts.size >= 2) {
-                    val matches = (eventDateParts[0] == requestDateParts[0] && eventDateParts[1] == requestDateParts[1])
-                    Log.d("HolidayCalendarController", "Fallback string comparison for ${event.name}: ${eventDateParts[0]}-${eventDateParts[1]} == ${requestDateParts[0]}-${requestDateParts[1]} => $matches")
-                    matches
-                } else {
-                    false
+        val events =
+            _globalEvents.value?.filter { event ->
+                if (event.date.isNullOrEmpty()) {
+                    Log.e("HolidayCalendarController", "Global event ${event.name} has null or empty date")
+                    return@filter false
                 }
-            }
-        } ?: emptyList()
+
+                // FIRST: Try simple string equality for direct match
+                if (event.date == date) {
+                    Log.d("HolidayCalendarController", "Direct string match for ${event.name}: ${event.date} == $date")
+                    return@filter true
+                }
+
+                try {
+                    val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                    val eventDate = LocalDate.parse(event.date, formatter)
+
+                    // Extract day and month for simple comparison
+                    val eventDay = eventDate.dayOfMonth
+                    val eventMonth = eventDate.monthValue
+                    val requestDay = requestDate.dayOfMonth
+                    val requestMonth = requestDate.monthValue
+
+                    // Compare day and month (ignore year for simplicity)
+                    val matches = (eventDay == requestDay && eventMonth == requestMonth)
+                    Log.d(
+                        "HolidayCalendarController",
+                        "Comparing ${event.name}: day $eventDay/$eventMonth == $requestDay/$requestMonth => $matches",
+                    )
+                    matches
+                } catch (e: Exception) {
+                    Log.e("HolidayCalendarController", "Error comparing dates for event ${event.name}: ${e.message}")
+                    // Attempt direct string comparison as fallback
+                    val eventDateParts = event.date.split("-")
+                    val requestDateParts = date.split("-")
+
+                    if (eventDateParts.size >= 2 && requestDateParts.size >= 2) {
+                        val matches = (eventDateParts[0] == requestDateParts[0] && eventDateParts[1] == requestDateParts[1])
+                        Log.d(
+                            "HolidayCalendarController",
+                            "Fallback string comparison for ${event.name}: ${eventDateParts[0]}-${eventDateParts[1]} == ${requestDateParts[0]}-${requestDateParts[1]} => $matches",
+                        )
+                        matches
+                    } else {
+                        false
+                    }
+                }
+            } ?: emptyList()
 
         Log.d("HolidayCalendarController", "Found ${events.size} global events for date $date")
         return events
     }
 
     // Method to get all global events
-    fun getAllGlobalEvents(): List<GlobalEvent> {
-        return _globalEvents.value ?: emptyList()
-    }
+    fun getAllGlobalEvents(): List<GlobalEvent> = _globalEvents.value ?: emptyList()
 
     // Method to get global events for a specific month
-    fun getGlobalEventsForMonth(month: Int): List<GlobalEvent> {
-        return _globalEvents.value?.filter { event ->
+    fun getGlobalEventsForMonth(month: Int): List<GlobalEvent> =
+        _globalEvents.value?.filter { event ->
             try {
                 val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
                 val eventDate = LocalDate.parse(event.date, formatter)
@@ -211,25 +212,31 @@ class HolidayCalendarController(
                 false
             }
         } ?: emptyList()
-    }
-    fun onViewClick(context: Context, documentName: String, filePath: String) {
+
+    fun onViewClick(
+        context: Context,
+        documentName: String,
+        filePath: String,
+    ) {
         if (filePath.isNullOrEmpty()) {
             Toast.makeText(context, "No document found for $documentName. Please upload document for the same.", Toast.LENGTH_SHORT).show()
             return
         }
 
         // Check if the file is an image based on extension
-        val isImage = filePath.endsWith(".jpg", ignoreCase = true) ||
-            filePath.endsWith(".jpeg", ignoreCase = true) ||
-            filePath.endsWith(".png", ignoreCase = true) ||
-            filePath.endsWith(".webp", ignoreCase = true)
+        val isImage =
+            filePath.endsWith(".jpg", ignoreCase = true) ||
+                filePath.endsWith(".jpeg", ignoreCase = true) ||
+                filePath.endsWith(".png", ignoreCase = true) ||
+                filePath.endsWith(".webp", ignoreCase = true)
 
         // Create appropriate intent based on file type
-        val intent = if (isImage) {
-            Intent(context, ImageViewerActivity::class.java)
-        } else {
-            Intent(context, WebViewActivity::class.java)
-        }
+        val intent =
+            if (isImage) {
+                Intent(context, ImageViewerActivity::class.java)
+            } else {
+                Intent(context, WebViewActivity::class.java)
+            }
 
         intent.putExtra("fileUrl", filePath)
         intent.putExtra("title", documentName)
@@ -247,14 +254,16 @@ class HolidayCalendarController(
         Log.d("HolidayCalendarController", "Making calendar API request with state: $userState")
 
         // Use encrypted API call with state parameter
-        val encryptedAPIHelper = com.archeGlobal.one.utils.EncryptedAPIHelper(context)
+        val encryptedAPIHelper =
+            com.archeGlobal.one.utils
+                .EncryptedAPIHelper(context)
 
         encryptedAPIHelper.makeEncryptedCall(
             endpoint = "calendar",
             method = "POST",
             request = request,
             responseClass = CalendarResponse::class.java,
-            withAuthHeader = true
+            withAuthHeader = true,
         ) { response, error ->
             if (error != null) {
                 Log.e("HolidayCalendarController", "Calendar API error: ${error.errorMessage}")
@@ -311,7 +320,10 @@ class HolidayCalendarController(
 
                 // Debug holidays and their types
                 calendarResponse.holidays.forEach { holiday ->
-                    Log.d("HolidayCalendarController", "Holiday loaded: ${holiday.name}, date: ${holiday.date}, type: ${holiday.holidayType}")
+                    Log.d(
+                        "HolidayCalendarController",
+                        "Holiday loaded: ${holiday.name}, date: ${holiday.date}, type: ${holiday.holidayType}",
+                    )
                 }
             } else {
                 _holidays.value = NetworkResult.Error("Server returned error status: ${calendarResponse.status}")
@@ -319,48 +331,46 @@ class HolidayCalendarController(
         }
     }
 
-    private fun handleCalendarResponse(response: Response<CalendarResponse>): NetworkResult<List<Holiday>> {
-        return if (response.isSuccessful) {
+    private fun handleCalendarResponse(response: Response<CalendarResponse>): NetworkResult<List<Holiday>> =
+        if (response.isSuccessful) {
             val holidays = response.body()?.holidays ?: emptyList()
             NetworkResult.Success(holidays)
         } else {
             NetworkResult.Error("Error ${response.code()}: ${response.message()}")
         }
-    }
 
     // For testing or offline mode
-    fun getDefaultHolidays(): List<Holiday> {
-        return listOf(
+    fun getDefaultHolidays(): List<Holiday> =
+        listOf(
             Holiday(
                 name = "New Year Day",
                 date = "01-01-2025",
                 holidayType = "Yes",
-                description = ""
+                description = "",
             ),
             Holiday(
                 name = "Republic Day",
                 date = "26-01-2025",
                 holidayType = "Yes",
-                description = ""
+                description = "",
             ),
             Holiday(
                 name = "Independence Day",
                 date = "15-08-2025",
                 holidayType = "Yes",
-                description = ""
+                description = "",
             ),
             Holiday(
                 name = "Gandhi Jayanthi",
                 date = "02-10-2025",
                 holidayType = "Yes",
-                description = ""
+                description = "",
             ),
             Holiday(
                 name = "Christmas",
                 date = "25-12-2025",
                 holidayType = "Yes",
-                description = ""
-            )
+                description = "",
+            ),
         )
-    }
 }

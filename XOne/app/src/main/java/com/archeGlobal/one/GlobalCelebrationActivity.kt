@@ -22,17 +22,20 @@ class GlobalCelebrationActivity : ComponentActivity() {
 
         controller = GlobalCelebrationController(this, AndroidNavigator(this))
 
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                controller.onBackPressed()
-            }
-        })
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    controller.onBackPressed()
+                }
+            },
+        )
 
         setContent {
             XOneTheme {
                 ResponsiveGlobalCelebrationScreen(
                     controller = controller,
-                    onBackPressed = { controller.onBackPressed() }
+                    onBackPressed = { controller.onBackPressed() },
                 )
             }
         }

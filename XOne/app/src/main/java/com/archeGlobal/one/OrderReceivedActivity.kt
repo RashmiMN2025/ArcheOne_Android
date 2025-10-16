@@ -25,7 +25,7 @@ class OrderReceivedActivity : ComponentActivity() {
             XOneTheme {
                 OrderReceivedScreen(
                     model = controller.model,
-                    controller = controller
+                    controller = controller,
                 )
             }
         }
@@ -35,7 +35,7 @@ class OrderReceivedActivity : ComponentActivity() {
         finish()
         overridePendingTransition(
             R.anim.slide_in_left,
-            R.anim.slide_out_right
+            R.anim.slide_out_right,
         )
     }
 }

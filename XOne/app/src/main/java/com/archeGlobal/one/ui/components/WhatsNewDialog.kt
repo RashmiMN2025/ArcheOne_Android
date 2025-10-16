@@ -25,37 +25,40 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 fun WhatsNewDialog(
     whatsNewItems: List<WhatsNewItem>,
     appVersion: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false
-        )
+        properties =
+            DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+            ),
     ) {
         Surface(
-            modifier = Modifier
-                .fillMaxWidth(0.9f) // 98% of actual screen width
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.9f) // 98% of actual screen width
 //                .padding(horizontal = 8.dp, vertical = 14.dp),
-                .wrapContentHeight(),
+                    .wrapContentHeight(),
             shape = RoundedCornerShape(24.dp),
-            color = Color(0xFFF6F4EE)
+            color = Color(0xFFF6F4EE),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp)
+                        .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 // App icon
                 Icon(
                     painter = painterResource(id = R.drawable.arche_black2),
                     contentDescription = "App Icon",
                     modifier = Modifier.size(46.dp),
-                    tint = Color.Black
+                    tint = Color.Black,
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -67,7 +70,7 @@ fun WhatsNewDialog(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -80,7 +83,7 @@ fun WhatsNewDialog(
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray,
                     textAlign = TextAlign.Center,
-                    lineHeight = 18.sp
+                    lineHeight = 18.sp,
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -88,21 +91,23 @@ fun WhatsNewDialog(
                 // What's new items
                 whatsNewItems.forEach { item ->
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
                     ) {
                         // 🔴 Bullet + Category Title in one row
                         Row(
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(
-                                        color = Color(0xFFDD3825),
-                                        shape = androidx.compose.foundation.shape.CircleShape
-                                    )
+                                modifier =
+                                    Modifier
+                                        .size(8.dp)
+                                        .background(
+                                            color = Color(0xFFDD3825),
+                                            shape = androidx.compose.foundation.shape.CircleShape,
+                                        ),
                             )
 
                             Spacer(modifier = Modifier.width(12.dp))
@@ -112,7 +117,7 @@ fun WhatsNewDialog(
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.Black
+                                color = Color.Black,
                             )
                         }
 
@@ -120,9 +125,10 @@ fun WhatsNewDialog(
 
                         // 📌 Description directly below category
                         Row(
-                            modifier = Modifier
-                                .padding(20.dp, 0.dp, 0.dp, 0.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                Modifier
+                                    .padding(20.dp, 0.dp, 0.dp, 0.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
                                 text = item.description,
@@ -130,7 +136,7 @@ fun WhatsNewDialog(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
                                 color = Color.Black,
-                                lineHeight = 18.sp
+                                lineHeight = 18.sp,
                             )
                         }
 
@@ -139,7 +145,7 @@ fun WhatsNewDialog(
                             Spacer(modifier = Modifier.height(4.dp))
                             Divider(
                                 color = Color.LightGray,
-                                thickness = 1.dp
+                                thickness = 1.dp,
                             )
                         }
                     }
@@ -150,20 +156,22 @@ fun WhatsNewDialog(
                 // Continue button
                 Button(
                     onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
                     shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFDD3825),
-                        contentColor = Color.White
-                    )
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825),
+                            contentColor = Color.White,
+                        ),
                 ) {
                     Text(
                         text = "Continue",
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     )
                 }
             }

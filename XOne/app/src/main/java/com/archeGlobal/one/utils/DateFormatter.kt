@@ -7,7 +7,6 @@ import java.util.*
  * Utility class for date formatting in the XOne application
  */
 object DateFormatter {
-
     /**
      * Parses a date string from API and returns a Date object
      * Supports both "yyyy-MM-dd" and "yyyy-MM-dd HH:mm:ss" formats
@@ -83,7 +82,10 @@ object DateFormatter {
      * @param arrivalDate Arrival date in format "2025-09-05"
      * @return Formatted date range like "1 Sep 2025 - 5 Sep 2025"
      */
-    fun formatTravelDateRange(departureDate: String?, arrivalDate: String?): String {
+    fun formatTravelDateRange(
+        departureDate: String?,
+        arrivalDate: String?,
+    ): String {
         val formattedDeparture = formatTravelDate(departureDate)
         val formattedArrival = formatTravelDate(arrivalDate)
 

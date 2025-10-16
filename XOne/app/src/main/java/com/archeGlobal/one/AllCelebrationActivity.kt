@@ -28,7 +28,7 @@ class AllCelebrationActivity : ComponentActivity() {
             XOneTheme {
                 AllCelebrationScreen(
                     controller = homeController,
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }

@@ -16,8 +16,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
-class CollateralController(private val context: Context) {
-
+class CollateralController(
+    private val context: Context,
+) {
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private val _isLoading = mutableStateOf(true)
@@ -47,20 +48,22 @@ class CollateralController(private val context: Context) {
     }
 
     fun onCategoryClick(category: SmartCollateralCategory) {
-        val intent = Intent(context, CollateralDetailActivity::class.java).apply {
-            putExtra("categoryName", category.name)
-        }
+        val intent =
+            Intent(context, CollateralDetailActivity::class.java).apply {
+                putExtra("categoryName", category.name)
+            }
         context.startActivity(intent)
     }
 
     fun onFileClick(file: SmartCollateralFile) {
         val fileUrl = "${file.fileUrl}"
-        val intent = Intent(context, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", fileUrl)
-            putExtra("title", file.fileName)
-            putExtra("isPdf", true)
-            putExtra("usePdfJs", true)
-        }
+        val intent =
+            Intent(context, WebViewActivity::class.java).apply {
+                putExtra("fileUrl", fileUrl)
+                putExtra("title", file.fileName)
+                putExtra("isPdf", true)
+                putExtra("usePdfJs", true)
+            }
         context.startActivity(intent)
     }
 

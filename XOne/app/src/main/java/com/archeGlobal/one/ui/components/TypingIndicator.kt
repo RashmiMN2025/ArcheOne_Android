@@ -24,11 +24,12 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun TypingIndicator() {
     Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFFFFAF5))
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFFFFFAF5))
+                .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // First dot with delay 0
         BouncingDot(0)
@@ -47,29 +48,32 @@ private fun BouncingDot(delayMillis: Int) {
     val scale by infiniteTransition.animateFloat(
         initialValue = 0.5f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(400, delayMillis),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scaleAnimation"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(400, delayMillis),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "scaleAnimation",
     )
 
     val opacity by infiniteTransition.animateFloat(
         initialValue = 0.5f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(400, delayMillis),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "opacityAnimation"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(400, delayMillis),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "opacityAnimation",
     )
 
     Box(
-        modifier = Modifier
-            .padding(horizontal = 2.dp)
-            .size(6.dp)
-            .scale(scale)
-            .clip(CircleShape)
-            .background(Color.Gray.copy(alpha = opacity))
+        modifier =
+            Modifier
+                .padding(horizontal = 2.dp)
+                .size(6.dp)
+                .scale(scale)
+                .clip(CircleShape)
+                .background(Color.Gray.copy(alpha = opacity)),
     )
 }

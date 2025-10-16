@@ -62,7 +62,7 @@ class MeetingRoomListActivity : ComponentActivity() {
                             putExtra("endDate", endDate)
                         }
                         startActivity(intent)
-                    }
+                    },
                 )
             }
         }

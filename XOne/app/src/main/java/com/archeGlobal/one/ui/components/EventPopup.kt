@@ -26,35 +26,40 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 @Composable
 fun EventPopup(
     event: EventResponse,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     android.util.Log.d("EventPopup", "Rendering EventPopup with data: Title=${event.title}, Image=${event.image}")
     android.util.Log.d("EventPopup", "Event details: Date=${event.date}, Description=${event.description?.take(50) ?: "N/A"}...")
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFF6F4EE)
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 8.dp
-            )
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = Color(0xFFF6F4EE),
+                ),
+            elevation =
+                CardDefaults.cardElevation(
+                    defaultElevation = 8.dp,
+                ),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 // Image
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(320.dp)
-                        .padding(top = 20.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(320.dp)
+                            .padding(top = 20.dp),
                 ) {
                     val painter = rememberAsyncImagePainter(event.image)
                     val state = painter.state
@@ -62,10 +67,11 @@ fun EventPopup(
                     Image(
                         painter = painter,
                         contentDescription = event.title,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                        contentScale = ContentScale.Fit
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                        contentScale = ContentScale.Fit,
                     )
 
                     // Log image loading state
@@ -89,60 +95,65 @@ fun EventPopup(
                 // Title
                 Text(
                     text = event.title ?: "",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 16.dp),
                     fontSize = 20.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 // Date
                 Text(
                     text = event.date ?: "",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
                     fontSize = 14.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 // Description
                 Text(
                     text = event.description ?: "",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp),
                     fontSize = 15.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = Color.Black,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 // Close button
                 Button(
                     onClick = onDismiss,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .height(46.dp)
-                        .width(110.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFDD3825)
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .height(46.dp)
+                            .width(110.dp),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825),
+                        ),
+                    shape = RoundedCornerShape(12.dp),
                 ) {
                     Text(
                         text = "Close",
                         fontSize = 15.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = Color.White
+                        color = Color.White,
                     )
                 }
             }

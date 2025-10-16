@@ -16,9 +16,8 @@ import com.google.gson.Gson
 import java.net.URLEncoder
 
 class AndroidNavigator(
-    private val activity: ComponentActivity
+    private val activity: ComponentActivity,
 ) : Navigator {
-
     internal var navController: NavController? = null
 
     fun setNavController(controller: NavController) {
@@ -29,36 +28,50 @@ class AndroidNavigator(
         navController?.navigate(route)
     }
 
-    private fun navigate(route: String, optionsBuilder: (NavOptionsBuilder) -> Unit) {
+    private fun navigate(
+        route: String,
+        optionsBuilder: (NavOptionsBuilder) -> Unit,
+    ) {
         navController?.navigate(route, navOptions(optionsBuilder))
     }
 
-    private fun startActivity(intent: Intent, withAnimation: Boolean = true, slideLeft: Boolean = false) {
+    private fun startActivity(
+        intent: Intent,
+        withAnimation: Boolean = true,
+        slideLeft: Boolean = false,
+    ) {
         if (withAnimation) {
-            val bundle: Bundle = ActivityOptions.makeCustomAnimation(
-                activity,
-                if (slideLeft) R.anim.slide_in_left else R.anim.slide_in_right,
-                if (slideLeft) R.anim.slide_out_right else R.anim.slide_out_left
-            ).toBundle()
+            val bundle: Bundle =
+                ActivityOptions
+                    .makeCustomAnimation(
+                        activity,
+                        if (slideLeft) R.anim.slide_in_left else R.anim.slide_in_right,
+                        if (slideLeft) R.anim.slide_out_right else R.anim.slide_out_left,
+                    ).toBundle()
             activity.startActivity(intent, bundle)
         } else {
             activity.startActivity(intent)
         }
     }
 
-    private fun openWebView(url: String, title: String) {
-        val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", url)
-            putExtra("title", title)
-        }
+    private fun openWebView(
+        url: String,
+        title: String,
+    ) {
+        val intent =
+            Intent(activity, WebViewActivity::class.java).apply {
+                putExtra("fileUrl", url)
+                putExtra("title", title)
+            }
         startActivity(intent)
     }
 
     override fun openPulseLogin() {
-        val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", "https://dev.arche.global/onboarding")
-            putExtra("title", "Pulse")
-        }
+        val intent =
+            Intent(activity, WebViewActivity::class.java).apply {
+                putExtra("fileUrl", "https://dev.arche.global/onboarding")
+                putExtra("title", "Pulse")
+            }
         startActivity(intent)
     }
 
@@ -69,19 +82,24 @@ class AndroidNavigator(
                     Intent.FLAG_ACTIVITY_CLEAR_TASK or
                     Intent.FLAG_ACTIVITY_CLEAR_TOP
             },
-            false
+            false,
         )
         activity.finish()
     }
 
-    override fun navigateToOtpVerification(email: String, mobile: String, employeeId: String, stayLoggedIn: Boolean) {
+    override fun navigateToOtpVerification(
+        email: String,
+        mobile: String,
+        employeeId: String,
+        stayLoggedIn: Boolean,
+    ) {
         startActivity(
             Intent(activity, OtpVerificationActivity::class.java).apply {
                 putExtra("email", email)
                 putExtra("mobile", mobile)
                 putExtra("employeeId", employeeId)
                 putExtra("stayLoggedIn", stayLoggedIn)
-            }
+            },
         )
     }
 
@@ -91,7 +109,7 @@ class AndroidNavigator(
         email: String,
         mobile: String,
         employeeId: String,
-        stayLoggedIn: Boolean
+        stayLoggedIn: Boolean,
     ) {
         Log.d("AndroidNavigator", "navigateToHome called with fromOtp=$fromOtp")
 
@@ -126,7 +144,7 @@ class AndroidNavigator(
         showBiometricSetup: Boolean,
         email: String,
         mobile: String,
-        employeeId: String
+        employeeId: String,
     ) {
         startActivity(
             Intent(activity, HomeActivity::class.java).apply {
@@ -141,7 +159,7 @@ class AndroidNavigator(
                 putExtra("clearBackStack", true) // Force clear navigation back stack
             },
             true,
-            true
+            true,
         )
 
         // Finish the current activity to prevent going back to it
@@ -154,14 +172,15 @@ class AndroidNavigator(
         selectedGreetingUrl: String,
         allGreetings: List<String>,
         message: String,
-        category: String
+        category: String,
     ) {
-        val intent = Intent(activity, GreetingDetailActivity::class.java).apply {
-            putExtra("imageUrl", selectedGreetingUrl)
-            putExtra("category", category)
-            putExtra("message", message)
-            putStringArrayListExtra("allGreetings", ArrayList(allGreetings))
-        }
+        val intent =
+            Intent(activity, GreetingDetailActivity::class.java).apply {
+                putExtra("imageUrl", selectedGreetingUrl)
+                putExtra("category", category)
+                putExtra("message", message)
+                putStringArrayListExtra("allGreetings", ArrayList(allGreetings))
+            }
         activity.startActivity(intent)
     }
 
@@ -174,11 +193,13 @@ class AndroidNavigator(
                     putExtra("isEmergencyContact", true)
                     putExtra("showHeader", showHeader)
                     putExtra("destination", "locations")
-                }
+                },
             )
             activity.finish()
         }
-    } override fun navigateToBusinessCard() {
+    }
+
+    override fun navigateToBusinessCard() {
         navigate("business_card")
     }
 
@@ -270,7 +291,7 @@ class AndroidNavigator(
             startActivity(
                 Intent(activity, HomeActivity::class.java).apply {
                     putExtra("navigateTo", "greetings")
-                }
+                },
             )
         }
     }
@@ -293,9 +314,10 @@ class AndroidNavigator(
     override fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory) {
         val gson = com.google.gson.Gson()
         val subcategoryJson = gson.toJson(subcategory)
-        val intent = android.content.Intent(activity, GlobalCelebrationDetailActivity::class.java).apply {
-            putExtra("subcategory_json", subcategoryJson)
-        }
+        val intent =
+            android.content.Intent(activity, GlobalCelebrationDetailActivity::class.java).apply {
+                putExtra("subcategory_json", subcategoryJson)
+            }
         startActivity(intent, true)
     }
 
@@ -351,19 +373,21 @@ class AndroidNavigator(
 
     override fun navigateToOrderHistory() {
         // Simple direct navigation like admin dashboard
-        val intent = Intent(activity, HomeActivity::class.java).apply {
-            action = "navigate_to_order_history"
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
+        val intent =
+            Intent(activity, HomeActivity::class.java).apply {
+                action = "navigate_to_order_history"
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
         activity.startActivity(intent)
         activity.finish()
     }
 
     override fun navigateToConsumptionReport() {
         val source = if (activity is AdminDashboardActivity) "AdminDashboard" else null
-        val intent = Intent(activity, ConsumptionReportActivity::class.java).apply {
-            putExtra("sourceScreen", source)
-        }
+        val intent =
+            Intent(activity, ConsumptionReportActivity::class.java).apply {
+                putExtra("sourceScreen", source)
+            }
         startActivity(intent)
     }
 
@@ -371,7 +395,7 @@ class AndroidNavigator(
         startActivity(
             Intent(activity, XConnectActivity::class.java).apply {
                 putExtra("initialTab", initialTab)
-            }
+            },
         )
     }
 
@@ -380,9 +404,10 @@ class AndroidNavigator(
     }
 
     override fun navigateToTrackTickets(category: String) {
-        val intent = Intent(activity, TrackTicketsActivity::class.java).apply {
-            putExtra("ticketCategory", category)
-        }
+        val intent =
+            Intent(activity, TrackTicketsActivity::class.java).apply {
+                putExtra("ticketCategory", category)
+            }
         startActivity(intent)
     }
 
@@ -409,7 +434,7 @@ class AndroidNavigator(
             startActivity(
                 Intent(activity, SOSActivity::class.java).apply {
                     putExtra("showHeader", showHeader)
-                }
+                },
             )
         }
     }
@@ -459,6 +484,13 @@ class AndroidNavigator(
 
     override fun navigateToTravelApprovals() {
         navController?.navigate("travel_approvals") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    override fun navigateToTravelAdminDashboard() {
+        navController?.navigate("travel_admin_dashboard") {
             launchSingleTop = true
             restoreState = true
         }
@@ -566,7 +598,10 @@ class AndroidNavigator(
         navigate("emergencycontact")
     }
 
-    override fun navigateToPDFViewer(pdfUrl: String, title: String) {
+    override fun navigateToPDFViewer(
+        pdfUrl: String,
+        title: String,
+    ) {
         try {
             navigate("pdf_viewer/${URLEncoder.encode(pdfUrl, "UTF-8")}?title=$title")
         } catch (e: Exception) {
@@ -594,9 +629,9 @@ class AndroidNavigator(
 
     override fun navigateToTodo() {
         startActivity(Intent(activity, TodoActivity::class.java))
-    } override fun getCurrentRoute(): String? {
-        return navController?.currentDestination?.route
     }
+
+    override fun getCurrentRoute(): String? = navController?.currentDestination?.route
 
     override fun refreshCurrentScreen() {
         getCurrentRoute()?.let { currentRoute ->
@@ -637,13 +672,19 @@ class AndroidNavigator(
         }
     }
 
-    override fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token: String) {
-        val intent = Intent(activity, com.archeGlobal.one.ui.screens.MpinActivity::class.java).apply {
-            putExtra("email", email)
-            putExtra("mobile", mobile)
-            putExtra("employeeId", employeeId)
-            putExtra("token", token)
-        }
+    override fun navigateToMpinSetup(
+        email: String,
+        mobile: String,
+        employeeId: String,
+        token: String,
+    ) {
+        val intent =
+            Intent(activity, com.archeGlobal.one.ui.screens.MpinActivity::class.java).apply {
+                putExtra("email", email)
+                putExtra("mobile", mobile)
+                putExtra("employeeId", employeeId)
+                putExtra("token", token)
+            }
         activity.startActivity(intent)
         activity.finish()
     }
@@ -655,10 +696,11 @@ class AndroidNavigator(
             }
             else -> {
                 // For other activities, navigate to LoginActivity and show update dialog
-                val intent = Intent(activity, com.archeGlobal.one.LoginActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                    putExtra("showUpdateDialog", true)
-                }
+                val intent =
+                    Intent(activity, com.archeGlobal.one.LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                        putExtra("showUpdateDialog", true)
+                    }
                 activity.startActivity(intent)
                 activity.finish()
             }

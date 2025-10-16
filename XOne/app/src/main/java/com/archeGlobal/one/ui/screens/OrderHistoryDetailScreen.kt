@@ -33,7 +33,7 @@ import java.util.Locale
 @Composable
 fun OrderHistoryDetailScreen(
     controller: OrderHistoryController,
-    orderItem: DeskCartOrderHistory
+    orderItem: DeskCartOrderHistory,
 ) {
     // Handle back gesture navigation - always go to Order History
     BackHandler {
@@ -42,23 +42,27 @@ fun OrderHistoryDetailScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Header
@@ -66,7 +70,7 @@ fun OrderHistoryDetailScreen(
                     title = {
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "Order Details",
@@ -75,7 +79,7 @@ fun OrderHistoryDetailScreen(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.offset(x = (-24).dp) // Center accounting for back button
+                                modifier = Modifier.offset(x = (-24).dp), // Center accounting for back button
                             )
                         }
                     },
@@ -84,28 +88,30 @@ fun OrderHistoryDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        ),
                 )
 
                 // Content
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     // Order Status Card at top
                     OrderHistoryStatusCard(
                         orderId = orderItem.order_Id,
                         orderDate = formatOrderHistoryDateDetails(orderItem.Order_Placed_Time),
-                        orderStatus = orderItem.Order_Status
+                        orderStatus = orderItem.Order_Status,
                     )
 
                     // Employee Details Card
@@ -113,10 +119,10 @@ fun OrderHistoryDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     ) {
                         Column(
-                            modifier = Modifier.padding(20.dp)
+                            modifier = Modifier.padding(20.dp),
                         ) {
                             Text(
                                 text = "Employee Details",
@@ -124,7 +130,7 @@ fun OrderHistoryDetailScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 19.sp,
                                 color = Color.Black,
-                                modifier = Modifier.padding(bottom = 16.dp)
+                                modifier = Modifier.padding(bottom = 16.dp),
                             )
 
                             OrderHistoryDetailRow(label = "Name:", value = orderItem.Emp_Name)
@@ -133,9 +139,12 @@ fun OrderHistoryDetailScreen(
                             OrderHistoryDetailRow(label = "Location:", value = orderItem.Location)
                             OrderHistoryDetailRow(
                                 label = "Email:",
-                                value = com.archeGlobal.one.utils.UserDataManager.getInstance(
-                                    androidx.compose.ui.platform.LocalContext.current
-                                ).getUserData()?.email ?: ""
+                                value =
+                                    com.archeGlobal.one.utils.UserDataManager
+                                        .getInstance(
+                                            androidx.compose.ui.platform.LocalContext.current,
+                                        ).getUserData()
+                                        ?.email ?: "",
                             )
                         }
                     }
@@ -145,10 +154,10 @@ fun OrderHistoryDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     ) {
                         Column(
-                            modifier = Modifier.padding(20.dp)
+                            modifier = Modifier.padding(20.dp),
                         ) {
                             Text(
                                 text = "Order Items",
@@ -156,14 +165,14 @@ fun OrderHistoryDetailScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 19.sp,
                                 color = Color.Black,
-                                modifier = Modifier.padding(bottom = 16.dp)
+                                modifier = Modifier.padding(bottom = 16.dp),
                             )
 
                             // List each item
                             orderItem.items.filter { it.count > 0 }.forEach { item ->
                                 OrderHistoryItemRow(
                                     label = item.name.replace("_", " "),
-                                    value = "Qty: ${item.count}"
+                                    value = "Qty: ${item.count}",
                                 )
                             }
 
@@ -172,7 +181,7 @@ fun OrderHistoryDetailScreen(
                             // Total items with divider
                             HorizontalDivider(
                                 color = Color.Gray.copy(alpha = 0.3f),
-                                thickness = 1.dp
+                                thickness = 1.dp,
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -181,7 +190,7 @@ fun OrderHistoryDetailScreen(
                                 label = "Total Items",
                                 value = "Qty: ${orderItem.Total_Items_in_Order}",
                                 labelWeight = FontWeight.Normal,
-                                valueWeight = FontWeight.Normal
+                                valueWeight = FontWeight.Normal,
                             )
                         }
                     }
@@ -192,10 +201,10 @@ fun OrderHistoryDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                         ) {
                             Column(
-                                modifier = Modifier.padding(20.dp)
+                                modifier = Modifier.padding(20.dp),
                             ) {
                                 Text(
                                     text = "Additional Details",
@@ -203,14 +212,14 @@ fun OrderHistoryDetailScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 19.sp,
                                     color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 16.dp)
+                                    modifier = Modifier.padding(bottom = 16.dp),
                                 )
 
                                 // Processed By field - show if not empty
                                 if (orderItem.orderProcessedByAdminTeam.isNotEmpty()) {
                                     OrderHistoryDetailRow(
                                         label = "Processed By:",
-                                        value = orderItem.orderProcessedByAdminTeam
+                                        value = orderItem.orderProcessedByAdminTeam,
                                     )
                                 }
 
@@ -218,7 +227,7 @@ fun OrderHistoryDetailScreen(
                                 if (orderItem.Remarks.isNotEmpty()) {
                                     OrderHistoryDetailRow(
                                         label = "Remarks:",
-                                        value = orderItem.Remarks
+                                        value = orderItem.Remarks,
                                     )
                                 }
                             }
@@ -234,21 +243,21 @@ fun OrderHistoryDetailScreen(
 private fun OrderHistoryStatusCard(
     orderId: String,
     orderDate: String,
-    orderStatus: String
+    orderStatus: String,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Column {
                     Text(
@@ -256,7 +265,7 @@ private fun OrderHistoryStatusCard(
                         fontSize = 18.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
+                        color = Color.Black,
                     )
 
                     Row(modifier = Modifier.padding(top = 4.dp)) {
@@ -265,32 +274,33 @@ private fun OrderHistoryStatusCard(
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
-                            color = Color.Black
+                            color = Color.Black,
                         )
                         Text(
                             text = orderDate,
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
-                            color = Color.Gray
+                            color = Color.Gray,
                         )
                     }
                 }
 
                 // Status Badge
-                val (backgroundColor, textColor, borderColor) = when (orderStatus.lowercase()) {
-                    "pending" -> Triple(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500), Color(0xFFFFA500)) // Orange
-                    "approved" -> Triple(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000), Color(0xFF008000)) // Green
-                    "rejected", "cancelled" -> Triple(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000), Color(0xFFFF0000)) // Red
-                    "closed" -> Triple(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080), Color(0xFF808080)) // Gray
-                    else -> Triple(Color.Gray.copy(alpha = 0.15f), Color.Gray, Color.Gray) // Fallback
-                }
+                val (backgroundColor, textColor, borderColor) =
+                    when (orderStatus.lowercase()) {
+                        "pending" -> Triple(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500), Color(0xFFFFA500)) // Orange
+                        "approved" -> Triple(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000), Color(0xFF008000)) // Green
+                        "rejected", "cancelled" -> Triple(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000), Color(0xFFFF0000)) // Red
+                        "closed" -> Triple(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080), Color(0xFF808080)) // Gray
+                        else -> Triple(Color.Gray.copy(alpha = 0.15f), Color.Gray, Color.Gray) // Fallback
+                    }
 
                 Card(
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(containerColor = backgroundColor),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    border = BorderStroke(1.dp, borderColor)
+                    border = BorderStroke(1.dp, borderColor),
                 ) {
                     Text(
                         text = "Status: $orderStatus",
@@ -298,7 +308,7 @@ private fun OrderHistoryStatusCard(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         color = textColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                     )
                 }
             }
@@ -311,13 +321,14 @@ private fun OrderHistoryDetailRow(
     label: String,
     value: String,
     labelWeight: FontWeight = FontWeight.Medium,
-    valueWeight: FontWeight = FontWeight.Normal
+    valueWeight: FontWeight = FontWeight.Normal,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = label,
@@ -325,7 +336,7 @@ private fun OrderHistoryDetailRow(
             fontWeight = labelWeight,
             fontSize = 15.sp,
             color = Color.Gray,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
 
         Text(
@@ -335,7 +346,7 @@ private fun OrderHistoryDetailRow(
             fontSize = 15.sp,
             color = Color.Black,
             modifier = Modifier.weight(1f),
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
         )
     }
 }
@@ -345,13 +356,14 @@ private fun OrderHistoryItemRow(
     label: String,
     value: String,
     labelWeight: FontWeight = FontWeight.Normal,
-    valueWeight: FontWeight = FontWeight.Normal
+    valueWeight: FontWeight = FontWeight.Normal,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = label,
@@ -359,7 +371,7 @@ private fun OrderHistoryItemRow(
             fontWeight = labelWeight,
             fontSize = 15.sp,
             color = Color.Black,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
 
         Text(
@@ -369,7 +381,7 @@ private fun OrderHistoryItemRow(
             fontSize = 15.sp,
             color = Color.Black,
             modifier = Modifier.weight(1f),
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
         )
     }
 }

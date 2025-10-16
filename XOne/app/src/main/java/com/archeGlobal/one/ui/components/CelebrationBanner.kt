@@ -41,35 +41,38 @@ import com.archeGlobal.one.ui.theme.XOneTheme
 fun CelebrationBanner(
     celebrationData: CelebrationResponse?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val totalCelebrations = (celebrationData?.today?.size ?: 0) + (celebrationData?.tomorrow?.size ?: 0)
 
     // Debug logging
-    android.util.Log.d("CelebrationBanner", "Received data - Today: ${celebrationData?.today?.size ?: 0}, Tomorrow: ${celebrationData?.tomorrow?.size ?: 0}, Total: $totalCelebrations")
+    android.util.Log.d(
+        "CelebrationBanner",
+        "Received data - Today: ${celebrationData?.today?.size ?: 0}, Tomorrow: ${celebrationData?.tomorrow?.size ?: 0}, Total: $totalCelebrations",
+    )
 
     if (totalCelebrations > 0) {
         Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .background(
-                    color = Color(0x1ADD3825),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(vertical = 8.dp, horizontal = 12.dp),
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .background(
+                        color = Color(0x1ADD3825),
+                        shape = RoundedCornerShape(8.dp),
+                    ).padding(vertical = 8.dp, horizontal = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
                 onClick = onClick,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.cele),
                     contentDescription = "Celebration Pin",
                     tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
             }
 
@@ -83,22 +86,23 @@ fun CelebrationBanner(
                 textAlign = TextAlign.Center,
                 color = Color.Black,
                 lineHeight = 15.sp,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { onClick() }
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .clickable { onClick() },
             )
 
             Spacer(modifier = Modifier.width(8.dp))
 
             IconButton(
                 onClick = onClick,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.rightpin),
                     contentDescription = "Celebration Pin",
                     tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
@@ -111,46 +115,48 @@ fun CelebrationDialog(
     onDismiss: () -> Unit,
     onWishesClick: (String, String, String) -> Unit,
     onViewAllClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableStateOf("Today") }
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Card(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .pointerInput(Unit) {
-                    detectHorizontalDragGestures(
-                        onDragEnd = { /* Handle drag end */ },
-                        onHorizontalDrag = { _, dragAmount ->
-                            if (dragAmount > 50) {
-                                // Swiped from left to right - go to Today
-                                selectedTab = "Today"
-                            } else if (dragAmount < -50) {
-                                // Swiped from right to left - go to Tomorrow
-                                selectedTab = "Tomorrow"
-                            }
-                        }
-                    )
-                },
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Column(
-                modifier = Modifier
+            modifier =
+                modifier
                     .fillMaxWidth()
                     .padding(16.dp)
+                    .pointerInput(Unit) {
+                        detectHorizontalDragGestures(
+                            onDragEnd = { /* Handle drag end */ },
+                            onHorizontalDrag = { _, dragAmount ->
+                                if (dragAmount > 50) {
+                                    // Swiped from left to right - go to Today
+                                    selectedTab = "Today"
+                                } else if (dragAmount < -50) {
+                                    // Swiped from right to left - go to Tomorrow
+                                    selectedTab = "Tomorrow"
+                                }
+                            },
+                        )
+                    },
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        ) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
             ) {
                 // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // Empty space for balance
                     Spacer(modifier = Modifier.width(48.dp))
@@ -162,14 +168,14 @@ fun CelebrationDialog(
                         fontFamily = GraphikFontFamily,
                         color = Color.Black,
                         modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
 
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = Color.Gray
+                            tint = Color.Gray,
                         )
                     }
                 }
@@ -179,33 +185,34 @@ fun CelebrationDialog(
                 // Tab selector
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
                     TabButton(
                         text = "Today",
                         isSelected = selectedTab == "Today",
-                        onClick = { selectedTab = "Today" }
+                        onClick = { selectedTab = "Today" },
                     )
 
                     TabButton(
                         text = "Tomorrow",
                         isSelected = selectedTab == "Tomorrow",
-                        onClick = { selectedTab = "Tomorrow" }
+                        onClick = { selectedTab = "Tomorrow" },
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Get items for current tab
-                val allItemsForTab = if (selectedTab == "Today") {
-                    celebrationData?.today ?: emptyList()
-                } else {
-                    celebrationData?.tomorrow ?: emptyList()
-                }
+                val allItemsForTab =
+                    if (selectedTab == "Today") {
+                        celebrationData?.today ?: emptyList()
+                    } else {
+                        celebrationData?.tomorrow ?: emptyList()
+                    }
 
                 // Content
                 LazyColumn(
-                    modifier = Modifier.heightIn(max = 300.dp)
+                    modifier = Modifier.heightIn(max = 300.dp),
                 ) {
                     // Show only first 3 items
                     val itemsToShow = allItemsForTab.take(3)
@@ -213,10 +220,11 @@ fun CelebrationDialog(
                     if (itemsToShow.isEmpty()) {
                         item {
                             Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp),
-                                contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Text(
                                     text = if (selectedTab == "Today") "No events today" else "No events tomorrow",
@@ -224,7 +232,7 @@ fun CelebrationDialog(
                                     fontWeight = FontWeight.Normal,
                                     fontFamily = GraphikFontFamily,
                                     color = Color.Gray,
-                                    textAlign = TextAlign.Center
+                                    textAlign = TextAlign.Center,
                                 )
                             }
                         }
@@ -234,7 +242,7 @@ fun CelebrationDialog(
                                 item = item,
                                 onWishesClick = { onWishesClick(item.email, item.employeeName, item.celebrationType) },
                                 isFromSelectedTab = true,
-                                modifier = Modifier.padding(vertical = 4.dp)
+                                modifier = Modifier.padding(vertical = 4.dp),
                             )
                         }
                     }
@@ -246,24 +254,25 @@ fun CelebrationDialog(
                 if (allItemsForTab.size > 3) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.Center,
                     ) {
                         OutlinedButton(
                             onClick = onViewAllClick,
                             shape = RoundedCornerShape(20.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFFDD3825),
-                                containerColor = Color.Transparent
-                            ),
+                            colors =
+                                ButtonDefaults.outlinedButtonColors(
+                                    contentColor = Color(0xFFDD3825),
+                                    containerColor = Color.Transparent,
+                                ),
                             border = BorderStroke(1.dp, Color(0xFFDD3825)),
-                            modifier = Modifier.height(36.dp)
+                            modifier = Modifier.height(36.dp),
                         ) {
                             Text(
                                 text = "View All",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 fontFamily = GraphikFontFamily,
-                                color = Color(0xFFDD3825)
+                                color = Color(0xFFDD3825),
                             )
                         }
                     }
@@ -274,28 +283,30 @@ fun CelebrationDialog(
                 // Page indicator
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.Center,
                 ) {
                     // Today indicator
                     Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(
-                                color = if (selectedTab == "Today") Color(0xFFDD3825) else Color.Gray.copy(alpha = 0.3f),
-                                shape = CircleShape
-                            )
+                        modifier =
+                            Modifier
+                                .size(8.dp)
+                                .background(
+                                    color = if (selectedTab == "Today") Color(0xFFDD3825) else Color.Gray.copy(alpha = 0.3f),
+                                    shape = CircleShape,
+                                ),
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
 
                     // Tomorrow indicator
                     Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(
-                                color = if (selectedTab == "Tomorrow") Color(0xFFDD3825) else Color.Gray.copy(alpha = 0.3f),
-                                shape = CircleShape
-                            )
+                        modifier =
+                            Modifier
+                                .size(8.dp)
+                                .background(
+                                    color = if (selectedTab == "Tomorrow") Color(0xFFDD3825) else Color.Gray.copy(alpha = 0.3f),
+                                    shape = CircleShape,
+                                ),
                     )
                 }
             }
@@ -308,22 +319,23 @@ private fun TabButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Button(
         onClick = onClick,
         modifier = modifier,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFFFF6B6B) else Color(0xFFE5E5E5),
-            contentColor = if (isSelected) Color.White else Color.Black
-        ),
-        shape = RoundedCornerShape(20.dp)
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = if (isSelected) Color(0xFFFF6B6B) else Color(0xFFE5E5E5),
+                contentColor = if (isSelected) Color.White else Color.Black,
+            ),
+        shape = RoundedCornerShape(20.dp),
     ) {
         Text(
             text = text,
             fontSize = 14.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-            fontFamily = GraphikFontFamily
+            fontFamily = GraphikFontFamily,
         )
     }
 }
@@ -333,32 +345,35 @@ fun CelebrationItem(
     item: CelebrationItem,
     onWishesClick: () -> Unit,
     isFromSelectedTab: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isFromSelectedTab) Color(0xFFF8F9FA) else Color.Gray.copy(alpha = 0.15f)
-        ),
-        shape = RoundedCornerShape(8.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor = if (isFromSelectedTab) Color(0xFFF8F9FA) else Color.Gray.copy(alpha = 0.15f),
+            ),
+        shape = RoundedCornerShape(8.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Profile picture
                 Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(Color.Gray, CircleShape)
-                        .clip(CircleShape),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .size(40.dp)
+                            .background(Color.Gray, CircleShape)
+                            .clip(CircleShape),
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (item.profilePic.isNotEmpty()) {
                         Box(modifier = Modifier.fillMaxSize()) {
@@ -367,22 +382,26 @@ fun CelebrationItem(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = "Profile",
                                 tint = Color.White,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(8.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(8.dp),
                             )
 
                             // Load actual profile image on top
                             AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(item.profilePic)
-                                    .crossfade(true)
-                                    .build(),
+                                model =
+                                    ImageRequest
+                                        .Builder(LocalContext.current)
+                                        .data(item.profilePic)
+                                        .crossfade(true)
+                                        .build(),
                                 contentDescription = "Profile Picture",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
+                                contentScale = ContentScale.Crop,
                             )
                         }
                     } else {
@@ -390,7 +409,7 @@ fun CelebrationItem(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile",
                             tint = Color.White,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
                         )
                     }
                 }
@@ -403,14 +422,14 @@ fun CelebrationItem(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         fontFamily = GraphikFontFamily,
-                        color = Color.Black
+                        color = Color.Black,
                     )
 
                     Text(
                         text = item.celebrationType,
                         fontSize = 12.sp,
                         fontFamily = GraphikFontFamily,
-                        color = Color(0xFF007AFF)
+                        color = Color(0xFF007AFF),
                     )
                 }
             }
@@ -418,18 +437,19 @@ fun CelebrationItem(
             // Wishes button
             Button(
                 onClick = onWishesClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF007AFF)
-                ),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF007AFF),
+                    ),
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.height(32.dp)
+                modifier = Modifier.height(32.dp),
             ) {
                 Text(
                     text = "WISHES",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = GraphikFontFamily,
-                    color = Color.White
+                    color = Color.White,
                 )
             }
         }
@@ -442,7 +462,7 @@ fun CelebrationBannerPreview() {
     XOneTheme {
         CelebrationBanner(
             celebrationData = null,
-            onClick = {}
+            onClick = {},
         )
     }
 }

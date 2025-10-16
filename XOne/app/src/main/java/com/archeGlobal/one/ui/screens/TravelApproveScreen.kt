@@ -41,7 +41,7 @@ import java.util.*
 @Composable
 fun TravelApproveScreen(
     controller: TravelController,
-    travelRequest: TravelRequest
+    travelRequest: TravelRequest,
 ) {
     // Get context and font adjustment for consistent font scaling
     val context = LocalContext.current
@@ -53,8 +53,14 @@ fun TravelApproveScreen(
     var successMessage by remember { mutableStateOf<String?>(null) }
 
     // Date formatter for display
-    val dateFormatter = remember {
-        SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    val dateFormatter =
+        remember {
+            SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        }
+
+    // Reset approval action state when screen opens
+    LaunchedEffect(Unit) {
+        controller.resetApprovalActionState()
     }
 
     // Observe the approval action state from the controller
@@ -98,30 +104,34 @@ fun TravelApproveScreen(
     // Wrap entire content with font scale adjustment
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .systemBarsPadding()
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .systemBarsPadding(),
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                WelcomeBackgroundTop,
-                                WelcomeBackgroundMiddle,
-                                WelcomeBackgroundBottom
-                            )
-                        )
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush =
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            WelcomeBackgroundTop,
+                                            WelcomeBackgroundMiddle,
+                                            WelcomeBackgroundBottom,
+                                        ),
+                                ),
+                        ),
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     TopAppBar(
                         title = {
                             Box(
                                 modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Text(
                                     text = "Approve Travel Request",
@@ -130,7 +140,7 @@ fun TravelApproveScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Center,
-                                    modifier = Modifier.offset(x = (-24).dp)
+                                    modifier = Modifier.offset(x = (-24).dp),
                                 )
                             }
                         },
@@ -141,48 +151,50 @@ fun TravelApproveScreen(
                                 Icon(
                                     Icons.Default.ArrowBack,
                                     contentDescription = "Back",
-                                    tint = Color.Black
+                                    tint = Color.Black,
                                 )
                             }
                         },
                         backgroundColor = Color.Transparent,
-                        elevation = 0.dp
+                        elevation = 0.dp,
                     )
 
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .padding(16.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(16.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = 1.dp,
-                        backgroundColor = Color(0xFFF6F4EE)
+                        backgroundColor = Color(0xFFF6F4EE),
                     ) {
                         val scrollState = rememberScrollState()
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .verticalScroll(scrollState)
-                                .padding(24.dp)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .verticalScroll(scrollState)
+                                    .padding(24.dp),
                         ) {
                             // Header with ID and Status
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
                                     text = "#${travelRequest.id}",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     fontFamily = GraphikFontFamily,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
 
                                 Card(
                                     shape = RoundedCornerShape(8.dp),
                                     backgroundColor = Color(0xFFFFF3CD),
-                                    elevation = 0.dp
+                                    elevation = 0.dp,
                                 ) {
                                     Text(
                                         text = "Status: Pending",
@@ -190,81 +202,153 @@ fun TravelApproveScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium,
                                         color = Color(0xFFFF9800),
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Created At
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.calendar_3x,
+                                label = "Created At",
+                                value = dateFormatter.format(travelRequest.createdDate),
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             // Employee details
                             ApprovalDetailRow(
                                 iconRes = R.drawable.person_3x,
                                 label = "Employee",
-                                value = travelRequest.approver ?: "Nova O'Sullivan"
+                                value = travelRequest.employeeName ?: "N/A",
                             )
 
                             ApprovalDetailRow(
                                 iconRes = R.drawable.person_badge_clock,
                                 label = "Employee ID",
-                                value = "NT9999"
+                                value = travelRequest.employeeId ?: "N/A",
                             )
 
                             ApprovalDetailRow(
                                 iconRes = R.drawable.envelope_3x,
                                 label = "Email",
-                                value = "webtestuser@arche.global"
+                                value = travelRequest.employeeEmail ?: "N/A",
                             )
 
                             ApprovalDetailRow(
                                 iconRes = R.drawable.phone_3x,
                                 label = "Mobile",
-                                value = "7397768656"
+                                value = travelRequest.employeeMobile ?: "N/A",
                             )
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Project details
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.folder_3x,
+                                label = "Project",
+                                value = travelRequest.project,
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.projectid,
+                                label = "Project ID",
+                                value = travelRequest.projectId ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.opportunityid,
+                                label = "Opportunity ID",
+                                value = travelRequest.opportunityId ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.crmid,
+                                label = "CRM ID",
+                                value = travelRequest.crmId ?: "N/A",
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Business details
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.busjust,
+                                label = "Business Justification",
+                                value = travelRequest.businessJustification ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.modeoft,
+                                label = "Mode of Transport",
+                                value = travelRequest.modeOfTransport ?: "Flight",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.stayreq,
+                                label = "Stay Required",
+                                value = travelRequest.stayRequired ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.car_3x,
+                                label = "Cab Required",
+                                value = "No", // Default value, update based on actual field if available
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.meal,
+                                label = "Meal Preference",
+                                value = travelRequest.mealPreference ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.seat,
+                                label = "Seat Preference",
+                                value = travelRequest.seatPreference ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.noimage,
+                                label = "Frequent Flyer Number",
+                                value = travelRequest.frequentFlyerNumber ?: "N/A",
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             // Travel Details - Handle multi-destination vs single destination
                             val destinations = travelRequest.getAllDestinations()
 
                             if (destinations.isEmpty() || destinations.size == 1) {
-                                // Single destination display
-                                Text(
-                                    text = "Trip 1",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 4.dp)
-                                )
-
+                                // Single destination display (no trip label)
                                 val destination = destinations.firstOrNull()
 
                                 ApprovalDetailRow(
                                     iconRes = R.drawable.mappin_and_ellipse,
                                     label = "Origin City",
-                                    value = destination?.originCity ?: "N/A"
+                                    value = destination?.originCity ?: "N/A",
                                 )
 
                                 ApprovalDetailRow(
                                     iconRes = R.drawable.mappin_and_ellipse,
                                     label = "Destination City",
-                                    value = destination?.destinationCity ?: travelRequest.destination
+                                    value = destination?.destinationCity ?: travelRequest.destination,
                                 )
 
                                 ApprovalDetailRow(
                                     iconRes = R.drawable.airplane_departure,
                                     label = "Date of Departure",
-                                    value = destination?.departureDate ?: travelRequest.departureDate ?: "N/A"
+                                    value = destination?.departureDate ?: travelRequest.departureDate ?: "N/A",
                                 )
 
                                 ApprovalDetailRow(
                                     iconRes = R.drawable.airplane_arrival,
                                     label = "Date of Arrival",
-                                    value = destination?.arrivalDate ?: travelRequest.arrivalDate ?: "N/A"
+                                    value = destination?.arrivalDate ?: travelRequest.arrivalDate ?: "N/A",
                                 )
                             } else {
-                                // Multi-destination display
+                                // Multi-destination display (with trip labels)
                                 destinations.forEachIndexed { index, destination ->
                                     if (index > 0) {
                                         Spacer(modifier = Modifier.height(12.dp))
@@ -276,60 +360,34 @@ fun TravelApproveScreen(
                                         fontWeight = FontWeight.SemiBold,
                                         fontFamily = GraphikFontFamily,
                                         color = Color.Black,
-                                        modifier = Modifier.padding(bottom = 4.dp)
+                                        modifier = Modifier.padding(bottom = 4.dp),
                                     )
 
                                     ApprovalDetailRow(
                                         iconRes = R.drawable.mappin_and_ellipse,
                                         label = "Origin City",
-                                        value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A"
+                                        value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
                                     )
 
                                     ApprovalDetailRow(
                                         iconRes = R.drawable.mappin_and_ellipse,
                                         label = "Destination City",
-                                        value = destination.destinationCity
+                                        value = destination.destinationCity,
                                     )
 
                                     ApprovalDetailRow(
                                         iconRes = R.drawable.airplane_departure,
                                         label = "Date of Departure",
-                                        value = destination.departureDate
+                                        value = destination.departureDate,
                                     )
 
                                     ApprovalDetailRow(
                                         iconRes = R.drawable.airplane_arrival,
                                         label = "Date of Arrival",
-                                        value = destination.arrivalDate
+                                        value = destination.arrivalDate,
                                     )
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            ApprovalDetailRow(
-                                iconRes = R.drawable.folder_3x,
-                                label = "Project",
-                                value = travelRequest.project
-                            )
-
-                            ApprovalDetailRow(
-                                iconRes = R.drawable.busjust,
-                                label = "Business Justification",
-                                value = travelRequest.businessJustification ?: "Test"
-                            )
-
-                            ApprovalDetailRow(
-                                iconRes = R.drawable.car_3x,
-                                label = "Mode of Transport",
-                                value = travelRequest.modeOfTransport ?: "Flight"
-                            )
-
-                            ApprovalDetailRow(
-                                iconRes = R.drawable.calendar_3x,
-                                label = "Created",
-                                value = dateFormatter.format(travelRequest.createdDate)
-                            )
 
                             Spacer(modifier = Modifier.height(24.dp))
 
@@ -337,25 +395,27 @@ fun TravelApproveScreen(
                             OutlinedTextField(
                                 value = remarks,
                                 onValueChange = { remarks = it },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(120.dp)
-                                    .padding(bottom = 24.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(120.dp)
+                                        .padding(bottom = 24.dp),
                                 placeholder = {
                                     Text(
                                         "Enter remark (optional)",
                                         fontFamily = GraphikFontFamily,
-                                        color = Color.Gray
+                                        color = Color.Gray,
                                     )
                                 },
-                                colors = TextFieldDefaults.outlinedTextFieldColors(
-                                    focusedBorderColor = Color(0xFF4CAF50),
-                                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                                    textColor = Color.Black,
-                                    placeholderColor = Color.Gray,
-                                    backgroundColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(8.dp)
+                                colors =
+                                    TextFieldDefaults.outlinedTextFieldColors(
+                                        focusedBorderColor = Color(0xFF4CAF50),
+                                        unfocusedBorderColor = Color(0xFFE0E0E0),
+                                        textColor = Color.Black,
+                                        placeholderColor = Color.Gray,
+                                        backgroundColor = Color.White,
+                                    ),
+                                shape = RoundedCornerShape(8.dp),
                             )
 
                             // Submit Approval button
@@ -364,21 +424,23 @@ fun TravelApproveScreen(
                                     isLoading = true
                                     controller.approveTravelRequest(travelRequest.id, remarks)
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    backgroundColor = Color(0xFF4CAF50),
-                                    disabledBackgroundColor = Color.Gray
-                                ),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        backgroundColor = Color(0xFF4CAF50),
+                                        disabledBackgroundColor = Color.Gray,
+                                    ),
                                 shape = RoundedCornerShape(28.dp),
-                                enabled = !isLoading
+                                enabled = !isLoading,
                             ) {
                                 if (isLoading) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(24.dp),
                                         color = Color.White,
-                                        strokeWidth = 2.dp
+                                        strokeWidth = 2.dp,
                                     )
                                 } else {
                                     Text(
@@ -386,7 +448,7 @@ fun TravelApproveScreen(
                                         color = Color.White,
                                         fontSize = 16.sp,
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
                                     )
                                 }
                             }
@@ -400,7 +462,7 @@ fun TravelApproveScreen(
                                     fontSize = 14.sp,
                                     fontFamily = GraphikFontFamily,
                                     textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
                                 )
                             }
 
@@ -413,7 +475,7 @@ fun TravelApproveScreen(
                                     fontSize = 14.sp,
                                     fontFamily = GraphikFontFamily,
                                     textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
                                 )
                             }
                         }
@@ -428,19 +490,20 @@ fun TravelApproveScreen(
 private fun ApprovalDetailRow(
     iconRes: Int,
     label: String,
-    value: String
+    value: String,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
             modifier = Modifier.size(18.dp),
-            tint = Color.Gray
+            tint = Color.Gray,
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
@@ -449,7 +512,7 @@ private fun ApprovalDetailRow(
             fontWeight = FontWeight.Medium,
             color = Color.Gray,
             fontSize = 14.sp,
-            modifier = Modifier.width(130.dp)
+            modifier = Modifier.width(130.dp),
         )
         Spacer(modifier = Modifier.weight(1f))
         Text(
@@ -458,7 +521,7 @@ private fun ApprovalDetailRow(
             fontWeight = FontWeight.Normal,
             fontSize = 14.sp,
             color = Color.Black,
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
         )
     }
 }

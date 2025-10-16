@@ -9,20 +9,15 @@ import com.google.gson.annotations.SerializedName
 data class TravelDestination(
     @SerializedName("travel_destination")
     val travelDestination: String,
-
     @SerializedName("origin_city")
     val originCity: String,
-
     @SerializedName("destination_city")
     val destinationCity: String,
-
     @SerializedName("departure_date") val departureDate: String,
-
     @SerializedName("arrival_date")
     val arrivalDate: String,
-
     @SerializedName("flight_time")
-    val flightTimePreference: String = ""
+    val flightTimePreference: String = "",
 )
 
 /**
@@ -32,18 +27,56 @@ data class TravelDestination(
 data class TravelDetail(
     @SerializedName("originCity")
     val originCity: String = "N/A",
-
     @SerializedName("destinationCity")
     val destinationCity: String,
-
     @SerializedName("departureDate")
     val departureDate: String,
-
     @SerializedName("arrivalDate")
     val arrivalDate: String,
-
     @SerializedName("flightTimePreference")
-    val flightTime: String = ""
+    val flightTime: String = "",
+)
+
+/**
+ * Additional member for cab booking
+ */
+data class AdditionalMember(
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("email")
+    val email: String? = null,
+)
+
+/**
+ * Pickup location with map details for cab booking
+ */
+data class PickupLocation(
+    @SerializedName("location")
+    val location: String,
+    @SerializedName("mapDetails")
+    val mapDetails: String = "",
+)
+
+/**
+ * Cab details for travel request
+ */
+data class CabDetail(
+    @SerializedName("travelType")
+    val travelType: String,
+    @SerializedName("cabType")
+    val cabType: String,
+    @SerializedName("travelDate")
+    val travelDate: String,
+    @SerializedName("duration")
+    val duration: String,
+    @SerializedName("pickups")
+    val pickups: List<PickupLocation>,
+    @SerializedName("dropLocation")
+    val dropLocation: String,
+    @SerializedName("dropMapDetails")
+    val dropMapDetails: String = "",
+    @SerializedName("additionalMembers")
+    val additionalMembers: List<AdditionalMember> = emptyList(),
 )
 
 /**
@@ -53,60 +86,56 @@ data class TravelDetail(
 data class TravelRequestSubmission(
     @SerializedName("employeeName")
     val employeeName: String,
-
     @SerializedName("employeeEmail")
     val employeeEmail: String,
-
     @SerializedName("employeeId")
     val employeeId: String,
-
     @SerializedName("mobile")
     val mobile: String = "",
-
     @SerializedName("destinations")
-    val travelDetails: List<TravelDetail>,
-
-    @SerializedName("frequentFlyerNumber")
-    val frequentFlyerNum: String = "",
-
-    @SerializedName("mealPreference")
-    val mealPref: String = "",
-
-    @SerializedName("seatPreference")
-    val seatPref: String = "",
-
+    val travelDetails: List<TravelDetail> = emptyList(),
     @SerializedName("projectName")
-    val projectName: String,
-
+    val projectName: String = "",
+    @SerializedName("projectID")
+    val projectID: String = "",
+    @SerializedName("opportunityID")
+    val opportunityID: String = "",
+    @SerializedName("crmID")
+    val crmID: String = "",
     @SerializedName("businessJustification")
-    val businessJustification: String,
-
+    val businessJustification: String = "",
     @SerializedName("modeOfTransport")
     val modeOfTransport: String,
-
     @SerializedName("flightType")
     val flightType: String = "",
-
     @SerializedName("reportingManagerName")
-    val reportingManagerName: String,
-
+    val reportingManagerName: String = "",
     @SerializedName("reportingManagerEmail")
-    val reportingManagerEmail: String,
-
+    val reportingManagerEmail: String = "",
     @SerializedName("stayRequired")
-    val stayRequired: Boolean,
-
+    val stayRequired: Boolean = false,
+    @SerializedName("cabRequired")
+    val cabRequired: Boolean = false,
     @SerializedName("grade")
-    val grade: String,
-
+    val grade: String = "",
     @SerializedName("aadhar_number")
-    val aadharNumber: String,
-
+    val aadharNumber: String = "",
     @SerializedName("date_of_birth")
-    val dateOfBirth: String,
-
+    val dateOfBirth: String = "",
+    @SerializedName("frequentFlyerNum")
+    val frequentFlyerNum: String = "",
+    @SerializedName("mealPreference")
+    val mealPref: String = "",
+    @SerializedName("seatPreference")
+    val seatPref: String = "",
+    @SerializedName("cabDetails")
+    val cabDetails: List<CabDetail> = emptyList(),
+    @SerializedName("remarks")
+    val remarks: String = "",
+    @SerializedName("user_location")
+    val userLocation: String = "",
     @SerializedName("multiTravel")
-    val multiTravel: Boolean
+    val multiTravel: Boolean = false,
 )
 
 /**
@@ -116,21 +145,16 @@ data class TravelRequestSubmission(
 data class TravelRequestResponse(
     @SerializedName("status")
     val status: Int,
-
     @SerializedName("message")
     val message: String,
-
     // Support both camelCase and snake_case for order_history
     @SerializedName("orderHistory")
     val orderHistory: List<TravelHistoryItem>? = null,
-
     @SerializedName("order_history")
-    val orderHistorySnakeCase: List<TravelHistoryItem>? = null
+    val orderHistorySnakeCase: List<TravelHistoryItem>? = null,
 ) {
     // Helper function to get order history regardless of format
-    fun getAllOrderHistory(): List<TravelHistoryItem>? {
-        return orderHistory ?: orderHistorySnakeCase
-    }
+    fun getAllOrderHistory(): List<TravelHistoryItem>? = orderHistory ?: orderHistorySnakeCase
 }
 
 /**
@@ -145,27 +169,35 @@ fun createSingleDestinationRequest(
     destinationCity: String,
     projectName: String,
     businessJustification: String,
+    projectId: String = "",
+    opportunityId: String = "",
+    crmId: String = "",
     modeOfTransport: String,
     departureDate: String,
     arrivalDate: String,
     reportingManagerName: String,
     reportingManagerEmail: String,
     stayRequired: Boolean,
+    cabRequired: Boolean = false,
     grade: String,
     aadharNumber: String,
     dateOfBirth: String,
     frequentFlyerNumber: String,
     mealPreference: String,
     seatPreference: String,
-    flightTime: String
+    flightTime: String,
+    cabDetails: List<CabDetail> = emptyList(),
+    remarks: String = "",
+    userLocation: String = "",
 ): TravelRequestSubmission {
-    val travelDetail = TravelDetail(
-        originCity = originCity,
-        destinationCity = destinationCity,
-        departureDate = departureDate,
-        arrivalDate = arrivalDate,
-        flightTime = flightTime
-    )
+    val travelDetail =
+        TravelDetail(
+            originCity = originCity,
+            destinationCity = destinationCity,
+            departureDate = departureDate,
+            arrivalDate = arrivalDate,
+            flightTime = flightTime,
+        )
 
     return TravelRequestSubmission(
         employeeName = employeeName,
@@ -173,20 +205,27 @@ fun createSingleDestinationRequest(
         employeeId = employeeId,
         mobile = mobile,
         travelDetails = listOf(travelDetail),
-        frequentFlyerNum = frequentFlyerNumber,
-        mealPref = mealPreference,
-        seatPref = seatPreference,
         projectName = projectName,
+        projectID = projectId,
+        opportunityID = opportunityId,
+        crmID = crmId,
         businessJustification = businessJustification,
         modeOfTransport = modeOfTransport,
         flightType = "",
         reportingManagerName = reportingManagerName,
         reportingManagerEmail = reportingManagerEmail,
         stayRequired = stayRequired,
+        cabRequired = cabRequired,
         grade = grade,
         aadharNumber = aadharNumber,
         dateOfBirth = dateOfBirth,
-        multiTravel = false
+        frequentFlyerNum = frequentFlyerNumber,
+        mealPref = mealPreference,
+        seatPref = seatPreference,
+        cabDetails = cabDetails,
+        remarks = remarks,
+        userLocation = userLocation,
+        multiTravel = false,
     )
 }
 
@@ -200,37 +239,50 @@ fun createMultiDestinationRequest(
     mobile: String,
     projectName: String,
     businessJustification: String,
+    projectId: String = "",
+    opportunityId: String = "",
+    crmId: String = "",
     modeOfTransport: String,
     reportingManagerName: String,
     reportingManagerEmail: String,
     stayRequired: Boolean,
+    cabRequired: Boolean = false,
     grade: String,
     aadharNumber: String,
     dateOfBirth: String,
     frequentFlyerNumber: String,
     mealPreference: String,
     seatPreference: String,
-    travelDetails: List<TravelDetail>
-): TravelRequestSubmission {
-    return TravelRequestSubmission(
+    travelDetails: List<TravelDetail>,
+    cabDetails: List<CabDetail> = emptyList(),
+    remarks: String = "",
+    userLocation: String = "",
+): TravelRequestSubmission =
+    TravelRequestSubmission(
         employeeName = employeeName,
         employeeEmail = employeeEmail,
         employeeId = employeeId,
         mobile = mobile,
         travelDetails = travelDetails,
-        frequentFlyerNum = frequentFlyerNumber,
-        mealPref = mealPreference,
-        seatPref = seatPreference,
         projectName = projectName,
+        projectID = projectId,
+        opportunityID = opportunityId,
+        crmID = crmId,
         businessJustification = businessJustification,
         modeOfTransport = modeOfTransport,
         flightType = "",
         reportingManagerName = reportingManagerName,
         reportingManagerEmail = reportingManagerEmail,
         stayRequired = stayRequired,
+        cabRequired = cabRequired,
         grade = grade,
         aadharNumber = aadharNumber,
         dateOfBirth = dateOfBirth,
-        multiTravel = true
+        frequentFlyerNum = frequentFlyerNumber,
+        mealPref = mealPreference,
+        seatPref = seatPreference,
+        cabDetails = cabDetails,
+        remarks = remarks,
+        userLocation = userLocation,
+        multiTravel = true,
     )
-}

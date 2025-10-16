@@ -9,7 +9,7 @@ data class Message(
     val isUser: Boolean,
     val timestamp: Date = Date(),
     val showMoreCategories: Boolean = false,
-    val showFAQs: Boolean = false
+    val showFAQs: Boolean = false,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -41,7 +41,7 @@ data class Message(
 data class FAQItem(
     val title: String,
     val question: String,
-    val answer: String
+    val answer: String,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -3,20 +3,20 @@ package com.archeGlobal.one.controller
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.GreetingDetailActivity
+import com.archeGlobal.one.R
 import com.archeGlobal.one.model.GreetingSubcategory
 import com.archeGlobal.one.model.RegionalFestivalsModel
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.utils.UserDataManager
-import androidx.activity.ComponentActivity
-import com.archeGlobal.one.R
 
 class RegionalFestivalsController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
 
@@ -65,12 +65,13 @@ class RegionalFestivalsController(
         val allImages = ArrayList<String>(subcategory.files)
         val message = subcategory.message
         val category = subcategory.name
-        val intent = Intent(context, GreetingDetailActivity::class.java).apply {
-            putExtra("imageUrl", firstImage)
-            putStringArrayListExtra("allGreetings", allImages)
-            putExtra("message", message)
-            putExtra("category", category)
-        }
+        val intent =
+            Intent(context, GreetingDetailActivity::class.java).apply {
+                putExtra("imageUrl", firstImage)
+                putStringArrayListExtra("allGreetings", allImages)
+                putExtra("message", message)
+                putExtra("category", category)
+            }
         context.startActivity(intent)
     }
 
@@ -84,7 +85,7 @@ class RegionalFestivalsController(
                 activity.finish()
                 activity.overridePendingTransition(
                     R.anim.slide_in_left,
-                    R.anim.slide_out_right
+                    R.anim.slide_out_right,
                 )
             }
         }

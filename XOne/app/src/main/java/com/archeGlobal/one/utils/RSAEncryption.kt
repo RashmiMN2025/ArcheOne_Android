@@ -6,7 +6,6 @@ import java.security.PublicKey
 import javax.crypto.Cipher
 
 class RSAEncryption {
-
     companion object {
         private const val TAG = "RSAEncryption"
         private const val RSA_ALGORITHM = "RSA"
@@ -15,8 +14,11 @@ class RSAEncryption {
         /**
          * Encrypt data using RSA public key with OAEP SHA-256 padding
          */
-        fun encrypt(data: ByteArray, publicKey: PublicKey): ByteArray? {
-            return try {
+        fun encrypt(
+            data: ByteArray,
+            publicKey: PublicKey,
+        ): ByteArray? =
+            try {
                 val cipher = Cipher.getInstance(TRANSFORMATION)
                 cipher.init(Cipher.ENCRYPT_MODE, publicKey)
                 val encryptedData = cipher.doFinal(data)
@@ -27,13 +29,15 @@ class RSAEncryption {
                 Log.e(TAG, "RSA encryption failed: ${e.message}", e)
                 null
             }
-        }
 
         /**
          * Decrypt data using RSA private key with OAEP SHA-256 padding
          */
-        fun decrypt(encryptedData: ByteArray, privateKey: PrivateKey): ByteArray? {
-            return try {
+        fun decrypt(
+            encryptedData: ByteArray,
+            privateKey: PrivateKey,
+        ): ByteArray? =
+            try {
                 val cipher = Cipher.getInstance(TRANSFORMATION)
                 cipher.init(Cipher.DECRYPT_MODE, privateKey)
                 val decryptedData = cipher.doFinal(encryptedData)
@@ -44,6 +48,5 @@ class RSAEncryption {
                 Log.e(TAG, "RSA decryption failed: ${e.message}", e)
                 null
             }
-        }
     }
 }

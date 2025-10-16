@@ -3,9 +3,7 @@ package com.archeGlobal.one.model
 import java.text.SimpleDateFormat
 import java.util.*
 
-private fun getCurrentDate(): String {
-    return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
-}
+private fun getCurrentDate(): String = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
 
 data class AddItemModel(
     val showDialog: Boolean = false,
@@ -29,9 +27,10 @@ data class AddItemModel(
     val types: List<String> = listOf("Stationery", "HK_Consumables", "Party_Essentials"),
     val quantityUpdateTypes: List<String> = listOf("Update New Quantity", "Update Used Quantity"),
     val items: List<String> = listOf("_S1", "_S2", "_S3", "_S4", "_S5"),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
 )
 
 enum class DialogMode {
-    ADD, UPDATE
+    ADD,
+    UPDATE,
 }

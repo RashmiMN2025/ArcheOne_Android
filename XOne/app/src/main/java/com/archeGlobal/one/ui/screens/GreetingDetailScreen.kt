@@ -39,7 +39,7 @@ fun GreetingDetailScreen(
     onGreetingSelected: (String) -> Unit,
     onBackPressed: () -> Unit,
     onSendGreeting: () -> Unit,
-    onSendInOutlook: (String, String) -> Unit
+    onSendInOutlook: (String, String) -> Unit,
 ) {
     // Track the currently selected greeting
     var currentSelectedGreeting by remember { mutableStateOf(selectedGreetingUrl) }
@@ -48,43 +48,48 @@ fun GreetingDetailScreen(
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF5F5F5)) // Light gray background
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF5F5F5)), // Light gray background
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState),
             ) {
                 // Add status bar padding to push content down
                 Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
 
                 // Top App Bar
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .background(Color.Transparent)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .background(Color.Transparent),
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         // Back button
                         IconButton(onClick = onBackPressed) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
 
@@ -96,7 +101,7 @@ fun GreetingDetailScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
                             modifier = Modifier.weight(1f),
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         )
 
                         // Empty space for balance
@@ -108,7 +113,7 @@ fun GreetingDetailScreen(
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     items(categoryGreetings) { greetingUrl ->
                         GreetingThumbnailCard(
@@ -117,7 +122,7 @@ fun GreetingDetailScreen(
                             onClick = {
                                 currentSelectedGreeting = greetingUrl
                                 onGreetingSelected(greetingUrl)
-                            }
+                            },
                         )
                     }
                 }
@@ -125,24 +130,29 @@ fun GreetingDetailScreen(
                 Spacer(modifier = Modifier.height(28.dp))
                 // Main greeting card display
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) { // Use a Box with AsyncImage directly instead of Card with white background
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    // Use a Box with AsyncImage directly instead of Card with white background
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.65f) // Made even smaller (reduced from 0.85f)
-                            .aspectRatio(0.75f) // Keep the same aspect ratio
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.65f) // Made even smaller (reduced from 0.85f)
+                                .aspectRatio(0.75f), // Keep the same aspect ratio
                     ) {
                         AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(currentSelectedGreeting)
-                                .crossfade(true)
-                                .build(),
+                            model =
+                                ImageRequest
+                                    .Builder(LocalContext.current)
+                                    .data(currentSelectedGreeting)
+                                    .crossfade(true)
+                                    .build(),
                             contentDescription = "Greeting detail",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
+                            contentScale = ContentScale.Fit,
                         )
                     }
                 }
@@ -151,9 +161,10 @@ fun GreetingDetailScreen(
 
                 // Message section
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                 ) {
                     Text(
                         text = "Add Message",
@@ -161,7 +172,7 @@ fun GreetingDetailScreen(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = 8.dp),
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -170,26 +181,29 @@ fun GreetingDetailScreen(
                     val messageScroll = rememberScrollState()
 
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.9f)
-                            .height(150.dp)
-                            .background(Color.White, RoundedCornerShape(8.dp))
-                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-                            .padding(6.dp)
-                            .align(Alignment.CenterHorizontally) // <-- Add this line
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.9f)
+                                .height(150.dp)
+                                .background(Color.White, RoundedCornerShape(8.dp))
+                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                                .padding(6.dp)
+                                .align(Alignment.CenterHorizontally), // <-- Add this line
                     ) {
                         BasicTextField(
                             value = message,
                             onValueChange = onMessageChanged,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(messageScroll),
-                            textStyle = LocalTextStyle.current.copy(
-                                fontFamily = FontFamily.Default,
-                                fontSize = 15.sp,
-                                color = Color.Black,
-                                fontWeight = FontWeight.Medium
-                            ),
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(messageScroll),
+                            textStyle =
+                                LocalTextStyle.current.copy(
+                                    fontFamily = FontFamily.Default,
+                                    fontSize = 15.sp,
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Medium,
+                                ),
                             maxLines = Int.MAX_VALUE,
                             singleLine = false,
                             decorationBox = { innerTextField ->
@@ -198,11 +212,11 @@ fun GreetingDetailScreen(
                                         text = "Enter your message...",
                                         color = Color.LightGray,
                                         fontFamily = FontFamily.Default,
-                                        fontSize = 15.sp
+                                        fontSize = 15.sp,
                                     )
                                 }
                                 innerTextField()
-                            }
+                            },
                         )
                     }
 
@@ -210,48 +224,53 @@ fun GreetingDetailScreen(
 
                     // Action buttons
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         // Send Greeting button
                         Button(
                             onClick = onSendGreeting,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(45.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDD3825)
-                            ),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(45.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                ),
+                            shape = RoundedCornerShape(12.dp),
                         ) {
                             Text(
                                 text = "Send Greeting",
                                 fontSize = 14.sp,
                                 color = Color.White,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
                             )
                         }
 
                         // Send in Outlook button
                         Button(
                             onClick = { onSendInOutlook(currentSelectedGreeting, message) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(45.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF2196F3)
-                            ),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(45.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF2196F3),
+                                ),
+                            shape = RoundedCornerShape(12.dp),
                         ) {
                             Text(
                                 text = "Send in Outlook",
                                 fontSize = 14.sp,
                                 color = Color.White,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
                             )
                         }
                     }

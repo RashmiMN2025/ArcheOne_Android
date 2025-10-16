@@ -10,6 +10,7 @@ import com.archeGlobal.one.utils.UserDataManager
 
 class CollateralDetailActivity : ComponentActivity() {
     private lateinit var controller: CollateralController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -28,7 +29,7 @@ class CollateralDetailActivity : ComponentActivity() {
                     categoryName = categoryName,
                     files = filesList,
                     controller = controller,
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }

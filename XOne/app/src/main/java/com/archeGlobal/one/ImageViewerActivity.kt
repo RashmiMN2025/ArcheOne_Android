@@ -43,20 +43,23 @@ class ImageViewerActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFFE0DCD1), // Light Grey/Beige
-                                    Color(0xFFC8C8CA), // Medium Grey
-                                    Color(0xFF474749) // Dark Grey
-                                )
-                            )
-                        )
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush =
+                                    Brush.verticalGradient(
+                                        colors =
+                                            listOf(
+                                                Color(0xFFE0DCD1), // Light Grey/Beige
+                                                Color(0xFFC8C8CA), // Medium Grey
+                                                Color(0xFF474749), // Dark Grey
+                                            ),
+                                    ),
+                            ),
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     ) {
                         // Top app bar
                         TopAppBar(
@@ -67,7 +70,7 @@ class ImageViewerActivity : ComponentActivity() {
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black,
                                     modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center
+                                    textAlign = TextAlign.Center,
                                 )
                             },
                             navigationIcon = {
@@ -75,72 +78,79 @@ class ImageViewerActivity : ComponentActivity() {
                                     Icon(
                                         imageVector = Icons.Default.ArrowBack,
                                         contentDescription = "Back",
-                                        tint = Color.Black
+                                        tint = Color.Black,
                                     )
                                 }
                             },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent
-                            ),
-                            modifier = Modifier.fillMaxWidth()
+                            colors =
+                                TopAppBarDefaults.topAppBarColors(
+                                    containerColor = Color.Transparent,
+                                ),
+                            modifier = Modifier.fillMaxWidth(),
                         )
 
                         // Image content in a Card
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                                .padding(horizontal = 16.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .padding(horizontal = 16.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                            shape =
+                                androidx.compose.foundation.shape
+                                    .RoundedCornerShape(16.dp),
                         ) {
                             Column(
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
                             ) {
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize()
+                                            .padding(16.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .pointerInput(Unit) {
-                                                detectTransformGestures { centroid, pan, zoom, _ ->
-                                                    // Calculate new scale
-                                                    val newScale = (scale * zoom).coerceIn(1f, 3f)
+                                        modifier =
+                                            Modifier
+                                                .fillMaxSize()
+                                                .pointerInput(Unit) {
+                                                    detectTransformGestures { centroid, pan, zoom, _ ->
+                                                        // Calculate new scale
+                                                        val newScale = (scale * zoom).coerceIn(1f, 3f)
 
-                                                    // Only update if we're zooming in or if we're already zoomed in
-                                                    if (newScale > 1f || scale > 1f) {
-                                                        scale = newScale
+                                                        // Only update if we're zooming in or if we're already zoomed in
+                                                        if (newScale > 1f || scale > 1f) {
+                                                            scale = newScale
 
-                                                        // If we're zooming out completely, reset the offset
-                                                        if (scale <= 1f) {
-                                                            offset = androidx.compose.ui.geometry.Offset.Zero
-                                                        } else {
-                                                            // Apply pan only when zoomed in
-                                                            offset += pan
+                                                            // If we're zooming out completely, reset the offset
+                                                            if (scale <= 1f) {
+                                                                offset = androidx.compose.ui.geometry.Offset.Zero
+                                                            } else {
+                                                                // Apply pan only when zoomed in
+                                                                offset += pan
+                                                            }
                                                         }
                                                     }
-                                                }
-                                            }
+                                                },
                                     ) {
                                         AsyncImage(
                                             model = imageUrl,
                                             contentDescription = title,
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .graphicsLayer(
-                                                    scaleX = scale,
-                                                    scaleY = scale,
-                                                    translationX = offset.x,
-                                                    translationY = offset.y
-                                                ),
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxSize()
+                                                    .graphicsLayer(
+                                                        scaleX = scale,
+                                                        scaleY = scale,
+                                                        translationX = offset.x,
+                                                        translationY = offset.y,
+                                                    ),
                                             contentScale = ContentScale.Fit,
                                             onLoading = { isLoading = true },
                                             onSuccess = { isLoading = false },
-                                            onError = { isLoading = false }
+                                            onError = { isLoading = false },
                                         )
                                     }
                                 }

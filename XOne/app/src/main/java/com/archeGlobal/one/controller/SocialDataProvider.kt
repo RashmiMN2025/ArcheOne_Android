@@ -18,8 +18,9 @@ import kotlinx.coroutines.withContext
  * Singleton that preloads and caches social content data for the Connect page
  * to improve loading performance.
  */
-class SocialDataProvider private constructor(private val applicationContext: Context) {
-
+class SocialDataProvider private constructor(
+    private val applicationContext: Context,
+) {
     // Cached data
     private var _socialContent = SocialContent()
     val socialContent: SocialContent get() = _socialContent
@@ -82,61 +83,66 @@ class SocialDataProvider private constructor(private val applicationContext: Con
      */
     private fun processData() {
         // Process blogs - use Content for longer descriptions like case studies
-        _blogs = _socialContent.blogs.map { blog ->
-            SocialArticle(
-                id = blog.Slug,
-                title = blog.Title,
-                description = blog.Content?.takeIf { it.isNotEmpty() } ?: blog.Description,
-                imageUrl = blog.Image,
-                content = blog.Content
-            )
-        }
+        _blogs =
+            _socialContent.blogs.map { blog ->
+                SocialArticle(
+                    id = blog.Slug,
+                    title = blog.Title,
+                    description = blog.Content?.takeIf { it.isNotEmpty() } ?: blog.Description,
+                    imageUrl = blog.Image,
+                    content = blog.Content,
+                )
+            }
 
         // Process case studies - use Content for longer descriptions
-        _caseStudies = if (_socialContent.caseStudies.isNotEmpty()) {
-            _socialContent.caseStudies.map { caseStudy ->
-                SocialArticle(
-                    id = caseStudy.Slug,
-                    title = caseStudy.Title,
-                    description = caseStudy.Content?.takeIf { it.isNotEmpty() } ?: caseStudy.Description,
-                    imageUrl = caseStudy.Image,
-                    content = caseStudy.Content
-                )
+        _caseStudies =
+            if (_socialContent.caseStudies.isNotEmpty()) {
+                _socialContent.caseStudies.map { caseStudy ->
+                    SocialArticle(
+                        id = caseStudy.Slug,
+                        title = caseStudy.Title,
+                        description = caseStudy.Content?.takeIf { it.isNotEmpty() } ?: caseStudy.Description,
+                        imageUrl = caseStudy.Image,
+                        content = caseStudy.Content,
+                    )
+                }
+            } else {
+                // Fallback to filtering jobs if case studies aren't available
+                _socialContent.jobs
+                    .filter {
+                        it.Title.contains("Guide") ||
+                            it.Title.contains("Strategy") ||
+                            it.Slug.contains("guide") ||
+                            it.Slug.contains("strategy")
+                    }.map { job ->
+                        SocialArticle(
+                            id = job.Slug,
+                            title = job.Title,
+                            description = job.Description,
+                            imageUrl = job.Image,
+                            content = job.Content,
+                        )
+                    }
             }
-        } else {
-            // Fallback to filtering jobs if case studies aren't available
-            _socialContent.jobs.filter {
-                it.Title.contains("Guide") || it.Title.contains("Strategy") ||
-                    it.Slug.contains("guide") ||
-                    it.Slug.contains("strategy")
-            }.map { job ->
-                SocialArticle(
-                    id = job.Slug,
-                    title = job.Title,
-                    description = job.Description,
-                    imageUrl = job.Image,
-                    content = job.Content
-                )
-            }
-        }
 
         // Process jobs
-        _jobs = _socialContent.jobs.filter { job ->
-            // Jobs have specific characteristics like experience requirements
-            job.Description.contains("Experience") ||
-                job.Description.contains("yrs") ||
-                job.Title.contains("Manager") ||
-                job.Title.contains("Engineer") ||
-                job.Title.contains("Lead") ||
-                job.Title.contains("L1") ||
-                job.Title.contains("L2") ||
-                job.Title.contains("L3") ||
-                job.Title.contains("SME") ||
-                job.Title.contains("Sales") ||
-                job.Title.contains("Presales") ||
-                job.Title.contains("Security") ||
-                job.Title.contains("Practice")
-        }
+        _jobs =
+            _socialContent.jobs.filter { job ->
+                // Jobs have specific characteristics like experience requirements
+                job.Description.contains("Experience") ||
+                    job.Description.contains("yrs") ||
+                    job.Title.contains("Manager") ||
+                    job.Title.contains("Engineer") ||
+                    job.Title.contains("Lead") ||
+                    job.Title.contains("L1") ||
+                    job.Title.contains("L2") ||
+                    job.Title.contains("L3") ||
+                    job.Title.contains("SME") ||
+                    job.Title.contains("Sales") ||
+                    job.Title.contains("Presales") ||
+                    job.Title.contains("Security") ||
+                    job.Title.contains("Practice")
+            }
 
         Log.d(TAG, "Processed ${_blogs.size} blogs, ${_caseStudies.size} case studies, ${_jobs.size} jobs")
 
@@ -176,11 +182,13 @@ class SocialDataProvider private constructor(private val applicationContext: Con
                 imageUrls.forEach { url ->
                     try {
                         // Use Coil library to preload the image
-                        val request = ImageRequest.Builder(applicationContext)
-                            .data(url)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .memoryCachePolicy(CachePolicy.ENABLED)
-                            .build()
+                        val request =
+                            ImageRequest
+                                .Builder(applicationContext)
+                                .data(url)
+                                .diskCachePolicy(CachePolicy.ENABLED)
+                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                .build()
 
                         ImageLoader(applicationContext).enqueue(request)
                     } catch (e: Exception) {
@@ -208,12 +216,11 @@ class SocialDataProvider private constructor(private val applicationContext: Con
         private const val TAG = "SocialDataProvider"
         private var INSTANCE: SocialDataProvider? = null
 
-        fun getInstance(context: Context): SocialDataProvider {
-            return INSTANCE ?: synchronized(this) {
+        fun getInstance(context: Context): SocialDataProvider =
+            INSTANCE ?: synchronized(this) {
                 INSTANCE ?: SocialDataProvider(context.applicationContext).also {
                     INSTANCE = it
                 }
             }
-        }
     }
 }

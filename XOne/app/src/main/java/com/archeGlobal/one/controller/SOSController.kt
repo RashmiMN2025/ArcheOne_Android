@@ -17,8 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class SOSController(application: Application) : AndroidViewModel(application) {
-
+class SOSController(
+    application: Application,
+) : AndroidViewModel(application) {
     private val _sosBlogs = MutableStateFlow<List<SosBlogModel>>(emptyList())
     val sosBlogs: StateFlow<List<SosBlogModel>> get() = _sosBlogs
 
@@ -47,31 +48,34 @@ class SOSController(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        val callIntent = Intent(Intent.ACTION_DIAL).apply {
-            data = Uri.parse("tel:$sosNumber")
-        }
+        val callIntent =
+            Intent(Intent.ACTION_DIAL).apply {
+                data = Uri.parse("tel:$sosNumber")
+            }
         callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(callIntent)
     }
 
-    suspend fun submitEncryptedSOSRequest(request: SOSRequest): Result<SOSResponse> {
-        return try {
+    suspend fun submitEncryptedSOSRequest(request: SOSRequest): Result<SOSResponse> =
+        try {
             _isSubmitting.value = true
             Log.d("SOSController", "Submitting encrypted SOS request: ${request.category}")
 
-            val response = encryptedApiService.encryptedRequest(
-                endpoint = "sos",
-                method = "POST",
-                body = request,
-                responseClass = EncryptedSOSResponse::class.java,
-                withAuthHeader = true
-            )
+            val response =
+                encryptedApiService.encryptedRequest(
+                    endpoint = "sos",
+                    method = "POST",
+                    body = request,
+                    responseClass = EncryptedSOSResponse::class.java,
+                    withAuthHeader = true,
+                )
 
             // Convert EncryptedSOSResponse to SOSResponse
-            val sosResponse = SOSResponse(
-                status = response.status == 200,
-                message = response.message
-            )
+            val sosResponse =
+                SOSResponse(
+                    status = response.status == 200,
+                    message = response.message,
+                )
 
             Log.d("SOSController", "SOS request submitted successfully")
             Result.success(sosResponse)
@@ -84,26 +88,31 @@ class SOSController(application: Application) : AndroidViewModel(application) {
         } finally {
             _isSubmitting.value = false
         }
-    }
 
-    suspend fun submitEncryptedHelpdeskRequest(request: SOSRequest): Result<SOSResponse> {
-        return try {
+    suspend fun submitEncryptedHelpdeskRequest(request: SOSRequest): Result<SOSResponse> =
+        try {
             _isSubmitting.value = true
-            Log.d("SOSController", "Submitting encrypted helpdesk request: ${request.category}")
+            Log.d("SOSController", "Submitting encrypted helpdesk request:")
+            Log.d("SOSController", "  Category: ${request.category}")
+            Log.d("SOSController", "  Subcategory: ${request.subcategory}")
+            Log.d("SOSController", "  Query: ${request.query}")
+            Log.d("SOSController", "  Email: ${request.email}")
 
-            val response = encryptedApiService.encryptedRequest(
-                endpoint = "helpdesk",
-                method = "POST",
-                body = request,
-                responseClass = EncryptedSOSResponse::class.java,
-                withAuthHeader = true
-            )
+            val response =
+                encryptedApiService.encryptedRequest(
+                    endpoint = "helpdesk",
+                    method = "POST",
+                    body = request,
+                    responseClass = EncryptedSOSResponse::class.java,
+                    withAuthHeader = true,
+                )
 
             // Convert EncryptedSOSResponse to SOSResponse
-            val sosResponse = SOSResponse(
-                status = response.status == 200,
-                message = response.message
-            )
+            val sosResponse =
+                SOSResponse(
+                    status = response.status == 200,
+                    message = response.message,
+                )
 
             Log.d("SOSController", "Helpdesk request submitted successfully")
             Result.success(sosResponse)
@@ -116,5 +125,4 @@ class SOSController(application: Application) : AndroidViewModel(application) {
         } finally {
             _isSubmitting.value = false
         }
-    }
 }

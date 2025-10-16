@@ -9,9 +9,12 @@ import android.widget.TextView
 import android.widget.Toast
 
 object CustomToast {
-
     // Universal toast method - replaces all Toast.makeText() calls
-    fun show(context: Context, message: String, duration: Int = Toast.LENGTH_SHORT) {
+    fun show(
+        context: Context,
+        message: String,
+        duration: Int = Toast.LENGTH_SHORT,
+    ) {
         try {
             val toast = Toast(context)
             val inflater = LayoutInflater.from(context)
@@ -25,11 +28,12 @@ object CustomToast {
                 setPadding(24, 16, 24, 16)
                 maxLines = 10
 
-                val drawable = GradientDrawable().apply {
-                    shape = GradientDrawable.RECTANGLE
-                    cornerRadius = 20f
-                    setColor(Color.parseColor("#DC000000")) // Standard toast gray background (87% opacity)
-                }
+                val drawable =
+                    GradientDrawable().apply {
+                        shape = GradientDrawable.RECTANGLE
+                        cornerRadius = 20f
+                        setColor(Color.parseColor("#DC000000")) // Standard toast gray background (87% opacity)
+                    }
                 background = drawable
             }
 
@@ -46,11 +50,17 @@ object CustomToast {
         }
     }
 
-    fun showLongToast(context: Context, message: String) {
+    fun showLongToast(
+        context: Context,
+        message: String,
+    ) {
         show(context, message, Toast.LENGTH_LONG)
     }
 
-    fun showErrorToast(context: Context, message: String) {
+    fun showErrorToast(
+        context: Context,
+        message: String,
+    ) {
         show(context, message, Toast.LENGTH_LONG)
     }
 }

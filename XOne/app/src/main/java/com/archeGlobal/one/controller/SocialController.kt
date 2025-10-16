@@ -15,7 +15,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SocialController(private val context: Context) {
+class SocialController(
+    private val context: Context,
+) {
     // Get reference to the data provider
     private val dataProvider = SocialDataProvider.getInstance(context)
 
@@ -61,16 +63,15 @@ class SocialController(private val context: Context) {
         }
     }
 
-    fun getJobs(): List<Job> {
-        return if (dataProvider.isLoaded) {
+    fun getJobs(): List<Job> =
+        if (dataProvider.isLoaded) {
             dataProvider.jobs
         } else {
             _socialState.jobs
         }
-    }
 
-    fun getBlogs(): List<SocialArticle> {
-        return if (dataProvider.isLoaded) {
+    fun getBlogs(): List<SocialArticle> =
+        if (dataProvider.isLoaded) {
             dataProvider.blogs
         } else {
             // Fallback to local processing - use Content for longer descriptions like case studies
@@ -80,14 +81,13 @@ class SocialController(private val context: Context) {
                     title = blog.Title,
                     description = blog.Content?.takeIf { it.isNotEmpty() } ?: blog.Description,
                     imageUrl = blog.Image,
-                    content = blog.Content
+                    content = blog.Content,
                 )
             }
         }
-    }
 
-    fun getCaseStudies(): List<SocialArticle> {
-        return if (dataProvider.isLoaded) {
+    fun getCaseStudies(): List<SocialArticle> =
+        if (dataProvider.isLoaded) {
             dataProvider.caseStudies
         } else {
             // Fallback to local processing if data isn't preloaded
@@ -99,30 +99,31 @@ class SocialController(private val context: Context) {
                         title = caseStudy.Title,
                         description = caseStudy.Content?.takeIf { it.isNotEmpty() } ?: caseStudy.Description,
                         imageUrl = caseStudy.Image,
-                        content = caseStudy.Content
+                        content = caseStudy.Content,
                     )
                 }
             } else {
                 // Fallback to filtering jobs if case studies aren't available
-                _socialState.jobs.filter {
-                    it.Title.contains("Guide") || it.Title.contains("Strategy") ||
-                        it.Slug.contains("guide") ||
-                        it.Slug.contains("strategy")
-                }.map { job ->
-                    SocialArticle(
-                        id = job.Slug,
-                        title = job.Title,
-                        description = job.Description,
-                        imageUrl = job.Image,
-                        content = job.Content
-                    )
-                }
+                _socialState.jobs
+                    .filter {
+                        it.Title.contains("Guide") ||
+                            it.Title.contains("Strategy") ||
+                            it.Slug.contains("guide") ||
+                            it.Slug.contains("strategy")
+                    }.map { job ->
+                        SocialArticle(
+                            id = job.Slug,
+                            title = job.Title,
+                            description = job.Description,
+                            imageUrl = job.Image,
+                            content = job.Content,
+                        )
+                    }
             }
         }
-    }
 
-    fun getJobPostings(): List<Job> {
-        return if (dataProvider.isLoaded) {
+    fun getJobPostings(): List<Job> =
+        if (dataProvider.isLoaded) {
             dataProvider.jobs
         } else {
             // Fallback to local processing
@@ -143,28 +144,32 @@ class SocialController(private val context: Context) {
                     job.Title.contains("Practice")
             }
         }
-    }
 
-    fun openInBrowser(type: String, slug: String) {
+    fun openInBrowser(
+        type: String,
+        slug: String,
+    ) {
         val baseUrl = "https://arche.global"
-        val url = when (type) {
-            "Case Studies" -> "$baseUrl/case-studies/$slug"
-            "Blogs" -> "$baseUrl/blog/$slug"
-            else -> "$baseUrl/jobs/$slug"
-        }
+        val url =
+            when (type) {
+                "Case Studies" -> "$baseUrl/case-studies/$slug"
+                "Blogs" -> "$baseUrl/blog/$slug"
+                else -> "$baseUrl/jobs/$slug"
+            }
 
         // Use WebViewActivity instead of external browser
-        val intent = Intent(context, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", url)
-            putExtra(
-                "title",
-                when (type) {
-                    "Case Studies" -> "Case Study"
-                    "Blogs" -> "Blog"
-                    else -> "Job Details"
-                }
-            )
-        }
+        val intent =
+            Intent(context, WebViewActivity::class.java).apply {
+                putExtra("fileUrl", url)
+                putExtra(
+                    "title",
+                    when (type) {
+                        "Case Studies" -> "Case Study"
+                        "Blogs" -> "Blog"
+                        else -> "Job Details"
+                    },
+                )
+            }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
         Log.d("SocialController", "Opening $type link in WebViewActivity: $url")

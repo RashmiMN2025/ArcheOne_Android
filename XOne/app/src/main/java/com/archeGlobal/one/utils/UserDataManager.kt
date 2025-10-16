@@ -19,8 +19,9 @@ import com.google.gson.Gson
  * Singleton class to manage user data throughout the application.
  * This ensures all components have access to the same user data instance.
  */
-class UserDataManager private constructor(context: Context) {
-
+class UserDataManager private constructor(
+    context: Context,
+) {
     val preferencesManager = PreferencesManager(context.applicationContext)
     private val gson = Gson()
 
@@ -74,11 +75,10 @@ class UserDataManager private constructor(context: Context) {
         @Volatile
         private var INSTANCE: UserDataManager? = null
 
-        fun getInstance(context: Context): UserDataManager {
-            return INSTANCE ?: synchronized(this) {
+        fun getInstance(context: Context): UserDataManager =
+            INSTANCE ?: synchronized(this) {
                 INSTANCE ?: UserDataManager(context).also { INSTANCE = it }
             }
-        }
     }
 
     init {
@@ -123,7 +123,7 @@ class UserDataManager private constructor(context: Context) {
                 "Communique: ${communiqueData?.size ?: 0}, " +
                 "Greetings: ${greetingsData?.size ?: 0}, " +
                 "GreetingCategories: ${greetingCategoriesData?.size ?: 0}, " +
-                "FAQ: ${faqData?.size ?: 0}"
+                "FAQ: ${faqData?.size ?: 0}",
         )
     }
 
@@ -174,7 +174,10 @@ class UserDataManager private constructor(context: Context) {
 
     fun getLastLoginTime(): Long? = preferencesManager.getLong(PREF_LAST_LOGIN_TIME)
 
-    fun saveUserDataFromResponse(response: VerifyOtpResponse, token: String) {
+    fun saveUserDataFromResponse(
+        response: VerifyOtpResponse,
+        token: String,
+    ) {
         preferencesManager.saveAuthToken(token)
         preferencesManager.saveLong(PREF_LAST_LOGIN_TIME, System.currentTimeMillis())
 
@@ -189,67 +192,73 @@ class UserDataManager private constructor(context: Context) {
         Log.d(TAG, "UserDataManager: Refreshing in-memory cache after data save")
 
         // Process the greeting categories with messages from the new API format
-        val apiGreetingCategories = response.greetingCategories1?.map { category ->
-            ApiGreetingCategory(
-                id = category.id,
-                name = category.name,
-                files = category.files,
-                message = category.message,
-                subfolder = category.subfolder // <-- fix: include subfolder
-            )
-        } ?: emptyList()
+        val apiGreetingCategories =
+            response.greetingCategories1?.map { category ->
+                ApiGreetingCategory(
+                    id = category.id,
+                    name = category.name,
+                    files = category.files,
+                    message = category.message,
+                    subfolder = category.subfolder, // <-- fix: include subfolder
+                )
+            } ?: emptyList()
 
         // Create a map of greeting categories from the greetingCategories API response
         // For categories with subfolders, use combined files from all subfolders
         // For categories without subfolders, use the main category files
-        val fullGreetingsData = apiGreetingCategories.associate { category ->
-            val allFiles = if (category.subfolder?.isNotEmpty() == true) {
-                // Combine files from all subfolders
-                category.subfolder.flatMap { subfolder -> subfolder.files }
-            } else {
-                // Use main category files if no subfolders
-                category.files
+        val fullGreetingsData =
+            apiGreetingCategories.associate { category ->
+                val allFiles =
+                    if (category.subfolder?.isNotEmpty() == true) {
+                        // Combine files from all subfolders
+                        category.subfolder.flatMap { subfolder -> subfolder.files }
+                    } else {
+                        // Use main category files if no subfolders
+                        category.files
+                    }
+                category.name to allFiles
             }
-            category.name to allFiles
-        }
 
-        val newUserData = response.user?.let {
-            UserData(
-                name = it.name,
-                designation = it.designation,
-                department = it.department,
-                employeeId = it.employeeid,
-                email = it.email,
-                mobile = it.mobile,
-                location = it.location,
-                services = response.services,
-                profilePic = response.profile_pic,
-                sosContact = response.sos,
-                userDetails = it.userDetails,
-                // Use the full greetings map here
-                greetings = fullGreetingsData
-            )
-        }
+        val newUserData =
+            response.user?.let {
+                UserData(
+                    name = it.name,
+                    designation = it.designation,
+                    department = it.department,
+                    employeeId = it.employeeid,
+                    email = it.email,
+                    mobile = it.mobile,
+                    location = it.location,
+                    services = response.services,
+                    profilePic = response.profile_pic,
+                    sosContact = response.sos,
+                    userDetails = it.userDetails,
+                    // Use the full greetings map here
+                    greetings = fullGreetingsData,
+                )
+            }
 
         // Update in-memory cache
         userData = newUserData
         officesData = response.offices
         policiesData = response.policiesList
-        sosBlogsData = response.sosBlogs.map { sosBlog ->
-            SosBlogModel(
-                name = sosBlog.name,
-                description = sosBlog.description,
-                imageUrl = sosBlog.imageUrl,
-                details = sosBlog.details
-            )
-        }
+        sosBlogsData =
+            response.sosBlogs.map { sosBlog ->
+                SosBlogModel(
+                    name = sosBlog.name,
+                    description = sosBlog.description,
+                    imageUrl = sosBlog.imageUrl,
+                    details = sosBlog.details,
+                )
+            }
         assetDetails = response.assetDetails
-        communiqueData = response.communique.map { communique ->
-            CommuniqueModel.Communique(
-                communiqueName = communique.communiqueName,
-                filePath = communique.filePath
-            )
-        }
+        communiqueData =
+            response.communique.map { communique ->
+                CommuniqueModel.Communique(
+                    communiqueName = communique.communiqueName,
+                    filePath = communique.filePath,
+                )
+            }
         // Update in-memory caches for greetings
         greetingsData = fullGreetingsData
         greetingCategoriesData = apiGreetingCategories
@@ -397,9 +406,7 @@ class UserDataManager private constructor(context: Context) {
     /**
      * Get service URL by service name
      */
-    fun getServiceUrl(serviceName: String): String? {
-        return userData?.services?.find { it.service.equals(serviceName, ignoreCase = true) }?.url
-    }
+    fun getServiceUrl(serviceName: String): String? = userData?.services?.find { it.service.equals(serviceName, ignoreCase = true) }?.url
 
     fun getEventData(): EventResponse? {
         val localEventData = eventData // Use local variable to avoid smart cast issue

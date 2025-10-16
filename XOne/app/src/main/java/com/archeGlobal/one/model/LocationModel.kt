@@ -13,12 +13,12 @@ data class LocationInfo(
     val adminName: String? = null,
     val adminNumber: String? = null,
     val states: List<StateInfo>? = null,
-    val redirection: String? = null
+    val redirection: String? = null,
 )
 
 data class StateInfo(
     val name: String,
-    val locations: List<LocationInfo>
+    val locations: List<LocationInfo>,
 )
 
 data class LocationScreenState(
@@ -28,5 +28,5 @@ data class LocationScreenState(
     val showingDetails: Boolean = false,
     val showingStateList: Boolean = false,
     val showingFloorMap: Boolean = false,
-    val showingContactInfo: Boolean = false
+    val showingContactInfo: Boolean = false,
 )

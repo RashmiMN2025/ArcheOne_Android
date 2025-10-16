@@ -12,11 +12,10 @@ import java.nio.charset.StandardCharsets
  * Utility class for generating QR codes for business cards
  */
 object QRCodeGenerator {
-
     // Enum to define layout types
     enum class QRLayoutType {
         VERTICAL,
-        HORIZONTAL
+        HORIZONTAL,
     }
 
     /**
@@ -37,18 +36,19 @@ object QRCodeGenerator {
         phone: String,
         location: String,
         layoutType: QRLayoutType,
-        size: Int = 300
+        size: Int = 300,
     ): Bitmap? {
         try {
             val url = generateQRUrl(name, title, email, phone, location, layoutType)
 
             // Generate QR code bitmap using ZXing
-            val bitMatrix = MultiFormatWriter().encode(
-                url,
-                BarcodeFormat.QR_CODE,
-                size,
-                size
-            )
+            val bitMatrix =
+                MultiFormatWriter().encode(
+                    url,
+                    BarcodeFormat.QR_CODE,
+                    size,
+                    size,
+                )
 
             return createBitmap(bitMatrix)
         } catch (e: Exception) {
@@ -66,25 +66,28 @@ object QRCodeGenerator {
         email: String,
         phone: String,
         location: String,
-        layoutType: QRLayoutType
+        layoutType: QRLayoutType,
     ): String {
-        val baseUrl = if (layoutType == QRLayoutType.VERTICAL) {
-            "https://archeone.arche.global/bcard/vertical"
-        } else {
-            "https://archeone.arche.global/bcard/horizontal"
-        }
+        val baseUrl =
+            if (layoutType == QRLayoutType.VERTICAL) {
+                "https://archeone.arche.global/bcard/vertical"
+            } else {
+                "https://archeone.arche.global/bcard/horizontal"
+            }
 
-        val queryParams = mapOf(
-            "name" to name,
-            "title" to title,
-            "email" to email,
-            "phone" to phone,
-            "location" to location
-        )
+        val queryParams =
+            mapOf(
+                "name" to name,
+                "title" to title,
+                "email" to email,
+                "phone" to phone,
+                "location" to location,
+            )
 
-        val queryString = queryParams.entries.joinToString("&") { (key, value) ->
-            "$key=${URLEncoder.encode(value, StandardCharsets.UTF_8.name())}"
-        }
+        val queryString =
+            queryParams.entries.joinToString("&") { (key, value) ->
+                "$key=${URLEncoder.encode(value, StandardCharsets.UTF_8.name())}"
+            }
 
         return "$baseUrl?$queryString"
     }

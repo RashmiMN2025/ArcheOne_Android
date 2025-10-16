@@ -57,26 +57,31 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import kotlinx.coroutines.launch
 
 // Function to crop the white border from the QR code bitmap
-private fun cropQRCodeBitmap(bitmap: Bitmap, borderFraction: Float = 0.075f): Bitmap {
+private fun cropQRCodeBitmap(
+    bitmap: Bitmap,
+    borderFraction: Float = 0.075f,
+): Bitmap {
     val borderSize = (bitmap.width * borderFraction).toInt()
     val clippedSize = bitmap.width - (2 * borderSize)
     try {
         // Create a new bitmap with ARGB_8888 for transparency
-        val croppedBitmap = Bitmap.createBitmap(
-            clippedSize,
-            clippedSize,
-            Bitmap.Config.ARGB_8888
-        )
+        val croppedBitmap =
+            Bitmap.createBitmap(
+                clippedSize,
+                clippedSize,
+                Bitmap.Config.ARGB_8888,
+            )
         val canvas = Canvas(croppedBitmap)
-        val paint = Paint().apply {
-            isAntiAlias = true
-        }
+        val paint =
+            Paint().apply {
+                isAntiAlias = true
+            }
         // Draw the cropped portion
         canvas.drawBitmap(
             bitmap,
             Rect(borderSize, borderSize, bitmap.width - borderSize, bitmap.height - borderSize),
             Rect(0, 0, clippedSize, clippedSize),
-            paint
+            paint,
         )
         return croppedBitmap
     } catch (e: IllegalArgumentException) {
@@ -90,18 +95,19 @@ private fun cropQRCodeBitmap(bitmap: Bitmap, borderFraction: Float = 0.075f): Bi
 private fun ComposeQRCodeImage(
     bitmap: Bitmap,
     modifier: Modifier = Modifier,
-    contentDescription: String? = null
+    contentDescription: String? = null,
 ) {
     Box(
-        modifier = modifier
-            .background(Color.Transparent) // Ensure transparent background
-            .clip(RoundedCornerShape(8.dp))
+        modifier =
+            modifier
+                .background(Color.Transparent) // Ensure transparent background
+                .clip(RoundedCornerShape(8.dp)),
     ) {
         Image(
             bitmap = cropQRCodeBitmap(bitmap).asImageBitmap(),
             contentDescription = contentDescription,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Fit
+            contentScale = ContentScale.Fit,
         )
     }
 }
@@ -110,15 +116,16 @@ private fun ComposeQRCodeImage(
 @Composable
 private fun CustomTopAppBar(
     onBackPressed: () -> Unit,
-    onShareClick: () -> Unit
+    onShareClick: () -> Unit,
 ) {
     TopAppBar(
         title = {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 20.dp),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(end = 20.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Business Card",
@@ -126,38 +133,40 @@ private fun CustomTopAppBar(
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
         },
         navigationIcon = {
             IconButton(
-                onClick = onBackPressed
+                onClick = onBackPressed,
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),
                     contentDescription = "Back",
-                    tint = TextPrimary
+                    tint = TextPrimary,
                 )
             }
         },
         actions = {
             IconButton(
                 onClick = onShareClick,
-                modifier = Modifier
-                    .size(32.dp)
-                    .padding(end = 5.dp)
+                modifier =
+                    Modifier
+                        .size(32.dp)
+                        .padding(end = 5.dp),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.share),
                     contentDescription = "Share",
-                    tint = TextPrimary
+                    tint = TextPrimary,
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent
-        )
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+            ),
     )
 }
 
@@ -176,84 +185,92 @@ fun BusinessCardScreen(
 
     // Create a LocationInfo object using the location string from businessCard
     // Use remember with businessCard.location as key to update when location changes
-    val location = remember(businessCard.location) {
-        // Try to find the full office address from the offices data
-        val offices = OtpVerificationController.getOfficesData()
-        val userLocation = businessCard.location.trim()
+    val location =
+        remember(businessCard.location) {
+            // Try to find the full office address from the offices data
+            val offices = OtpVerificationController.getOfficesData()
+            val userLocation = businessCard.location.trim()
 
-        // First check if there's an office with a matching country name
-        val matchingOffice =
-            offices?.find { office -> office.country.equals(userLocation, ignoreCase = true) }
+            // First check if there's an office with a matching country name
+            val matchingOffice =
+                offices?.find { office -> office.country.equals(userLocation, ignoreCase = true) }
 
-        if (matchingOffice != null) {
-            // Found a direct match with country
-            LocationInfo(
-                name = matchingOffice.country,
-                companyName = matchingOffice.companyName ?: "Arche Global Pvt Ltd",
-                address = matchingOffice.address,
-                email = matchingOffice.email,
-                hasMultipleLocations = false
-            )
-        } else {
-            // Check if it's an Indian regional office
-            val indiaOffice =
-                offices?.find { office -> office.country.equals("India", ignoreCase = true) }
-            val regionalOffice = indiaOffice?.regionaloffice?.find { office ->
-                office.region.contains(
-                    userLocation,
-                    ignoreCase = true
-                )
-            }
-
-            if (regionalOffice != null) {
-                // Found a matching regional office
+            if (matchingOffice != null) {
+                // Found a direct match with country
                 LocationInfo(
-                    name = regionalOffice.region,
-                    companyName = regionalOffice.companyName ?: "Arche Global Pvt Ltd",
-                    address = regionalOffice.address,
-                    email = regionalOffice.email ?: indiaOffice.email,
-                    hasMultipleLocations = false
+                    name = matchingOffice.country,
+                    companyName = matchingOffice.companyName ?: "Arche Global Pvt Ltd",
+                    address = matchingOffice.address,
+                    email = matchingOffice.email,
+                    hasMultipleLocations = false,
                 )
             } else {
-                // Custom location - use Bangalore as fallback address for the back side
-                val bangaloreOffice = indiaOffice?.regionaloffice?.find { office ->
-                    office.region.contains("Bangalore", ignoreCase = true)
-                }
+                // Check if it's an Indian regional office
+                val indiaOffice =
+                    offices?.find { office -> office.country.equals("India", ignoreCase = true) }
+                val regionalOffice =
+                    indiaOffice?.regionaloffice?.find { office ->
+                        office.region.contains(
+                            userLocation,
+                            ignoreCase = true,
+                        )
+                    }
 
-                LocationInfo(
-                    name = userLocation, // Keep custom location name for front side
-                    companyName = bangaloreOffice?.companyName ?: "Arche Global Pvt Ltd",
-                    address = bangaloreOffice?.address ?: "Bangalore", // Use Bangalore address for back side
-                    email = bangaloreOffice?.email ?: indiaOffice?.email ?: "",
-                    hasMultipleLocations = false
-                )
+                if (regionalOffice != null) {
+                    // Found a matching regional office
+                    LocationInfo(
+                        name = regionalOffice.region,
+                        companyName = regionalOffice.companyName ?: "Arche Global Pvt Ltd",
+                        address = regionalOffice.address,
+                        email = regionalOffice.email ?: indiaOffice.email,
+                        hasMultipleLocations = false,
+                    )
+                } else {
+                    // Custom location - use Bangalore as fallback address for the back side
+                    val bangaloreOffice =
+                        indiaOffice?.regionaloffice?.find { office ->
+                            office.region.contains("Bangalore", ignoreCase = true)
+                        }
+
+                    LocationInfo(
+                        name = userLocation, // Keep custom location name for front side
+                        companyName = bangaloreOffice?.companyName ?: "Arche Global Pvt Ltd",
+                        address = bangaloreOffice?.address ?: "Bangalore", // Use Bangalore address for back side
+                        email = bangaloreOffice?.email ?: indiaOffice?.email ?: "",
+                        hasMultipleLocations = false,
+                    )
+                }
             }
         }
-    }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                    Modifier
+                        .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 item {
                     CustomTopAppBar(
@@ -261,67 +278,71 @@ fun BusinessCardScreen(
                         onShareClick = {
                             scope.launch {
                                 cardBounds.value?.let { bounds ->
-                                    val combinedBitmap = captureBothSides(
-                                        view,
-                                        bounds,
-                                        showFrontSide
-                                    ) { newShowFrontSide ->
-                                        showFrontSide = newShowFrontSide
-                                    }
+                                    val combinedBitmap =
+                                        captureBothSides(
+                                            view,
+                                            bounds,
+                                            showFrontSide,
+                                        ) { newShowFrontSide ->
+                                            showFrontSide = newShowFrontSide
+                                        }
                                     controller.onShareCard(combinedBitmap)
                                 }
                             }
-                        }
+                        },
                     )
                 }
 
                 item {
                     // Business Card
                     Card(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .width(280.dp)
-                            .height(450.dp)
-                            .onGloballyPositioned { coordinates ->
-                                val bounds = coordinates.boundsInRoot()
-                                cardBounds.value = android.graphics.Rect(
-                                    bounds.left.toInt(),
-                                    bounds.top.toInt(),
-                                    bounds.right.toInt(),
-                                    bounds.bottom.toInt()
-                                )
-                            }
-                            .pointerInput(Unit) {
-                                detectHorizontalDragGestures { _, dragAmount ->
-                                    when {
-                                        dragAmount < -50 && showFrontSide ->
-                                            showFrontSide =
-                                                false // Swipe left
-                                        dragAmount > 50 && !showFrontSide ->
-                                            showFrontSide =
-                                                true // Swipe right
+                        modifier =
+                            Modifier
+                                .padding(16.dp)
+                                .width(280.dp)
+                                .height(450.dp)
+                                .onGloballyPositioned { coordinates ->
+                                    val bounds = coordinates.boundsInRoot()
+                                    cardBounds.value =
+                                        android.graphics.Rect(
+                                            bounds.left.toInt(),
+                                            bounds.top.toInt(),
+                                            bounds.right.toInt(),
+                                            bounds.bottom.toInt(),
+                                        )
+                                }.pointerInput(Unit) {
+                                    detectHorizontalDragGestures { _, dragAmount ->
+                                        when {
+                                            dragAmount < -50 && showFrontSide ->
+                                                showFrontSide =
+                                                    false // Swipe left
+                                            dragAmount > 50 && !showFrontSide ->
+                                                showFrontSide =
+                                                    true // Swipe right
+                                        }
                                     }
-                                }
-                            },
+                                },
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(16.dp),
                     ) {
                         if (showFrontSide) {
                             // Front side
                             Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(20.dp),
-                                horizontalAlignment = Alignment.Start
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(20.dp),
+                                horizontalAlignment = Alignment.Start,
                             ) {
                                 // Logo
                                 // Logo
                                 Image(
                                     painter = painterResource(id = R.drawable.arche_black2),
                                     contentDescription = "Arche Logo",
-                                    modifier = Modifier
-                                        .size(40.dp)
+                                    modifier =
+                                        Modifier
+                                            .size(40.dp),
                                 )
 
                                 Spacer(modifier = Modifier.height(90.dp))
@@ -334,7 +355,7 @@ fun BusinessCardScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium,
                                         fontSize = 18.sp,
-                                        color = Color.Black
+                                        color = Color.Black,
                                     )
 
                                     // Designation
@@ -343,7 +364,7 @@ fun BusinessCardScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 15.sp,
-                                        color = Color.Gray
+                                        color = Color.Gray,
                                     )
                                 }
 
@@ -358,7 +379,7 @@ fun BusinessCardScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 15.sp,
-                                        color = Color.Black
+                                        color = Color.Black,
                                     )
 
                                     // Reduced spacing between email and phone
@@ -370,7 +391,7 @@ fun BusinessCardScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 15.sp,
-                                        color = Color.Black
+                                        color = Color.Black,
                                     )
 
                                     // Normal spacing between phone and location
@@ -382,7 +403,7 @@ fun BusinessCardScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 15.sp,
-                                        color = Color.Black
+                                        color = Color.Black,
                                     )
                                 }
 
@@ -391,11 +412,12 @@ fun BusinessCardScreen(
 
                                 // Bottom row with arche text and QR code
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(Color(0xFFF6F4EE)),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .background(Color(0xFFF6F4EE)),
                                     horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.Bottom
+                                    verticalAlignment = Alignment.Bottom,
                                 ) {
                                     // Arche text at bottom left
                                     Text(
@@ -403,7 +425,7 @@ fun BusinessCardScreen(
                                         fontSize = 25.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = Color.Black,
-                                        modifier = Modifier.offset(y = (-10).dp) // Move up slightly while keeping in the row
+                                        modifier = Modifier.offset(y = (-10).dp), // Move up slightly while keeping in the row
                                     )
 
                                     // QR Code at bottom right
@@ -411,8 +433,9 @@ fun BusinessCardScreen(
                                         ComposeQRCodeImage(
                                             bitmap = qrBitmap,
                                             contentDescription = "QR Code",
-                                            modifier = Modifier
-                                                .size(75.dp)
+                                            modifier =
+                                                Modifier
+                                                    .size(75.dp),
                                         )
                                     }
                                 }
@@ -420,11 +443,12 @@ fun BusinessCardScreen(
                         } else {
                             // Back side
                             Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(20.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(20.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.SpaceBetween
+                                verticalArrangement = Arrangement.SpaceBetween,
                             ) {
                                 // Top quote
                                 Text(
@@ -435,18 +459,20 @@ fun BusinessCardScreen(
                                     color = Color.Black,
                                     textAlign = TextAlign.Center,
                                     maxLines = 1,
-                                    modifier = Modifier
-                                        .padding(horizontal = 0.dp)
-                                        .padding(top = 20.dp)
+                                    modifier =
+                                        Modifier
+                                            .padding(horizontal = 0.dp)
+                                            .padding(top = 20.dp),
                                 )
 
                                 // Logo in the middle
                                 Image(
                                     painter = painterResource(id = R.drawable.arche_black2),
                                     contentDescription = "Arche Logo",
-                                    modifier = Modifier
-                                        .size(90.dp)
-                                        .aspectRatio(9f / 8f)
+                                    modifier =
+                                        Modifier
+                                            .size(90.dp)
+                                            .aspectRatio(9f / 8f),
                                 )
 
                                 // Bottom section with company name, address, and website
@@ -457,7 +483,7 @@ fun BusinessCardScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium,
                                         color = Color.Black,
-                                        modifier = Modifier.padding(bottom = 10.dp)
+                                        modifier = Modifier.padding(bottom = 10.dp),
                                     )
 
                                     // Use the location data already resolved in the front side
@@ -471,9 +497,10 @@ fun BusinessCardScreen(
                                         color = Color.Black,
                                         textAlign = TextAlign.Center,
                                         lineHeight = 11.sp,
-                                        modifier = Modifier
-                                            .padding(horizontal = 16.dp)
-                                            .padding(bottom = 20.dp)
+                                        modifier =
+                                            Modifier
+                                                .padding(horizontal = 16.dp)
+                                                .padding(bottom = 20.dp),
                                     )
 
                                     Text(
@@ -482,7 +509,7 @@ fun BusinessCardScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium,
                                         color = Color.Black,
-                                        modifier = Modifier.padding(bottom = 10.dp)
+                                        modifier = Modifier.padding(bottom = 10.dp),
                                     )
                                 }
                             }
@@ -498,65 +525,70 @@ fun BusinessCardScreen(
                         modifier = Modifier.padding(vertical = 8.dp),
                         fontWeight = FontWeight.Medium,
                         fontFamily = GraphikFontFamily,
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
                     )
                 }
 
                 item {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Button(
                             onClick = {
                                 scope.launch {
                                     cardBounds.value?.let { bounds ->
                                         // Capture both sides of the card and combine them
-                                        val combinedBitmap = captureBothSides(
-                                            view,
-                                            bounds,
-                                            showFrontSide
-                                        ) { newShowFrontSide ->
-                                            showFrontSide = newShowFrontSide
-                                        }
+                                        val combinedBitmap =
+                                            captureBothSides(
+                                                view,
+                                                bounds,
+                                                showFrontSide,
+                                            ) { newShowFrontSide ->
+                                                showFrontSide = newShowFrontSide
+                                            }
                                         controller.onDownloadCard(combinedBitmap)
                                     }
                                 }
                             },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(48.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                            shape = RoundedCornerShape(27.dp)
+                            shape = RoundedCornerShape(27.dp),
                         ) {
                             Text(
                                 "Download Card",
                                 color = Color.White,
                                 fontSize = 12.5.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
 
                         Button(
                             onClick = { controller.onEditCard() },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFF6F4EE),
-                                contentColor = Color.Black
-                            ),
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(48.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFF6F4EE),
+                                    contentColor = Color.Black,
+                                ),
                             shape = RoundedCornerShape(24.dp),
-                            border = BorderStroke(1.dp, Color.Black)
+                            border = BorderStroke(1.dp, Color.Black),
                         ) {
                             Text(
                                 "Edit Card",
                                 fontSize = 12.5.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
                     }
@@ -572,33 +604,41 @@ fun BusinessCardScreen(
             // Split phone number into country code and number
             var countryCode by remember(businessCard.phone) {
                 mutableStateOf(
-                    businessCard.phone.split(" - ").firstOrNull()?.take(4) ?: "+91"
+                    businessCard.phone
+                        .split(" - ")
+                        .firstOrNull()
+                        ?.take(4) ?: "+91",
                 )
             }
             var phoneNumber by remember(businessCard.phone) {
                 mutableStateOf(
-                    businessCard.phone.split(" - ").getOrNull(1)?.take(10) ?: ""
+                    businessCard.phone
+                        .split(" - ")
+                        .getOrNull(1)
+                        ?.take(10) ?: "",
                 )
             }
 
             // Define keywords for designation check
-            val keywords = listOf(
-                "sales",
-                "lead",
-                "practice",
-                "head",
-                "ceo",
-                "managing",
-                "director",
-                "management",
-                "manager",
-                "senior"
-            )
+            val keywords =
+                listOf(
+                    "sales",
+                    "lead",
+                    "practice",
+                    "head",
+                    "ceo",
+                    "managing",
+                    "director",
+                    "management",
+                    "manager",
+                    "senior",
+                )
 
             // Check if user has permission to edit phone number based on designation
-            val canEditPhone = businessCard.designation.lowercase().split(" ").any { word ->
-                keywords.any { keyword -> word.contains(keyword) }
-            }
+            val canEditPhone =
+                businessCard.designation.lowercase().split(" ").any { word ->
+                    keywords.any { keyword -> word.contains(keyword) }
+                }
 
             AlertDialog(
                 onDismissRequest = { controller.showEditCardDialog.value = false },
@@ -606,14 +646,14 @@ fun BusinessCardScreen(
                 title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "Edit Card",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
                             fontFamily = GraphikFontFamily,
-                            color = Color.Black
+                            color = Color.Black,
                         )
                     }
                 },
@@ -638,7 +678,7 @@ fun BusinessCardScreen(
 
                         var selectedLocation by remember {
                             mutableStateOf(
-                                if (isCurrentLocationCustom) "Other" else businessCard.location
+                                if (isCurrentLocationCustom) "Other" else businessCard.location,
                             )
                         }
                         var isOtherSelected by remember { mutableStateOf(isCurrentLocationCustom) }
@@ -646,7 +686,7 @@ fun BusinessCardScreen(
                         // Initialize custom location with current location if it's custom
                         var customLocation by remember {
                             mutableStateOf(
-                                if (isCurrentLocationCustom) businessCard.location else ""
+                                if (isCurrentLocationCustom) businessCard.location else "",
                             )
                         }
 
@@ -663,46 +703,51 @@ fun BusinessCardScreen(
                                 trailingIcon = {
                                     IconButton(onClick = { expanded = !expanded }) {
                                         Icon(
-                                            imageVector = if (expanded) {
-                                                androidx.compose.material.icons.Icons.Default.KeyboardArrowUp
-                                            } else {
-                                                androidx.compose.material.icons.Icons.Default.KeyboardArrowDown
-                                            },
-                                            contentDescription = if (expanded) "Collapse" else "Expand"
+                                            imageVector =
+                                                if (expanded) {
+                                                    androidx.compose.material.icons.Icons.Default.KeyboardArrowUp
+                                                } else {
+                                                    androidx.compose.material.icons.Icons.Default.KeyboardArrowDown
+                                                },
+                                            contentDescription = if (expanded) "Collapse" else "Expand",
                                         )
                                     }
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { expanded = true },
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    cursorColor = Color.Black,
-                                    focusedIndicatorColor = Color.Black,
-                                    unfocusedIndicatorColor = Color.Black
-                                ),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable { expanded = true },
+                                colors =
+                                    TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        cursorColor = Color.Black,
+                                        focusedIndicatorColor = Color.Black,
+                                        unfocusedIndicatorColor = Color.Black,
+                                    ),
                                 singleLine = true,
-                                textStyle = androidx.compose.ui.text.TextStyle(
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 14.sp
-                                ),
-                                shape = RoundedCornerShape(12.dp)
+                                textStyle =
+                                    androidx.compose.ui.text.TextStyle(
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 14.sp,
+                                    ),
+                                shape = RoundedCornerShape(12.dp),
                             )
 
                             DropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false },
-                                modifier = Modifier
-                                    .width(260.dp)
-                                    .heightIn(max = 360.dp),
+                                modifier =
+                                    Modifier
+                                        .width(260.dp)
+                                        .heightIn(max = 360.dp),
                                 // Override the container color to make it transparent black
                                 properties = PopupProperties(focusable = true),
                                 shape = RoundedCornerShape(12.dp),
-                                containerColor = Color(0xFFF6F4EE) // 80% transparent black
+                                containerColor = Color(0xFFF6F4EE), // 80% transparent black
                             ) {
                                 locations.forEachIndexed { index, location ->
                                     Column {
@@ -714,7 +759,7 @@ fun BusinessCardScreen(
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Normal,
                                                     fontSize = 12.sp,
-                                                    modifier = Modifier.padding(vertical = 4.dp)
+                                                    modifier = Modifier.padding(vertical = 4.dp),
                                                 )
                                             },
                                             onClick = {
@@ -727,22 +772,24 @@ fun BusinessCardScreen(
                                                 }
                                                 expanded = false
                                             },
-                                            colors = MenuDefaults.itemColors(
-                                                textColor = Color.White,
-                                                leadingIconColor = Color.White,
-                                                trailingIconColor = Color.White,
-                                                disabledTextColor = Color.White.copy(alpha = 0.5f),
-                                                disabledLeadingIconColor = Color.White.copy(alpha = 0.5f),
-                                                disabledTrailingIconColor = Color.White.copy(alpha = 0.5f)
-                                            ),
-                                            modifier = Modifier.height(30.dp)
+                                            colors =
+                                                MenuDefaults.itemColors(
+                                                    textColor = Color.White,
+                                                    leadingIconColor = Color.White,
+                                                    trailingIconColor = Color.White,
+                                                    disabledTextColor = Color.White.copy(alpha = 0.5f),
+                                                    disabledLeadingIconColor = Color.White.copy(alpha = 0.5f),
+                                                    disabledTrailingIconColor = Color.White.copy(alpha = 0.5f),
+                                                ),
+                                            modifier = Modifier.height(30.dp),
                                         )
                                         if (index < locations.size - 1) {
                                             HorizontalDivider(
-                                                modifier = Modifier
-                                                    .fillMaxWidth(),
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth(),
                                                 thickness = 1.dp,
-                                                color = Color.Gray.copy(alpha = 0.5f)
+                                                color = Color.Gray.copy(alpha = 0.5f),
                                             )
                                         }
                                     }
@@ -768,30 +815,33 @@ fun BusinessCardScreen(
                                         color = Color.Gray,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
-                                        fontSize = 14.sp
+                                        fontSize = 14.sp,
                                     )
                                 },
                                 singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp),
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    cursorColor = Color.Black,
-                                    focusedIndicatorColor = Color.Black,
-                                    unfocusedIndicatorColor = Color.Black,
-                                    focusedPlaceholderColor = Color.Gray,
-                                    unfocusedPlaceholderColor = Color.Gray
-                                ),
-                                textStyle = androidx.compose.ui.text.TextStyle(
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 14.sp
-                                ),
-                                shape = RoundedCornerShape(12.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp),
+                                colors =
+                                    TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        cursorColor = Color.Black,
+                                        focusedIndicatorColor = Color.Black,
+                                        unfocusedIndicatorColor = Color.Black,
+                                        focusedPlaceholderColor = Color.Gray,
+                                        unfocusedPlaceholderColor = Color.Gray,
+                                    ),
+                                textStyle =
+                                    androidx.compose.ui.text.TextStyle(
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 14.sp,
+                                    ),
+                                shape = RoundedCornerShape(12.dp),
                             )
                         }
 
@@ -803,7 +853,7 @@ fun BusinessCardScreen(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 // Country Code field
                                 OutlinedTextField(
@@ -822,31 +872,34 @@ fun BusinessCardScreen(
                                             color = Color.Gray,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
-                                            fontSize = 14.sp
+                                            fontSize = 14.sp,
                                         )
                                     },
                                     singleLine = true,
-                                    modifier = Modifier
-                                        .weight(0.3f)
-                                        .height(52.dp),
-                                    colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedTextColor = Color.Black,
-                                        cursorColor = Color.Black,
-                                        focusedIndicatorColor = Color.Black,
-                                        unfocusedIndicatorColor = Color.Black,
-                                        focusedPlaceholderColor = Color.Gray,
-                                        unfocusedPlaceholderColor = Color.Gray
-                                    ),
-                                    textStyle = androidx.compose.ui.text.TextStyle(
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        fontSize = 14.sp
-                                    ),
+                                    modifier =
+                                        Modifier
+                                            .weight(0.3f)
+                                            .height(52.dp),
+                                    colors =
+                                        TextFieldDefaults.colors(
+                                            focusedContainerColor = Color.White,
+                                            unfocusedContainerColor = Color.White,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedTextColor = Color.Black,
+                                            cursorColor = Color.Black,
+                                            focusedIndicatorColor = Color.Black,
+                                            unfocusedIndicatorColor = Color.Black,
+                                            focusedPlaceholderColor = Color.Gray,
+                                            unfocusedPlaceholderColor = Color.Gray,
+                                        ),
+                                    textStyle =
+                                        androidx.compose.ui.text.TextStyle(
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 14.sp,
+                                        ),
                                     shape = RoundedCornerShape(12.dp),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 )
 
                                 Text(
@@ -854,7 +907,7 @@ fun BusinessCardScreen(
                                     color = Color.Black,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    fontSize = 16.sp
+                                    fontSize = 16.sp,
                                 )
 
                                 // Phone Number field
@@ -873,31 +926,34 @@ fun BusinessCardScreen(
                                             color = Color.Gray,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
-                                            fontSize = 14.sp
+                                            fontSize = 14.sp,
                                         )
                                     },
                                     singleLine = true,
-                                    modifier = Modifier
-                                        .weight(0.7f)
-                                        .height(52.dp),
-                                    colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedTextColor = Color.Black,
-                                        cursorColor = Color.Black,
-                                        focusedIndicatorColor = Color.Black,
-                                        unfocusedIndicatorColor = Color.Black,
-                                        focusedPlaceholderColor = Color.Gray,
-                                        unfocusedPlaceholderColor = Color.Gray
-                                    ),
-                                    textStyle = androidx.compose.ui.text.TextStyle(
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        fontSize = 14.sp
-                                    ),
+                                    modifier =
+                                        Modifier
+                                            .weight(0.7f)
+                                            .height(52.dp),
+                                    colors =
+                                        TextFieldDefaults.colors(
+                                            focusedContainerColor = Color.White,
+                                            unfocusedContainerColor = Color.White,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedTextColor = Color.Black,
+                                            cursorColor = Color.Black,
+                                            focusedIndicatorColor = Color.Black,
+                                            unfocusedIndicatorColor = Color.Black,
+                                            focusedPlaceholderColor = Color.Gray,
+                                            unfocusedPlaceholderColor = Color.Gray,
+                                        ),
+                                    textStyle =
+                                        androidx.compose.ui.text.TextStyle(
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 14.sp,
+                                        ),
                                     shape = RoundedCornerShape(12.dp),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 )
                             }
                         }
@@ -906,24 +962,26 @@ fun BusinessCardScreen(
                 confirmButton = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Button(
                             onClick = { controller.showEditCardDialog.value = false },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(44.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF9E9E9E),
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(24.dp)
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(44.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF9E9E9E),
+                                    contentColor = Color.White,
+                                ),
+                            shape = RoundedCornerShape(24.dp),
                         ) {
                             Text(
                                 "Cancel",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
-                                fontFamily = GraphikFontFamily
+                                fontFamily = GraphikFontFamily,
                             )
                         }
 
@@ -933,74 +991,88 @@ fun BusinessCardScreen(
                                     if (phoneNumber.length == 10 && countryCode.isNotEmpty()) {
                                         controller.onCardUpdated(newLocation, countryCode, phoneNumber)
                                     } else {
-                                        android.widget.Toast.makeText(
-                                            context,
-                                            if (countryCode.isEmpty()) "Country code cannot be empty!" else "Phone number must be 10 digits!",
-                                            android.widget.Toast.LENGTH_SHORT
-                                        ).show()
+                                        android.widget.Toast
+                                            .makeText(
+                                                context,
+                                                if (countryCode.isEmpty()) "Country code cannot be empty!" else "Phone number must be 10 digits!",
+                                                android.widget.Toast.LENGTH_SHORT,
+                                            ).show()
                                     }
                                 } else {
-                                    controller.onCardUpdated(newLocation, businessCard.phone.split(" - ").firstOrNull() ?: "+91", businessCard.phone.split(" - ").getOrNull(1) ?: "")
+                                    controller.onCardUpdated(
+                                        newLocation,
+                                        businessCard.phone.split(" - ").firstOrNull() ?: "+91",
+                                        businessCard.phone.split(" - ").getOrNull(1) ?: "",
+                                    )
                                 }
                             },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(44.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDD3825),
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(24.dp)
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(44.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    contentColor = Color.White,
+                                ),
+                            shape = RoundedCornerShape(24.dp),
                         ) {
                             Text(
                                 "Save",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
-                                fontFamily = GraphikFontFamily
+                                fontFamily = GraphikFontFamily,
                             )
                         }
                     }
                 },
-                dismissButton = null
+                dismissButton = null,
             )
         }
     }
 }
 
-private fun captureCardArea(view: View, cardBounds: android.graphics.Rect): Bitmap {
+private fun captureCardArea(
+    view: View,
+    cardBounds: android.graphics.Rect,
+): Bitmap {
     view.isDrawingCacheEnabled = true
     val fullBitmap = Bitmap.createBitmap(view.drawingCache)
     view.isDrawingCacheEnabled = false
 
     return try {
-        val result = Bitmap.createBitmap(
-            cardBounds.width(),
-            cardBounds.height(),
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = Canvas(result)
-        val paint = Paint().apply {
-            isAntiAlias = true
-        }
-        val cornerRadius = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            16f,
-            view.resources.displayMetrics
-        )
-        val path = Path().apply {
-            addRoundRect(
-                RectF(0f, 0f, cardBounds.width().toFloat(), cardBounds.height().toFloat()),
-                cornerRadius,
-                cornerRadius,
-                Path.Direction.CW
+        val result =
+            Bitmap.createBitmap(
+                cardBounds.width(),
+                cardBounds.height(),
+                Bitmap.Config.ARGB_8888,
             )
-        }
+        val canvas = Canvas(result)
+        val paint =
+            Paint().apply {
+                isAntiAlias = true
+            }
+        val cornerRadius =
+            TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                16f,
+                view.resources.displayMetrics,
+            )
+        val path =
+            Path().apply {
+                addRoundRect(
+                    RectF(0f, 0f, cardBounds.width().toFloat(), cardBounds.height().toFloat()),
+                    cornerRadius,
+                    cornerRadius,
+                    Path.Direction.CW,
+                )
+            }
         canvas.clipPath(path)
         canvas.drawBitmap(
             fullBitmap,
             -cardBounds.left.toFloat(),
             -cardBounds.top.toFloat(),
-            paint
+            paint,
         )
         result
     } catch (e: IllegalArgumentException) {
@@ -1013,7 +1085,7 @@ private suspend fun captureBothSides(
     view: View,
     cardBounds: android.graphics.Rect,
     currentShowFrontSide: Boolean,
-    updateShowFrontSide: (Boolean) -> Unit
+    updateShowFrontSide: (Boolean) -> Unit,
 ): Bitmap {
     // Save the original state
     val originalShowFrontSide = currentShowFrontSide
@@ -1042,56 +1114,66 @@ private suspend fun captureBothSides(
     val combinedWidth = cardWidth + (shadowSize * 4).toInt()
 
     // Create the combined bitmap with white background
-    val combinedBitmap = Bitmap.createBitmap(
-        combinedWidth,
-        combinedHeight,
-        Bitmap.Config.ARGB_8888
-    )
+    val combinedBitmap =
+        Bitmap.createBitmap(
+            combinedWidth,
+            combinedHeight,
+            Bitmap.Config.ARGB_8888,
+        )
     val canvas = android.graphics.Canvas(combinedBitmap)
     canvas.drawColor(android.graphics.Color.WHITE)
 
     // Calculate corner radius in pixels
-    val cornerRadius = TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP,
-        16f,
-        view.resources.displayMetrics
-    )
+    val cornerRadius =
+        TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            16f,
+            view.resources.displayMetrics,
+        )
 
     // Create a function to draw a card with shadow
-    fun drawCardWithShadow(bitmap: Bitmap, x: Float, y: Float) {
+    fun drawCardWithShadow(
+        bitmap: Bitmap,
+        x: Float,
+        y: Float,
+    ) {
         // Draw shadow first
-        val shadowPaint = android.graphics.Paint().apply {
-            isAntiAlias = true
-            color = android.graphics.Color.argb(40, 0, 0, 0)
-            style = android.graphics.Paint.Style.FILL
-            setShadowLayer(shadowSize, 0f, 6f, android.graphics.Color.argb(80, 0, 0, 0))
-        }
+        val shadowPaint =
+            android.graphics.Paint().apply {
+                isAntiAlias = true
+                color = android.graphics.Color.argb(40, 0, 0, 0)
+                style = android.graphics.Paint.Style.FILL
+                setShadowLayer(shadowSize, 0f, 6f, android.graphics.Color.argb(80, 0, 0, 0))
+            }
 
         // Create rectangle for card with shadow
-        val cardRect = android.graphics.RectF(
-            x + shadowSize,
-            y + shadowSize,
-            x + cardWidth - shadowSize,
-            y + cardHeight - shadowSize
-        )
+        val cardRect =
+            android.graphics.RectF(
+                x + shadowSize,
+                y + shadowSize,
+                x + cardWidth - shadowSize,
+                y + cardHeight - shadowSize,
+            )
 
         // Draw shadow with rounded corners
         canvas.drawRoundRect(cardRect, cornerRadius, cornerRadius, shadowPaint)
 
         // Create rectangle for the actual card
-        val cardRealRect = android.graphics.RectF(
-            x + shadowSize,
-            y + shadowSize,
-            x + cardWidth - shadowSize,
-            y + cardHeight - shadowSize
-        )
+        val cardRealRect =
+            android.graphics.RectF(
+                x + shadowSize,
+                y + shadowSize,
+                x + cardWidth - shadowSize,
+                y + cardHeight - shadowSize,
+            )
 
         // Draw card background
-        val cardPaint = android.graphics.Paint().apply {
-            isAntiAlias = true
-            color = android.graphics.Color.rgb(242, 242, 237) // Cream white like in image
-            style = android.graphics.Paint.Style.FILL
-        }
+        val cardPaint =
+            android.graphics.Paint().apply {
+                isAntiAlias = true
+                color = android.graphics.Color.rgb(242, 242, 237) // Cream white like in image
+                style = android.graphics.Paint.Style.FILL
+            }
         canvas.drawRoundRect(cardRealRect, cornerRadius, cornerRadius, cardPaint)
 
         // Create a clip path for the card content
@@ -1107,7 +1189,7 @@ private suspend fun captureBothSides(
             bitmap,
             x + shadowSize,
             y + shadowSize,
-            null
+            null,
         )
 
         // Restore canvas state

@@ -39,9 +39,7 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TicketTrackingScreen(
-    controller: HelpDeskController
-) {
+fun TicketTrackingScreen(controller: HelpDeskController) {
     val model by controller.model.collectAsState()
     val navigationTrigger by controller.navigationTrigger.collectAsState()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -67,30 +65,34 @@ fun TicketTrackingScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 TopAppBar(
                     title = {
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 modifier = Modifier.offset(x = (-24).dp),
@@ -98,7 +100,7 @@ fun TicketTrackingScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     },
@@ -107,25 +109,28 @@ fun TicketTrackingScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        ),
                 )
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                 ) {
                     // Show different text based on navigation source
-                    val statusText = when (controller.getNavigationSource()) {
-                        "asset" -> "Check the status of your tickets"
-                        else -> "Check the status of your tickets"
-                    }
+                    val statusText =
+                        when (controller.getNavigationSource()) {
+                            "asset" -> "Check the status of your tickets"
+                            else -> "Check the status of your tickets"
+                        }
 
                     Text(
                         text = statusText,
@@ -133,7 +138,7 @@ fun TicketTrackingScreen(
                         color = Color.Gray,
                         fontFamily = GraphikFontFamily,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -141,21 +146,21 @@ fun TicketTrackingScreen(
                     SwipeRefresh(
                         state = swipeRefreshState,
                         onRefresh = { controller.refreshTickets() },
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     ) {
                         when {
                             model.error != null -> {
                                 Column(
                                     modifier = Modifier.fillMaxSize(),
                                     verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     Text(
                                         text = "Error loading tickets",
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Medium,
                                         fontFamily = GraphikFontFamily,
-                                        color = Color.Red
+                                        color = Color.Red,
                                     )
                                     Text(
                                         text = model.error!!,
@@ -163,15 +168,15 @@ fun TicketTrackingScreen(
                                         color = Color.Gray,
                                         fontFamily = GraphikFontFamily,
                                         textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(top = 8.dp)
+                                        modifier = Modifier.padding(top = 8.dp),
                                     )
                                     Button(
                                         onClick = { controller.refreshTickets() },
-                                        modifier = Modifier.padding(top = 16.dp)
+                                        modifier = Modifier.padding(top = 16.dp),
                                     ) {
                                         Text(
                                             text = "Retry",
-                                            fontFamily = GraphikFontFamily
+                                            fontFamily = GraphikFontFamily,
                                         )
                                     }
                                 }
@@ -180,7 +185,7 @@ fun TicketTrackingScreen(
                                 EmptyTicketsState(
                                     navigationSource = controller.getNavigationSource(),
                                     onRaiseTicket = { controller.raiseTicket("", "") },
-                                    onRaiseConcern = { controller.raiseConcern("", "") }
+                                    onRaiseConcern = { controller.raiseConcern("", "") },
                                 )
                             }
                             else -> {
@@ -200,13 +205,11 @@ fun TicketTrackingScreen(
 }
 
 @Composable
-fun TicketsList(
-    tickets: List<SupportTicket>
-) {
+fun TicketsList(tickets: List<SupportTicket>) {
     var expandedTicketId by remember { mutableStateOf<String?>(null) }
 
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         items(tickets) { ticket ->
             TicketCard(
@@ -214,7 +217,7 @@ fun TicketsList(
                 isExpanded = expandedTicketId == ticket.ticketNumber,
                 onExpandToggle = { ticketId ->
                     expandedTicketId = if (expandedTicketId == ticketId) null else ticketId
-                }
+                },
             )
         }
     }
@@ -224,37 +227,40 @@ fun TicketsList(
 fun TicketCard(
     ticket: SupportTicket,
     isExpanded: Boolean,
-    onExpandToggle: (String) -> Unit
+    onExpandToggle: (String) -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.7f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color.White.copy(alpha = 0.7f),
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onExpandToggle(ticket.ticketNumber) },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onExpandToggle(ticket.ticketNumber) },
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 ) {
                     Text(
                         text = "Ticket ${ticket.ticketNumber}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = GraphikFontFamily,
-                        color = Color.Black
+                        color = Color.Black,
                     )
                     // Show category for closed tickets, nothing for open tickets
                     if (ticket.status == TicketStatus.CLOSED) {
@@ -263,13 +269,13 @@ fun TicketCard(
                             fontSize = 14.sp,
                             color = Color.Black,
                             fontFamily = GraphikFontFamily,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp),
                         )
                     }
                 }
 
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(modifier = Modifier.offset(y = (-4).dp)) {
                         StatusChip(status = ticket.status)
@@ -278,7 +284,7 @@ fun TicketCard(
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = Color.Gray
+                        tint = Color.Gray,
                     )
                 }
             }
@@ -287,14 +293,15 @@ fun TicketCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Column(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     // Add separator line
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(Color.Gray.copy(alpha = 0.2f))
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(Color.Gray.copy(alpha = 0.2f)),
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -308,18 +315,19 @@ fun TicketCard(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.Start,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Box(
-                                    modifier = Modifier
-                                        .size(18.dp),
-                                    contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .size(18.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Image(
                                         painter = painterResource(id = R.drawable.sub),
                                         contentDescription = "Sub-Category",
                                         modifier = Modifier.size(14.dp),
-                                        colorFilter = ColorFilter.tint(Color.Black)
+                                        colorFilter = ColorFilter.tint(Color.Black),
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -328,14 +336,14 @@ fun TicketCard(
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Normal,
                                     fontFamily = GraphikFontFamily,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
                                     text = subCategory,
                                     fontSize = 13.sp,
                                     fontFamily = GraphikFontFamily,
-                                    color = Color.Gray
+                                    color = Color.Gray,
                                 )
                             }
                             Spacer(modifier = Modifier.height(10.dp))
@@ -345,18 +353,19 @@ fun TicketCard(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(18.dp),
-                                contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .size(18.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.created),
                                     contentDescription = "Created Date",
                                     modifier = Modifier.size(14.dp),
-                                    colorFilter = ColorFilter.tint(Color.Black)
+                                    colorFilter = ColorFilter.tint(Color.Black),
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
@@ -365,14 +374,14 @@ fun TicketCard(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,
                                 fontFamily = GraphikFontFamily,
-                                color = Color.Black
+                                color = Color.Black,
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = ticket.createdDate,
                                 fontSize = 13.sp,
                                 fontFamily = GraphikFontFamily,
-                                color = Color.Gray
+                                color = Color.Gray,
                             )
                         }
 
@@ -381,18 +390,19 @@ fun TicketCard(
                         // Issue (Description)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(18.dp),
-                                contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .size(18.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.issue),
                                     contentDescription = "Issue",
                                     modifier = Modifier.size(14.dp),
-                                    colorFilter = ColorFilter.tint(Color.Black)
+                                    colorFilter = ColorFilter.tint(Color.Black),
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
@@ -401,7 +411,7 @@ fun TicketCard(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,
                                 fontFamily = GraphikFontFamily,
-                                color = Color.Black
+                                color = Color.Black,
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
@@ -410,7 +420,7 @@ fun TicketCard(
                                 color = Color.Gray,
                                 fontFamily = GraphikFontFamily,
                                 lineHeight = 18.sp,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
                             )
                         }
 
@@ -420,18 +430,19 @@ fun TicketCard(
                         ticket.closureComments?.let { resolution ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
                             ) {
                                 Box(
-                                    modifier = Modifier
-                                        .size(18.dp),
-                                    contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .size(18.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Image(
                                         painter = painterResource(id = R.drawable.approved),
                                         contentDescription = "Resolution",
                                         modifier = Modifier.size(14.dp),
-                                        colorFilter = ColorFilter.tint(Color.Black)
+                                        colorFilter = ColorFilter.tint(Color.Black),
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -440,7 +451,7 @@ fun TicketCard(
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Normal,
                                     fontFamily = GraphikFontFamily,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
@@ -449,7 +460,7 @@ fun TicketCard(
                                     color = Color.Gray,
                                     fontFamily = GraphikFontFamily,
                                     lineHeight = 18.sp,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
                                 )
                             }
                             Spacer(modifier = Modifier.height(10.dp))
@@ -460,18 +471,19 @@ fun TicketCard(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.Start,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Box(
-                                    modifier = Modifier
-                                        .size(18.dp),
-                                    contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .size(18.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Image(
                                         painter = painterResource(id = R.drawable.closed),
                                         contentDescription = "Closed Date",
                                         modifier = Modifier.size(14.dp),
-                                        colorFilter = ColorFilter.tint(Color.Black)
+                                        colorFilter = ColorFilter.tint(Color.Black),
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -480,14 +492,14 @@ fun TicketCard(
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Normal,
                                     fontFamily = GraphikFontFamily,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
                                     text = closedDate,
                                     fontSize = 13.sp,
                                     fontFamily = GraphikFontFamily,
-                                    color = Color.Gray
+                                    color = Color.Gray,
                                 )
                             }
                         }
@@ -498,18 +510,19 @@ fun TicketCard(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(18.dp),
-                                contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .size(18.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.created),
                                     contentDescription = "Created Date",
                                     modifier = Modifier.size(14.dp),
-                                    colorFilter = ColorFilter.tint(Color.Black)
+                                    colorFilter = ColorFilter.tint(Color.Black),
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
@@ -518,14 +531,14 @@ fun TicketCard(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,
                                 fontFamily = GraphikFontFamily,
-                                color = Color.Black
+                                color = Color.Black,
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = ticket.createdDate,
                                 fontSize = 13.sp,
                                 fontFamily = GraphikFontFamily,
-                                color = Color.Gray
+                                color = Color.Gray,
                             )
                         }
 
@@ -534,18 +547,19 @@ fun TicketCard(
                         // Issue
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(18.dp),
-                                contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .size(18.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.issue),
                                     contentDescription = "Issue",
                                     modifier = Modifier.size(14.dp),
-                                    colorFilter = ColorFilter.tint(Color.Black)
+                                    colorFilter = ColorFilter.tint(Color.Black),
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
@@ -554,7 +568,7 @@ fun TicketCard(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,
                                 fontFamily = GraphikFontFamily,
-                                color = Color.Black
+                                color = Color.Black,
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
@@ -563,7 +577,7 @@ fun TicketCard(
                                 color = Color.Gray,
                                 fontFamily = GraphikFontFamily,
                                 lineHeight = 18.sp,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
                             )
                         }
                     }
@@ -575,33 +589,33 @@ fun TicketCard(
                             text = "Category: ${ticket.category}",
                             fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
-                            color = Color.Gray
+                            color = Color.Gray,
                         )
                         if (details.rating != null) {
                             Text(
                                 text = "Rating: ${details.rating}",
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
-                                color = Color.Gray
+                                color = Color.Gray,
                             )
                         }
                         Text(
                             text = "Platform: ${details.platform}",
                             fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
-                            color = Color.Gray
+                            color = Color.Gray,
                         )
                         Text(
                             text = "Device: ${details.deviceInfo}",
                             fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
-                            color = Color.Gray
+                            color = Color.Gray,
                         )
                         Text(
                             text = "Android Version: ${details.appVersion}",
                             fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
-                            color = Color.Gray
+                            color = Color.Gray,
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -610,13 +624,13 @@ fun TicketCard(
                             text = "Best regards,",
                             fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
-                            color = Color.Gray
+                            color = Color.Gray,
                         )
                         Text(
                             text = "ArcheOne Team",
                             fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
-                            color = Color.Gray
+                            color = Color.Gray,
                         )
                     }
                 }
@@ -627,25 +641,27 @@ fun TicketCard(
 
 @Composable
 fun StatusChip(status: TicketStatus) {
-    val (statusText, backgroundColor) = when (status) {
-        TicketStatus.OPEN -> "Open" to Color(0xFFD32F2F) // Changed to red
-        TicketStatus.IN_PROGRESS -> "In Progress" to Color(0xFF2196F3)
-        TicketStatus.CLOSED -> "Closed" to Color(0xFF4CAF50)
-        TicketStatus.PENDING -> "Pending" to Color(0xFFFFC107)
-    }
+    val (statusText, backgroundColor) =
+        when (status) {
+            TicketStatus.OPEN -> "Open" to Color(0xFFD32F2F) // Changed to red
+            TicketStatus.IN_PROGRESS -> "In Progress" to Color(0xFF2196F3)
+            TicketStatus.CLOSED -> "Closed" to Color(0xFF4CAF50)
+            TicketStatus.PENDING -> "Pending" to Color(0xFFFFC107)
+        }
 
     Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(backgroundColor)
-            .padding(horizontal = 8.dp, vertical = 1.dp)
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(backgroundColor)
+                .padding(horizontal = 8.dp, vertical = 1.dp),
     ) {
         Text(
             text = statusText,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = GraphikFontFamily,
-            color = Color.White
+            color = Color.White,
         )
     }
 }
@@ -654,25 +670,26 @@ fun StatusChip(status: TicketStatus) {
 fun EmptyTicketsState(
     navigationSource: String?,
     onRaiseTicket: () -> Unit,
-    onRaiseConcern: () -> Unit
+    onRaiseConcern: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        verticalArrangement = Arrangement.Top,
     ) {
         Spacer(modifier = Modifier.height(80.dp))
 
         Box(
             modifier = Modifier.size(80.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Image(
                 painter = painterResource(id = R.drawable.noimage),
                 contentDescription = "No tickets",
-                modifier = Modifier.size(80.dp)
+                modifier = Modifier.size(80.dp),
             )
         }
 
@@ -684,7 +701,7 @@ fun EmptyTicketsState(
             fontWeight = FontWeight.Medium,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -694,7 +711,7 @@ fun EmptyTicketsState(
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }

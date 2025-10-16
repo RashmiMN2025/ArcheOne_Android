@@ -45,7 +45,7 @@ fun LocationsScreen(
     controller: LocationsController,
     isEmergencyContact: Boolean = false,
     showHeader: Boolean,
-    onBackToHome: () -> Unit // <-- Add this
+    onBackToHome: () -> Unit, // <-- Add this
 ) {
     val context = LocalContext.current
     val locationController = controller ?: remember { LocationsController(context) }
@@ -81,8 +81,12 @@ fun LocationsScreen(
     LaunchedEffect(Unit) {
         Log.d(
             "LocationsScreen",
-            "Screen initialized with isEmergencyContact=$isEmergencyContactActual"
+            "Screen initialized with isEmergencyContact=$isEmergencyContactActual",
         )
+
+        // Ensure data is loaded first (critical for lazy loading)
+        locationController.onServiceAccessed()
+
         locationController.resetState()
 
         // Set the value in the controller
@@ -91,7 +95,7 @@ fun LocationsScreen(
         // Set the value in the saved state handle
         navController.currentBackStackEntry?.savedStateHandle?.set(
             "isEmergencyContact",
-            isEmergencyContactActual
+            isEmergencyContactActual,
         )
 
         // Only auto-navigate to India location if in emergency contact mode
@@ -111,23 +115,27 @@ fun LocationsScreen(
     val state = locationController.getState()
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFE0DCD1), // Light Beige/Grey
-                            Color(0xFFC8C8CA), // Light Grey
-                            Color(0xFF474749) // Dark Grey
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        Color(0xFFE0DCD1), // Light Beige/Grey
+                                        Color(0xFFC8C8CA), // Light Grey
+                                        Color(0xFF474749), // Dark Grey
+                                    ),
+                            ),
+                    ),
         ) {
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
@@ -136,17 +144,18 @@ fun LocationsScreen(
                     CenterAlignedTopAppBar(
                         title = {
                             Text(
-                                text = when {
-                                    locationController.isInEmergencyContactMode() -> "Emergency Contacts"
-                                    state.showingStateList -> "Regional Offices"
-                                    state.showingDetails -> "Regional Offices"
-                                    else -> "Locations"
-                                },
+                                text =
+                                    when {
+                                        locationController.isInEmergencyContactMode() -> "Emergency Contacts"
+                                        state.showingStateList -> "Regional Offices"
+                                        state.showingDetails -> "Regional Offices"
+                                        else -> "Locations"
+                                    },
                                 fontSize = 20.sp,
                                 color = Color.Black,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         },
                         navigationIcon = {
@@ -172,20 +181,21 @@ fun LocationsScreen(
                                             }
                                         }
                                     }
-                                }
+                                },
                             ) {
                                 Icon(
                                     Icons.Default.ArrowBack,
                                     contentDescription = "Back",
-                                    tint = Color.Black
+                                    tint = Color.Black,
                                 )
                             }
                         },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent
-                        )
+                        colors =
+                            TopAppBarDefaults.topAppBarColors(
+                                containerColor = Color.Transparent,
+                            ),
                     )
-                }
+                },
             ) { padding ->
                 when {
                     state.showingStateList && state.selectedState?.name == "Tamil Nadu" -> {
@@ -193,24 +203,25 @@ fun LocationsScreen(
                         LazyColumn(
                             modifier = Modifier.padding(padding),
                             contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
                         ) {
                             items(state.selectedState.locations) { location ->
                                 val context = LocalContext.current
                                 LocationCard(
                                     location = location,
                                     onClick = { locationController.selectLocation(location) },
-                                    onFloorMapClick = if (location.hasFloorMap && location.mapFileName != null) {
-                                        {
-                                            location.mapFileName?.let { mapFile ->
-                                                locationController.showFloorMap(
-                                                    mapFile
-                                                )
+                                    onFloorMapClick =
+                                        if (location.hasFloorMap && location.mapFileName != null) {
+                                            {
+                                                location.mapFileName?.let { mapFile ->
+                                                    locationController.showFloorMap(
+                                                        mapFile,
+                                                    )
+                                                }
                                             }
-                                        }
-                                    } else {
-                                        null
-                                    }
+                                        } else {
+                                            null
+                                        },
                                 )
                             }
                         }
@@ -223,7 +234,7 @@ fun LocationsScreen(
                                 locationController.selectStateLocation(state)
                             },
                             modifier = Modifier.padding(padding),
-                            controller = locationController
+                            controller = locationController,
                         )
                     }
 
@@ -237,7 +248,7 @@ fun LocationsScreen(
                                         locationController.showFloorMap(mapFile)
                                     }
                                 },
-                                modifier = Modifier.padding(padding)
+                                modifier = Modifier.padding(padding),
                             )
                         }
                     }
@@ -249,7 +260,7 @@ fun LocationsScreen(
                             onShowFloorMap = { mapFile ->
                                 locationController.showFloorMap(mapFile)
                             },
-                            modifier = Modifier.padding(padding)
+                            modifier = Modifier.padding(padding),
                         )
                     }
                 }
@@ -263,30 +274,33 @@ private fun LocationCard(
     location: LocationInfo,
     onClick: () -> Unit,
     onFloorMapClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
 
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF6F4EE)
-        ),
-        elevation = CardDefaults.cardElevation(4.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color(0xFFF6F4EE),
+            ),
+        elevation = CardDefaults.cardElevation(4.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
         ) {
             Text(
                 text = location.name,
                 fontSize = 18.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.Black,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -294,7 +308,7 @@ private fun LocationCard(
                 fontSize = 17.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black
+                color = Color.Black,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -304,21 +318,21 @@ private fun LocationCard(
                 fontSize = 15.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Normal,
-                color = TextSecondary
+                color = TextSecondary,
             )
 
             Spacer(modifier = Modifier.height(6.dp))
 
             Row(
                 verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = "Email:",
                     fontSize = 14.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
-                    color = TextSecondary
+                    color = TextSecondary,
                 )
                 Text(
                     text = location.email,
@@ -327,14 +341,16 @@ private fun LocationCard(
                     fontWeight = FontWeight.Normal,
                     color = TextSecondary,
                     textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable(
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = Uri.parse("mailto:${location.email}")
-                            }
-                            context.startActivity(Intent.createChooser(intent, "Send email"))
-                        }
-                    )
+                    modifier =
+                        Modifier.clickable(
+                            onClick = {
+                                val intent =
+                                    Intent(Intent.ACTION_SENDTO).apply {
+                                        data = Uri.parse("mailto:${location.email}")
+                                    }
+                                context.startActivity(Intent.createChooser(intent, "Send email"))
+                            },
+                        ),
                 )
             }
 
@@ -342,26 +358,28 @@ private fun LocationCard(
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Phone,
                         contentDescription = "Phone",
-                        tint = PrimaryRed
+                        tint = PrimaryRed,
                     )
                     Text(
                         text = "${location.hrName}: ${location.hrNumber}",
                         fontSize = 14.sp,
                         color = Color.Black,
                         textDecoration = TextDecoration.Underline,
-                        modifier = Modifier.clickable(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_DIAL).apply {
-                                    data = Uri.parse("tel:${location.hrNumber}")
-                                }
-                                context.startActivity(intent)
-                            }
-                        )
+                        modifier =
+                            Modifier.clickable(
+                                onClick = {
+                                    val intent =
+                                        Intent(Intent.ACTION_DIAL).apply {
+                                            data = Uri.parse("tel:${location.hrNumber}")
+                                        }
+                                    context.startActivity(intent)
+                                },
+                            ),
                     )
                 }
             }
@@ -370,26 +388,28 @@ private fun LocationCard(
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Phone,
                         contentDescription = "Phone",
-                        tint = PrimaryRed
+                        tint = PrimaryRed,
                     )
                     Text(
                         text = "${location.adminName}: ${location.adminNumber}",
                         fontSize = 14.sp,
                         color = Color.Black,
                         textDecoration = TextDecoration.Underline,
-                        modifier = Modifier.clickable(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_DIAL).apply {
-                                    data = Uri.parse("tel:${location.adminNumber}")
-                                }
-                                context.startActivity(intent)
-                            }
-                        )
+                        modifier =
+                            Modifier.clickable(
+                                onClick = {
+                                    val intent =
+                                        Intent(Intent.ACTION_DIAL).apply {
+                                            data = Uri.parse("tel:${location.adminNumber}")
+                                        }
+                                    context.startActivity(intent)
+                                },
+                            ),
                     )
                 }
             }
@@ -397,7 +417,7 @@ private fun LocationCard(
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.End,
             ) {
                 Button(
                     onClick = {
@@ -407,12 +427,13 @@ private fun LocationCard(
                         // For all locations except India, open in Google Maps
                         if (!location.name.equals("India", ignoreCase = true)) {
                             // Open Google Maps with the redirection link if available
-                            val uri = if (location.redirection?.isNotEmpty() == true) {
-                                Uri.parse(location.redirection)
-                            } else {
-                                // Fallback to searching for the address
-                                Uri.parse("geo:0,0?q=${Uri.encode(location.address)}")
-                            }
+                            val uri =
+                                if (location.redirection?.isNotEmpty() == true) {
+                                    Uri.parse(location.redirection)
+                                } else {
+                                    // Fallback to searching for the address
+                                    Uri.parse("geo:0,0?q=${Uri.encode(location.address)}")
+                                }
                             val intent = Intent(Intent.ACTION_VIEW, uri)
                             context.startActivity(intent)
                         } else {
@@ -422,14 +443,14 @@ private fun LocationCard(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
-                    modifier = Modifier.width(180.dp)
+                    modifier = Modifier.width(180.dp),
                 ) {
                     Text(
                         text = "View Locations",
                         color = Color.White,
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     )
                 }
             }
@@ -439,16 +460,16 @@ private fun LocationCard(
                 Button(
                     onClick = { onFloorMapClick?.invoke() },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = Color.White
+                            tint = Color.White,
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -456,7 +477,7 @@ private fun LocationCard(
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
-                            color = Color.White
+                            color = Color.White,
                         )
                     }
                 }
@@ -470,20 +491,21 @@ private fun StateList(
     states: List<StateInfo>,
     onStateClick: (StateInfo) -> Unit,
     modifier: Modifier = Modifier,
-    controller: LocationsController
+    controller: LocationsController,
 ) {
     val context = LocalContext.current
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(16.dp),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 // Display ALL states from the API response without filtering
                 items(states) { state ->
@@ -492,39 +514,41 @@ private fun StateList(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(16.dp),
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onStateClick(state) }
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onStateClick(state) }
+                                    .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             // Office building icon in red circle
                             Box(
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.building),
                                     contentDescription = null,
                                     tint = PrimaryRed,
-                                    modifier = Modifier.size(45.dp)
+                                    modifier = Modifier.size(45.dp),
                                 )
                             }
 
                             // Office details
                             Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 16.dp)
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .padding(start = 16.dp),
                             ) {
                                 Text(
                                     text = state.name,
                                     fontSize = 18.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
+                                    color = TextPrimary,
                                 )
 
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -535,7 +559,7 @@ private fun StateList(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     color = TextSecondary,
-                                    lineHeight = 20.sp
+                                    lineHeight = 20.sp,
                                 )
                             }
 
@@ -544,7 +568,7 @@ private fun StateList(
                                 imageVector = Icons.Default.KeyboardArrowRight,
                                 contentDescription = null,
                                 tint = Color.Gray,
-                                modifier = Modifier.size(30.dp)
+                                modifier = Modifier.size(30.dp),
                             )
                         }
                     }
@@ -558,26 +582,27 @@ private fun StateList(
 private fun LocationDetails(
     location: LocationInfo,
     onShowFloorMap: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
 
     Card(
         modifier = modifier.fillMaxWidth().padding(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
         ) {
             Text(
                 text = location.name,
                 fontSize = 19.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = TextPrimary,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -587,7 +612,7 @@ private fun LocationDetails(
                 fontSize = 16.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
-                color = Color.Gray
+                color = Color.Gray,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -595,18 +620,20 @@ private fun LocationDetails(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Column(
-                    modifier = Modifier.weight(1f)
-                        .padding(4.dp)
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .padding(4.dp),
                 ) {
                     Text(
                         text = location.address,
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Black
+                        color = Color.Black,
                     )
                 }
 
@@ -614,41 +641,46 @@ private fun LocationDetails(
 
                 // Add location icon in a circular red background
                 Box(
-                    modifier = Modifier
-                        .clickable(
-                            onClick = {
-                                // Don't navigate to maps for Indian locations - we're already displaying details
-                                if (!location.name.contains("India", ignoreCase = true)) {
-                                    // Open Google Maps with the redirection link if available
-                                    val uri = if (location.redirection?.isNotEmpty() == true) {
-                                        Uri.parse(location.redirection)
-                                    } else {
-                                        // Fallback to searching for the address
-                                        Uri.parse("geo:0,0?q=${Uri.encode(location.address)}")
+                    modifier =
+                        Modifier
+                            .clickable(
+                                onClick = {
+                                    // Don't navigate to maps for Indian locations - we're already displaying details
+                                    if (!location.name.contains("India", ignoreCase = true)) {
+                                        // Open Google Maps with the redirection link if available
+                                        val uri =
+                                            if (location.redirection?.isNotEmpty() == true) {
+                                                Uri.parse(location.redirection)
+                                            } else {
+                                                // Fallback to searching for the address
+                                                Uri.parse("geo:0,0?q=${Uri.encode(location.address)}")
+                                            }
+                                        val intent = Intent(Intent.ACTION_VIEW, uri)
+                                        context.startActivity(intent)
                                     }
-                                    val intent = Intent(Intent.ACTION_VIEW, uri)
-                                    context.startActivity(intent)
-                                }
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
+                                },
+                            ),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_location), // Replace with your SVG resource
                         contentDescription = "Navigate to location",
                         tint = PrimaryRed,
-                        modifier = Modifier.size(50.dp)
+                        modifier = Modifier.size(50.dp),
                     )
                 }
             }
 
             Divider(
                 modifier = Modifier.padding(vertical = 16.dp),
-                color = Color.LightGray
+                color = Color.LightGray,
             )
 
             // Only show Contact Information section if any contact info is available
-            val hasContactInfo = location.email.isNotEmpty() || (location.hrName != null && location.hrNumber != null) || (location.adminName != null && location.adminNumber != null)
+            val hasContactInfo =
+                location.email.isNotEmpty() ||
+                    (location.hrName != null && location.hrNumber != null) ||
+                    (location.adminName != null && location.adminNumber != null)
 
             if (hasContactInfo) {
                 Spacer(modifier = Modifier.height(10.dp))
@@ -657,7 +689,7 @@ private fun LocationDetails(
                     fontSize = 16.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
 
                 Spacer(modifier = Modifier.height(3.dp))
@@ -668,20 +700,22 @@ private fun LocationDetails(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.clickable(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                    data = Uri.parse("mailto:${location.email}")
-                                }
-                                context.startActivity(Intent.createChooser(intent, "Send email"))
-                            }
-                        )
+                        modifier =
+                            Modifier.clickable(
+                                onClick = {
+                                    val intent =
+                                        Intent(Intent.ACTION_SENDTO).apply {
+                                            data = Uri.parse("mailto:${location.email}")
+                                        }
+                                    context.startActivity(Intent.createChooser(intent, "Send email"))
+                                },
+                            ),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Email,
                             contentDescription = "Email",
                             tint = Color.Black,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
                         Text(
                             text = location.email,
@@ -689,7 +723,7 @@ private fun LocationDetails(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             color = Color.Black,
-                            textDecoration = TextDecoration.Underline
+                            textDecoration = TextDecoration.Underline,
                         )
                     }
                 }
@@ -702,20 +736,22 @@ private fun LocationDetails(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.clickable(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_DIAL).apply {
-                                    data = Uri.parse("tel:${location.adminNumber}")
-                                }
-                                context.startActivity(intent)
-                            }
-                        )
+                        modifier =
+                            Modifier.clickable(
+                                onClick = {
+                                    val intent =
+                                        Intent(Intent.ACTION_DIAL).apply {
+                                            data = Uri.parse("tel:${location.adminNumber}")
+                                        }
+                                    context.startActivity(intent)
+                                },
+                            ),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Phone,
                             contentDescription = "Phone",
                             tint = Color.Black,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
                         Column {
                             Text(
@@ -723,7 +759,7 @@ private fun LocationDetails(
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.Gray
+                                color = Color.Gray,
                             )
                             Row {
                                 Text(
@@ -731,7 +767,7 @@ private fun LocationDetails(
                                     fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -739,7 +775,7 @@ private fun LocationDetails(
                                     fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -748,7 +784,7 @@ private fun LocationDetails(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     color = Color.Black,
-                                    textDecoration = TextDecoration.Underline
+                                    textDecoration = TextDecoration.Underline,
                                 )
                             }
                         }
@@ -763,20 +799,22 @@ private fun LocationDetails(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.clickable(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_DIAL).apply {
-                                    data = Uri.parse("tel:${location.hrNumber}")
-                                }
-                                context.startActivity(intent)
-                            }
-                        )
+                        modifier =
+                            Modifier.clickable(
+                                onClick = {
+                                    val intent =
+                                        Intent(Intent.ACTION_DIAL).apply {
+                                            data = Uri.parse("tel:${location.hrNumber}")
+                                        }
+                                    context.startActivity(intent)
+                                },
+                            ),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Phone,
                             contentDescription = "Phone",
                             tint = Color.Black,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
                         Column {
                             Text(
@@ -784,7 +822,7 @@ private fun LocationDetails(
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.Gray
+                                color = Color.Gray,
                             )
                             Row {
                                 Text(
@@ -792,7 +830,7 @@ private fun LocationDetails(
                                     fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -800,7 +838,7 @@ private fun LocationDetails(
                                     fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -809,7 +847,7 @@ private fun LocationDetails(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     color = Color.Black,
-                                    textDecoration = TextDecoration.Underline
+                                    textDecoration = TextDecoration.Underline,
                                 )
                             }
                         }
@@ -825,17 +863,17 @@ private fun LocationDetails(
                 Button(
                     onClick = onShowFloorMap,
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_map), // Replace with your SVG resource
                             contentDescription = "Floor Map",
                             tint = Color.White,
-                            modifier = Modifier.size(35.dp)
+                            modifier = Modifier.size(35.dp),
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -843,7 +881,7 @@ private fun LocationDetails(
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
-                            color = Color.White
+                            color = Color.White,
                         )
                     }
                 }
@@ -858,22 +896,23 @@ private fun LocationList(
     onLocationClick: (LocationInfo) -> Unit,
     onShowFloorMap: (String) -> Unit,
     modifier: Modifier = Modifier,
-    isTamilNadu: Boolean = false
+    isTamilNadu: Boolean = false,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(locations) { location ->
             LocationCard(
                 location = location,
                 onClick = { onLocationClick(location) },
-                onFloorMapClick = if (location.hasFloorMap && location.mapFileName != null) {
-                    { location.mapFileName?.let { mapFile -> onShowFloorMap(mapFile) } }
-                } else {
-                    null
-                }
+                onFloorMapClick =
+                    if (location.hasFloorMap && location.mapFileName != null) {
+                        { location.mapFileName?.let { mapFile -> onShowFloorMap(mapFile) } }
+                    } else {
+                        null
+                    },
             )
         }
     }

@@ -27,53 +27,57 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @Composable
-fun HolidayOptionsScreen(
-    controller: HolidayOptionsController
-) {
+fun HolidayOptionsScreen(controller: HolidayOptionsController) {
     // Handle back button press
     BackHandler {
         controller.onBackPressed()
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(4.dp, 12.dp, 4.dp, 0.dp) // Minimized horizontal padding
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(4.dp, 12.dp, 4.dp, 0.dp), // Minimized horizontal padding
             ) {
                 // Top App Bar
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding(),
                 ) {
                     // Back button aligned to start
                     IconButton(
                         onClick = { controller.onBackPressed() },
-                        modifier = Modifier.align(Alignment.CenterStart)
+                        modifier = Modifier.align(Alignment.CenterStart),
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.Black
+                            tint = Color.Black,
                         )
                     }
                     // Title centered
@@ -83,25 +87,28 @@ fun HolidayOptionsScreen(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center),
                     )
                 }
             }
 
             // Two option cards side by side
             Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.TopCenter
-            ) { // Holiday Calendar Option
+                modifier =
+                    Modifier
+                        .fillMaxSize(),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                // Holiday Calendar Option
                 OptionCard(
                     title = "Holiday Calendar", // Added line break to display on two lines
                     subtitle = "Company Holidays",
                     iconResId = R.drawable.holiday2,
                     onClick = { controller.navigateToHolidayCalendar() },
-                    modifier = Modifier
-                        .width(200.dp)
-                        .padding(top = 125.dp)
+                    modifier =
+                        Modifier
+                            .width(200.dp)
+                            .padding(top = 125.dp),
                 )
 
                 // Kudos Option
@@ -123,34 +130,40 @@ fun OptionCard(
     subtitle: String,
     iconResId: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier
-            .height(170.dp)
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        ),
-        shape = RoundedCornerShape(12.dp)
+        modifier =
+            modifier
+                .height(170.dp)
+                .clickable(onClick = onClick),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color.White,
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 4.dp,
+            ),
+        shape = RoundedCornerShape(12.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp), // Reduced padding from 16dp to 12dp
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+            // Reduced padding from 16dp to 12dp
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Icon on top
             Image(
                 painter = painterResource(id = iconResId),
                 contentDescription = title,
-                modifier = Modifier
-                    .size(50.dp) // Reduced from 60dp to 50dp
-                    .clip(RoundedCornerShape(8.dp))
+                modifier =
+                    Modifier
+                        .size(50.dp) // Reduced from 60dp to 50dp
+                        .clip(RoundedCornerShape(8.dp)),
             )
             Spacer(modifier = Modifier.height(8.dp)) // Reduced from 12dp to 8dp            // Title below icon
             Text(
@@ -161,7 +174,7 @@ fun OptionCard(
                 color = Color.Black,
                 maxLines = 2, // Changed from 1 to allow wrapping
                 textAlign = TextAlign.Center,
-                lineHeight = 18.sp // Add line height to compress text vertically
+                lineHeight = 18.sp, // Add line height to compress text vertically
             )
 
             Spacer(modifier = Modifier.height(1.dp)) // Further reduced from 2dp to 1dp
@@ -174,7 +187,7 @@ fun OptionCard(
                 fontFamily = GraphikFontFamily,
                 color = Color.Gray,
                 maxLines = 1,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }

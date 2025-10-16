@@ -21,7 +21,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -41,7 +40,7 @@ fun MeetingRoomListScreen(
     numberOfAttendees: String,
     meetingType: String,
     onBackPressed: () -> Unit,
-    onRoomClick: (MeetingRoom) -> Unit = {}
+    onRoomClick: (MeetingRoom) -> Unit = {},
 ) {
     val rooms by controller.rooms.collectAsState()
     val isLoading by controller.isLoading.collectAsState()
@@ -52,33 +51,37 @@ fun MeetingRoomListScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 // Header
                 TopAppBar(
                     title = {
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "MeetSpace",
@@ -86,7 +89,7 @@ fun MeetingRoomListScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 20.sp,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     },
@@ -95,29 +98,31 @@ fun MeetingRoomListScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
                     actions = {
                         Spacer(modifier = Modifier.width(48.dp)) // Balance the navigation icon
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        ),
                 )
 
                 // Meeting Rooms List
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     items(rooms) { room ->
                         MeetingRoomCard(
                             room = room,
-                            onClick = { onRoomClick(room) }
+                            onClick = { onRoomClick(room) },
                         )
                     }
                 }
@@ -151,20 +156,22 @@ fun MeetingRoomListScreen(
 @Composable
 private fun MeetingRoomCard(
     room: MeetingRoom,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(240.dp)
-            .clickable { onClick() }
-            .padding(bottom = 15.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+                .clickable { onClick() }
+                .padding(bottom = 15.dp),
         shape = RoundedCornerShape(18.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .fillMaxSize(),
         ) {
             // Background image placeholder
             Image(
@@ -174,23 +181,25 @@ private fun MeetingRoomCard(
                 ),
                 contentDescription = "${room.name} Meeting Room",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
 
             // Dark overlay for text readability
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f))
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.4f)),
             )
 
             // Room details overlay
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = room.name,
@@ -198,7 +207,7 @@ private fun MeetingRoomCard(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     color = Color.White,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -209,7 +218,7 @@ private fun MeetingRoomCard(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = Color.White,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -222,7 +231,7 @@ private fun MeetingRoomCard(
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

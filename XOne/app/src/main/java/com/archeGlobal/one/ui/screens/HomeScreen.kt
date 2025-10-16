@@ -99,7 +99,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun ProfileHeader(
     model: HomeModel,
-    onShowProfileClick: () -> Unit
+    onShowProfileClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val activity = remember { context as? Activity }
@@ -109,40 +109,45 @@ fun ProfileHeader(
         activity?.finishAffinity() // Exit the app and go to the mobile home screen
     }
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(240.dp)
-            .clip(RoundedCornerShape(bottomStart = 26.dp, bottomEnd = 26.dp))
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+                .clip(RoundedCornerShape(bottomStart = 26.dp, bottomEnd = 26.dp)),
     ) {
         // Background image with clip
         Image(
             painter = painterResource(id = R.drawable.header_home),
             contentDescription = "Header Background",
-            modifier = Modifier
-                .fillMaxSize(),
-            contentScale = ContentScale.Crop
+            modifier =
+                Modifier
+                    .fillMaxSize(),
+            contentScale = ContentScale.Crop,
         )
 
         // Content without overlay
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 27.dp, end = 16.dp, top = 70.dp, bottom = 16.dp), // Adjusted top padding from 60.dp to 50.dp and bottom from 24.dp to 16.dp
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 27.dp, end = 16.dp, top = 70.dp, bottom = 16.dp),
+            // Adjusted top padding from 60.dp to 50.dp and bottom from 24.dp to 16.dp
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Spacer(modifier = Modifier.width(5.dp))
                 // Profile picture
                 Surface(
-                    modifier = Modifier
-                        .size(90.dp, 95.dp)
-                        .padding(top = 8.dp)
-                        .clickable(onClick = onShowProfileClick),
+                    modifier =
+                        Modifier
+                            .size(90.dp, 95.dp)
+                            .padding(top = 8.dp)
+                            .clickable(onClick = onShowProfileClick),
                     shape = CircleShape,
-                    color = Color.LightGray
+                    color = Color.LightGray,
                 ) {
                     // If profile picture URL is available, display it using Coil
                     if (model.profilePicture != null && model.profilePicture.isNotEmpty()) {
@@ -158,21 +163,27 @@ fun ProfileHeader(
                                     imageVector = Icons.Default.Person,
                                     contentDescription = null,
                                     modifier = Modifier.fillMaxSize(),
-                                    tint = Color.DarkGray
+                                    tint = Color.DarkGray,
                                 )
 
                                 // Load the actual profile image on top
                                 Image(
-                                    painter = rememberAsyncImagePainter(
-                                        ImageCache.createProfileImageRequest(
-                                            context = context,
-                                            url = model.profilePicture
+                                    painter =
+                                        rememberAsyncImagePainter(
+                                            ImageCache.createProfileImageRequest(
+                                                context = context,
+                                                url = model.profilePicture,
+                                            ),
+                                            onSuccess = {
+                                                Log.d(
+                                                    "HomeScreen",
+                                                    "Profile image loaded successfully: ${model.profilePicture}",
+                                                )
+                                            },
                                         ),
-                                        onSuccess = { Log.d("HomeScreen", "Profile image loaded successfully: ${model.profilePicture}") }
-                                    ),
                                     contentDescription = "Profile Picture",
                                     modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
+                                    contentScale = ContentScale.Crop,
                                 )
                             }
                         }
@@ -182,7 +193,7 @@ fun ProfileHeader(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
                             modifier = Modifier.fillMaxSize(),
-                            tint = Color.DarkGray
+                            tint = Color.DarkGray,
                         )
                     }
                 }
@@ -190,14 +201,14 @@ fun ProfileHeader(
                 Spacer(modifier = Modifier.width(20.dp))
 
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
                         text = model.userName,
                         fontSize = 23.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
+                        color = Color.Black,
                     )
 
                     Text(
@@ -205,7 +216,7 @@ fun ProfileHeader(
                         fontSize = 18.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Black
+                        color = Color.Black,
                     )
 
                     Text(
@@ -213,7 +224,7 @@ fun ProfileHeader(
                         fontSize = 15.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Black
+                        color = Color.Black,
                     )
 
                     Text(
@@ -221,7 +232,7 @@ fun ProfileHeader(
                         fontSize = 15.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Black
+                        color = Color.Black,
                     )
                 }
             }
@@ -250,17 +261,18 @@ fun ResponsiveHomeScreen(
     eventData: EventResponse? = null,
     showEventPopup: Boolean = false,
     onDismissEventPopup: () -> Unit = {},
-    navigator: com.archeGlobal.one.navigation.Navigator? = null
+    navigator: com.archeGlobal.one.navigation.Navigator? = null,
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
     val windowSizeClass = calculateWindowSizeClass(activity ?: return)
-    val columns = when (windowSizeClass.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 3 // Phone portrait
-        WindowWidthSizeClass.Medium -> 5 // Large phone/Small tablet
-        WindowWidthSizeClass.Expanded -> 6 // Tablet landscape
-        else -> 3
-    }
+    val columns =
+        when (windowSizeClass.widthSizeClass) {
+            WindowWidthSizeClass.Compact -> 3 // Phone portrait
+            WindowWidthSizeClass.Medium -> 5 // Large phone/Small tablet
+            WindowWidthSizeClass.Expanded -> 6 // Tablet landscape
+            else -> 3
+        }
 
     HomeScreenContent(
         model = model,
@@ -282,7 +294,7 @@ fun ResponsiveHomeScreen(
         showEventPopup = showEventPopup,
         onDismissEventPopup = controller::dismissEventPopup,
         columns = columns, // Pass the column count
-        navigator = navigator
+        navigator = navigator,
     )
 }
 
@@ -307,13 +319,14 @@ fun HomeScreenContent(
     showEventPopup: Boolean = false,
     onDismissEventPopup: () -> Unit = {},
     columns: Int = 3, // Default to 3 for phones
-    navigator: com.archeGlobal.one.navigation.Navigator? = null
+    navigator: com.archeGlobal.one.navigation.Navigator? = null,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         val context = LocalContext.current
 
@@ -322,7 +335,10 @@ fun HomeScreenContent(
         val otpVerificationController = remember { navigator?.let { OtpVerificationController(it, context) } }
 
         // Observe the locked state
-        val lockedState = userDataManager.preferencesManager.lockedState.collectAsState().value
+        val lockedState =
+            userDataManager.preferencesManager.lockedState
+                .collectAsState()
+                .value
         // Initialize background model with proper colors to prevent black screen
         val backgroundModel = remember(lockedState) { WelcomeBackgroundModel() }
 
@@ -378,7 +394,7 @@ fun HomeScreenContent(
                     email = lastEmail,
                     mobile = lastMobile,
                     employeeId = lastEmployeeId,
-                    fromHome = true
+                    fromHome = true,
                 ) { message, isError ->
                     // Calculate elapsed time and ensure minimum 2-second loading
                     val elapsedTime = System.currentTimeMillis() - refreshStartTime
@@ -393,7 +409,8 @@ fun HomeScreenContent(
                         if (isError) {
                             Log.e("HomeScreen", "Swipe refresh failed: $message")
                             // Check if token expired (should navigate to login)
-                            if (message.contains("token", ignoreCase = true) || message.contains("unauthorized", ignoreCase = true) ||
+                            if (message.contains("token", ignoreCase = true) ||
+                                message.contains("unauthorized", ignoreCase = true) ||
                                 message.contains("expired", ignoreCase = true)
                             ) {
                                 Log.d("HomeScreen", "Token expired during swipe refresh, navigating to login")
@@ -458,7 +475,7 @@ fun HomeScreenContent(
                 onToggleIcon = {
                     controller.togglePrideIcon()
                     isUsingPrideIcon.value = controller.isUsingPrideIcon()
-                }
+                },
             )
         }
 
@@ -466,12 +483,13 @@ fun HomeScreenContent(
         if (lockedState && !isBiometricEnabled) {
             // Overlay to block all interaction and blur background
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.25f))
-                    .blur(12.dp)
-                    .zIndex(100f) // High zIndex to block everything
-                    .pointerInput(Unit) {} // Block pointer events
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.25f))
+                        .blur(12.dp)
+                        .zIndex(100f) // High zIndex to block everything
+                        .pointerInput(Unit) {}, // Block pointer events
             )
 
             // Universal loader when verifying MPIN
@@ -487,39 +505,42 @@ fun HomeScreenContent(
             val isKeyboardVisible = keyboardHeight > 0
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(101f),
-                contentAlignment = if (isKeyboardVisible) Alignment.TopCenter else Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .zIndex(101f),
+                contentAlignment = if (isKeyboardVisible) Alignment.TopCenter else Alignment.Center,
             ) {
                 Surface(
                     shape = RoundedCornerShape(28.dp),
                     color = Color(0xFFFEF7F2),
                     shadowElevation = 24.dp,
                     tonalElevation = 2.dp,
-                    modifier = Modifier
-                        .widthIn(min = 340.dp, max = 420.dp)
-                        .padding(horizontal = 16.dp)
-                        .then(
-                            if (isKeyboardVisible) {
-                                Modifier.padding(top = 32.dp)
-                            } else {
-                                Modifier
-                            }
-                        )
+                    modifier =
+                        Modifier
+                            .widthIn(min = 340.dp, max = 420.dp)
+                            .padding(horizontal = 16.dp)
+                            .then(
+                                if (isKeyboardVisible) {
+                                    Modifier.padding(top = 32.dp)
+                                } else {
+                                    Modifier
+                                },
+                            ),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp, vertical = 28.dp)
-                            .widthIn(min = 340.dp, max = 420.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 20.dp, vertical = 28.dp)
+                                .widthIn(min = 340.dp, max = 420.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         // Red lock icon
                         Icon(
                             painter = painterResource(id = R.drawable.lock), // Use your red lock icon
                             contentDescription = "Lock",
                             tint = Color(0xFFDD3825),
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(48.dp),
                         )
                         Spacer(modifier = Modifier.height(18.dp))
                         // Title
@@ -529,13 +550,14 @@ fun HomeScreenContent(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 26.sp,
                             color = Color.Black,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         // Subtitle
                         Column(
-                            modifier = Modifier
-                                .padding(16.dp, 0.dp, 16.dp, 0.dp)
+                            modifier =
+                                Modifier
+                                    .padding(16.dp, 0.dp, 16.dp, 0.dp),
                         ) {
                             Text(
                                 "Please enter your 4-digit MPIN to unlock the app",
@@ -544,14 +566,14 @@ fun HomeScreenContent(
                                 fontSize = 16.sp,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center,
-                                lineHeight = 18.sp
+                                lineHeight = 18.sp,
                             )
                         }
                         Spacer(modifier = Modifier.height(28.dp))
                         // "Enter MPIN" label
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
                                 "Enter MPIN",
@@ -559,7 +581,7 @@ fun HomeScreenContent(
                                 fontWeight = FontWeight.Normal,
                                 fontSize = 16.sp,
                                 color = Color(0xFF7B7B7B),
-                                modifier = Modifier.padding(start = 4.dp)
+                                modifier = Modifier.padding(start = 4.dp),
                             )
                         }
                         Spacer(modifier = Modifier.height(10.dp))
@@ -567,7 +589,7 @@ fun HomeScreenContent(
                         var focusedIndex by remember { mutableStateOf(-1) }
                         Row(
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             for (i in 0 until 4) {
                                 // ...inside your Row for MPIN digit boxes...
@@ -589,44 +611,46 @@ fun HomeScreenContent(
                                             focusRequesters[i - 1].requestFocus()
                                         }
                                     },
-                                    modifier = Modifier
-                                        .width(65.dp)
-                                        .height(65.dp)
-                                        .focusRequester(focusRequesters[i])
-                                        .padding(horizontal = 4.dp)
-                                        .onFocusChanged { focusState ->
-                                            if (focusState.isFocused) {
-                                                focusedIndex = i
-                                            }
-                                        }
-                                        .border(
-                                            width = 1.5.dp,
-                                            color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
-                                            shape = MaterialTheme.shapes.medium
+                                    modifier =
+                                        Modifier
+                                            .width(65.dp)
+                                            .height(65.dp)
+                                            .focusRequester(focusRequesters[i])
+                                            .padding(horizontal = 4.dp)
+                                            .onFocusChanged { focusState ->
+                                                if (focusState.isFocused) {
+                                                    focusedIndex = i
+                                                }
+                                            }.border(
+                                                width = 1.5.dp,
+                                                color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
+                                                shape = MaterialTheme.shapes.medium,
+                                            ),
+                                    textStyle =
+                                        TextStyle(
+                                            fontSize = 28.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black,
+                                            textAlign = TextAlign.Center,
                                         ),
-                                    textStyle = TextStyle(
-                                        fontSize = 28.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black,
-                                        textAlign = TextAlign.Center
-                                    ),
                                     singleLine = true,
                                     visualTransformation = PasswordVisualTransformation(),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                                     shape = MaterialTheme.shapes.medium,
-                                    colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
-                                        disabledContainerColor = Color.White,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedTextColor = Color.Black,
-                                        disabledTextColor = Color.Black,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent
-                                    ),
-                                    isError = mpinError != null && enteredMpin.length == 4
+                                    colors =
+                                        TextFieldDefaults.colors(
+                                            focusedContainerColor = Color.White,
+                                            unfocusedContainerColor = Color.White,
+                                            disabledContainerColor = Color.White,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedTextColor = Color.Black,
+                                            disabledTextColor = Color.Black,
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            disabledIndicatorColor = Color.Transparent,
+                                        ),
+                                    isError = mpinError != null && enteredMpin.length == 4,
                                 )
                                 if (i < 3) Spacer(modifier = Modifier.width(8.dp))
                             }
@@ -655,21 +679,23 @@ fun HomeScreenContent(
                                     }
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(54.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(54.dp),
                             shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDD3825),
-                                contentColor = Color.White
-                            ),
-                            enabled = !isVerifyingMpin
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    contentColor = Color.White,
+                                ),
+                            enabled = !isVerifyingMpin,
                         ) {
                             Text(
                                 "Unlock",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 20.sp
+                                fontSize = 20.sp,
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
@@ -680,23 +706,25 @@ fun HomeScreenContent(
                                 intent.putExtra("resetMpin", true)
                                 appContext.startActivity(intent)
                             },
-                            modifier = Modifier
-                                .width(140.dp)
-                                .height(38.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE0B4AA),
-                                contentColor = Color(0xFFDD3825),
-                                disabledContainerColor = Color(0xFFE0B4AA),
-                                disabledContentColor = Color(0xFFDD3825)
-                            ),
+                            modifier =
+                                Modifier
+                                    .width(140.dp)
+                                    .height(38.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFE0B4AA),
+                                    contentColor = Color(0xFFDD3825),
+                                    disabledContainerColor = Color(0xFFE0B4AA),
+                                    disabledContentColor = Color(0xFFDD3825),
+                                ),
                             border = BorderStroke(1.dp, Color(0xFFDD3825)),
-                            shape = MaterialTheme.shapes.medium
+                            shape = MaterialTheme.shapes.medium,
                         ) {
                             Text(
                                 "Reset MPIN",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 16.sp
+                                fontSize = 16.sp,
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
@@ -708,9 +736,10 @@ fun HomeScreenContent(
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Red,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 8.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 8.dp),
                             )
                         }
                     }
@@ -725,7 +754,7 @@ fun HomeScreenContent(
             Log.d("HomeScreen", "Event description: ${eventData.description}")
             EventPopup(
                 event = eventData,
-                onDismiss = onDismissEventPopup
+                onDismiss = onDismissEventPopup,
             )
         } else {
             Log.d("HomeScreen", "Not showing event popup - eventData present: ${eventData != null}, showEventPopup: $showEventPopup")
@@ -747,7 +776,7 @@ fun HomeScreenContent(
                     // Navigate to AllCelebrationActivity
                     val intent = android.content.Intent(context, com.archeGlobal.one.AllCelebrationActivity::class.java)
                     context.startActivity(intent)
-                }
+                },
             )
         }
 
@@ -762,7 +791,7 @@ fun HomeScreenContent(
                 appVersion = "1.4",
                 onDismiss = {
                     controller.dismissWhatsNewDialog()
-                }
+                },
             )
         }
 
@@ -773,53 +802,57 @@ fun HomeScreenContent(
             onFooterHomeClick = onFooterHomeClick,
             onFooterChatClick = onFooterChatClick,
             onFooterSOSClick = onFooterSOSClick,
-            onFooterProfileClick = onFooterProfileClick
+            onFooterProfileClick = onFooterProfileClick,
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 // Main content with conditional blur and pull-to-refresh
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .blur(
-                            radius = if (lockedState && !isBiometricEnabled) {
-                                12.dp
-                            } else if (isAuthenticating) {
-                                10.dp
-                            } else {
-                                0.dp
-                            }
-                        )
-                        .pointerInput(Unit) {
-                            detectHorizontalDragGestures(
-                                onDragEnd = { /* Handle drag end */ },
-                                onHorizontalDrag = { _, dragAmount ->
-                                    if (dragAmount > 50) {
-                                        // Swiped from left to right
-                                        currentView = "All Apps"
-                                    } else if (dragAmount < -50) {
-                                        // Swiped from right to left
-                                        currentView = "Favorites"
-                                    }
-                                }
-                            )
-                        }
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .blur(
+                                radius =
+                                    if (lockedState && !isBiometricEnabled) {
+                                        12.dp
+                                    } else if (isAuthenticating) {
+                                        10.dp
+                                    } else {
+                                        0.dp
+                                    },
+                            ).pointerInput(Unit) {
+                                detectHorizontalDragGestures(
+                                    onDragEnd = { /* Handle drag end */ },
+                                    onHorizontalDrag = { _, dragAmount ->
+                                        if (dragAmount > 50) {
+                                            // Swiped from left to right
+                                            currentView = "All Apps"
+                                        } else if (dragAmount < -50) {
+                                            // Swiped from right to left
+                                            currentView = "Favorites"
+                                        }
+                                    },
+                                )
+                            },
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        backgroundModel.topColor,
-                                        backgroundModel.middleColor,
-                                        backgroundModel.bottomColor
-                                    )
-                                )
-                            )
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(
+                                    brush =
+                                        Brush.verticalGradient(
+                                            colors =
+                                                listOf(
+                                                    backgroundModel.topColor,
+                                                    backgroundModel.middleColor,
+                                                    backgroundModel.bottomColor,
+                                                ),
+                                        ),
+                                ),
                     ) {
                         ProfileHeader(
                             model = model,
-                            onShowProfileClick = onShowProfileClick
+                            onShowProfileClick = onShowProfileClick,
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -827,33 +860,34 @@ fun HomeScreenContent(
                         // Celebration banner (using same celebrationData from above)
                         CelebrationBanner(
                             celebrationData = celebrationData,
-                            onClick = { controller.showCelebrationDialog() }
+                            onClick = { controller.showCelebrationDialog() },
                         )
 
                         // Pride banner with pins - click to open change icon dialog
                         if (isPrideMonth) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                                    .background(
-                                        color = Color(0x1ADD3825),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .padding(vertical = 8.dp, horizontal = 12.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp)
+                                        .background(
+                                            color = Color(0x1ADD3825),
+                                            shape = RoundedCornerShape(8.dp),
+                                        ).padding(vertical = 8.dp, horizontal = 12.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 IconButton(
                                     onClick = { controller.showPrideMonthDialog() },
-                                    modifier = Modifier
-                                        .size(24.dp)
+                                    modifier =
+                                        Modifier
+                                            .size(24.dp),
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.leftpin),
                                         contentDescription = "Change Icon",
                                         tint = Color(0xFFDD3825),
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(16.dp),
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -864,23 +898,26 @@ fun HomeScreenContent(
                                     fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.Center,
                                     color = Color.Black,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clickable { // Show Pride Month dialog when text is clicked
-                                            controller.showPrideMonthDialog()
-                                        }
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .clickable {
+                                                // Show Pride Month dialog when text is clicked
+                                                controller.showPrideMonthDialog()
+                                            },
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 IconButton(
                                     onClick = { controller.showPrideMonthDialog() },
-                                    modifier = Modifier
-                                        .size(24.dp)
+                                    modifier =
+                                        Modifier
+                                            .size(24.dp),
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.rightpin),
                                         contentDescription = "Change Icon",
                                         tint = Color(0xFFDD3825),
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(16.dp),
                                     )
                                 }
                             }
@@ -890,42 +927,49 @@ fun HomeScreenContent(
 
                         // Toggle Buttons
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.Center
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Button(
                                 onClick = {
-                                    onAllAppsClick(); currentView = "All Apps"
+                                    onAllAppsClick()
+                                    currentView = "All Apps"
                                 },
                                 modifier = Modifier.width(150.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (currentView == "All Apps") {
-                                        Color(0xFFDD3825)
-                                    } else {
-                                        Color(0xFFF6F4EE)
-                                    },
-                                    contentColor = if (currentView == "All Apps") {
-                                        Color.White
-                                    } else {
-                                        Color.Black
-                                    }
-                                ),
-                                elevation = ButtonDefaults.buttonElevation(
-                                    defaultElevation = 0.dp
-                                ),
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (currentView == "All Apps") Color(0xFFDD3825) else DividerColor
-                                ),
-                                shape = RoundedCornerShape(8.dp)
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor =
+                                            if (currentView == "All Apps") {
+                                                Color(0xFFDD3825)
+                                            } else {
+                                                Color(0xFFF6F4EE)
+                                            },
+                                        contentColor =
+                                            if (currentView == "All Apps") {
+                                                Color.White
+                                            } else {
+                                                Color.Black
+                                            },
+                                    ),
+                                elevation =
+                                    ButtonDefaults.buttonElevation(
+                                        defaultElevation = 0.dp,
+                                    ),
+                                border =
+                                    BorderStroke(
+                                        1.dp,
+                                        if (currentView == "All Apps") Color(0xFFDD3825) else DividerColor,
+                                    ),
+                                shape = RoundedCornerShape(8.dp),
                             ) {
                                 Text(
                                     text = "All Apps",
                                     fontSize = 16.sp, // Added font size
                                     fontFamily = GraphikFontFamily, // Added font family
-                                    fontWeight = FontWeight.Medium // Added font weight
+                                    fontWeight = FontWeight.Medium, // Added font weight
                                 )
                             }
 
@@ -933,35 +977,41 @@ fun HomeScreenContent(
 
                             Button(
                                 onClick = {
-                                    onFavoritesClick(); currentView = "Favorites"
+                                    onFavoritesClick()
+                                    currentView = "Favorites"
                                 },
                                 modifier = Modifier.width(150.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (currentView == "Favorites") {
-                                        Color(0xFFDD3825)
-                                    } else {
-                                        Color(0xFFF6F4EE)
-                                    },
-                                    contentColor = if (currentView == "Favorites") {
-                                        Color.White
-                                    } else {
-                                        Color.Black
-                                    }
-                                ),
-                                elevation = ButtonDefaults.buttonElevation(
-                                    defaultElevation = 0.dp
-                                ),
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (currentView == "Favorites") Color(0xFFDD3825) else DividerColor
-                                ),
-                                shape = RoundedCornerShape(8.dp)
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor =
+                                            if (currentView == "Favorites") {
+                                                Color(0xFFDD3825)
+                                            } else {
+                                                Color(0xFFF6F4EE)
+                                            },
+                                        contentColor =
+                                            if (currentView == "Favorites") {
+                                                Color.White
+                                            } else {
+                                                Color.Black
+                                            },
+                                    ),
+                                elevation =
+                                    ButtonDefaults.buttonElevation(
+                                        defaultElevation = 0.dp,
+                                    ),
+                                border =
+                                    BorderStroke(
+                                        1.dp,
+                                        if (currentView == "Favorites") Color(0xFFDD3825) else DividerColor,
+                                    ),
+                                shape = RoundedCornerShape(8.dp),
                             ) {
                                 Text(
                                     text = "Favorites",
                                     fontSize = 16.sp, // Added font size
                                     fontFamily = GraphikFontFamily, // Added font family
-                                    fontWeight = FontWeight.Medium // Added font weight
+                                    fontWeight = FontWeight.Medium, // Added font weight
                                 )
                             }
                         }
@@ -975,28 +1025,29 @@ fun HomeScreenContent(
                                 onRefresh = { performRefresh() },
                                 modifier = Modifier.fillMaxSize(),
                                 indicator = { _, _ -> // Empty indicator - we'll use UniversalLoader instead
-                                }
+                                },
                             ) {
                                 if (currentView == "All Apps") {
                                     // All Apps View
                                     LazyColumn(
                                         modifier = Modifier.fillMaxSize(),
-                                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
+                                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp),
                                     ) {
                                         model.categories.forEach { (category, items) ->
                                             item {
                                                 CategoryHeader(
                                                     title = category,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(vertical = 8.dp)
+                                                    modifier =
+                                                        Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(vertical = 8.dp),
                                                 )
                                             }
 
                                             items(items.chunked(columns)) { rowItems ->
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
-                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                 ) {
                                                     rowItems.forEach { item ->
                                                         AppItem(
@@ -1013,7 +1064,7 @@ fun HomeScreenContent(
                                                                 selectedPosition = position
                                                             },
                                                             isNew = item.isNew,
-                                                            stickerText = item.stickerText
+                                                            stickerText = item.stickerText,
                                                         )
                                                     }
                                                     repeat(columns - rowItems.size) {
@@ -1029,29 +1080,30 @@ fun HomeScreenContent(
                                     if (model.favorites.isEmpty()) {
                                         Box(
                                             modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
+                                            contentAlignment = Alignment.Center,
                                         ) {
                                             EmptyFavorites()
                                         }
                                     } else {
                                         LazyColumn(
                                             modifier = Modifier.fillMaxSize(),
-                                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp),
                                         ) {
                                             model.favorites.forEach { (category, items) ->
                                                 item {
                                                     CategoryHeader(
                                                         title = category,
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(vertical = 8.dp)
+                                                        modifier =
+                                                            Modifier
+                                                                .fillMaxWidth()
+                                                                .padding(vertical = 8.dp),
                                                     )
                                                 }
 
                                                 items(items.chunked(columns)) { rowItems ->
                                                     Row(
                                                         modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                     ) {
                                                         rowItems.forEach { item ->
                                                             AppItem(
@@ -1068,7 +1120,7 @@ fun HomeScreenContent(
                                                                     selectedPosition = position
                                                                 },
                                                                 isNew = item.isNew,
-                                                                stickerText = item.stickerText
+                                                                stickerText = item.stickerText,
                                                             )
                                                         }
                                                         repeat(columns - rowItems.size) {
@@ -1095,14 +1147,15 @@ fun HomeScreenContent(
             // Semi-transparent overlay when an app is selected
             if (selectedApp != null) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.6f))
-                        .blur(radius = 8.dp)
-                        .clickable(onClick = {
-                            selectedApp = null
-                            selectedPosition = null
-                        })
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .blur(radius = 8.dp)
+                            .clickable(onClick = {
+                                selectedApp = null
+                                selectedPosition = null
+                            }),
                 )
             }
 
@@ -1115,31 +1168,35 @@ fun HomeScreenContent(
                     val itemSizePx = with(density) { itemSize.toPx() }
 
                     Box(
-                        modifier = Modifier
-                            .offset {
-                                IntOffset(
-                                    x = (x - itemSizePx * scaleFactor / 2).toInt(),
-                                    y = (y - itemSizePx - 15).toInt() // Position exactly above with exact pixel offset
-                                )
-                            }
+                        modifier =
+                            Modifier
+                                .offset {
+                                    IntOffset(
+                                        x = (x - itemSizePx * scaleFactor / 2).toInt(),
+                                        y = (y - itemSizePx - 15).toInt(), // Position exactly above with exact pixel offset
+                                    )
+                                },
                     ) {
                         val formattedTitle = formatServiceTitle(selectedApp!!.title)
 
                         Card(
-                            modifier = Modifier
-                                .width(115.dp) // Set fixed width
-                                .height(115.dp), // Set fixed height
+                            modifier =
+                                Modifier
+                                    .width(115.dp) // Set fixed width
+                                    .height(115.dp),
+                            // Set fixed height
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
                         ) {
                             Box(modifier = Modifier.fillMaxSize()) {
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(4.dp),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize()
+                                            .padding(4.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                                    verticalArrangement = Arrangement.Center,
                                 ) {
                                     AppIcon(title = selectedApp!!.title, modifier = Modifier.size(50.dp))
                                     Spacer(modifier = Modifier.height(6.dp))
@@ -1153,7 +1210,7 @@ fun HomeScreenContent(
                                         maxLines = 2,
                                         lineHeight = 14.sp,
                                         overflow = TextOverflow.Visible,
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
                                     )
                                 }
                             }
@@ -1175,41 +1232,43 @@ fun HomeScreenContent(
                     val scaleFactor = 1.1f // Same as app scale factor
 
                     // Calculate x position (centered with the app)
-                    val xOffset = when {
-                        x + (dialogWidthPx / 2) > screenWidthPx -> screenWidthPx - dialogWidthPx - 16f
-                        x - (dialogWidthPx / 2) < 0 -> 16f
-                        else -> x - (dialogWidthPx / 2)
-                    }
+                    val xOffset =
+                        when {
+                            x + (dialogWidthPx / 2) > screenWidthPx -> screenWidthPx - dialogWidthPx - 16f
+                            x - (dialogWidthPx / 2) < 0 -> 16f
+                            else -> x - (dialogWidthPx / 2)
+                        }
 
                     // Reduce the yOffset to decrease the space between the service card and the dialog
                     val yOffset = y - itemSizePx - 180 // Reduced from 235 to 200
 
                     Card(
-                        modifier = Modifier
-                            .width(dialogWidth)
-                            .offset {
-                                IntOffset(
-                                    x = xOffset.toInt(),
-                                    y = yOffset.toInt()
-                                )
-                            },
+                        modifier =
+                            Modifier
+                                .width(dialogWidth)
+                                .offset {
+                                    IntOffset(
+                                        x = xOffset.toInt(),
+                                        y = yOffset.toInt(),
+                                    )
+                                },
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     ) {
                         Text(
                             text = if (selectedApp!!.isFavorite) "Remove from Favourites" else "Add to Favourites",
                             fontSize = 13.sp,
                             color = Color.Black,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onToggleFavorite(selectedApp!!)
-                                    selectedApp = null
-                                    selectedPosition = null
-                                }
-                                .padding(vertical = 8.dp),
-                            textAlign = TextAlign.Center
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onToggleFavorite(selectedApp!!)
+                                        selectedApp = null
+                                        selectedPosition = null
+                                    }.padding(vertical = 8.dp),
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }
@@ -1218,15 +1277,16 @@ fun HomeScreenContent(
             // Show authentication overlay if authenticating
             if (isAuthenticating) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f)),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center,
                 ) {
                     // Optional: Add a fingerprint icon or loading indicator here
                     CircularProgressIndicator(
                         color = Color.White,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(48.dp),
                     )
                 }
             }
@@ -1236,12 +1296,13 @@ fun HomeScreenContent(
                 Dialog(onDismissRequest = { showRatingDialog = false }) {
                     Card(
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
                     ) {
                         Column(
-                            modifier = Modifier
-                                .padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier =
+                                Modifier
+                                    .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Text(
                                 "How was your experience?",
@@ -1252,63 +1313,71 @@ fun HomeScreenContent(
                                 maxLines = 2,
                                 lineHeight = 14.sp,
                                 textAlign = TextAlign.Center, // Center align the text
-                                modifier = Modifier.fillMaxWidth() // Make sure it uses the full width
+                                modifier = Modifier.fillMaxWidth(), // Make sure it uses the full width
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
 
                             Row(
-                                horizontalArrangement = Arrangement.Center
+                                horizontalArrangement = Arrangement.Center,
                             ) {
                                 for (i in 1..5) {
                                     Icon(
-                                        painter = painterResource(
-                                            id = if (i <= rating) R.drawable.ic_star_filled else R.drawable.ic_star_outline
-                                        ),
+                                        painter =
+                                            painterResource(
+                                                id = if (i <= rating) R.drawable.ic_star_filled else R.drawable.ic_star_outline,
+                                            ),
                                         contentDescription = "Star $i",
                                         tint = Color(0xFFFFD700),
-                                        modifier = Modifier
-                                            .size(45.dp)
-                                            .clickable {
-                                                rating = i
-                                                // If 4 or 5 stars selected, redirect to Play Store immediately
-                                                if (i >= 4) {
-                                                    // Submit feedback first
-                                                    val feedbackRequest = FeedbackRequest(
-                                                        name = employeeData.name,
-                                                        email = employeeData.email,
-                                                        category = "App rating",
-                                                        feedback = null,
-                                                        rating = i,
-                                                        platform = "Android",
-                                                        deviceName = android.os.Build.MODEL,
-                                                        version = android.os.Build.VERSION.RELEASE
-                                                    )
+                                        modifier =
+                                            Modifier
+                                                .size(45.dp)
+                                                .clickable {
+                                                    rating = i
+                                                    // If 4 or 5 stars selected, redirect to Play Store immediately
+                                                    if (i >= 4) {
+                                                        // Submit feedback first
+                                                        val feedbackRequest =
+                                                            FeedbackRequest(
+                                                                name = employeeData.name,
+                                                                email = employeeData.email,
+                                                                category = "App rating",
+                                                                feedback = null,
+                                                                rating = i,
+                                                                platform = "Android",
+                                                                deviceName = android.os.Build.MODEL,
+                                                                version = android.os.Build.VERSION.RELEASE,
+                                                            )
 
-                                                    // Submit feedback in background
-                                                    CoroutineScope(Dispatchers.IO).launch {
-                                                        try {
-                                                            apiService.submitFeedback(feedbackRequest)
-                                                        } catch (e: Exception) {
-                                                            // Log error but don't show to user
+                                                        // Submit feedback in background
+                                                        CoroutineScope(Dispatchers.IO).launch {
+                                                            try {
+                                                                apiService.submitFeedback(feedbackRequest)
+                                                            } catch (e: Exception) {
+                                                                // Log error but don't show to user
+                                                            }
                                                         }
-                                                    }
 
-                                                    // Redirect to Play Store immediately
-                                                    try {
-                                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.archeGlobal.one"))
-                                                        context.startActivity(intent)
-                                                    } catch (e: Exception) {
-                                                        Toast.makeText(context, "Unable to open Play Store", Toast.LENGTH_SHORT).show()
-                                                    }
+                                                        // Redirect to Play Store immediately
+                                                        try {
+                                                            val intent =
+                                                                Intent(
+                                                                    Intent.ACTION_VIEW,
+                                                                    Uri.parse(
+                                                                        "https://play.google.com/store/apps/details?id=com.archeGlobal.one",
+                                                                    ),
+                                                                )
+                                                            context.startActivity(intent)
+                                                        } catch (e: Exception) {
+                                                            Toast.makeText(context, "Unable to open Play Store", Toast.LENGTH_SHORT).show()
+                                                        }
 
-                                                    // Close dialog
-                                                    showRatingDialog = false
-                                                    rating = 0
-                                                    feedbackText = ""
-                                                }
-                                            }
-                                            .padding(4.dp)
+                                                        // Close dialog
+                                                        showRatingDialog = false
+                                                        rating = 0
+                                                        feedbackText = ""
+                                                    }
+                                                }.padding(4.dp),
                                     )
                                 }
                             }
@@ -1320,23 +1389,26 @@ fun HomeScreenContent(
                                     value = feedbackText,
                                     onValueChange = { feedbackText = it },
                                     placeholder = { Text("Please tell us what could be better") },
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.LightGray,
-                                        cursorColor = Color.Gray,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedContainerColor = Color.White
-                                    ),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth(),
+                                    colors =
+                                        OutlinedTextFieldDefaults.colors(
+                                            unfocusedBorderColor = Color.LightGray,
+                                            focusedBorderColor = Color.LightGray,
+                                            cursorColor = Color.Gray,
+                                            unfocusedContainerColor = Color.White,
+                                            focusedContainerColor = Color.White,
+                                        ),
                                     shape = RoundedCornerShape(12.dp),
-                                    textStyle = TextStyle(
-                                        fontSize = 16.sp,
-                                        color = Color.Black,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium
-                                    ),
-                                    maxLines = 4
+                                    textStyle =
+                                        TextStyle(
+                                            fontSize = 16.sp,
+                                            color = Color.Black,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                        ),
+                                    maxLines = 4,
                                 )
                             }
 
@@ -1355,16 +1427,17 @@ fun HomeScreenContent(
                                     isSubmitting = true
 
                                     // Prepare request (only for 1-3 star ratings, 4-5 stars are handled on selection)
-                                    val feedbackRequest = FeedbackRequest(
-                                        name = employeeData.name,
-                                        email = employeeData.email,
-                                        category = "App rating",
-                                        feedback = feedbackText,
-                                        rating = rating,
-                                        platform = "Android",
-                                        deviceName = android.os.Build.MODEL,
-                                        version = android.os.Build.VERSION.RELEASE
-                                    )
+                                    val feedbackRequest =
+                                        FeedbackRequest(
+                                            name = employeeData.name,
+                                            email = employeeData.email,
+                                            category = "App rating",
+                                            feedback = feedbackText,
+                                            rating = rating,
+                                            platform = "Android",
+                                            deviceName = android.os.Build.MODEL,
+                                            version = android.os.Build.VERSION.RELEASE,
+                                        )
 
                                     // Call API
                                     CoroutineScope(Dispatchers.IO).launch {
@@ -1389,24 +1462,26 @@ fun HomeScreenContent(
                                         }
                                     }
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
                                 enabled = !isSubmitting,
                                 shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFDD3825),
-                                    disabledContainerColor = Color(0xFFDD3825), // keep red even when disabled
-                                    contentColor = Color.White,
-                                    disabledContentColor = Color.White
-                                )
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFDD3825),
+                                        disabledContainerColor = Color(0xFFDD3825), // keep red even when disabled
+                                        contentColor = Color.White,
+                                        disabledContentColor = Color.White,
+                                    ),
                             ) {
                                 Text(
                                     if (isSubmitting) "Submit" else "Submit",
                                     fontSize = 12.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color.White
+                                    color = Color.White,
                                 )
                             }
                         }
@@ -1500,7 +1575,7 @@ private fun AppItem(
     isSelected: Boolean = false,
     onLongPress: (Pair<Float, Float>) -> Unit,
     isNew: Boolean = false,
-    stickerText: String = "New"
+    stickerText: String = "New",
 ) {
     var itemPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
     val context = LocalContext.current
@@ -1508,44 +1583,49 @@ private fun AppItem(
     val formattedTitle = formatServiceTitle(title)
 
     Card(
-        modifier = modifier
-            .aspectRatio(0.95f)
-            .padding(3.dp)
-            .onGloballyPositioned { coordinates ->
-                val position = coordinates.positionInRoot()
-                itemPosition = Pair(
-                    position.x + (coordinates.size.width / 2),
-                    position.y + (coordinates.size.height / 2)
-                )
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = {
-                        onClick()
-                    },
-                    onLongPress = {
-                        itemPosition?.let { pos -> onLongPress(pos) }
-                    }
-                )
-            },
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF6F4EE)
-        ),
-        shape = RoundedCornerShape(12.dp)
+        modifier =
+            modifier
+                .aspectRatio(0.95f)
+                .padding(3.dp)
+                .onGloballyPositioned { coordinates ->
+                    val position = coordinates.positionInRoot()
+                    itemPosition =
+                        Pair(
+                            position.x + (coordinates.size.width / 2),
+                            position.y + (coordinates.size.height / 2),
+                        )
+                }.pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = {
+                            onClick()
+                        },
+                        onLongPress = {
+                            itemPosition?.let { pos -> onLongPress(pos) }
+                        },
+                    )
+                },
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 2.dp,
+            ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color(0xFFF6F4EE),
+            ),
+        shape = RoundedCornerShape(12.dp),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .fillMaxSize(),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(4.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
                 // Icon at the top
@@ -1563,28 +1643,29 @@ private fun AppItem(
                     maxLines = 2,
                     lineHeight = 14.sp,
                     overflow = TextOverflow.Visible,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
 
             // New sticker in top-right corner with straight right edge and curved left edge
             if (isNew) {
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 6.dp)
-                        .background(
-                            color = Color(0xFFDD3825),
-                            shape = RoundedCornerShape(
-                                topStart = 8.dp,
-                                topEnd = 0.dp,
-                                bottomStart = 8.dp,
-                                bottomEnd = 0.dp
-                            )
-                        )
-                        .padding(horizontal = 6.dp, vertical = 1.dp)
-                        .height(14.dp),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 6.dp)
+                            .background(
+                                color = Color(0xFFDD3825),
+                                shape =
+                                    RoundedCornerShape(
+                                        topStart = 8.dp,
+                                        topEnd = 0.dp,
+                                        bottomStart = 8.dp,
+                                        bottomEnd = 0.dp,
+                                    ),
+                            ).padding(horizontal = 6.dp, vertical = 1.dp)
+                            .height(14.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = stickerText,
@@ -1592,7 +1673,7 @@ private fun AppItem(
                         fontSize = 8.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.offset(y = (-3.1).dp)
+                        modifier = Modifier.offset(y = (-3.1).dp),
                     )
                 }
             }
@@ -1603,7 +1684,7 @@ private fun AppItem(
 @Composable
 private fun AppIcon(
     title: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         // Check if it's a default app
@@ -1611,64 +1692,68 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart", "Smart Collateral", "MeetSpace", "ArcheHonours",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "MyPay", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
-            "Locations", "TravelDesk", "Policy", "New Onboarding", "Profile", "Profile Connect", "ZenTask", "Password Reset", "Know Your Org", "Arche Odyssey", "ZingHR", "IdeaVault", "Pulse", "HelpDesk" -> {
+            "Locations", "TravelDesk", "Policy", "New Onboarding", "Profile", "Profile Connect", "ZenTask", "Password Reset", "Know Your Org", "Arche Odyssey", "ZingHR", "IdeaVault", "Pulse", "HelpDesk",
+            -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFF6F4EE)
+                    color = Color(0xFFF6F4EE),
                 ) {
                     Image(
-                        painter = painterResource(
-                            id = when (title.lowercase().replace(" ", "")) {
-                                "deskcart" -> R.drawable.deskcart
-                                "vision" -> R.drawable.vision
-                                "corevalues" -> R.drawable.core_values
-                                "communique" -> R.drawable.communique
-                                "aboutus" -> R.drawable.about_us
-                                "mydocuments" -> R.drawable.mydocuments
-                                "id" -> R.drawable.id
-                                "asset" -> R.drawable.asset
-                                "businesscard" -> R.drawable.xcard
-                                "leave" -> R.drawable.leave
-                                "elearning" -> R.drawable.elearning
-                                "mycareer" -> R.drawable.mycareer
-                                "timesheet" -> R.drawable.timesheet
-                                "goalsetting/kpi", "goal" -> R.drawable.goals
-                                "admin" -> R.drawable.admin
-                                "mypay" -> R.drawable.finance
-                                "sap" -> R.drawable.sap
-                                "ample" -> R.drawable.ample
-                                "sos" -> R.drawable.sos
-                                "calendar" -> R.drawable.holiday
-                                "holidaycalendar" -> R.drawable.holiday
-                                "greetings" -> R.drawable.greetings
-                                "medical" -> R.drawable.medical
-                                "blogs" -> R.drawable.xconnect
-                                "locations" -> R.drawable.locations
-                                "traveldesk" -> R.drawable.travel
-                                "policy" -> R.drawable.policy
-                                "newonboarding" -> R.drawable.new_onboarding
-                                "profile" -> R.drawable.profile
-                                "profileconnect" -> R.drawable.profile
-                                "zentask" -> R.drawable.todo
-                                "passwordreset" -> R.drawable.password_reset
-                                "knowyourog" -> R.drawable.know_your_org
-                                "archeodyssey" -> R.drawable.arche_odyssey
-                                "zinghr" -> R.drawable.zinghr
-                                "ideavault" -> R.drawable.idea_vault
-                                "pulse" -> R.drawable.pulse
-                                "helpdesk" -> R.drawable.helpdesk
-                                "smartcollateral" -> R.drawable.smart
-                                "meetspace" -> R.drawable.meeting
-                                "archehonours" -> R.drawable.archehonours
-                                else -> R.drawable.mydocuments
-                            }
-                        ),
+                        painter =
+                            painterResource(
+                                id =
+                                    when (title.lowercase().replace(" ", "")) {
+                                        "deskcart" -> R.drawable.deskcart
+                                        "vision" -> R.drawable.vision
+                                        "corevalues" -> R.drawable.core_values
+                                        "communique" -> R.drawable.communique
+                                        "aboutus" -> R.drawable.about_us
+                                        "mydocuments" -> R.drawable.mydocuments
+                                        "id" -> R.drawable.id
+                                        "asset" -> R.drawable.asset
+                                        "businesscard" -> R.drawable.xcard
+                                        "leave" -> R.drawable.leave
+                                        "elearning" -> R.drawable.elearning
+                                        "mycareer" -> R.drawable.mycareer
+                                        "timesheet" -> R.drawable.timesheet
+                                        "goalsetting/kpi", "goal" -> R.drawable.goals
+                                        "admin" -> R.drawable.admin
+                                        "mypay" -> R.drawable.finance
+                                        "sap" -> R.drawable.sap
+                                        "ample" -> R.drawable.ample
+                                        "sos" -> R.drawable.sos
+                                        "calendar" -> R.drawable.holiday
+                                        "holidaycalendar" -> R.drawable.holiday
+                                        "greetings" -> R.drawable.greetings
+                                        "medical" -> R.drawable.medical
+                                        "blogs" -> R.drawable.xconnect
+                                        "locations" -> R.drawable.locations
+                                        "traveldesk" -> R.drawable.travel
+                                        "policy" -> R.drawable.policy
+                                        "newonboarding" -> R.drawable.new_onboarding
+                                        "profile" -> R.drawable.profile
+                                        "profileconnect" -> R.drawable.profile
+                                        "zentask" -> R.drawable.todo
+                                        "passwordreset" -> R.drawable.password_reset
+                                        "knowyourog" -> R.drawable.know_your_org
+                                        "archeodyssey" -> R.drawable.arche_odyssey
+                                        "zinghr" -> R.drawable.zinghr
+                                        "ideavault" -> R.drawable.idea_vault
+                                        "pulse" -> R.drawable.pulse
+                                        "helpdesk" -> R.drawable.helpdesk
+                                        "smartcollateral" -> R.drawable.smart
+                                        "meetspace" -> R.drawable.meeting
+                                        "archehonours" -> R.drawable.archehonours
+                                        else -> R.drawable.mydocuments
+                                    },
+                            ),
                         contentDescription = title,
-                        modifier = Modifier
-                            .padding(5.dp) // Increase padding if needed
-                            .fillMaxSize(),
-                        contentScale = ContentScale.Fit
+                        modifier =
+                            Modifier
+                                .padding(5.dp) // Increase padding if needed
+                                .fillMaxSize(),
+                        contentScale = ContentScale.Fit,
                     )
                 }
             }
@@ -1677,20 +1762,21 @@ private fun AppIcon(
                 Surface(
                     modifier = Modifier.size(44.dp),
                     shape = CircleShape,
-                    color = getColorForApp(title).copy(alpha = 0.1f)
+                    color = getColorForApp(title).copy(alpha = 0.1f),
                 ) {
                     Box {
                         Canvas(modifier = Modifier.fillMaxSize()) {
-                            val pattern = Path().apply {
-                                moveTo(0f, 0f)
-                                lineTo(size.width, size.height)
-                                moveTo(size.width, 0f)
-                                lineTo(0f, size.height)
-                            }
+                            val pattern =
+                                Path().apply {
+                                    moveTo(0f, 0f)
+                                    lineTo(size.width, size.height)
+                                    moveTo(size.width, 0f)
+                                    lineTo(0f, size.height)
+                                }
                             drawPath(
                                 path = pattern,
                                 color = Color.White.copy(alpha = 0.1f),
-                                style = Stroke(width = 1f)
+                                style = Stroke(width = 1f),
                             )
                         }
 
@@ -1698,7 +1784,7 @@ private fun AppIcon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
                             tint = getColorForApp(title),
-                            modifier = Modifier.padding(8.dp)
+                            modifier = Modifier.padding(8.dp),
                         )
                     }
                 }
@@ -1710,18 +1796,19 @@ private fun AppIcon(
 @Composable
 private fun CategoryHeader(
     title: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         Text(
             text = title,
             color = Color.Black,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = 17.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium
-            ),
-            modifier = Modifier.padding(vertical = 8.dp)
+            style =
+                MaterialTheme.typography.titleMedium.copy(
+                    fontSize = 17.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                ),
+            modifier = Modifier.padding(vertical = 8.dp),
         )
     }
 }

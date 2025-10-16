@@ -31,7 +31,7 @@ fun ChatBottomNavigationBar(
     onSOSClick: () -> Unit,
     onProfileClick: () -> Unit,
     isUsingPrideIcon: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val homeSelectedColor = Color(0xFF000000) // Black for home
     val selectedColor = Color(0xFFDD3825) // Red for other items
@@ -41,7 +41,7 @@ fun ChatBottomNavigationBar(
         modifier = modifier.height(70.dp),
         containerColor = Color(0xFFF6F4EE),
         contentColor = selectedColor,
-        tonalElevation = 4.dp
+        tonalElevation = 4.dp,
     ) {
         // Home item - always unselected in Chat screen
         NavigationBarItem(
@@ -51,18 +51,25 @@ fun ChatBottomNavigationBar(
                 CompositionLocalProvider(LocalContentColor provides homeSelectedColor) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp),
                     ) {
-                        val homeIconRes = if (isUsingPrideIcon) {
-                            R.drawable.homepride
-                        } else {
-                            R.drawable.arche_black2
-                        }
+                        val homeIconRes =
+                            if (isUsingPrideIcon) {
+                                R.drawable.homepride
+                            } else {
+                                R.drawable.arche_black2
+                            }
                         Image(
                             painter = painterResource(id = homeIconRes),
                             contentDescription = "Home",
                             modifier = Modifier.size(24.dp),
-                            colorFilter = if (isUsingPrideIcon) null else androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor)
+                            colorFilter =
+                                if (isUsingPrideIcon) {
+                                    null
+                                } else {
+                                    androidx.compose.ui.graphics.ColorFilter
+                                        .tint(homeSelectedColor)
+                                },
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -70,19 +77,20 @@ fun ChatBottomNavigationBar(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
-                            color = homeSelectedColor
+                            color = homeSelectedColor,
                         )
                     }
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = homeSelectedColor, // Black for home when selected
-                unselectedIconColor = homeSelectedColor,
-                selectedTextColor = homeSelectedColor, // Black for home when selected
-                unselectedTextColor = homeSelectedColor,
-                indicatorColor = Color(0xFFF6F4EE)
-            ),
-            alwaysShowLabel = false
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = homeSelectedColor, // Black for home when selected
+                    unselectedIconColor = homeSelectedColor,
+                    selectedTextColor = homeSelectedColor, // Black for home when selected
+                    unselectedTextColor = homeSelectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
         )
 
         // Chat item - always selected in Chat screen
@@ -93,13 +101,13 @@ fun ChatBottomNavigationBar(
                 CompositionLocalProvider(LocalContentColor provides selectedColor) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp),
                     ) {
                         Icon(
                             painterResource(id = R.drawable.chat),
                             contentDescription = "Chat",
                             modifier = Modifier.size(24.dp),
-                            tint = selectedColor
+                            tint = selectedColor,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -107,19 +115,20 @@ fun ChatBottomNavigationBar(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
-                            color = selectedColor
+                            color = selectedColor,
                         )
                     }
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,
-                unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,
-                unselectedTextColor = unselectedColor,
-                indicatorColor = Color(0xFFF6F4EE)
-            ),
-            alwaysShowLabel = false
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor,
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor,
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
         )
 
         // SOS item - always unselected in Chat screen
@@ -130,13 +139,13 @@ fun ChatBottomNavigationBar(
                 CompositionLocalProvider(LocalContentColor provides unselectedColor) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp),
                     ) {
                         Icon(
                             painterResource(id = R.drawable.sostab),
                             contentDescription = "SOS",
                             modifier = Modifier.size(24.dp),
-                            tint = unselectedColor
+                            tint = unselectedColor,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -144,19 +153,20 @@ fun ChatBottomNavigationBar(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
-                            color = unselectedColor
+                            color = unselectedColor,
                         )
                     }
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor, // Red for SOS when selected
-                unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor, // Red for SOS when selected
-                unselectedTextColor = unselectedColor,
-                indicatorColor = Color(0xFFF6F4EE)
-            ),
-            alwaysShowLabel = false
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor, // Red for SOS when selected
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor, // Red for SOS when selected
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
         )
 
         // Profile item - always unselected in Chat screen
@@ -167,13 +177,13 @@ fun ChatBottomNavigationBar(
                 CompositionLocalProvider(LocalContentColor provides unselectedColor) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp),
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.footerprofile),
                             contentDescription = "Profile",
                             modifier = Modifier.size(24.dp),
-                            tint = unselectedColor
+                            tint = unselectedColor,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -181,19 +191,20 @@ fun ChatBottomNavigationBar(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
-                            color = unselectedColor
+                            color = unselectedColor,
                         )
                     }
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor, // Red for Profile when selected
-                unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor, // Red for Profile when selected
-                unselectedTextColor = unselectedColor,
-                indicatorColor = Color(0xFFF6F4EE)
-            ),
-            alwaysShowLabel = false
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor, // Red for Profile when selected
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor, // Red for Profile when selected
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
         )
     }
 }

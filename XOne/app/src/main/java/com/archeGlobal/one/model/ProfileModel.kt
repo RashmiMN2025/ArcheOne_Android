@@ -6,16 +6,17 @@ data class ProfileModel(
     val profilePicture: String? = null,
     val version: String = "Version 1.0", // This will be dynamically set by the controller
     val lastLoginTime: String = "", // Added last login time
-    val menuItems: List<ProfileMenuItem> = listOf(
-        ProfileMenuItem("About Me", "person"),
-        ProfileMenuItem("Address/Coordinates", "home"),
-        ProfileMenuItem("Emergency Contact", "phone"),
-        ProfileMenuItem("Documents", "document"),
-        ProfileMenuItem("Log out", "logout")
-    )
+    val menuItems: List<ProfileMenuItem> =
+        listOf(
+            ProfileMenuItem("About Me", "person"),
+            ProfileMenuItem("Address/Coordinates", "home"),
+            ProfileMenuItem("Emergency Contact", "phone"),
+            ProfileMenuItem("Documents", "document"),
+            ProfileMenuItem("Log out", "logout"),
+        ),
 )
 
 data class ProfileMenuItem(
     val title: String,
-    val icon: String
+    val icon: String,
 )

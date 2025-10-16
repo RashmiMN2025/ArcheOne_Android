@@ -15,5 +15,5 @@ data class UserData(
     val profilePic: String? = null,
     val sosContact: String? = null,
     val userDetails: UserDetails? = null,
-    val greetings: Map<String, List<String>> = emptyMap()
+    val greetings: Map<String, List<String>> = emptyMap(),
 )

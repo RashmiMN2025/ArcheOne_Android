@@ -89,7 +89,7 @@ fun ChatScreen(
     viewModel: ChatViewModel,
     navController: NavController,
     onBackPressed: () -> Unit,
-    showBottomBar: Boolean = false
+    showBottomBar: Boolean = false,
 ) {
     var showReportDialog by remember { mutableStateOf(false) }
     var messageToReport by remember { mutableStateOf<Message?>(null) }
@@ -112,55 +112,61 @@ fun ChatScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFFE0DCD1), // Light grey at top
-                                Color(0xFFC8C8CA), // Medium grey in middle
-                                Color(0xFF474749) // Dark grey at bottom
-                            )
-                        )
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush =
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            Color(0xFFE0DCD1), // Light grey at top
+                                            Color(0xFFC8C8CA), // Medium grey in middle
+                                            Color(0xFF474749), // Dark grey at bottom
+                                        ),
+                                ),
+                        ),
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     // Top Bar
                     TopAppBar(
                         title = {
                             Box(
                                 modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Text(
                                     "Chat Support",
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                             }
                         },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent
-                        )
+                        colors =
+                            TopAppBarDefaults.topAppBarColors(
+                                containerColor = Color.Transparent,
+                            ),
                     )
 
                     // Chat messages
                     LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 16.dp),
-                        state = listState
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .padding(horizontal = 16.dp),
+                        state = listState,
                     ) {
                         items(messages) { message ->
                             MessageBubble(
@@ -170,7 +176,7 @@ fun ChatScreen(
                                 onReportMessage = { msg ->
                                     messageToReport = msg
                                     showReportDialog = true
-                                }
+                                },
                             )
                         }
 
@@ -191,67 +197,74 @@ fun ChatScreen(
                             text = "Long press any message to report",
                             fontSize = 11.sp,
                             color = Color.White,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 0.dp),
-                            textAlign = TextAlign.Center
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 0.dp),
+                            textAlign = TextAlign.Center,
                         )
                         Divider()
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color(0xFFEEEEEE)) // Light grey background
-                                .padding(
-                                    horizontal = 16.dp,
-                                    vertical = 12.dp
-                                ), // Reduced vertical padding
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .background(Color(0xFFEEEEEE)) // Light grey background
+                                    .padding(
+                                        horizontal = 16.dp,
+                                        vertical = 12.dp,
+                                    ),
+                            // Reduced vertical padding
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             OutlinedTextField(
                                 value = inputText,
                                 onValueChange = { viewModel.inputText.value = it },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 8.dp),
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .padding(end = 8.dp),
                                 placeholder = { Text("Type your question...") },
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                                keyboardActions = KeyboardActions(
-                                    onSend = {
-                                        if (inputText.isNotBlank()) {
-                                            viewModel.sendMessage(inputText)
-                                            focusManager.clearFocus()
-                                        }
-                                    }
-                                ),
-                                colors = TextFieldDefaults.colors(
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    focusedTextColor = Color.Black,
-                                    cursorColor = Color(0xFFDD3825),
-                                    unfocusedContainerColor = Color.White,
-                                    focusedContainerColor = Color.White
-                                ),
+                                keyboardActions =
+                                    KeyboardActions(
+                                        onSend = {
+                                            if (inputText.isNotBlank()) {
+                                                viewModel.sendMessage(inputText)
+                                                focusManager.clearFocus()
+                                            }
+                                        },
+                                    ),
+                                colors =
+                                    TextFieldDefaults.colors(
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        focusedTextColor = Color.Black,
+                                        cursorColor = Color(0xFFDD3825),
+                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = Color.White,
+                                    ),
                                 shape = RoundedCornerShape(8.dp),
                                 maxLines = 1,
-                                singleLine = true
+                                singleLine = true,
                             )
 
                             Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clickable {
-                                        if (inputText.isNotBlank()) {
-                                            viewModel.sendMessage(inputText)
-                                            focusManager.clearFocus()
-                                        }
-                                    },
-                                contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .size(40.dp)
+                                        .clickable {
+                                            if (inputText.isNotBlank()) {
+                                                viewModel.sendMessage(inputText)
+                                                focusManager.clearFocus()
+                                            }
+                                        },
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.send),
                                     contentDescription = "Send",
                                     tint = Color(0xFFDD3825),
-                                    modifier = Modifier.size(28.dp)
+                                    modifier = Modifier.size(28.dp),
                                 )
                             }
                         }
@@ -269,7 +282,7 @@ fun ChatScreen(
                             onChatClick = { /* Already on Chat screen */ },
                             onSOSClick = { navController.navigate("sos") },
                             onProfileClick = { navController.navigate("profile") },
-                            isUsingPrideIcon = isUsingPrideIcon
+                            isUsingPrideIcon = isUsingPrideIcon,
                         )
                     }
                 }
@@ -289,7 +302,7 @@ fun ChatScreen(
                     reportMessage(context, message, reason)
                     showReportDialog = false
                     messageToReport = null
-                }
+                },
             )
         }
     }
@@ -300,33 +313,35 @@ fun MessageBubble(
     message: Message,
     viewModel: ChatViewModel,
     chatData: ChatData,
-    onReportMessage: (Message) -> Unit
+    onReportMessage: (Message) -> Unit,
 ) {
     val context = LocalContext.current
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalAlignment = if (message.isUser) Alignment.End else Alignment.Start
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+        horizontalAlignment = if (message.isUser) Alignment.End else Alignment.Start,
     ) {
         Column(
-            horizontalAlignment = if (message.isUser) Alignment.End else Alignment.Start
+            horizontalAlignment = if (message.isUser) Alignment.End else Alignment.Start,
         ) {
             if (!message.isUser) {
                 // Display the main message content
                 Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFFFFAF5)) // Creamy color for bot messages
-                        .padding(12.dp)
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onLongPress = {
-                                    onReportMessage(message)
-                                }
-                            )
-                        }
+                    modifier =
+                        Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFFFFFAF5)) // Creamy color for bot messages
+                            .padding(12.dp)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onLongPress = {
+                                        onReportMessage(message)
+                                    },
+                                )
+                            },
                 ) {
                     Column {
                         // Check if the message contains "I found multiple relevant questions"
@@ -336,17 +351,18 @@ fun MessageBubble(
                                 if (line.startsWith("•")) {
                                     val question = line.substring(2).trim()
                                     Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { viewModel.selectFAQ(question) }
-                                            .padding(vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .clickable { viewModel.selectFAQ(question) }
+                                                .padding(vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         // Display bullet point and question text
                                         Text(
                                             text = "• $question",
                                             color = Color.Black,
-                                            modifier = Modifier.weight(1f)
+                                            modifier = Modifier.weight(1f),
                                         )
 
                                         // Red arrow on the right
@@ -354,7 +370,7 @@ fun MessageBubble(
                                             painter = painterResource(id = R.drawable.ic_arrow_forward),
                                             contentDescription = "Arrow",
                                             tint = Color(0xFFDD3825),
-                                            modifier = Modifier.size(20.dp)
+                                            modifier = Modifier.size(20.dp),
                                         )
                                     }
                                 } else if (line.isNotEmpty() && !line.startsWith("Here are some answers")) {
@@ -362,7 +378,7 @@ fun MessageBubble(
                                         text = line,
                                         color = Color.Black,
                                         modifier = Modifier.padding(vertical = 4.dp),
-                                        onLongPress = { onReportMessage(message) }
+                                        onLongPress = { onReportMessage(message) },
                                     )
                                 }
                             }
@@ -377,7 +393,7 @@ fun MessageBubble(
                                     fontWeight = FontWeight.Normal, // Changed from Medium to Normal to match answer
                                     lineHeight = 20.sp,
                                     modifier = Modifier.padding(bottom = 24.dp), // Increased padding for more space
-                                    onLongPress = { onReportMessage(message) }
+                                    onLongPress = { onReportMessage(message) },
                                 )
 
                                 // Display the answer with double spacing
@@ -386,7 +402,7 @@ fun MessageBubble(
                                     color = Color.Black,
                                     fontSize = 16.sp,
                                     lineHeight = 20.sp,
-                                    onLongPress = { onReportMessage(message) }
+                                    onLongPress = { onReportMessage(message) },
                                 )
                             } else {
                                 // Fallback if format is unexpected
@@ -395,7 +411,7 @@ fun MessageBubble(
                                     color = Color.Black,
                                     fontSize = 16.sp,
                                     lineHeight = 20.sp,
-                                    onLongPress = { onReportMessage(message) }
+                                    onLongPress = { onReportMessage(message) },
                                 )
                             }
                         } else if (message.content.startsWith("You asked:")) {
@@ -404,9 +420,11 @@ fun MessageBubble(
 
                             if (parts.size > 1) {
                                 // Get the question part and remove the "You asked:" prefix and quotes
-                                val questionText = parts[0].removePrefix("You asked: ")
-                                    .trim()
-                                    .removeSurrounding("\"")
+                                val questionText =
+                                    parts[0]
+                                        .removePrefix("You asked: ")
+                                        .trim()
+                                        .removeSurrounding("\"")
                                 // Display question with the same style as the answer text
                                 ClickableEmailText(
                                     text = questionText,
@@ -415,7 +433,7 @@ fun MessageBubble(
                                     fontWeight = FontWeight.Normal, // Changed from Medium to Normal to match answer
                                     lineHeight = 20.sp,
                                     modifier = Modifier.padding(bottom = 16.dp),
-                                    onLongPress = { onReportMessage(message) }
+                                    onLongPress = { onReportMessage(message) },
                                 )
 
                                 // Display the answer with proper spacing
@@ -424,7 +442,7 @@ fun MessageBubble(
                                     color = Color.Black,
                                     fontSize = 16.sp,
                                     lineHeight = 20.sp,
-                                    onLongPress = { onReportMessage(message) }
+                                    onLongPress = { onReportMessage(message) },
                                 )
                             } else {
                                 // Fallback if format is unexpected
@@ -433,7 +451,7 @@ fun MessageBubble(
                                     color = Color.Black,
                                     fontSize = 16.sp,
                                     lineHeight = 20.sp,
-                                    onLongPress = { onReportMessage(message) }
+                                    onLongPress = { onReportMessage(message) },
                                 )
                             }
 
@@ -454,15 +472,16 @@ fun MessageBubble(
                                 if (!message.showMoreCategories && chatData.faqs.size > 5) {
                                     Box(
                                         modifier = Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.CenterEnd
+                                        contentAlignment = Alignment.CenterEnd,
                                     ) {
                                         Text(
                                             text = "Show More",
                                             color = Color(0xFFDD3825),
                                             fontSize = 14.sp,
-                                            modifier = Modifier
-                                                .clickable { viewModel.loadMoreFAQs(message.id) }
-                                                .padding(8.dp)
+                                            modifier =
+                                                Modifier
+                                                    .clickable { viewModel.loadMoreFAQs(message.id) }
+                                                    .padding(8.dp),
                                         )
                                     }
                                 }
@@ -474,7 +493,7 @@ fun MessageBubble(
                                 color = Color.Black,
                                 fontSize = 16.sp,
                                 lineHeight = 20.sp,
-                                onLongPress = { onReportMessage(message) }
+                                onLongPress = { onReportMessage(message) },
                             )
 
                             // Append FAQ list if `showFAQs` is true
@@ -494,15 +513,16 @@ fun MessageBubble(
                                 if (!message.showMoreCategories && chatData.faqs.size > 5) {
                                     Box(
                                         modifier = Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.CenterEnd
+                                        contentAlignment = Alignment.CenterEnd,
                                     ) {
                                         Text(
                                             text = "Show More",
                                             color = Color(0xFFDD3825),
                                             fontSize = 14.sp,
-                                            modifier = Modifier
-                                                .clickable { viewModel.loadMoreFAQs(message.id) }
-                                                .padding(8.dp)
+                                            modifier =
+                                                Modifier
+                                                    .clickable { viewModel.loadMoreFAQs(message.id) }
+                                                    .padding(8.dp),
                                         )
                                     }
                                 }
@@ -513,21 +533,22 @@ fun MessageBubble(
             } else {
                 // Regular user message bubble
                 Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFDD3825)) // Red color for user messages
-                        .padding(12.dp)
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onLongPress = {
-                                    onReportMessage(message)
-                                }
-                            )
-                        }
+                    modifier =
+                        Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFFDD3825)) // Red color for user messages
+                            .padding(12.dp)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onLongPress = {
+                                        onReportMessage(message)
+                                    },
+                                )
+                            },
                 ) {
                     Text(
                         text = message.content,
-                        color = Color.White
+                        color = Color.White,
                     )
                 }
             }
@@ -538,7 +559,7 @@ fun MessageBubble(
             text = formatTime(message.timestamp),
             fontSize = 10.sp,
             color = Color(0xFFFFFAF5),
-            modifier = Modifier.padding(top = 4.dp, start = if (message.isUser) 0.dp else 8.dp, end = if (!message.isUser) 0.dp else 8.dp)
+            modifier = Modifier.padding(top = 4.dp, start = if (message.isUser) 0.dp else 8.dp, end = if (!message.isUser) 0.dp else 8.dp),
         )
     }
 }
@@ -547,16 +568,17 @@ fun MessageBubble(
 fun WelcomeMessage() {
     Card(
         modifier = Modifier.padding(4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        shape = RoundedCornerShape(16.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color.White,
+            ),
+        shape = RoundedCornerShape(16.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "👋",
-                    fontSize = 24.sp
+                    fontSize = 24.sp,
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
@@ -564,7 +586,7 @@ fun WelcomeMessage() {
                     fontWeight = FontWeight.Bold,
                     fontFamily = GraphikFontFamily,
                     fontSize = 18.sp,
-                    color = Color.Black
+                    color = Color.Black,
                 )
             }
 
@@ -572,32 +594,39 @@ fun WelcomeMessage() {
 
             Text(
                 text = "I'm your personal support guide, ready to help you navigate through ArcheOne's features and services.",
-                color = Color.Black
+                color = Color.Black,
             )
         }
     }
 }
 
 @Composable
-fun FAQQuestionRow(question: String, onClick: () -> Unit) {
+fun FAQQuestionRow(
+    question: String,
+    onClick: () -> Unit,
+) {
     Card(
-        modifier = Modifier
-            .padding(vertical = 2.dp)
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        ),
-        shape = RoundedCornerShape(8.dp)
+        modifier =
+            Modifier
+                .padding(vertical = 2.dp)
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color.White,
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 2.dp,
+            ),
+        shape = RoundedCornerShape(8.dp),
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = question,
@@ -605,7 +634,7 @@ fun FAQQuestionRow(question: String, onClick: () -> Unit) {
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 color = Color.Black,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -614,15 +643,13 @@ fun FAQQuestionRow(question: String, onClick: () -> Unit) {
                 painter = painterResource(id = R.drawable.ic_arrow_forward),
                 contentDescription = "Arrow",
                 tint = Color(0xFFDD3825),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
         }
     }
 }
 
-private fun formatTime(date: Date): String {
-    return DateFormat.format("hh:mm a", date).toString()
-}
+private fun formatTime(date: Date): String = DateFormat.format("hh:mm a", date).toString()
 
 @Composable
 fun ClickableEmailText(
@@ -632,7 +659,7 @@ fun ClickableEmailText(
     lineHeight: androidx.compose.ui.unit.TextUnit = 20.sp,
     fontWeight: FontWeight = FontWeight.Normal,
     color: Color = Color.Black,
-    onLongPress: (() -> Unit)? = null
+    onLongPress: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val annotatedString = buildAnnotatedStringWithEmails(text)
@@ -640,40 +667,45 @@ fun ClickableEmailText(
 
     Text(
         text = annotatedString,
-        modifier = modifier.pointerInput(Unit) {
-            detectTapGestures(
-                onLongPress = {
-                    onLongPress?.invoke()
-                },
-                onTap = { offset ->
-                    textLayoutResult.value?.let { layoutResult ->
-                        val position = layoutResult.getOffsetForPosition(offset)
-                        annotatedString.getStringAnnotations(
-                            tag = "EMAIL",
-                            start = position,
-                            end = position
-                        ).firstOrNull()?.let { emailAnnotation ->
-                            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = Uri.parse("mailto:${emailAnnotation.item}")
-                            }
-                            try {
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
-                            }
+        modifier =
+            modifier.pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = {
+                        onLongPress?.invoke()
+                    },
+                    onTap = { offset ->
+                        textLayoutResult.value?.let { layoutResult ->
+                            val position = layoutResult.getOffsetForPosition(offset)
+                            annotatedString
+                                .getStringAnnotations(
+                                    tag = "EMAIL",
+                                    start = position,
+                                    end = position,
+                                ).firstOrNull()
+                                ?.let { emailAnnotation ->
+                                    val intent =
+                                        Intent(Intent.ACTION_SENDTO).apply {
+                                            data = Uri.parse("mailto:${emailAnnotation.item}")
+                                        }
+                                    try {
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
                         }
-                    }
-                }
-            )
-        },
+                    },
+                )
+            },
         onTextLayout = { textLayoutResult.value = it },
-        style = androidx.compose.ui.text.TextStyle(
-            fontSize = fontSize,
-            lineHeight = lineHeight,
-            fontFamily = GraphikFontFamily,
-            fontWeight = fontWeight,
-            color = color
-        )
+        style =
+            androidx.compose.ui.text.TextStyle(
+                fontSize = fontSize,
+                lineHeight = lineHeight,
+                fontFamily = GraphikFontFamily,
+                fontWeight = fontWeight,
+                color = color,
+            ),
     )
 }
 
@@ -695,8 +727,8 @@ private fun buildAnnotatedStringWithEmails(text: String): AnnotatedString {
             pushStyle(
                 SpanStyle(
                     color = Color(0xFFDD3825), // Red color for emails
-                    textDecoration = TextDecoration.Underline
-                )
+                    textDecoration = TextDecoration.Underline,
+                ),
             )
             append(email)
             pop() // Remove style
@@ -716,19 +748,20 @@ private fun buildAnnotatedStringWithEmails(text: String): AnnotatedString {
 fun ReportMessageDialog(
     message: Message,
     onDismiss: () -> Unit,
-    onReport: (Message, String) -> Unit
+    onReport: (Message, String) -> Unit,
 ) {
     var selectedReason by remember { mutableStateOf("Inappropriate Content") }
     var customReason by remember { mutableStateOf("") }
 
-    val reportReasons = listOf(
-        "Inappropriate Content",
-        "Spam or Repetitive",
-        "Harassment or Abuse",
-        "False Information",
-        "Offensive Language",
-        "Other"
-    )
+    val reportReasons =
+        listOf(
+            "Inappropriate Content",
+            "Spam or Repetitive",
+            "Harassment or Abuse",
+            "False Information",
+            "Offensive Language",
+            "Other",
+        )
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -737,7 +770,7 @@ fun ReportMessageDialog(
                 text = "Report Message",
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.Black,
             )
         },
         text = {
@@ -747,27 +780,28 @@ fun ReportMessageDialog(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 16.dp),
                 )
 
                 reportReasons.forEach { reason ->
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { selectedReason = reason }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedReason = reason }
+                                .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(
                             selected = selectedReason == reason,
-                            onClick = { selectedReason = reason }
+                            onClick = { selectedReason = reason },
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = reason,
                             color = Color.Black,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                 }
@@ -780,21 +814,23 @@ fun ReportMessageDialog(
                         onValueChange = { customReason = it },
                         label = { Text("Describe the issue", fontSize = 12.sp) },
                         placeholder = { Text("Please explain the issue...", fontSize = 12.sp) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(80.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(80.dp),
                         maxLines = 2,
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color(0xFFDD3825),
-                            unfocusedIndicatorColor = Color.Gray,
-                            focusedLabelColor = Color(0xFFDD3825),
-                            unfocusedLabelColor = Color.Gray,
-                            cursorColor = Color(0xFFDD3825),
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black
-                        )
+                        colors =
+                            TextFieldDefaults.colors(
+                                focusedIndicatorColor = Color(0xFFDD3825),
+                                unfocusedIndicatorColor = Color.Gray,
+                                focusedLabelColor = Color(0xFFDD3825),
+                                unfocusedLabelColor = Color.Gray,
+                                cursorColor = Color(0xFFDD3825),
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                            ),
                     )
                 }
 
@@ -804,24 +840,26 @@ fun ReportMessageDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val finalReason = if (selectedReason == "Other" && customReason.isNotBlank()) {
-                        "Other: $customReason"
-                    } else if (selectedReason == "Other") {
-                        "Other: No specific details provided"
-                    } else {
-                        selectedReason
-                    }
+                    val finalReason =
+                        if (selectedReason == "Other" && customReason.isNotBlank()) {
+                            "Other: $customReason"
+                        } else if (selectedReason == "Other") {
+                            "Other: No specific details provided"
+                        } else {
+                            selectedReason
+                        }
                     onReport(message, finalReason)
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFDD3825)
-                )
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFDD3825),
+                    ),
             ) {
                 Text(
                     "Report",
                     color = Color.White,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
             }
         },
@@ -831,17 +869,22 @@ fun ReportMessageDialog(
                     "Cancel",
                     color = Color(0xFFDD3825),
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
             }
         },
-        containerColor = Color.White
+        containerColor = Color.White,
     )
 }
 
-private fun reportMessage(context: Context, message: Message, reason: String) {
+private fun reportMessage(
+    context: Context,
+    message: Message,
+    reason: String,
+) {
     val timestamp = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(message.timestamp)
-    val report = """
+    val report =
+        """
         === MESSAGE REPORT ===
         Report ID: ${System.currentTimeMillis()}
         Timestamp: $timestamp
@@ -853,7 +896,7 @@ private fun reportMessage(context: Context, message: Message, reason: String) {
         App Version: 1.0
         ========================
         
-    """.trimIndent()
+        """.trimIndent()
 
     try {
         // Save to app's private storage
@@ -863,16 +906,18 @@ private fun reportMessage(context: Context, message: Message, reason: String) {
         // In a production app, you would also send this to your server
         // sendReportToServer(report)
 
-        Toast.makeText(
-            context,
-            "Thank you for your report. We will review this content.",
-            Toast.LENGTH_LONG
-        ).show()
+        Toast
+            .makeText(
+                context,
+                "Thank you for your report. We will review this content.",
+                Toast.LENGTH_LONG,
+            ).show()
     } catch (e: Exception) {
-        Toast.makeText(
-            context,
-            "Unable to submit report. Please try again.",
-            Toast.LENGTH_SHORT
-        ).show()
+        Toast
+            .makeText(
+                context,
+                "Unable to submit report. Please try again.",
+                Toast.LENGTH_SHORT,
+            ).show()
     }
 }

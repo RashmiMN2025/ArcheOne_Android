@@ -36,31 +36,34 @@ fun AssetScreen(
     onBackPressed: () -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         var showIssueDialog by remember { mutableStateOf(false) }
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFE0DCD1), // Light Beige
-                            Color(0xFFC8C8CA), // Light Gray
-                            Color(0xFF474749) // Dark Gray
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors =
+                                listOf(
+                                    Color(0xFFE0DCD1), // Light Beige
+                                    Color(0xFFC8C8CA), // Light Gray
+                                    Color(0xFF474749), // Dark Gray
+                                ),
+                        ),
+                    ),
         ) {
             TopAppBar(
                 title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             modifier = Modifier.offset(x = 27.dp),
@@ -69,7 +72,7 @@ fun AssetScreen(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         )
                     }
                 },
@@ -78,31 +81,33 @@ fun AssetScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
                             contentDescription = "Back",
-                            tint = Color.Black
+                            tint = Color.Black,
                         )
                     }
                 },
                 actions = {
                     TextButton(
                         onClick = { controller.navigateToTrackTickets() },
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red),
                     ) {
                         Text(
                             text = "Track Tickets",
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                    ),
             )
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 15.dp)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 15.dp),
             ) {
                 when {
                     model.isLoading -> {
@@ -112,22 +117,24 @@ fun AssetScreen(
                         Text(
                             text = model.error,
                             color = Color.Red,
-                            modifier = Modifier.align(Alignment.Center)
+                            modifier = Modifier.align(Alignment.Center),
                         )
                     }
                     else -> {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFF6F4EE)
-                            )
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor = Color(0xFFF6F4EE),
+                                ),
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp)
-                                    .verticalScroll(rememberScrollState())
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp)
+                                        .verticalScroll(rememberScrollState()),
                             ) {
                                 // User Information Section
                                 Text(
@@ -136,7 +143,7 @@ fun AssetScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 16.dp)
+                                    modifier = Modifier.padding(bottom = 16.dp),
                                 )
 
                                 InfoRow("Name:", model.name)
@@ -147,7 +154,7 @@ fun AssetScreen(
 
                                 Divider(
                                     modifier = Modifier.padding(vertical = 16.dp),
-                                    color = Color.LightGray
+                                    color = Color.LightGray,
                                 )
 
                                 // Asset Details Section
@@ -157,7 +164,7 @@ fun AssetScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 16.dp)
+                                    modifier = Modifier.padding(bottom = 16.dp),
                                 )
 
                                 // Iterate over the asset details array
@@ -167,37 +174,40 @@ fun AssetScreen(
                                         Divider(
                                             modifier = Modifier.padding(vertical = 8.dp),
                                             color = Color.LightGray,
-                                            thickness = 1.dp
+                                            thickness = 1.dp,
                                         )
                                     }
                                 }
 
                                 Divider(
                                     modifier = Modifier.padding(vertical = 16.dp),
-                                    color = Color.LightGray
+                                    color = Color.LightGray,
                                 )
 
                                 // Information Notice
                                 Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 16.dp, start = 0.dp, end = 0.dp),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFFC8C8CA).copy(alpha = 0.5f)
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 16.dp, start = 0.dp, end = 0.dp),
+                                    colors =
+                                        CardDefaults.cardColors(
+                                            containerColor = Color(0xFFC8C8CA).copy(alpha = 0.5f),
+                                        ),
+                                    shape = RoundedCornerShape(8.dp),
                                 ) {
                                     Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(6.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.info),
                                             contentDescription = "Information",
                                             tint = Color(0xFFE94235),
-                                            modifier = Modifier.size(24.dp)
+                                            modifier = Modifier.size(24.dp),
                                         )
                                         Spacer(modifier = Modifier.width(16.dp))
                                         Text(
@@ -205,7 +215,7 @@ fun AssetScreen(
                                             color = Color.Black,
                                             fontSize = 16.sp,
                                             fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal
+                                            fontWeight = FontWeight.Normal,
                                         )
                                     }
                                 }
@@ -216,19 +226,22 @@ fun AssetScreen(
                                 Button(
                                     onClick = {
                                         // Navigate to RaiseConcernActivity with Asset prefilled
-                                        val intent = android.content.Intent(context, com.archeGlobal.one.RaiseConcernActivity::class.java).apply {
-                                            putExtra("source", "asset")
-                                            putExtra("prefilledCategory", "Asset") // asset category pre-selected
-                                        }
+                                        val intent =
+                                            android.content.Intent(context, com.archeGlobal.one.RaiseConcernActivity::class.java).apply {
+                                                putExtra("source", "asset")
+                                                putExtra("prefilledCategory", "Asset") // asset category pre-selected
+                                            }
                                         context.startActivity(intent)
                                     },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 24.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = PrimaryRed
-                                    ),
-                                    shape = RoundedCornerShape(25.dp)
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 24.dp),
+                                    colors =
+                                        ButtonDefaults.buttonColors(
+                                            containerColor = PrimaryRed,
+                                        ),
+                                    shape = RoundedCornerShape(25.dp),
                                 ) {
                                     Text(
                                         "Raise a Ticket",
@@ -236,7 +249,7 @@ fun AssetScreen(
                                         color = Color.White,
                                         fontSize = 18.sp,
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
                                     )
                                 }
                             }
@@ -254,7 +267,7 @@ fun AssetScreen(
                     controller.onIssueDescriptionChange(issueText)
                     controller.onSubmitIssue()
                     showIssueDialog = false
-                }
+                },
             )
         }
     }
@@ -263,24 +276,27 @@ fun AssetScreen(
 @Composable
 fun IssueDialog(
     onDismiss: () -> Unit,
-    onSubmit: (String) -> Unit
+    onSubmit: (String) -> Unit,
 ) {
     var issueText by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier =
+                Modifier
+                    .fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFF5F5F5) // Cream color background
-            )
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = Color(0xFFF5F5F5), // Cream color background
+                ),
         ) {
             Column(
-                modifier = Modifier
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                    Modifier
+                        .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = "Report an Issue",
@@ -288,31 +304,34 @@ fun IssueDialog(
                     fontSize = 18.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(bottom = 24.dp)
+                    modifier = Modifier.padding(bottom = 24.dp),
                 )
 
                 // Issue input field with rounded corners
                 OutlinedTextField(
                     value = issueText,
                     onValueChange = { issueText = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(180.dp),
                     placeholder = { Text("Please describe your issue") },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.LightGray,
-                        focusedBorderColor = Color.Black,
-                        cursorColor = Color.Gray,
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White
-                    ),
-                    textStyle = TextStyle(
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.Black,
+                            cursorColor = Color.Gray,
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White,
+                        ),
+                    textStyle =
+                        TextStyle(
+                            color = Color.Black,
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                        ),
+                    shape = RoundedCornerShape(12.dp),
                 )
 
                 // Submit button
@@ -324,12 +343,14 @@ fun IssueDialog(
                             onSubmit(issueText)
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryRed
-                    )
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 24.dp),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = PrimaryRed,
+                        ),
                 ) {
                     Text(
                         "Submit",
@@ -337,7 +358,7 @@ fun IssueDialog(
                         color = Color.White,
                         fontSize = 18.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     )
                 }
 
@@ -348,9 +369,10 @@ fun IssueDialog(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 16.sp,
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .clickable { onDismiss() }
+                    modifier =
+                        Modifier
+                            .padding(top = 16.dp)
+                            .clickable { onDismiss() },
                 )
             }
         }
@@ -362,9 +384,10 @@ fun AssetDetailCard(asset: AssetDetails) {
     // Add this log at the start of the composable
     android.util.Log.d("AssetScreen", "Displaying asset: hostName=${asset.hostName}")
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp) // Add some spacing between assets
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp), // Add some spacing between assets
     ) {
         InfoRow("Asset Type:", asset.assetType)
         InfoRow("Asset ID/\nHostName:", asset.hostName)
@@ -376,11 +399,15 @@ fun AssetDetailCard(asset: AssetDetails) {
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(
+    label: String,
+    value: String,
+) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
     ) {
         Text(
             label,
@@ -388,14 +415,14 @@ private fun InfoRow(label: String, value: String) {
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
             color = Color.Gray,
-            modifier = Modifier.width(120.dp)
+            modifier = Modifier.width(120.dp),
         )
         Text(
             text = value.ifEmpty { "N/A" },
             fontSize = 15.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Normal,
-            color = Color.Black
+            color = Color.Black,
         )
     }
 }

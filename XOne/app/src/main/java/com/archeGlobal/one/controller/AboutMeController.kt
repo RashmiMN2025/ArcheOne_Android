@@ -7,7 +7,7 @@ import com.archeGlobal.one.model.AboutMeModel
 import com.archeGlobal.one.navigation.Navigator
 
 class AboutMeController(
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) {
     var model by mutableStateOf(
         AboutMeModel(
@@ -16,22 +16,19 @@ class AboutMeController(
             email = OtpVerificationController.getUserData()?.email ?: "",
             mobile = OtpVerificationController.getUserData()?.mobile ?: "",
             employeeId = OtpVerificationController.getUserData()?.employeeId ?: "",
-
             // Personal Details - from userDetails
             aadharNumber = OtpVerificationController.getUserData()?.userDetails?.aadhar_number ?: "",
             panNumber = OtpVerificationController.getUserData()?.userDetails?.pan ?: "",
             uanNumber = OtpVerificationController.getUserData()?.userDetails?.uan ?: "",
             bloodGroup = OtpVerificationController.getUserData()?.userDetails?.blood_group ?: "",
-
             // Reporting Structure - from userDetails
             reportingManager = OtpVerificationController.getUserData()?.userDetails?.reporting_manager ?: "",
             divisionalHead = OtpVerificationController.getUserData()?.userDetails?.divisional_head ?: "",
-
             // Work Information - these are available
             department = OtpVerificationController.getUserData()?.department ?: "",
             designation = OtpVerificationController.getUserData()?.designation ?: "",
-            location = OtpVerificationController.getUserData()?.location ?: ""
-        )
+            location = OtpVerificationController.getUserData()?.location ?: "",
+        ),
     )
 
     fun onBackPressed() {

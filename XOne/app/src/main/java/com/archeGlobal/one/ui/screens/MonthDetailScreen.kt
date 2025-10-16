@@ -48,7 +48,7 @@ import java.util.*
 fun MonthDetailScreen(
     month: Int,
     controller: HolidayCalendarController,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
 ) {
     val holidaysState = controller.holidays.observeAsState()
     val hiddenHolidaysUpdated = controller.hiddenHolidaysUpdated.observeAsState()
@@ -74,18 +74,20 @@ fun MonthDetailScreen(
             is NetworkResult.Success -> {
                 result.data?.let { calendarResponse ->
                     // Filter holidays by month and hide status
-                    val allMonthHolidays = calendarResponse.holidays
-                        .filter { holiday ->
-                            try {
-                                val date = LocalDate.parse(
-                                    holiday.date,
-                                    DateTimeFormatter.ofPattern("dd-MM-yyyy")
-                                )
-                                date.monthValue == selectedMonth && (holiday.holidayType == "Yes" || holiday.holidayType == "RH")
-                            } catch (e: Exception) {
-                                false
+                    val allMonthHolidays =
+                        calendarResponse.holidays
+                            .filter { holiday ->
+                                try {
+                                    val date =
+                                        LocalDate.parse(
+                                            holiday.date,
+                                            DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+                                        )
+                                    date.monthValue == selectedMonth && (holiday.holidayType == "Yes" || holiday.holidayType == "RH")
+                                } catch (e: Exception) {
+                                    false
+                                }
                             }
-                        }
                     // Filter out hidden holidays
                     monthHolidays = controller.getVisibleHolidays(allMonthHolidays)
 
@@ -96,18 +98,21 @@ fun MonthDetailScreen(
 
             is NetworkResult.Error -> {
                 // If API fails, use default holidays filtered by month
-                val allMonthHolidays = controller.getDefaultHolidays()
-                    .filter { holiday ->
-                        try {
-                            val date = LocalDate.parse(
-                                holiday.date,
-                                DateTimeFormatter.ofPattern("dd-MM-yyyy")
-                            )
-                            date.monthValue == selectedMonth
-                        } catch (e: Exception) {
-                            false
+                val allMonthHolidays =
+                    controller
+                        .getDefaultHolidays()
+                        .filter { holiday ->
+                            try {
+                                val date =
+                                    LocalDate.parse(
+                                        holiday.date,
+                                        DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+                                    )
+                                date.monthValue == selectedMonth
+                            } catch (e: Exception) {
+                                false
+                            }
                         }
-                    }
                 // Filter out hidden holidays
                 monthHolidays = controller.getVisibleHolidays(allMonthHolidays)
 
@@ -131,68 +136,70 @@ fun MonthDetailScreen(
         if (selectedDate != null) {
             Log.d("MonthDetailScreen", "Selected date: $selectedDate")
 
-            val milestones = when (val result = holidaysState.value) {
-                is NetworkResult.Success -> {
-                    result.data?.let { calendarResponse ->
-                        // Get milestones that match the selected date
-                        val allMilestones = calendarResponse.milestones
-                        Log.d(
-                            "MonthDetailScreen",
-                            "Total milestones to filter: ${allMilestones.size}"
-                        )
+            val milestones =
+                when (val result = holidaysState.value) {
+                    is NetworkResult.Success -> {
+                        result.data?.let { calendarResponse ->
+                            // Get milestones that match the selected date
+                            val allMilestones = calendarResponse.milestones
+                            Log.d(
+                                "MonthDetailScreen",
+                                "Total milestones to filter: ${allMilestones.size}",
+                            )
 
-                        val filtered = allMilestones.filter { milestone ->
-                            try {
-                                // Get the selected date parts (selectedDate will never be null here)
-                                val selectedDateStr = selectedDate ?: return@filter false
-                                val selectedDateParts = selectedDateStr.split("-")
-                                val dayFromSelection = selectedDateParts[0].toInt()
-                                val monthFromSelection = selectedDateParts[1].toInt()
+                            val filtered =
+                                allMilestones.filter { milestone ->
+                                    try {
+                                        // Get the selected date parts (selectedDate will never be null here)
+                                        val selectedDateStr = selectedDate ?: return@filter false
+                                        val selectedDateParts = selectedDateStr.split("-")
+                                        val dayFromSelection = selectedDateParts[0].toInt()
+                                        val monthFromSelection = selectedDateParts[1].toInt()
 
-                                // Parse milestone date (always in dd-MM-yyyy format)
-                                val milestoneParts = milestone.poDate.split("-")
+                                        // Parse milestone date (always in dd-MM-yyyy format)
+                                        val milestoneParts = milestone.poDate.split("-")
 
-                                if (milestoneParts.size == 3) {
-                                    // ALL milestone dates are in DD-MM-YYYY format
-                                    val milestoneDay = milestoneParts[0].toInt()
-                                    val milestoneMonth = milestoneParts[1].toInt()
+                                        if (milestoneParts.size == 3) {
+                                            // ALL milestone dates are in DD-MM-YYYY format
+                                            val milestoneDay = milestoneParts[0].toInt()
+                                            val milestoneMonth = milestoneParts[1].toInt()
 
-                                    // Compare ONLY day and month, ignoring year completely
-                                    val isMatch =
-                                        milestoneDay == dayFromSelection && milestoneMonth == monthFromSelection
+                                            // Compare ONLY day and month, ignoring year completely
+                                            val isMatch =
+                                                milestoneDay == dayFromSelection && milestoneMonth == monthFromSelection
 
-                                    Log.d(
-                                        "MonthDetailScreen",
-                                        "Comparing milestone ${milestone.poDate} " +
-                                            "(day=$milestoneDay, month=$milestoneMonth) with " +
-                                            "selected date $selectedDate (day=$dayFromSelection, month=$monthFromSelection) " +
-                                            "= $isMatch"
-                                    )
+                                            Log.d(
+                                                "MonthDetailScreen",
+                                                "Comparing milestone ${milestone.poDate} " +
+                                                    "(day=$milestoneDay, month=$milestoneMonth) with " +
+                                                    "selected date $selectedDate (day=$dayFromSelection, month=$monthFromSelection) " +
+                                                    "= $isMatch",
+                                            )
 
-                                    isMatch
-                                } else {
-                                    Log.e(
-                                        "MonthDetailScreen",
-                                        "Invalid milestone date format: ${milestone.poDate}"
-                                    )
-                                    false
+                                            isMatch
+                                        } else {
+                                            Log.e(
+                                                "MonthDetailScreen",
+                                                "Invalid milestone date format: ${milestone.poDate}",
+                                            )
+                                            false
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            "MonthDetailScreen",
+                                            "Error comparing dates: ${milestone.poDate} vs $selectedDate",
+                                            e,
+                                        )
+                                        false
+                                    }
                                 }
-                            } catch (e: Exception) {
-                                Log.e(
-                                    "MonthDetailScreen",
-                                    "Error comparing dates: ${milestone.poDate} vs $selectedDate",
-                                    e
-                                )
-                                false
-                            }
-                        }
 
-                        filtered
-                    } ?: emptyList()
+                            filtered
+                        } ?: emptyList()
+                    }
+
+                    else -> emptyList()
                 }
-
-                else -> emptyList()
-            }
             selectedMilestones = milestones
 
             // Get global events for the selected date
@@ -200,7 +207,7 @@ fun MonthDetailScreen(
                 selectedGlobalEvents = controller.getGlobalEventsForDate(selectedDate ?: "")
                 Log.d(
                     "MonthDetailScreen",
-                    "Global events for $selectedDate: ${selectedGlobalEvents.size}"
+                    "Global events for $selectedDate: ${selectedGlobalEvents.size}",
                 )
             }
         } else {
@@ -218,92 +225,92 @@ fun MonthDetailScreen(
                     val milestones = calendarResponse.milestones
                     Log.d("MonthDetailScreen", "Total milestones: ${milestones.size}")
 
-                    milestoneDates = milestones
-                        .filter { milestone ->
-                            try {
-                                // ALL milestone dates are in DD-MM-YYYY format
-                                val parts = milestone.poDate.split("-")
+                    milestoneDates =
+                        milestones
+                            .filter { milestone ->
+                                try {
+                                    // ALL milestone dates are in DD-MM-YYYY format
+                                    val parts = milestone.poDate.split("-")
 
-                                if (parts.size == 3) {
-                                    // Parse as DD-MM-YYYY
-                                    val day = parts[0].toInt()
-                                    val monthValue = parts[1].toInt() // Renamed to avoid shadowing
+                                    if (parts.size == 3) {
+                                        // Parse as DD-MM-YYYY
+                                        val day = parts[0].toInt()
+                                        val monthValue = parts[1].toInt() // Renamed to avoid shadowing
 
-                                    // Check if this milestone is for the current month
-                                    val isMatch = monthValue == selectedMonth
-                                    Log.d(
-                                        "MonthDetailScreen",
-                                        "Milestone ${milestone.poDate}: Month=$monthValue, Day=$day, Current Month=$selectedMonth, Match=$isMatch"
-                                    )
-                                    isMatch
-                                } else {
+                                        // Check if this milestone is for the current month
+                                        val isMatch = monthValue == selectedMonth
+                                        Log.d(
+                                            "MonthDetailScreen",
+                                            "Milestone ${milestone.poDate}: Month=$monthValue, Day=$day, Current Month=$selectedMonth, Match=$isMatch",
+                                        )
+                                        isMatch
+                                    } else {
+                                        Log.e(
+                                            "MonthDetailScreen",
+                                            "Invalid date format: ${milestone.poDate}",
+                                        )
+                                        false
+                                    }
+                                } catch (e: Exception) {
                                     Log.e(
                                         "MonthDetailScreen",
-                                        "Invalid date format: ${milestone.poDate}"
+                                        "Error parsing date: ${milestone.poDate}",
+                                        e,
                                     )
                                     false
                                 }
-                            } catch (e: Exception) {
-                                Log.e(
-                                    "MonthDetailScreen",
-                                    "Error parsing date: ${milestone.poDate}",
-                                    e
-                                )
-                                false
-                            }
-                        }
-                        .map {
-                            try {
-                                // Extract day from DD-MM-YYYY date format
-                                val parts = it.poDate.split("-")
+                            }.map {
+                                try {
+                                    // Extract day from DD-MM-YYYY date format
+                                    val parts = it.poDate.split("-")
 
-                                if (parts.size == 3) {
-                                    // Always use first part as day (DD-MM-YYYY format)
-                                    val day = parts[0].toInt()
+                                    if (parts.size == 3) {
+                                        // Always use first part as day (DD-MM-YYYY format)
+                                        val day = parts[0].toInt()
 
-                                    Log.d(
-                                        "MonthDetailScreen",
-                                        "Milestone day: $day from ${it.poDate}"
-                                    )
-                                    day
-                                } else {
-                                    Log.e("MonthDetailScreen", "Invalid date format: ${it.poDate}")
+                                        Log.d(
+                                            "MonthDetailScreen",
+                                            "Milestone day: $day from ${it.poDate}",
+                                        )
+                                        day
+                                    } else {
+                                        Log.e("MonthDetailScreen", "Invalid date format: ${it.poDate}")
+                                        0
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("MonthDetailScreen", "Error getting day: ${it.poDate}", e)
                                     0
                                 }
-                            } catch (e: Exception) {
-                                Log.e("MonthDetailScreen", "Error getting day: ${it.poDate}", e)
-                                0
-                            }
-                        }
-                        .filter { it > 0 }
-                        .toSet()
+                            }.filter { it > 0 }
+                            .toSet()
 
                     Log.d(
                         "MonthDetailScreen",
-                        "Milestone dates for month $selectedMonth: $milestoneDates"
+                        "Milestone dates for month $selectedMonth: $milestoneDates",
                     )
 
                     // Get global event dates for the selected month
-                    globalEventDates = controller.getGlobalEventsForMonth(selectedMonth)
-                        .map { event ->
-                            try {
-                                val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-                                val localDate = LocalDate.parse(event.date, formatter)
-                                if (localDate.monthValue == selectedMonth) localDate.dayOfMonth else 0
-                            } catch (e: Exception) {
-                                Log.e(
-                                    "MonthDetailScreen",
-                                    "Error parsing global event date: ${e.message}"
-                                )
-                                0
-                            }
-                        }
-                        .filter { it > 0 }
-                        .toSet()
+                    globalEventDates =
+                        controller
+                            .getGlobalEventsForMonth(selectedMonth)
+                            .map { event ->
+                                try {
+                                    val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                                    val localDate = LocalDate.parse(event.date, formatter)
+                                    if (localDate.monthValue == selectedMonth) localDate.dayOfMonth else 0
+                                } catch (e: Exception) {
+                                    Log.e(
+                                        "MonthDetailScreen",
+                                        "Error parsing global event date: ${e.message}",
+                                    )
+                                    0
+                                }
+                            }.filter { it > 0 }
+                            .toSet()
 
                     Log.d(
                         "MonthDetailScreen",
-                        "Global event dates for month $selectedMonth: $globalEventDates"
+                        "Global event dates for month $selectedMonth: $globalEventDates",
                     )
                 }
             }
@@ -325,15 +332,16 @@ fun MonthDetailScreen(
                 selectedDay = currentDate.dayOfMonth
 
                 // Find holiday for today
-                val todayHoliday = monthHolidays.find { holiday ->
-                    try {
-                        val holidayDate =
-                            LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                        holidayDate.dayOfMonth == currentDate.dayOfMonth
-                    } catch (e: Exception) {
-                        false
+                val todayHoliday =
+                    monthHolidays.find { holiday ->
+                        try {
+                            val holidayDate =
+                                LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                            holidayDate.dayOfMonth == currentDate.dayOfMonth
+                        } catch (e: Exception) {
+                            false
+                        }
                     }
-                }
                 selectedHoliday = todayHoliday
 
                 // Also load global events for today
@@ -348,15 +356,16 @@ fun MonthDetailScreen(
                 selectedDay = 1
 
                 // Find holiday for first day if any
-                val firstDayHoliday = monthHolidays.find { holiday ->
-                    try {
-                        val holidayDate =
-                            LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                        holidayDate.dayOfMonth == 1
-                    } catch (e: Exception) {
-                        false
+                val firstDayHoliday =
+                    monthHolidays.find { holiday ->
+                        try {
+                            val holidayDate =
+                                LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                            holidayDate.dayOfMonth == 1
+                        } catch (e: Exception) {
+                            false
+                        }
                     }
-                }
                 selectedHoliday = firstDayHoliday
 
                 // Also load global events for first day
@@ -377,57 +386,62 @@ fun MonthDetailScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
-                    )
-                )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    // Clear selections when background is clicked
-                    selectedHoliday = null
-                    selectedDate = null
-                    selectedMilestones = emptyList()
-                    selectedDay = null
-                }
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749)),
+                            ),
+                    ).clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) {
+                        // Clear selections when background is clicked
+                        selectedHoliday = null
+                        selectedDate = null
+                        selectedMilestones = emptyList()
+                        selectedDay = null
+                    },
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(4.dp, 10.dp, 4.dp, 0.dp) // Minimized horizontal padding
-                    .clickable(
-                        enabled = true,
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { /* Consume click to prevent it from reaching the background */ }
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(4.dp, 10.dp, 4.dp, 0.dp) // Minimized horizontal padding
+                        .clickable(
+                            enabled = true,
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { /* Consume click to prevent it from reaching the background */ },
             ) {
                 // Top Bar with back button
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding() // Add this for proper top spacing
-                        .padding(bottom = 10.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding() // Add this for proper top spacing
+                            .padding(bottom = 10.dp),
                 ) {
                     IconButton(
                         onClick = onBackPressed,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .align(Alignment.CenterStart)
+                        modifier =
+                            Modifier
+                                .size(48.dp)
+                                .align(Alignment.CenterStart),
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
                             contentDescription = "Back",
-                            tint = Color.Black
+                            tint = Color.Black,
                         )
                     }
 
@@ -438,7 +452,7 @@ fun MonthDetailScreen(
                         fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center),
                     )
                 }
 
@@ -447,31 +461,32 @@ fun MonthDetailScreen(
                 if (holidaysState.value is NetworkResult.Loading) {
                     Box(
                         contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     ) {
                         CircularProgressIndicator(
-                            color = Color(0xFFDD3825)
+                            color = Color(0xFFDD3825),
                         )
                     }
                 } else {
                     // Month Calendar with white background Card
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(400.dp)
-                            .padding(horizontal = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(400.dp)
+                                .padding(horizontal = 12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(16.dp),
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(16.dp),
                         ) {
                             // Month Header with navigation arrows
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 // Previous Month Button - only show if not January
                                 if (selectedMonth > 1) {
@@ -485,20 +500,21 @@ fun MonthDetailScreen(
                                             // Reset user selection flag to allow auto-selection
                                             isUserSelectedDate = false
                                             // Set first day of new month
-                                            val firstDayStr = String.format(
-                                                "%02d-%02d-%04d",
-                                                1,
-                                                selectedMonth - 1,
-                                                2025
-                                            )
+                                            val firstDayStr =
+                                                String.format(
+                                                    "%02d-%02d-%04d",
+                                                    1,
+                                                    selectedMonth - 1,
+                                                    2025,
+                                                )
                                             selectedDate = firstDayStr
                                             selectedDay = 1
-                                        }
+                                        },
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_back),
                                             contentDescription = "Previous Month",
-                                            tint = Color.Black
+                                            tint = Color.Black,
                                         )
                                     }
                                 } else {
@@ -508,16 +524,18 @@ fun MonthDetailScreen(
 
                                 // Month and Year
                                 Text(
-                                    text = YearMonth.of(2025, selectedMonth)
-                                        .month
-                                        .getDisplayName(
-                                            TextStyle.FULL,
-                                            Locale.getDefault()
-                                        ) + " 2025",
+                                    text =
+                                        YearMonth
+                                            .of(2025, selectedMonth)
+                                            .month
+                                            .getDisplayName(
+                                                TextStyle.FULL,
+                                                Locale.getDefault(),
+                                            ) + " 2025",
                                     color = Color.Black,
                                     fontSize = 24.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
                                 )
 
                                 // Next Month Button - only show if not December
@@ -532,22 +550,23 @@ fun MonthDetailScreen(
                                             // Reset user selection flag to allow auto-selection
                                             isUserSelectedDate = false
                                             // Set first day of new month
-                                            val firstDayStr = String.format(
-                                                "%02d-%02d-%04d",
-                                                1,
-                                                selectedMonth + 1,
-                                                2025
-                                            )
+                                            val firstDayStr =
+                                                String.format(
+                                                    "%02d-%02d-%04d",
+                                                    1,
+                                                    selectedMonth + 1,
+                                                    2025,
+                                                )
                                             selectedDate = firstDayStr
                                             selectedDay = 1
-                                        }
+                                        },
                                     ) {
                                         // Using the same icon as back but rotated 180 degrees
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_back),
                                             contentDescription = "Next Month",
                                             tint = Color.Black,
-                                            modifier = Modifier.rotate(180f)
+                                            modifier = Modifier.rotate(180f),
                                         )
                                     }
                                 } else {
@@ -572,25 +591,26 @@ fun MonthDetailScreen(
 
                                     // Force a direct check against known global event dates
                                     // This handles the case where the API's date format might be different
-                                    val knownGlobalEventDates = mapOf(
-                                        "08-03-2025" to "International Women's Day",
-                                        "22-04-2025" to "Earth Day",
-                                        "07-04-2025" to "World Health Day",
-                                        "01-05-2025" to "International Workers' day",
-                                        "05-06-2025" to "World Environment Day",
-                                        "21-09-2025" to "World Peace Day",
-                                        "19-11-2025" to "International Men's Day",
-                                        "11-05-2025" to "International Mother's Day",
-                                        "15-06-2025" to "International Father's Day",
-                                        "11-04-2025" to "International Pets Day",
-                                        "28-06-2025" to "LGBT Pride Day"
-                                    )
+                                    val knownGlobalEventDates =
+                                        mapOf(
+                                            "08-03-2025" to "International Women's Day",
+                                            "22-04-2025" to "Earth Day",
+                                            "07-04-2025" to "World Health Day",
+                                            "01-05-2025" to "International Workers' day",
+                                            "05-06-2025" to "World Environment Day",
+                                            "21-09-2025" to "World Peace Day",
+                                            "19-11-2025" to "International Men's Day",
+                                            "11-05-2025" to "International Mother's Day",
+                                            "15-06-2025" to "International Father's Day",
+                                            "11-04-2025" to "International Pets Day",
+                                            "28-06-2025" to "LGBT Pride Day",
+                                        )
 
                                     // Update milestone data for selected date
                                     selectedMilestones = controller.getMilestonesForDate(dateStr)
                                     Log.d(
                                         "MonthDetailScreen",
-                                        "Date clicked: $dateStr, Milestones: ${selectedMilestones.size}"
+                                        "Date clicked: $dateStr, Milestones: ${selectedMilestones.size}",
                                     )
 
                                     // Update global events for selected date
@@ -601,7 +621,7 @@ fun MonthDetailScreen(
                                     if (knownGlobalEventDates.containsKey(dateStr) && selectedGlobalEvents.isEmpty()) {
                                         Log.d(
                                             "MonthDetailScreen",
-                                            "Known global event date detected: $dateStr - ${knownGlobalEventDates[dateStr]}"
+                                            "Known global event date detected: $dateStr - ${knownGlobalEventDates[dateStr]}",
                                         )
                                         // Manually find matching global events by exact date string
                                         val allGlobalEvents = controller.getAllGlobalEvents()
@@ -612,48 +632,50 @@ fun MonthDetailScreen(
                                             selectedGlobalEvents = matchingEvents
                                             Log.d(
                                                 "MonthDetailScreen",
-                                                "Manually added ${matchingEvents.size} global events"
+                                                "Manually added ${matchingEvents.size} global events",
                                             )
                                             matchingEvents.forEach { event ->
                                                 Log.d(
                                                     "MonthDetailScreen",
-                                                    "  - Added: ${event.name} on ${event.date}"
+                                                    "  - Added: ${event.name} on ${event.date}",
                                                 )
                                             }
                                         } else {
                                             // As a fallback, create a synthetic event based on the known date
                                             Log.d(
                                                 "MonthDetailScreen",
-                                                "No direct match found, adding synthetic event"
+                                                "No direct match found, adding synthetic event",
                                             )
-                                            val syntheticEvent = GlobalEvent(
-                                                name = knownGlobalEventDates[dateStr]
-                                                    ?: "Global Event",
-                                                date = dateStr,
-                                                image = null,
-                                                description = "Global celebration day"
-                                            )
+                                            val syntheticEvent =
+                                                GlobalEvent(
+                                                    name =
+                                                        knownGlobalEventDates[dateStr]
+                                                            ?: "Global Event",
+                                                    date = dateStr,
+                                                    image = null,
+                                                    description = "Global celebration day",
+                                                )
                                             selectedGlobalEvents = listOf(syntheticEvent)
                                             Log.d(
                                                 "MonthDetailScreen",
-                                                "Added synthetic event: ${syntheticEvent.name}"
+                                                "Added synthetic event: ${syntheticEvent.name}",
                                             )
                                         }
                                     }
 
                                     Log.d(
                                         "MonthDetailScreen",
-                                        "Global Events for $dateStr: ${selectedGlobalEvents.size}"
+                                        "Global Events for $dateStr: ${selectedGlobalEvents.size}",
                                     )
                                     selectedGlobalEvents.forEach { event ->
                                         Log.d(
                                             "MonthDetailScreen",
-                                            "  - ${event.name}: ${event.date}"
+                                            "  - ${event.name}: ${event.date}",
                                         )
                                     }
 
                                     isUserSelectedDate = true
-                                }
+                                },
                             )
                         }
                     }
@@ -665,9 +687,10 @@ fun MonthDetailScreen(
                         // No data available for selected date - show message
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
                         ) {
                         }
                     } else {
@@ -675,16 +698,17 @@ fun MonthDetailScreen(
                         // Each section will display if content is available
                         // Wrap in scrollable column
                         Column(
-                            modifier = Modifier
-                                .verticalScroll(rememberScrollState())
-                                .fillMaxWidth()
+                            modifier =
+                                Modifier
+                                    .verticalScroll(rememberScrollState())
+                                    .fillMaxWidth(),
                         ) {
                             // 1. Global Events Box (appears first)
                             if (selectedDate != null && selectedGlobalEvents.isNotEmpty()) {
                                 GlobalEventDetailsBox(
                                     date = selectedDate!!,
                                     globalEvents = selectedGlobalEvents,
-                                    controller = controller
+                                    controller = controller,
                                 )
 
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -693,7 +717,7 @@ fun MonthDetailScreen(
                             // 2. Holiday Details Box (appears second)
                             if (selectedHoliday != null) {
                                 HolidayDetailsBox(
-                                    holiday = selectedHoliday!!
+                                    holiday = selectedHoliday!!,
                                 )
 
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -703,7 +727,7 @@ fun MonthDetailScreen(
                             if (selectedDate != null && selectedMilestones.isNotEmpty()) {
                                 MilestoneDetailsBox(
                                     date = selectedDate!!,
-                                    milestones = selectedMilestones
+                                    milestones = selectedMilestones,
                                 )
                             }
 
@@ -725,7 +749,7 @@ fun MonthCalendarView(
     globalEventDates: Set<Int> = emptySet(),
     selectedDay: Int? = null,
     isUserSelectedDate: Boolean = false,
-    onDateClick: (Holiday?, String, Int) -> Unit
+    onDateClick: (Holiday?, String, Int) -> Unit,
 ) {
     // Log milestone dates for debugging
     LaunchedEffect(milestoneDates) {
@@ -745,7 +769,7 @@ fun MonthCalendarView(
         // Days of week header
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             daysOfWeek.forEach { day ->
                 Text(
@@ -753,7 +777,7 @@ fun MonthCalendarView(
                     fontSize = 16.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Black
+                    color = Color.Black,
                 )
             }
         }
@@ -764,7 +788,7 @@ fun MonthCalendarView(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             LegendItem(color = Color(0xFFDD3825), text = "Holiday")
             Spacer(modifier = Modifier.width(6.dp))
@@ -784,7 +808,7 @@ fun MonthCalendarView(
         repeat(weeks) { weekIndex ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 repeat(7) { dayOfWeekIndex ->
                     val day = weekIndex * 7 + dayOfWeekIndex + 1 - firstDayOfMonth
@@ -796,14 +820,15 @@ fun MonthCalendarView(
                         val isToday = isCurrentMonth && day == currentDate.dayOfMonth
 
                         // Find if this day has a holiday
-                        val holiday = holidays.find {
-                            try {
-                                val holidayDate = LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                                holidayDate.dayOfMonth == day
-                            } catch (e: Exception) {
-                                false
+                        val holiday =
+                            holidays.find {
+                                try {
+                                    val holidayDate = LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                                    holidayDate.dayOfMonth == day
+                                } catch (e: Exception) {
+                                    false
+                                }
                             }
-                        }
 
                         val isMandatoryHoliday = holiday?.holidayType == "Yes"
                         val isRegionalHoliday = holiday?.holidayType == "RH"
@@ -814,47 +839,52 @@ fun MonthCalendarView(
 
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape).background(
-                                    when {
-                                        // Priority: If date has both holiday and global event, show green
-                                        (isMandatoryHoliday || isRegionalHoliday) && hasGlobalEvent -> Color(0xFF4CAF50) // Green for both holiday and global event
-                                        isMandatoryHoliday -> Color(0xFFDD3825) // Solid red for holidays
-                                        isRegionalHoliday -> Color(0xFF2196F3) // Solid blue for RH
-                                        hasGlobalEvent -> Color(0xFF4CAF50) // Solid green for global events
-                                        // Show blue for today if no user selection, or for selected day if user made a selection
-                                        (isToday && !isUserSelectedDate) || (day == selectedDay && isUserSelectedDate) -> Color(0xFF2196F3).copy(alpha = 0.3f) // Blue with 30% opacity
-                                        else -> Color.Transparent
-                                    }
-                                )
-                                .border(
-                                    width = if (day == selectedDay) 1.dp else 0.dp,
-                                    color = if (day == selectedDay) Color.White else Color.Transparent,
-                                    shape = CircleShape
-                                )
-                                .clickable {
-                                    onDateClick(holiday, dateStr, day)
-                                }
+                            modifier =
+                                Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        when {
+                                            // Priority: If date has both holiday and global event, show green
+                                            (isMandatoryHoliday || isRegionalHoliday) && hasGlobalEvent -> Color(0xFF4CAF50) // Green for both holiday and global event
+                                            isMandatoryHoliday -> Color(0xFFDD3825) // Solid red for holidays
+                                            isRegionalHoliday -> Color(0xFF2196F3) // Solid blue for RH
+                                            hasGlobalEvent -> Color(0xFF4CAF50) // Solid green for global events
+                                            // Show blue for today if no user selection, or for selected day if user made a selection
+                                            (isToday && !isUserSelectedDate) || (day == selectedDay && isUserSelectedDate) ->
+                                                Color(
+                                                    0xFF2196F3,
+                                                ).copy(alpha = 0.3f) // Blue with 30% opacity
+                                            else -> Color.Transparent
+                                        },
+                                    ).border(
+                                        width = if (day == selectedDay) 1.dp else 0.dp,
+                                        color = if (day == selectedDay) Color.White else Color.Transparent,
+                                        shape = CircleShape,
+                                    ).clickable {
+                                        onDateClick(holiday, dateStr, day)
+                                    },
                         ) {
                             Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Text(
                                     text = day.toString(),
                                     modifier = Modifier.padding(vertical = 2.dp),
                                     fontSize = 14.sp,
-                                    color = when {
-                                        isMandatoryHoliday || isRegionalHoliday -> Color.White
-                                        hasGlobalEvent -> Color.White
-                                        else -> Color.Black
-                                    },
+                                    color =
+                                        when {
+                                            isMandatoryHoliday || isRegionalHoliday -> Color.White
+                                            hasGlobalEvent -> Color.White
+                                            else -> Color.Black
+                                        },
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = when {
-                                        isMandatoryHoliday || isRegionalHoliday -> FontWeight.Bold
-                                        hasGlobalEvent -> FontWeight.Bold
-                                        else -> FontWeight.SemiBold
-                                    }
+                                    fontWeight =
+                                        when {
+                                            isMandatoryHoliday || isRegionalHoliday -> FontWeight.Bold
+                                            hasGlobalEvent -> FontWeight.Bold
+                                            else -> FontWeight.SemiBold
+                                        },
                                 )
 
                                 // Add indicator dots for special dates
@@ -862,20 +892,22 @@ fun MonthCalendarView(
                                     // Add yellow dot for milestone dates
                                     if (hasMilestone) {
                                         Box(
-                                            modifier = Modifier
-                                                .size(4.dp)
-                                                .clip(CircleShape)
-                                                .background(Color(0xFFF5A623))
+                                            modifier =
+                                                Modifier
+                                                    .size(4.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color(0xFFF5A623)),
                                         )
                                     }
 
                                     // Add purple dot for global event dates
                                     if (hasGlobalEvent) {
                                         Box(
-                                            modifier = Modifier
-                                                .size(4.dp)
-                                                .clip(CircleShape)
-                                                .background(Color(0xFF4CAF50))
+                                            modifier =
+                                                Modifier
+                                                    .size(4.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color(0xFF4CAF50)),
                                         )
                                     }
                                 }
@@ -884,7 +916,7 @@ fun MonthCalendarView(
                     } else {
                         // Empty space for days outside the month
                         Box(
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(32.dp),
                         )
                     }
                 }
@@ -896,52 +928,57 @@ fun MonthCalendarView(
 }
 
 @Composable
-fun HolidayDetailsBox(
-    holiday: Holiday
-) {
+fun HolidayDetailsBox(holiday: Holiday) {
     val context = LocalContext.current
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .padding(vertical = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.9f)
+                    .padding(vertical = 8.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(8.dp),
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 90.dp)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 90.dp)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
 // Holiday image on the left
                 Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .background(Color(0xFFFEF7F2))
+                    modifier =
+                        Modifier
+                            .size(60.dp)
+                            .background(Color(0xFFFEF7F2)),
                 ) {
                     if (!holiday.icon.isNullOrEmpty()) {
                         SubcomposeAsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(holiday.icon)
-                                .crossfade(true)
-                                .build(),
+                            model =
+                                ImageRequest
+                                    .Builder(context)
+                                    .data(holiday.icon)
+                                    .crossfade(true)
+                                    .build(),
                             contentDescription = "${holiday.name} icon",
-                            modifier = Modifier
-                                .fillMaxSize(),
+                            modifier =
+                                Modifier
+                                    .fillMaxSize(),
                             contentScale = ContentScale.Crop,
                             loading = {
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize(),
                                 ) {
                                     CircularProgressIndicator(color = Color(0xFFDD3825))
                                 }
@@ -949,16 +986,16 @@ fun HolidayDetailsBox(
                             error = {
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize(),
                                 ) {
                                     DefaultIndianFlag()
                                 }
-                            }
+                            },
                         )
                     } else {
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
                         ) {
                             DefaultIndianFlag()
                         }
@@ -968,7 +1005,7 @@ fun HolidayDetailsBox(
 // Holiday information on the right
                 Column(
                     modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.Start
+                    horizontalAlignment = Alignment.Start,
                 ) {
 // Holiday name
                     Text(
@@ -978,7 +1015,7 @@ fun HolidayDetailsBox(
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.height(2.dp))
 // Holiday date
@@ -989,7 +1026,7 @@ fun HolidayDetailsBox(
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Gray,
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
 
                     Spacer(modifier = Modifier.height(2.dp))
@@ -1004,7 +1041,7 @@ fun HolidayDetailsBox(
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -1015,72 +1052,80 @@ fun HolidayDetailsBox(
 @Composable
 private fun DefaultIndianFlag() {
     Box(
-        modifier = Modifier
-            .size(60.dp)
-            .background(Color.LightGray, RoundedCornerShape(4.dp)),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier
+                .size(60.dp)
+                .background(Color.LightGray, RoundedCornerShape(4.dp)),
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(Color(0xFFFF9933))
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(Color(0xFFFF9933)),
             )
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(Color.White),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(Color.White),
+                contentAlignment = Alignment.Center,
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF000080))
+                    modifier =
+                        Modifier
+                            .size(12.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF000080)),
                 )
             }
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(Color(0xFF138808))
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(Color(0xFF138808)),
             )
         }
     }
 }
 
-private fun formatDetailDate(dateStr: String): String {
-    return try {
+private fun formatDetailDate(dateStr: String): String =
+    try {
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
         val date = LocalDate.parse(dateStr, formatter)
         date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
     } catch (e: Exception) {
         dateStr
     }
-}
 
 @Composable
-private fun LegendItem(color: Color, text: String) {
+private fun LegendItem(
+    color: Color,
+    text: String,
+) {
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape)
-                .background(color)
+            modifier =
+                Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(color),
         )
         Spacer(modifier = Modifier.width(3.dp))
         Text(
             text = text,
             fontSize = 12.sp,
             fontFamily = GraphikFontFamily,
-            color = Color.Black
+            color = Color.Black,
         )
     }
 }
@@ -1088,39 +1133,43 @@ private fun LegendItem(color: Color, text: String) {
 @Composable
 fun MilestoneDetailsBox(
     date: String,
-    milestones: List<Milestone>
+    milestones: List<Milestone>,
 ) {
     // Format date for display (e.g., "12 January" from "12-01-2025")
-    val formattedDate = try {
-        val localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-        "${localDate.dayOfMonth} ${localDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())}"
-    } catch (e: Exception) {
-        date
-    }
+    val formattedDate =
+        try {
+            val localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+            "${localDate.dayOfMonth} ${localDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())}"
+        } catch (e: Exception) {
+            date
+        }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .padding(horizontal = 12.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = { /* Prevent click from reaching background */ }
-                ),
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.9f)
+                    .padding(horizontal = 12.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { /* Prevent click from reaching background */ },
+                    ),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
         ) {
             Column(
-                modifier = Modifier
-                    .padding(vertical = 12.dp, horizontal = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                    Modifier
+                        .padding(vertical = 12.dp, horizontal = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 // Title with formatted date
                 Text(
@@ -1129,7 +1178,7 @@ fun MilestoneDetailsBox(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1137,19 +1186,21 @@ fun MilestoneDetailsBox(
                 // Display milestone information
                 milestones.forEach { milestone ->
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
                     ) {
                         // Milestone bullet point in orange color
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(bottom = 2.dp)
+                            modifier = Modifier.padding(bottom = 2.dp),
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(Color(0xFFF5A623), CircleShape)
+                                modifier =
+                                    Modifier
+                                        .size(8.dp)
+                                        .background(Color(0xFFF5A623), CircleShape),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
 
@@ -1160,61 +1211,61 @@ fun MilestoneDetailsBox(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 3,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
 
                         // Customer information with left padding to align with the event text
                         Row(
-                            modifier = Modifier.padding(start = 12.dp)
+                            modifier = Modifier.padding(start = 12.dp),
                         ) {
                             Text(
                                 text = "Customer: ",
                                 color = Color.Gray,
-                                fontSize = 12.sp
+                                fontSize = 12.sp,
                             )
                             Text(
                                 text = milestone.customer,
                                 color = Color.Black,
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
 
                         // Project information
                         Row(
-                            modifier = Modifier.padding(start = 12.dp)
+                            modifier = Modifier.padding(start = 12.dp),
                         ) {
                             Text(
                                 text = "Project: ",
                                 color = Color.Gray,
-                                fontSize = 12.sp
+                                fontSize = 12.sp,
                             )
                             Text(
                                 text = milestone.project,
                                 color = Color.Black,
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
 
                         // Show original date (includes year)
                         Row(
-                            modifier = Modifier.padding(start = 12.dp)
+                            modifier = Modifier.padding(start = 12.dp),
                         ) {
                             Text(
                                 text = "Milestone Date: ",
                                 color = Color.Gray,
-                                fontSize = 12.sp
+                                fontSize = 12.sp,
                             )
                             Text(
                                 text = formatMilestoneDate(milestone.poDate),
                                 color = Color.Black,
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
                             )
                         }
 
@@ -1222,7 +1273,7 @@ fun MilestoneDetailsBox(
                             HorizontalDivider(
                                 color = Color.LightGray,
                                 thickness = 0.5.dp,
-                                modifier = Modifier.padding(top = 8.dp)
+                                modifier = Modifier.padding(top = 8.dp),
                             )
                         }
                     }
@@ -1248,11 +1299,22 @@ private fun formatMilestoneDate(dateStr: String): String {
         val year = parts[2].toInt()
 
         // Format as "DD Month YYYY"
-        val monthName = when (monthNum) {
-            1 -> "January"; 2 -> "February"; 3 -> "March"; 4 -> "April"; 5 -> "May"; 6 -> "June"
-            7 -> "July"; 8 -> "August"; 9 -> "September"; 10 -> "October"; 11 -> "November"; 12 -> "December"
-            else -> "Unknown"
-        }
+        val monthName =
+            when (monthNum) {
+                1 -> "January"
+                2 -> "February"
+                3 -> "March"
+                4 -> "April"
+                5 -> "May"
+                6 -> "June"
+                7 -> "July"
+                8 -> "August"
+                9 -> "September"
+                10 -> "October"
+                11 -> "November"
+                12 -> "December"
+                else -> "Unknown"
+            }
 
         "$day $monthName $year"
     } catch (e: Exception) {
@@ -1265,13 +1327,14 @@ private fun formatMilestoneDate(dateStr: String): String {
 fun GlobalEventDetailsBox(
     date: String,
     globalEvents: List<GlobalEvent>,
-    controller: HolidayCalendarController
+    controller: HolidayCalendarController,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Events list
         globalEvents.forEach { event ->
@@ -1280,11 +1343,12 @@ fun GlobalEventDetailsBox(
             // Add divider between events
             if (event != globalEvents.last()) {
                 Divider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
                     color = Color.LightGray,
-                    thickness = 1.dp
+                    thickness = 1.dp,
                 )
             }
         }
@@ -1294,45 +1358,51 @@ fun GlobalEventDetailsBox(
 @Composable
 fun GlobalEventItem(
     event: GlobalEvent,
-    controller: HolidayCalendarController
+    controller: HolidayCalendarController,
 ) {
     val context = LocalContext.current
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .padding(vertical = 8.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth(0.9f)
+                .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(8.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 90.dp)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 90.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // Event image on the left
             Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .background(Color(0xFFFEF7F2))
+                modifier =
+                    Modifier
+                        .size(60.dp)
+                        .background(Color(0xFFFEF7F2)),
             ) {
                 if (!event.image.isNullOrEmpty()) {
                     SubcomposeAsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data(event.image)
-                            .crossfade(true)
-                            .build(),
+                        model =
+                            ImageRequest
+                                .Builder(context)
+                                .data(event.image)
+                                .crossfade(true)
+                                .build(),
                         contentDescription = "${event.name} image",
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier =
+                            Modifier
+                                .fillMaxSize(),
                         contentScale = ContentScale.Crop,
                         loading = {
                             Box(
                                 contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
                             ) {
                                 CircularProgressIndicator(color = Color(0xFF4CAF50))
                             }
@@ -1340,29 +1410,29 @@ fun GlobalEventItem(
                         error = {
                             Box(
                                 contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
                             ) {
                                 // Show a placeholder icon for missing image
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = "Event Icon",
                                     tint = Color(0xFF4CAF50),
-                                    modifier = Modifier.size(30.dp)
+                                    modifier = Modifier.size(30.dp),
                                 )
                             }
-                        }
+                        },
                     )
                 } else {
                     // Default icon if no image
                     Box(
                         contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Event Icon",
                             tint = Color(0xFF4CAF50),
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(30.dp),
                         )
                     }
                 }
@@ -1373,7 +1443,7 @@ fun GlobalEventItem(
             // Event information on the right
             Column(
                 modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.Start
+                horizontalAlignment = Alignment.Start,
             ) {
                 // Event name
                 Text(
@@ -1383,7 +1453,7 @@ fun GlobalEventItem(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -1396,7 +1466,7 @@ fun GlobalEventItem(
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Gray,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -1411,7 +1481,7 @@ fun GlobalEventItem(
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
         }

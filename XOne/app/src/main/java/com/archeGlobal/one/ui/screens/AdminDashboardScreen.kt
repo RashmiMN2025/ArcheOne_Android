@@ -40,49 +40,54 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 @Composable
 fun AdminDashboardScreen(
     model: AdminDashboardModel,
-    controller: AdminDashboardController
+    controller: AdminDashboardController,
 ) {
     // Handle back gesture navigation
     BackHandler {
         controller.onBackPressed()
     }
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 // Header
                 AdminDashboardHeader(
-                    onBackPressed = controller::onBackPressed
+                    onBackPressed = controller::onBackPressed,
                 )
 
                 // Content
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                 ) {
                     // Dashboard Items Grid
                     AdminDashboardGrid(
                         items = model.dashboardItems,
-                        onItemClick = controller::onDashboardItemClick
+                        onItemClick = controller::onDashboardItemClick,
                     )
                 }
             }
@@ -97,14 +102,12 @@ fun AdminDashboardScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminDashboardHeader(
-    onBackPressed: () -> Unit
-) {
+fun AdminDashboardHeader(onBackPressed: () -> Unit) {
     TopAppBar(
         title = {
             Box(
                 modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Admin Dashboard",
@@ -112,7 +115,7 @@ fun AdminDashboardHeader(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 20.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
         },
@@ -121,34 +124,35 @@ fun AdminDashboardHeader(
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.Black
+                    tint = Color.Black,
                 )
             }
         },
         actions = {
             Spacer(modifier = Modifier.width(48.dp)) // Balance the navigation icon
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent
-        )
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+            ),
     )
 }
 
 @Composable
 fun AdminDashboardGrid(
     items: List<AdminDashboardItem>,
-    onItemClick: (AdminDashboardItem) -> Unit
+    onItemClick: (AdminDashboardItem) -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         items(items) { item ->
             AdminDashboardCard(
                 item = item,
-                onClick = { onItemClick(item) }
+                onClick = { onItemClick(item) },
             )
         }
     }
@@ -157,40 +161,43 @@ fun AdminDashboardGrid(
 @Composable
 fun AdminDashboardCard(
     item: AdminDashboardItem,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth(0.55f)
-            .height(230.dp)
-            .clickable(enabled = item.isEnabled) { onClick() },
+        modifier =
+            Modifier
+                .fillMaxWidth(0.55f)
+                .height(230.dp)
+                .clickable(enabled = item.isEnabled) { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 // Icon
                 Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .offset(y = (-8).dp),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .size(70.dp)
+                            .offset(y = (-8).dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Image(
                         painter = painterResource(id = getAdminIcon(item.iconName)),
                         contentDescription = item.title,
                         modifier = Modifier.size(55.dp),
                         contentScale = ContentScale.Fit,
-                        colorFilter = ColorFilter.tint(PrimaryRed)
+                        colorFilter = ColorFilter.tint(PrimaryRed),
                     )
                 }
 
@@ -205,7 +212,7 @@ fun AdminDashboardCard(
                     color = Color.Black,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
-                    lineHeight = 19.sp
+                    lineHeight = 19.sp,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -219,38 +226,40 @@ fun AdminDashboardCard(
                     color = Color.Gray,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
-                    lineHeight = 17.sp
+                    lineHeight = 17.sp,
                 )
             }
 
             // Notification Badge
             if (item.badgeCount > 0) {
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 16.dp, end = 8.dp),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 16.dp, end = 8.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                     // Notification bell background
                     Box(
-                        modifier = Modifier
-                            .width(46.dp)
-                            .height(32.dp)
-                            .background(
-                                color = PrimaryRed,
-                                shape = RoundedCornerShape(16.dp)
-                            ),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .width(46.dp)
+                                .height(32.dp)
+                                .background(
+                                    color = PrimaryRed,
+                                    shape = RoundedCornerShape(16.dp),
+                                ),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
                                 contentDescription = "Notifications",
                                 tint = Color.White,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(14.dp),
                             )
                             Spacer(modifier = Modifier.width(2.dp))
                             Text(
@@ -258,7 +267,7 @@ fun AdminDashboardCard(
                                 color = Color.White,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                fontFamily = GraphikFontFamily
+                                fontFamily = GraphikFontFamily,
                             )
                         }
                     }
@@ -269,11 +278,10 @@ fun AdminDashboardCard(
 }
 
 @Composable
-private fun getAdminIcon(iconName: String): Int {
-    return when (iconName) {
+private fun getAdminIcon(iconName: String): Int =
+    when (iconName) {
         "ic_inventory" -> R.drawable.inventory
         "ic_order_received" -> R.drawable.order_received
         "ic_consumption_report" -> R.drawable.consumption_report
         else -> R.drawable.ic_file
     }
-}

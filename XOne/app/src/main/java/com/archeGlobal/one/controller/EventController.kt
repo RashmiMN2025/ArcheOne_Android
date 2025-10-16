@@ -16,7 +16,7 @@ import java.util.Locale
 
 class EventController(
     private val apiService: ApiService,
-    private val context: Context
+    private val context: Context,
 ) {
     companion object {
         private const val TAG = "EventController"

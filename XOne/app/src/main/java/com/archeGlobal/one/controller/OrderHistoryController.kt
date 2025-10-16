@@ -20,9 +20,8 @@ import kotlinx.coroutines.withContext
 class OrderHistoryController(
     private val context: Context,
     private val navigator: Navigator,
-    private val sourceActivity: String? = null
+    private val sourceActivity: String? = null,
 ) : ViewModel() {
-
     companion object {
         var selectedOrderForDetails: DeskCartOrderHistory? = null
         private var cachedOrderHistory: List<DeskCartOrderHistory>? = null
@@ -45,11 +44,12 @@ class OrderHistoryController(
 
         if (isCacheValid) {
             // Use cached data
-            model = model.copy(
-                orders = cachedOrderHistory!!,
-                isLoading = false,
-                error = null
-            )
+            model =
+                model.copy(
+                    orders = cachedOrderHistory!!,
+                    isLoading = false,
+                    error = null,
+                )
             Log.d("OrderHistoryController", "Using cached order history: ${cachedOrderHistory!!.size} orders")
         } else {
             // Load fresh data
@@ -75,10 +75,11 @@ class OrderHistoryController(
                         cachedOrderHistory = orderHistoryResponse.orders
                         lastLoadTime = System.currentTimeMillis()
 
-                        model = model.copy(
-                            orders = orderHistoryResponse.orders,
-                            isLoading = false
-                        )
+                        model =
+                            model.copy(
+                                orders = orderHistoryResponse.orders,
+                                isLoading = false,
+                            )
                         Log.d("OrderHistoryController", "Order history loaded successfully: ${orderHistoryResponse.orders.size} orders")
                     } else {
                         handleError("Failed to load order history: ${response.message()}")
@@ -94,10 +95,11 @@ class OrderHistoryController(
 
     private fun handleError(message: String) {
         Log.e("OrderHistoryController", message)
-        model = model.copy(
-            isLoading = false,
-            error = message
-        )
+        model =
+            model.copy(
+                isLoading = false,
+                error = message,
+            )
     }
 
 //    fun onBackPressed() {
