@@ -267,8 +267,7 @@ interface ApiService {
 
     @POST("meeting/v1/qr_code/verify_and_checkin/{booking_id}")
     suspend fun verifyAndCheckIn(
-        @Path("booking_id") bookingId: String,
-        @Body request: VerifyCheckInRequest
+        @Path("booking_id") bookingId: String
     ): Response<VerifyCheckInResponse>
  
    // Cab Booking APIs

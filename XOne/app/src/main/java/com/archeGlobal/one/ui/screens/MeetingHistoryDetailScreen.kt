@@ -3,6 +3,7 @@ package com.archeGlobal.one.ui.screens
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -63,8 +64,15 @@ fun MeetingHistoryDetailScreen(
     val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
     var enterRemark by remember { mutableStateOf("") }
 
+    val pendingFrom = when (booking?.pendingFrom) {
+        "admin" -> "Admin"
+        "linemanager" -> "Reporting Manager"
+        "ceo" -> "CEO"
+        else -> "Unknown"
+    }
+
     val showRemarkAndButton = action == "approve" || action == "reject" || action == "cancel"
-    val buttonText = if (action == "approve") "Approve" else if (action == "reject") "Reject" else "Cancel"
+    val buttonText = if (action == "approve") "Approve Booking" else if (action == "reject") "Reject Booking" else "Cancel Booking"
     val buttonColor = if (action == "approve") Color(0xFF4CAF50) else if (action == "reject") Color(0xFFDD3825) else Color(0xFFDD3825)
 
     val archeAttendeesList = remember(booking) {
@@ -95,12 +103,11 @@ fun MeetingHistoryDetailScreen(
         }
     }
 
-    val pendingFrom = if (booking?.meetingType == "internal") "Admin" else "Manager/CEO"
-
     val status = booking?.meetingStatus ?: "Unknown"
     val (statusBackgroundColor, statusTextColor) = when (status.lowercase()) {
-        "confirmed" -> Color(0xFF008000).copy(alpha = 0.15f) to Color(0xFF008000)
-        "rejected" , "canceled" -> Color(0xFFFF0000).copy(alpha = 0.15f) to Color(0xFFFF0000)
+        "booked" -> Color(0xFF008000).copy(alpha = 0.15f) to Color(0xFF008000)
+        "rejected" -> Color(0xFFFF0000).copy(alpha = 0.15f) to Color(0xFFFF0000)
+        "cancelled" -> Color.Gray.copy(alpha = 0.15f) to Color.Gray
         else -> Color(0xFFFFA500).copy(alpha = 0.15f) to Color(0xFFFFA500)
     }
 
@@ -218,7 +225,7 @@ fun MeetingHistoryDetailScreen(
                                     color = Color.Black
                                 )
                                 Column(
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    verticalArrangement = Arrangement.Top
                                 ) {
                                     MeetingDetailRow(
                                         icon = R.drawable.mroomtype,
@@ -260,11 +267,6 @@ fun MeetingHistoryDetailScreen(
                                         label = "Justification",
                                         value = booking?.businessJustification ?: ""
                                     )
-//                                    MeetingDetailRow(
-//                                        icon = R.drawable.mappin_and_ellipse,
-//                                        label = "Extension",
-//                                        value = booking?.meetingExtension ?: ""
-//                                    )
                                     MeetingDetailRow(
                                         icon = R.drawable.panatry,
                                         label = "Refreshment",
@@ -303,7 +305,7 @@ fun MeetingHistoryDetailScreen(
                                     MeetingDetailRow(
                                         icon = R.drawable.checkinstatus,  // Adjust icon
                                         label = "Check-in Status",
-                                        value = pendingFrom
+                                        value = booking?.checkedIn ?: ""
                                     )
                                 }
 
@@ -347,16 +349,16 @@ fun MeetingHistoryDetailScreen(
                                             coroutineScope.launch {
                                                 try {
                                                     val userRole = when (source) {
-                                                        "history" -> "user"
+                                                        "history" -> "host"
                                                         "admin" -> "admin"
                                                         "linemanager" -> "linemanager"
                                                         "ceo" -> "ceo"
                                                         else -> "user"
                                                     }
                                                     val responseStr = when (buttonText) {
-                                                        "Approve" -> "approved"
-                                                        "Reject" -> "rejected"
-                                                        "Cancel" -> "canceled"
+                                                        "Approve Booking" -> "approved"
+                                                        "Reject Booking" -> "rejected"
+                                                        "Cancel Booking" -> "cancelled"
                                                         else -> return@launch
                                                     }
                                                     val request = MeetingApprovalRequest(
@@ -434,43 +436,44 @@ fun MeetingDetailRow(
     label: String,
     value: String
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = label,
-            tint = Color.Gray,
+    if (value.isNotEmpty()) {
+        Row(
             modifier = Modifier
-                .size(20.dp)
-                .padding(top = 2.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            fontFamily = GraphikFontFamily,
-            color = Color.Gray,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier
-                .weight(0.4f)
-                .padding(top = 2.dp)
-        )
-        Text(
-            text = value,
-            fontSize = 13.sp,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal,
-            color = Color.Black,
-            textAlign = TextAlign.End,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .weight(0.6f)
-                .padding(end = 8.dp)
-        )
+                .fillMaxWidth()
+                .padding(vertical = 2.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = label,
+                tint = Color.Gray,
+                modifier = Modifier
+                    .size(20.dp)
+                    .padding(top = 2.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                fontFamily = GraphikFontFamily,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .weight(0.4f)
+                    .padding(top = 2.dp)
+            )
+            Text(
+                text = value,
+                fontSize = 13.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
+                color = Color.Black,
+                textAlign = TextAlign.End,
+                maxLines = 20,
+                modifier = Modifier
+                    .weight(0.6f)
+                    .padding(end = 8.dp)
+            )
+        }
     }
 }

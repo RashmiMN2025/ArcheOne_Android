@@ -90,7 +90,11 @@ data class BookingHistoryItem(
     @SerializedName("room_id")
     val roomId: String,
     @SerializedName("remark")
-    val remark: String
+    val remark: String,
+    @SerializedName("pending_from")
+    val pendingFrom: String,
+    @SerializedName("checked_in")
+    val checkedIn: String,
 )
 
 data class BookingHistoryResponse(
@@ -126,20 +130,6 @@ data class VerifyData(
     val is_valid: Boolean,
     @SerializedName("verification_timestamp")
     val verification_timestamp: String,
-    val message: String,
-    @SerializedName("qr_data")
-    val qr_data: QrData
+    val message: String
 )
 
-data class QrData(
-    @SerializedName("booking_id")
-    val booking_id: String,
-    @SerializedName("room_id")
-    val room_id: String,
-    @SerializedName("qr_token")
-    val qr_token: String,
-    @SerializedName("meeting_starttime")
-    val meeting_starttime: String,
-    @SerializedName("meeting_endtime")
-    val meeting_endtime: String
-)

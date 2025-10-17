@@ -28,7 +28,7 @@ class MeetingHistoryController(private val context: Context, private val userRol
         fetchBookingHistory()
     }
 
-    private fun fetchBookingHistory() {
+    internal fun fetchBookingHistory() {
         CoroutineScope(Dispatchers.IO).launch {
             _isLoading.value = true
             _errorMessage.value = null
