@@ -1,7 +1,11 @@
 package com.archeGlobal.one.model
 
 import com.archeGlobal.one.utils.DateFormatter
+import com.google.gson.*
+import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
+import java.lang.reflect.Type
 import java.util.Date
 
 /**
@@ -223,6 +227,7 @@ data class TravelOrderHistoryItem(
 /**
  * Cab details nested object from API
  * Updated to support new pickups structure with map details
+ * Uses custom deserializers to handle both old (string array) and new (object array) formats
  */
 data class CabDetails(
     @SerializedName("travelType")
@@ -239,8 +244,9 @@ data class CabDetails(
     val travelDate: String? = null,
     @SerializedName("travel_date")
     val legacyTravelDate: String? = null,  // Legacy field
+    @JsonAdapter(PickupsDeserializer::class)
     @SerializedName("pickups")
-    val pickups: List<PickupLocationResponse>? = null,  // New structure with map details
+    val pickups: List<PickupLocationResponse>? = null,  // Handles both string[] and object[] formats
     @SerializedName("pickup_locations")
     val pickupLocations: List<String>? = null,  // Legacy field
     @SerializedName("dropLocation")
@@ -249,8 +255,9 @@ data class CabDetails(
     val legacyDropLocation: String? = null,  // Legacy field
     @SerializedName("dropMapDetails")
     val dropMapDetails: String? = null,
+    @JsonAdapter(AdditionalMembersDeserializer::class)
     @SerializedName("additionalMembers")
-    val additionalMembers: List<AdditionalMemberResponse>? = null,  // New structure
+    val additionalMembers: List<AdditionalMemberResponse>? = null,  // Handles both string[] and object[] formats
     @SerializedName("additional_members")
     val legacyAdditionalMembers: List<String>? = null,  // Legacy field
 ) {
@@ -574,3 +581,81 @@ data class TravelV2AdminHistoryResponse(
     @SerializedName("admin_history")
     val adminHistory: List<TravelApprovalHistoryItem>,
 )
+
+/**
+ * Custom deserializer for pickups field to handle both old format (string array)
+ * and new format (object array with location and mapDetails)
+ */
+class PickupsDeserializer : JsonDeserializer<List<PickupLocationResponse>> {
+    override fun deserialize(
+        json: JsonElement,
+        typeOfT: Type,
+        context: JsonDeserializationContext
+    ): List<PickupLocationResponse> {
+        if (json.isJsonNull) {
+            return emptyList()
+        }
+
+        val jsonArray = json.asJsonArray
+        val pickups = mutableListOf<PickupLocationResponse>()
+
+        for (element in jsonArray) {
+            when {
+                element.isJsonPrimitive && element.asJsonPrimitive.isString -> {
+                    // Old format: just a string like "kochi"
+                    val location = element.asString
+                    pickups.add(PickupLocationResponse(location = location, mapDetails = null))
+                }
+                element.isJsonObject -> {
+                    // New format: object with location and mapDetails
+                    val pickup = context.deserialize<PickupLocationResponse>(
+                        element,
+                        PickupLocationResponse::class.java
+                    )
+                    pickups.add(pickup)
+                }
+            }
+        }
+
+        return pickups
+    }
+}
+
+/**
+ * Custom deserializer for additional members field to handle both old format (string array)
+ * and new format (object array with name and email)
+ */
+class AdditionalMembersDeserializer : JsonDeserializer<List<AdditionalMemberResponse>> {
+    override fun deserialize(
+        json: JsonElement,
+        typeOfT: Type,
+        context: JsonDeserializationContext
+    ): List<AdditionalMemberResponse> {
+        if (json.isJsonNull) {
+            return emptyList()
+        }
+
+        val jsonArray = json.asJsonArray
+        val members = mutableListOf<AdditionalMemberResponse>()
+
+        for (element in jsonArray) {
+            when {
+                element.isJsonPrimitive && element.asJsonPrimitive.isString -> {
+                    // Old format: just a string name like "Pramukh JS"
+                    val name = element.asString
+                    members.add(AdditionalMemberResponse(name = name, email = null))
+                }
+                element.isJsonObject -> {
+                    // New format: object with name and email
+                    val member = context.deserialize<AdditionalMemberResponse>(
+                        element,
+                        AdditionalMemberResponse::class.java
+                    )
+                    members.add(member)
+                }
+            }
+        }
+
+        return members
+    }
+}

@@ -492,47 +492,9 @@ class TravelController(
         // Create request with employee email (v2 API only needs email)
         val request = TravelV2Request(employeeEmail = employeeEmail)
 
-        // Variables to track both API calls
-        var orderHistoryResponse: List<com.archeGlobal.one.model.TravelOrderHistoryItem>? = null
-        var approvalHistoryResponse: List<com.archeGlobal.one.model.TravelApprovalHistoryItem>? = null
-        var orderCallCompleted = false
-        var approvalCallCompleted = false
+        Log.d("TravelController", "Loading travel history for: $employeeEmail")
 
-        // Function to check if both calls are completed and process results
-        fun processResults() {
-            if (orderCallCompleted && approvalCallCompleted) {
-                val orderItems = orderHistoryResponse ?: emptyList()
-                val approvalItems = approvalHistoryResponse ?: emptyList()
-
-                Log.d(
-                    "TravelController",
-                    "V2 API: Loaded ${orderItems.size} order history items and ${approvalItems.size} approval history items",
-                )
-
-                // Convert to TravelRequest objects
-                val historyItems = orderItems.map { item ->
-                    Log.d("TravelController", "Processing order ${item.requestId}")
-                    item.toTravelRequest()
-                }
-
-                val approvalItemsConverted = approvalItems.map { item ->
-                    Log.d("TravelController", "Processing approval ${item.requestId}")
-                    item.toTravelRequest()
-                }
-
-                travelHistoryState = TravelHistoryState.Success(
-                    historyItems = historyItems,
-                    approvalItems = approvalItemsConverted,
-                )
-
-                Log.d(
-                    "TravelController",
-                    "V2 API: Loaded combined history: ${historyItems.size} order requests, ${approvalItemsConverted.size} approval requests",
-                )
-            }
-        }
-
-        // Make order history API call
+        // Make order history API call (only user's own travel requests)
         RetrofitClient.apiService.getTravelV2OrderHistory(request).enqueue(
             object : Callback<TravelV2OrderHistoryResponse> {
                 override fun onResponse(
@@ -540,48 +502,30 @@ class TravelController(
                     response: Response<TravelV2OrderHistoryResponse>,
                 ) {
                     if (response.isSuccessful && response.body() != null) {
-                        orderHistoryResponse = response.body()!!.orderHistory
-                        Log.d("TravelController", "V2 Order history API success: ${orderHistoryResponse?.size} items")
+                        val orderItems = response.body()!!.orderHistory
+                        Log.d("TravelController", "V2 Order history API success: ${orderItems.size} items")
+
+                        // Convert to TravelRequest objects
+                        val historyItems = orderItems.map { item ->
+                            Log.d("TravelController", "Processing order ${item.requestId}")
+                            item.toTravelRequest()
+                        }
+
+                        travelHistoryState = TravelHistoryState.Success(
+                            historyItems = historyItems,
+                            approvalItems = emptyList(), // No approval items for travel history screen
+                        )
+
+                        Log.d("TravelController", "Travel history loaded successfully: ${historyItems.size} requests")
                     } else {
                         Log.e("TravelController", "V2 Order history API error: ${response.code()}")
-                        orderHistoryResponse = emptyList()
+                        travelHistoryState = TravelHistoryState.Error("Failed to load travel history")
                     }
-                    orderCallCompleted = true
-                    processResults()
                 }
 
                 override fun onFailure(call: Call<TravelV2OrderHistoryResponse>, t: Throwable) {
                     Log.e("TravelController", "V2 Order history API network error", t)
-                    orderHistoryResponse = emptyList()
-                    orderCallCompleted = true
-                    processResults()
-                }
-            }
-        )
-
-        // Make approval history API call
-        RetrofitClient.apiService.getTravelV2ApprovalHistory(request).enqueue(
-            object : Callback<TravelV2ApprovalHistoryResponse> {
-                override fun onResponse(
-                    call: Call<TravelV2ApprovalHistoryResponse>,
-                    response: Response<TravelV2ApprovalHistoryResponse>,
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        approvalHistoryResponse = response.body()!!.approvalHistory
-                        Log.d("TravelController", "V2 Approval history API success: ${approvalHistoryResponse?.size} items")
-                    } else {
-                        Log.e("TravelController", "V2 Approval history API error: ${response.code()}")
-                        approvalHistoryResponse = emptyList()
-                    }
-                    approvalCallCompleted = true
-                    processResults()
-                }
-
-                override fun onFailure(call: Call<TravelV2ApprovalHistoryResponse>, t: Throwable) {
-                    Log.e("TravelController", "V2 Approval history API network error", t)
-                    approvalHistoryResponse = emptyList()
-                    approvalCallCompleted = true
-                    processResults()
+                    travelHistoryState = TravelHistoryState.Error("Network error: ${t.message}")
                 }
             }
         )
@@ -684,9 +628,9 @@ class TravelController(
 
     /**
      * Navigate to travel admin dashboard screen
+     * Note: Data loading is handled by TravelAdminDashboardScreen's DisposableEffect
      */
     fun navigateToTravelAdminDashboard() {
-        loadTravelApprovals()
         navigator.navigateToTravelAdminDashboard()
     }
 
