@@ -693,6 +693,7 @@ class TravelController(
 
         // Mark that we're navigating from approvals
         isFromTravelApprovals = true
+        isFromAdminDashboard = false
 
         // If the request is already processed (approved / rejected) just show the read-only
         // details page for travel approvals. Otherwise open the approval page
@@ -2681,9 +2682,8 @@ class TravelController(
         mapDetails = ""
 
         // Reset enhanced cab booking fields
-        projectId = ""
-        opportunityId = ""
-        crmId = ""
+        // NOTE: projectId, opportunityId, and crmId are NOT reset here
+        // as they should be preserved across transport mode changes
         cabTravelDate = currentDate
         attendeeSearchQuery = ""
         additionalAttendees = emptyList()

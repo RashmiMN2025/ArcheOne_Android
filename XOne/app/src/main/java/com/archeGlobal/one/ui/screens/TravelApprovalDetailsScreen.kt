@@ -83,7 +83,7 @@ fun TravelApprovalDetailsScreen(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
-                                    text = "Travel Request Details",
+                                    text = "Travel Approval Details",
                                     color = Color.Black,
                                     fontSize = 20.sp,
                                     fontFamily = GraphikFontFamily,

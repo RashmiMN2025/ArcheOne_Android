@@ -294,7 +294,7 @@ fun TravelRequestCard(
 
                         Text(
                             text = "Trip ${index + 1}",
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Medium,
                             fontSize = 16.sp,
                             fontFamily = GraphikFontFamily,
                             color = Color.Black,

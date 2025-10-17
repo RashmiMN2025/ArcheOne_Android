@@ -80,13 +80,20 @@ fun TravelRequestDetailScreen(
                 Column(modifier = Modifier.fillMaxSize()) {
                     TopAppBar(
                         title = {
+                            // Determine header text based on navigation source
+                            val headerText = when {
+                                controller.isFromAdminDashboard -> "Travel Admin Details"
+                                controller.isFromTravelApprovals -> "Travel Approvals Detail"
+                                else -> "Travel Request Details"
+                            }
+
                             Text(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
                                         .wrapContentWidth(Alignment.CenterHorizontally)
                                         .offset(x = (-24).dp),
-                                text = "Travel Request Details",
+                                text = headerText,
                                 color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,

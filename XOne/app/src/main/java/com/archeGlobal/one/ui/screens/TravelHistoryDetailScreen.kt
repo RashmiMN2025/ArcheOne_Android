@@ -78,7 +78,7 @@ fun TravelHistoryDetailScreen(
                                         .fillMaxWidth()
                                         .wrapContentWidth(Alignment.CenterHorizontally)
                                         .offset(x = (-24).dp),
-                                text = "Travel Request Details",
+                                text = "Travel History Details",
                                 color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
