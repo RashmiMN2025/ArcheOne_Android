@@ -272,7 +272,7 @@ fun MeetSpaceScreen(
                             with(LocalDensity.current) {
                                 val radius = 100.dp.toPx()
                                 for (i in 0 until 12) {
-                                    val angle = Math.toRadians((i * 30 - 60).toDouble())
+                                    val angle = Math.toRadians((i * 30 - 90).toDouble())
                                     val x = cos(angle) * radius
                                     val y = sin(angle) * radius
                                     val minute = (i * 5) % 60
@@ -548,6 +548,7 @@ fun MeetSpaceScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.Black
                             )
+                            Spacer(modifier = Modifier.width(4.dp))
                             // Show button only if userRoles has exactly one role
                             if (userRoles.size == 1) {
                                 Button(
@@ -566,13 +567,15 @@ fun MeetSpaceScreen(
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = when {
                                             userRoles.contains("admin") -> Color(0xFFDD3825) // Red for Admin
-                                            userRoles.contains("linemanager") -> Color(0xFF1FC01F) // Green for Manager
-                                            userRoles.contains("ceo") -> Color(0xFF14B8D5) // Cyan for CEO
+                                            userRoles.contains("linemanager") -> Color(0xFFDD3825) // Green for Manager
+                                            userRoles.contains("ceo") -> Color(0xFFDD3825) // Cyan for CEO
                                             else -> Color(0xFFF6F4EE) // Fallback, though not expected
                                         },
                                         contentColor = Color.White
                                     ),
-                                    shape = RoundedCornerShape(18.dp)
+                                    shape = RoundedCornerShape(18.dp),
+                                    modifier = Modifier
+                                        .height(35.dp)
                                 ) {
                                     Text(
                                         text = when {
@@ -581,7 +584,7 @@ fun MeetSpaceScreen(
                                             userRoles.contains("ceo") -> "CEO Approval"
                                             else -> "" // Fallback, though not expected
                                         },
-                                        fontSize = 12.sp,
+                                        fontSize = 10.5.sp,
                                         color = Color.White,
                                         textAlign = TextAlign.Center,
                                         fontFamily = GraphikFontFamily,
@@ -1076,56 +1079,87 @@ fun MeetSpaceScreen(
 
                         // Book Meeting Room Button
                         Button(
-                            onClick = {
-                                val missingFields = mutableListOf<String>()
-                                if (selectedLocation.isEmpty()) missingFields.add("Location")
-                                if (selectedMeetingType.isEmpty()) missingFields.add("Meeting Type")
-                                if (isDefaultDate) missingFields.add("Date")
-                                if (numberOfAttendees.isEmpty()) {
-                                    missingFields.add("Number of Attendees")
-                                } else if (numberOfAttendees.toIntOrNull() == null || numberOfAttendees.toInt() <= 0) {
-                                    missingFields.add("Valid Number of Attendees")
-                                }
-
-                                if (missingFields.isEmpty()) {
-                                    val startCal = Calendar.getInstance().apply { time = selectedDate }
-                                    val startTimeCal = Calendar.getInstance().apply {
-                                        time = timeFormatter.parse(fromTime)!!
+                                onClick = {
+                                    val missingFields = mutableListOf<String>()
+                                    if (selectedLocation.isEmpty()) missingFields.add("Location")
+                                    if (selectedMeetingType.isEmpty()) missingFields.add("Meeting Type")
+                                    if (isDefaultDate) missingFields.add("Date")
+                                    if (numberOfAttendees.isEmpty()) {
+                                        missingFields.add("Number of Attendees")
+                                    } else if (numberOfAttendees.toIntOrNull() == null || numberOfAttendees.toInt() <= 0) {
+                                        missingFields.add("Valid Number of Attendees")
                                     }
-                                    startCal.set(Calendar.HOUR_OF_DAY, startTimeCal.get(Calendar.HOUR_OF_DAY))
-                                    startCal.set(Calendar.MINUTE, startTimeCal.get(Calendar.MINUTE))
 
-                                    val endCal = Calendar.getInstance().apply { time = selectedDate }
-                                    val endTimeCal = Calendar.getInstance().apply {
-                                        time = timeFormatter.parse(toTime)!!
+                                    // === TIME VALIDATION: Minimum 15 minutes ===
+                                    var durationValid = true
+                                    if (missingFields.isEmpty()) {
+                                        try {
+                                            val startCal = Calendar.getInstance().apply { time = selectedDate }
+                                            val startTimeCal = Calendar.getInstance().apply {
+                                                time = timeFormatter.parse(fromTime)!!
+                                            }
+                                            startCal.set(Calendar.HOUR_OF_DAY, startTimeCal.get(Calendar.HOUR_OF_DAY))
+                                            startCal.set(Calendar.MINUTE, startTimeCal.get(Calendar.MINUTE))
+
+                                            val endCal = Calendar.getInstance().apply { time = selectedDate }
+                                            val endTimeCal = Calendar.getInstance().apply {
+                                                time = timeFormatter.parse(toTime)!!
+                                            }
+                                            endCal.set(Calendar.HOUR_OF_DAY, endTimeCal.get(Calendar.HOUR_OF_DAY))
+                                            endCal.set(Calendar.MINUTE, endTimeCal.get(Calendar.MINUTE))
+
+                                            // Ensure end time is after start time
+                                            if (endCal.timeInMillis <= startCal.timeInMillis) {
+                                                Toast.makeText(context, "End time must be after start time.", Toast.LENGTH_SHORT).show()
+                                                durationValid = false
+                                            } else {
+                                                val durationMinutes = (endCal.timeInMillis - startCal.timeInMillis) / (1000 * 60)
+                                                if (durationMinutes < 15) {
+                                                    Toast.makeText(context, "Minimum meeting time is 15 minutes.", Toast.LENGTH_LONG).show()
+                                                    durationValid = false
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Invalid time format.", Toast.LENGTH_SHORT).show()
+                                            durationValid = false
+                                        }
                                     }
-                                    endCal.set(Calendar.HOUR_OF_DAY, endTimeCal.get(Calendar.HOUR_OF_DAY))
-                                    endCal.set(Calendar.MINUTE, endTimeCal.get(Calendar.MINUTE))
 
-                                    val startDateStr = apiDateTimeFormatter.format(startCal.time)
-                                    val endDateStr = apiDateTimeFormatter.format(endCal.time)
-                                    val dateStr = dateFormatter.format(selectedDate)
+                                    if (missingFields.isNotEmpty()) {
+                                        Toast.makeText(context, "Please fill in all required fields", Toast.LENGTH_LONG).show()
+                                    } else if (durationValid) {
+                                        // Proceed only if duration is valid
+                                        val startCal = Calendar.getInstance().apply { time = selectedDate }
+                                        val startTimeCal = Calendar.getInstance().apply {
+                                            time = timeFormatter.parse(fromTime)!!
+                                        }
+                                        startCal.set(Calendar.HOUR_OF_DAY, startTimeCal.get(Calendar.HOUR_OF_DAY))
+                                        startCal.set(Calendar.MINUTE, startTimeCal.get(Calendar.MINUTE))
 
-                                    val intent = Intent(context, MeetingRoomListActivity::class.java).apply {
-                                        putExtra("location", selectedLocation)
-                                        putExtra("date", dateStr)
-                                        putExtra("fromTime", fromTime)
-                                        putExtra("toTime", toTime)
-                                        putExtra("startDate", startDateStr)
-                                        putExtra("endDate", endDateStr)
-                                        putExtra("noOfAttendees", numberOfAttendees)
-                                        putExtra("meetingType", selectedMeetingType)
+                                        val endCal = Calendar.getInstance().apply { time = selectedDate }
+                                        val endTimeCal = Calendar.getInstance().apply {
+                                            time = timeFormatter.parse(toTime)!!
+                                        }
+                                        endCal.set(Calendar.HOUR_OF_DAY, endTimeCal.get(Calendar.HOUR_OF_DAY))
+                                        endCal.set(Calendar.MINUTE, endTimeCal.get(Calendar.MINUTE))
+
+                                        val startDateStr = apiDateTimeFormatter.format(startCal.time)
+                                        val endDateStr = apiDateTimeFormatter.format(endCal.time)
+                                        val dateStr = dateFormatter.format(selectedDate)
+
+                                        val intent = Intent(context, MeetingRoomListActivity::class.java).apply {
+                                            putExtra("location", selectedLocation)
+                                            putExtra("date", dateStr)
+                                            putExtra("fromTime", fromTime)
+                                            putExtra("toTime", toTime)
+                                            putExtra("startDate", startDateStr)
+                                            putExtra("endDate", endDateStr)
+                                            putExtra("noOfAttendees", numberOfAttendees)
+                                            putExtra("meetingType", selectedMeetingType)
+                                        }
+                                        context.startActivity(intent)
                                     }
-                                    context.startActivity(intent)
-                                } else {
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            "Please fill in all required fields",
-                                            Toast.LENGTH_LONG,
-                                        ).show()
-                                }
-                            },
+                                },
                             modifier =
                                 Modifier
                                     .fillMaxWidth()

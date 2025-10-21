@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,9 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -56,6 +54,10 @@ import com.archeGlobal.one.network.BookingResponse
 import com.archeGlobal.one.network.RetrofitClient
 import retrofit2.Response
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.window.Dialog
+import androidx.wear.compose.material3.Dialog
+import com.archeGlobal.one.MeetSpaceActivity
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.utils.UserDataManager
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,6 +116,11 @@ fun MeetingRoomScreen(
     var hostEmail by remember { mutableStateOf("") }
     var lineManagerEmail by remember { mutableStateOf("") }
     var userName by remember { mutableStateOf("") }
+
+    var isLoading by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var bookingId by remember { mutableStateOf("") }
+    var successMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         var userData = userDataManager.getUserData()
@@ -1401,7 +1408,10 @@ fun MeetingRoomScreen(
                                             "Please fill in all required fields",
                                             android.widget.Toast.LENGTH_LONG
                                         ).show()
-                                    } else {
+                                        return@Button
+                                    }
+
+                                    isLoading = true
                                         val refreshmentReq =
                                             if (refreshmentRequired) "yes" else "no"
 
@@ -1448,52 +1458,49 @@ fun MeetingRoomScreen(
                                             line_manager_email = lineManager
                                         )
 
-                                        coroutineScope.launch {
-                                            try {
-                                                val response: Response<BookingResponse> =
-                                                    RetrofitClient.apiService.requestBooking(request)
-                                                if (response.isSuccessful) {
-                                                    val body = response.body()
-                                                    android.widget.Toast.makeText(
-                                                        context,
-                                                        body?.message ?: "Booking successful",
-                                                        android.widget.Toast.LENGTH_LONG
-                                                    ).show()
-                                                    // Clear all input fields
-                                                    clientName = ""
-                                                    projectName = ""
-                                                    meetingSubject = ""
-                                                    businessJustification = ""
-                                                    guestEmail = ""
-                                                    emailList = emptyList()
-                                                    archeAttendees = ""
-                                                    archeEmailList = emptyList()
-                                                    showAttendeesDropdown = false
-                                                    isSearchFieldFocused = false
-//                                                meetingExtensionRequired = false
-                                                    refreshmentRequired = false
-                                                    additionalRequests = false
-                                                    extensionDuration = ""
-                                                    showExtensionDropdown = false
-                                                    refreshmentDetails = ""
-                                                    additionalDetails = ""
-                                                    // Optional: Trigger onSubmit or navigate back
-                                                    onSubmit()
-                                                    // onBackPressed() // Uncomment if you want to navigate back
-                                                } else {
-                                                    android.widget.Toast.makeText(
-                                                        context,
-                                                        "Error: ${response.message()}",
-                                                        android.widget.Toast.LENGTH_LONG
-                                                    ).show()
+                                    coroutineScope.launch {
+                                        try {
+                                            val response: Response<BookingResponse> = RetrofitClient.apiService.requestBooking(request)
+                                            if (response.isSuccessful) {
+                                                val body = response.body()
+                                                body?.let {
+                                                    bookingId = it.booking_id
+                                                    successMessage = it.message
+                                                    showSuccessDialog = true
                                                 }
-                                            } catch (e: Exception) {
+
+                                                // Clear fields
+                                                clientName = ""
+                                                projectName = ""
+                                                meetingSubject = ""
+                                                businessJustification = ""
+                                                guestEmail = ""
+                                                emailList = emptyList()
+                                                archeAttendees = ""
+                                                archeEmailList = emptyList()
+                                                showAttendeesDropdown = false
+                                                isSearchFieldFocused = false
+                                                refreshmentRequired = false
+                                                additionalRequests = false
+                                                refreshmentDetails = ""
+                                                additionalDetails = ""
+                                                onSubmit()
+                                            } else {
                                                 android.widget.Toast.makeText(
                                                     context,
-                                                    "Network error: ${e.message}",
+                                                    "Error: ${response.message()}",
                                                     android.widget.Toast.LENGTH_LONG
                                                 ).show()
                                             }
+                                        } catch (e: Exception) {
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                "Network error: ${e.message}",
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        } finally {
+                                            // Hide loader
+                                            isLoading = false
                                         }
                                     }
                                 },
@@ -1504,14 +1511,24 @@ fun MeetingRoomScreen(
                                     containerColor = Color(0xFFDD3825),
                                     contentColor = Color.White
                                 ),
-                                shape = RoundedCornerShape(28.dp)
+                                shape = RoundedCornerShape(28.dp),
+                                enabled = !isLoading
                             ) {
-                                Text(
-                                    text = "Submit",
-                                    fontSize = 18.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                )
+                                if (isLoading)  {
+                                    Text(
+                                        text = "Submit",
+                                        fontSize = 18.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Submit",
+                                        fontSize = 18.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                }
                             }
                         }
 
@@ -1523,6 +1540,83 @@ fun MeetingRoomScreen(
                                 fontSize = 14.sp,
                                 fontFamily = GraphikFontFamily
                             )
+                        }
+                    }
+                }
+            }
+
+            if (isLoading) {
+                UniversalLoader(isLoading = true)
+            }
+
+            if (showSuccessDialog) {
+                Dialog(onDismissRequest = { showSuccessDialog = false }) {
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFFF6F4EE),
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Booking Successful",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Booking ID",
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = bookingId,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = successMessage,
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Button(
+                                onClick = {
+                                    showSuccessDialog = false
+                                    val intent = Intent(context, MeetSpaceActivity::class.java)
+                                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                                    context.startActivity(intent)
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(28.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                            ) {
+                                Text(
+                                    "OK",
+                                    fontSize = 18.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
                 }
