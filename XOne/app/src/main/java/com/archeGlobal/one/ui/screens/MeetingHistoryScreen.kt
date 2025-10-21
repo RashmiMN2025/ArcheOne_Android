@@ -911,18 +911,21 @@ fun MeetingBookingCard(
     onCheckIn: () -> Unit,
     onCancel: () -> Unit,
     source: String,
-    meetingType: String
+    meetingType: String,
+    onQrScanSuccess: () -> Unit = {}
 ) {
     val normalizedStatus = status.lowercase()
     val normalizedType = meetingType.lowercase()
+    val normalizePending = pendingFrom.lowercase()
     val isInternal = normalizedType == "internal"
-    val isPending = normalizedStatus == "requested"
-    val isStatus = normalizedStatus == "approved by line manager"
+    val isStatus = normalizedStatus == "requested"
+    val isPending =  normalizePending == "linemanager"
+    val isPendingCeo = normalizePending == "ceo"
 
     val showApproveReject = when (source) {
-        "admin" -> isInternal && isPending
-        "linemanager" -> !isInternal && isPending
-        "ceo" -> !isInternal && isStatus
+        "admin" -> isInternal && isStatus
+        "linemanager" -> !isInternal && isStatus && isPending
+        "ceo" -> !isInternal && isStatus && isPendingCeo
         else -> false
     }
 
@@ -933,8 +936,7 @@ fun MeetingBookingCard(
         else -> "Unknown"
     }
 
-    val showCheckInCancel = source == "history" &&
-            (normalizedStatus == "approve" || normalizedStatus == "approved" || normalizedStatus == "approved by admin" || normalizedStatus == "booked")
+    val showCheckInCancel = source == "history" && normalizedStatus == "booked"
 
     val (backgroundColor, textColor) = when (normalizedStatus) {
         "booked" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000))
@@ -942,6 +944,9 @@ fun MeetingBookingCard(
         "cancelled" -> Color.Gray.copy(alpha = 0.15f) to Color.Gray
         else -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500))
     }
+
+    val titleCaseStatus = status.split(" ")
+        .joinToString(" ") { it.lowercase().replaceFirstChar { c -> c.uppercase() } }
 
     // Parse start time
     val startCalendar = remember(meetingStarttime) {
@@ -961,15 +966,34 @@ fun MeetingBookingCard(
     // Current time
     val currentCalendar = Calendar.getInstance()
 
-
-    // Logic for Check-in: enable if start <= current <= start + 15 min, and not already checked in
-    val canCheckIn = startCalendar != null &&
+    // Logic for buttons
+    val isBeforeStart = startCalendar != null && currentCalendar.before(startCalendar)
+    val isWithinCheckInWindow = startCalendar != null &&
             currentCalendar.after(startCalendar) &&
-            currentCalendar.before(startCalendar.apply { add(Calendar.MINUTE, 15) }) &&
-            checkIn.lowercase() != "yes"  // Assuming "Yes" means checked in
+            currentCalendar.before(startCalendar.apply { add(Calendar.MINUTE, 15) })
+    val isAfterCheckInWindow = startCalendar != null &&
+            currentCalendar.after(startCalendar.apply { add(Calendar.MINUTE, 15) })
 
-    // Logic for Cancel: show and enable if current < start
-    val canCancel = startCalendar != null && currentCalendar.before(startCalendar) && canCheckIn
+    val alreadyCheckedIn   = checkIn.lowercase() == "true"
+    var qrScanSuccess by remember { mutableStateOf(false) }
+    val showCancelButton = isBeforeStart
+    val showCheckInButton = !isBeforeStart && (isWithinCheckInWindow || isAfterCheckInWindow)
+    val enableCheckInButton = isWithinCheckInWindow && !alreadyCheckedIn && !qrScanSuccess
+
+    val showPendingFrom = normalizedStatus == "requested"
+    val showRemark      = normalizedStatus in listOf("booked","requested","cancelled","rejected")
+    val showCheckIn     = normalizedStatus == "booked"
+    val remarkLabel     = when (normalizedStatus) {
+        "cancelled" -> "Cancellation reason"
+        "rejected"  -> "Rejection reason"
+        else        -> "Remark"
+    }
+
+    val remarkIcon = when (normalizedStatus) {
+        "cancelled" -> R.drawable.remark1   // ← same drawable as above
+        "rejected"  -> R.drawable.remark1     // ← same drawable as above
+        else        -> R.drawable.justification
+    }
 
     Card(
         modifier = Modifier
@@ -1004,7 +1028,7 @@ fun MeetingBookingCard(
                     modifier = Modifier.wrapContentWidth()
                 ) {
                     Text(
-                        text = "Status: $status",
+                        text = "Status: $titleCaseStatus",
                         fontSize = 12.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
@@ -1034,7 +1058,7 @@ fun MeetingBookingCard(
                 )
                 MeetingDetailItem(
                     icon = R.drawable.person_3x,
-                    label = "Host",
+                    label = "Host Email",
                     value = host
                 )
                 MeetingDetailItem(
@@ -1047,21 +1071,27 @@ fun MeetingBookingCard(
                     label = "Meeting time",
                     value = meetingTime
                 )
-                MeetingDetailItem(
-                    icon = R.drawable.mrrompending,
-                    label = "Pending from",
-                    value = pendingFrom
-                )
-                MeetingDetailItem(
-                    icon = R.drawable.justification,
-                    label = "Remark",
-                    value = remark
-                )
-                MeetingDetailItem(
-                    icon = R.drawable.checkinstatus,
-                    label = "Check-in Status",
-                    value = checkIn
-                )
+                if (showPendingFrom) {
+                    MeetingDetailItem(
+                        icon = R.drawable.mrrompending,
+                        label = "Pending from",
+                        value = pendingFrom
+                    )
+                }
+                if (showRemark) {
+                    MeetingDetailItem(
+                        icon = remarkIcon,
+                        label = remarkLabel,
+                        value = remark
+                    )
+                }
+                if (showCheckIn) {
+                    MeetingDetailItem(
+                        icon = R.drawable.checkinstatus,
+                        label = "Check-in Status",
+                        value = if (alreadyCheckedIn) "Done" else "Pending"
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -1116,29 +1146,47 @@ fun MeetingBookingCard(
                             )
                         }
                     } else if (showCheckInCancel) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(color = if (canCheckIn) Color(0xFF14B8D5) else Color.Gray)
-                                .padding(vertical = 12.dp)
-                                .clickable(enabled = canCheckIn, onClick = onCheckIn),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Check-in",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = GraphikFontFamily
-                            )
-                        }
-
-                        if (canCancel && canCheckIn) {
+                        if (showCheckInButton) {
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(24.dp))
+                                    .height(48.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(color = if (enableCheckInButton) Color(0xFF007AFF) else Color.Gray)
+                                    .padding(vertical = 12.dp)
+                                    .clickable(enabled = enableCheckInButton, onClick = onCheckIn),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(
+                                            id =  R.drawable.checkin
+                                        ),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = if (enableCheckInButton) "Scan to Check-in" else "Checked In",
+                                        color = Color.White,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = GraphikFontFamily
+                                    )
+                                }
+                            }
+                        }
+
+                        if (showCancelButton) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .clip(RoundedCornerShape(16.dp))
                                     .background(color = PrimaryRed)
                                     .padding(vertical = 12.dp)
                                     .clickable(onClick = onCancel),

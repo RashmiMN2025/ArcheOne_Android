@@ -71,6 +71,8 @@ fun MeetingHistoryDetailScreen(
         else -> "Unknown"
     }
 
+    val alreadyCheckedIn   = booking?.checkedIn?.lowercase() == "true"
+
     val showRemarkAndButton = action == "approve" || action == "reject" || action == "cancel"
     val buttonText = if (action == "approve") "Approve Booking" else if (action == "reject") "Reject Booking" else "Cancel Booking"
     val buttonColor = if (action == "approve") Color(0xFF4CAF50) else if (action == "reject") Color(0xFFDD3825) else Color(0xFFDD3825)
@@ -104,11 +106,29 @@ fun MeetingHistoryDetailScreen(
     }
 
     val status = booking?.meetingStatus ?: "Unknown"
+    val titleCaseStatus = status.split(" ")
+        .joinToString(" ") { it.lowercase().replaceFirstChar { c -> c.uppercase() } }
     val (statusBackgroundColor, statusTextColor) = when (status.lowercase()) {
         "booked" -> Color(0xFF008000).copy(alpha = 0.15f) to Color(0xFF008000)
         "rejected" -> Color(0xFFFF0000).copy(alpha = 0.15f) to Color(0xFFFF0000)
         "cancelled" -> Color.Gray.copy(alpha = 0.15f) to Color.Gray
         else -> Color(0xFFFFA500).copy(alpha = 0.15f) to Color(0xFFFFA500)
+    }
+
+    val normalizedStatus = status.lowercase()
+    val showPendingFrom = normalizedStatus == "requested"
+    val showRemark      = normalizedStatus in listOf("booked","requested","cancelled","rejected")
+    val showCheckIn     = normalizedStatus == "booked"
+    val remarkLabel     = when (normalizedStatus) {
+        "cancelled" -> "Cancellation reason"
+        "rejected"  -> "Rejection reason"
+        else        -> "Remark"
+    }
+
+    val remarkIcon = when (normalizedStatus) {
+        "cancelled" -> R.drawable.remark1   // ← same drawable as above
+        "rejected"  -> R.drawable.remark1      // ← same drawable as above
+        else        -> R.drawable.justification
     }
 
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
@@ -201,7 +221,7 @@ fun MeetingHistoryDetailScreen(
                                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                                     ) {
                                         Text(
-                                            text = "Status: $status",
+                                            text = "Status: $titleCaseStatus",
                                             fontSize = 14.sp,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Medium,
@@ -234,7 +254,7 @@ fun MeetingHistoryDetailScreen(
                                     )
                                     MeetingDetailRow(
                                         icon = R.drawable.host,
-                                        label = "Host",
+                                        label = "Host Email",
                                         value = booking?.hostEmail ?: ""
                                     )
                                     MeetingDetailRow(
@@ -292,21 +312,27 @@ fun MeetingHistoryDetailScreen(
                                         label = "Project Name",
                                         value = booking?.projectName ?: ""
                                     )
-                                    MeetingDetailRow(
-                                        icon = R.drawable.mrrompending,  // Adjust icon
-                                        label = "Pending from",
-                                        value = pendingFrom
-                                    )
-                                    MeetingDetailRow(
-                                        icon = R.drawable.justification,  // Adjust icon
-                                        label = "Remark",
-                                        value = booking?.remark ?: ""
-                                    )
-                                    MeetingDetailRow(
-                                        icon = R.drawable.checkinstatus,  // Adjust icon
-                                        label = "Check-in Status",
-                                        value = booking?.checkedIn ?: ""
-                                    )
+                                    if (showPendingFrom) {
+                                        MeetingDetailRow(
+                                            icon = R.drawable.mrrompending,  // Adjust icon
+                                            label = "Pending from",
+                                            value = pendingFrom
+                                        )
+                                    }
+                                    if (showRemark) {
+                                        MeetingDetailRow(
+                                            icon = remarkIcon,
+                                            label = remarkLabel,
+                                            value = booking?.remark ?: ""
+                                        )
+                                    }
+                                    if (showCheckIn) {
+                                        MeetingDetailRow(
+                                            icon = R.drawable.checkinstatus,  // Adjust icon
+                                            label = "Check-in Status",
+                                            value = if (alreadyCheckedIn) "Done" else "Pending"
+                                        )
+                                    }
                                 }
 
                                 if (showRemarkAndButton) {
@@ -358,7 +384,7 @@ fun MeetingHistoryDetailScreen(
                                                     val responseStr = when (buttonText) {
                                                         "Approve Booking" -> "approved"
                                                         "Reject Booking" -> "rejected"
-                                                        "Cancel Booking" -> "cancelled"
+                                                        "Cancel Booking" -> "rejected"
                                                         else -> return@launch
                                                     }
                                                     val request = MeetingApprovalRequest(

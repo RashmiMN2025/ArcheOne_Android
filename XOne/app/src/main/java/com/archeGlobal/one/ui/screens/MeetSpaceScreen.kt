@@ -1042,7 +1042,7 @@ fun MeetSpaceScreen(
                                                 textDecoration = TextDecoration.Underline,
                                             ),
                                     ) {
-                                        append("adminemail@arche.global")
+                                        append("admindesk@arche.global")
                                     }
                                     pop()
                                 }
