@@ -1375,93 +1375,125 @@ fun MeetingRoomScreen(
                             // Submit Button
                             Button(
                                 onClick = {
-//                                    val meetingExtension = if (meetingExtensionRequired) "yes" else "no"
-                                    val refreshmentReq = if (refreshmentRequired) "yes" else "no"
-
-                                    var additional = additionalDetails
-//                                    if (meetingExtensionRequired && extensionDuration.isNotBlank()) {
-//                                        additional = "Extension: $extensionDuration\n$additional"
-//                                    }
-                                    if (refreshmentRequired && refreshmentDetails.isNotBlank()) {
-                                        additional = "Refreshment: $refreshmentDetails\n$additional"
+                                    val isValid = when (meetingType) {
+                                        "Meeting with Guest" -> {
+                                            clientName.isNotBlank() &&
+                                                    projectName.isNotBlank() &&
+                                                    meetingSubject.isNotBlank() &&
+                                                    businessJustification.isNotBlank() &&
+                                                    emailList.isNotEmpty() &&
+                                                    archeEmailList.isNotEmpty() &&
+                                                    (!refreshmentRequired || refreshmentDetails.isNotBlank()) &&
+                                                    (!additionalRequests || additionalDetails.isNotBlank())
+                                        }
+                                        else -> { // Internal Meeting
+                                            meetingSubject.isNotBlank() &&
+                                                    archeEmailList.isNotEmpty() &&
+                                                    businessJustification.isNotBlank() &&
+                                                    (!refreshmentRequired || refreshmentDetails.isNotBlank()) &&
+                                                    (!additionalRequests || additionalDetails.isNotBlank())
+                                        }
                                     }
 
-                                    val lineManager = if (meetingType == "Meeting with Guest") lineManagerEmail else ""
-                                    val client = if (meetingType == "Meeting with Guest") clientName else ""
-                                    val project = if (meetingType == "Meeting with Guest") projectName else ""
-                                    val business = if (meetingType == "Meeting with Guest") businessJustification else ""
-                                    val guestAtt = if (meetingType == "Meeting with Guest") emailList else emptyList()
+                                    if (!isValid) {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "Please fill in all required fields",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    } else {
+                                        val refreshmentReq =
+                                            if (refreshmentRequired) "yes" else "no"
 
-                                    val apiMeetingType = when (meetingType) {
-                                        "Meeting with Guest" -> "external"
-                                        "Internal Meeting" -> "internal"
-                                        else -> meetingType // Fallback to original if unexpected
-                                    }
+                                        var additional = additionalDetails
+                                        if (refreshmentRequired && refreshmentDetails.isNotBlank()) {
+                                            additional =
+                                                "Refreshment: $refreshmentDetails\n$additional"
+                                        }
 
-                                    val request = BookingRequest(
-                                        room_id = room.room_id,
-                                        room_name = room.name,
-                                        room_location = location,
-                                        host_email = hostEmail,
-                                        meeting_type = apiMeetingType,
-                                        meeting_subject = meetingSubject,
-                                        meeting_starttime = startDate,
-                                        meeting_endtime = endDate,
-                                        arche_attendees = archeEmailList,
-                                        guest_attendees = guestAtt,
-                                        business_justification = business,
-                                        client_name = client,
-                                        project_name = project,
+                                        val lineManager =
+                                            if (meetingType == "Meeting with Guest") lineManagerEmail else ""
+                                        val client =
+                                            if (meetingType == "Meeting with Guest") clientName else ""
+                                        val project =
+                                            if (meetingType == "Meeting with Guest") projectName else ""
+                                        val business =
+                                            if (meetingType == "Meeting with Guest") businessJustification else ""
+                                        val guestAtt =
+                                            if (meetingType == "Meeting with Guest") emailList else emptyList()
+
+                                        val apiMeetingType = when (meetingType) {
+                                            "Meeting with Guest" -> "external"
+                                            "Internal Meeting" -> "internal"
+                                            else -> meetingType // Fallback to original if unexpected
+                                        }
+
+                                        val request = BookingRequest(
+                                            room_id = room.room_id,
+                                            room_name = room.name,
+                                            room_location = location,
+                                            host_email = hostEmail,
+                                            meeting_type = apiMeetingType,
+                                            meeting_subject = meetingSubject,
+                                            meeting_starttime = startDate,
+                                            meeting_endtime = endDate,
+                                            arche_attendees = archeEmailList,
+                                            guest_attendees = guestAtt,
+                                            business_justification = business,
+                                            client_name = client,
+                                            project_name = project,
 //                                        meeting_extension = meetingExtension,
-                                        refreshment_required = refreshmentReq,
-                                        additional_request = additional,
-                                        line_manager_email = lineManager
-                                    )
+                                            refreshment_required = refreshmentReq,
+                                            additional_request = additional,
+                                            line_manager_email = lineManager
+                                        )
 
-                                    coroutineScope.launch {
-                                        try {
-                                            val response: Response<BookingResponse> = RetrofitClient.apiService.requestBooking(request)
-                                            if (response.isSuccessful) {
-                                                val body = response.body()
-                                                android.widget.Toast.makeText(
-                                                    context,
-                                                    body?.message ?: "Booking successful",
-                                                    android.widget.Toast.LENGTH_LONG
-                                                ).show()
-                                                // Clear all input fields
-                                                clientName = ""
-                                                projectName = ""
-                                                meetingSubject = ""
-                                                businessJustification = ""
-                                                guestEmail = ""
-                                                emailList = emptyList()
-                                                archeAttendees = ""
-                                                archeEmailList = emptyList()
-                                                showAttendeesDropdown = false
-                                                isSearchFieldFocused = false
+                                        coroutineScope.launch {
+                                            try {
+                                                val response: Response<BookingResponse> =
+                                                    RetrofitClient.apiService.requestBooking(request)
+                                                if (response.isSuccessful) {
+                                                    val body = response.body()
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        body?.message ?: "Booking successful",
+                                                        android.widget.Toast.LENGTH_LONG
+                                                    ).show()
+                                                    // Clear all input fields
+                                                    clientName = ""
+                                                    projectName = ""
+                                                    meetingSubject = ""
+                                                    businessJustification = ""
+                                                    guestEmail = ""
+                                                    emailList = emptyList()
+                                                    archeAttendees = ""
+                                                    archeEmailList = emptyList()
+                                                    showAttendeesDropdown = false
+                                                    isSearchFieldFocused = false
 //                                                meetingExtensionRequired = false
-                                                refreshmentRequired = false
-                                                additionalRequests = false
-                                                extensionDuration = ""
-                                                showExtensionDropdown = false
-                                                refreshmentDetails = ""
-                                                additionalDetails = ""
-                                                // Optional: Trigger onSubmit or navigate back
-                                                onSubmit()
-                                                // onBackPressed() // Uncomment if you want to navigate back
-                                            } else {
+                                                    refreshmentRequired = false
+                                                    additionalRequests = false
+                                                    extensionDuration = ""
+                                                    showExtensionDropdown = false
+                                                    refreshmentDetails = ""
+                                                    additionalDetails = ""
+                                                    // Optional: Trigger onSubmit or navigate back
+                                                    onSubmit()
+                                                    // onBackPressed() // Uncomment if you want to navigate back
+                                                } else {
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "Error: ${response.message()}",
+                                                        android.widget.Toast.LENGTH_LONG
+                                                    ).show()
+                                                }
+                                            } catch (e: Exception) {
                                                 android.widget.Toast.makeText(
                                                     context,
-                                                    "Error: ${response.message()}",
+                                                    "Network error: ${e.message}",
                                                     android.widget.Toast.LENGTH_LONG
                                                 ).show()
                                             }
-                                        } catch (e: Exception) {
-                                            android.widget.Toast.makeText(
-                                                context,
-                                                "Network error: ${e.message}",
-                                                android.widget.Toast.LENGTH_LONG
-                                            ).show()
                                         }
                                     }
                                 },

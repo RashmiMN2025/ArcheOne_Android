@@ -1029,20 +1029,20 @@ fun MeetSpaceScreen(
                         if (selectedMeetingType == "Meeting with Guest") {
                             val annotatedString =
                                 buildAnnotatedString {
-                                    append("* If you have priority meeting, Please reach out to Admin Team ")
+                                    append("Note: For guest meetings, please book at least 24 hours in advance. If you have additional requests, ensure bookings are made at least 7 days prior.\nFor priority meeting, please reach out to the Admin Team at ")
 
                                     pushStringAnnotation(
                                         tag = "EMAIL",
-                                        annotation = "mailto:adminemail@arche.global",
+                                        annotation = "mailto:admindesk@arche.global",
                                     )
                                     withStyle(
                                         style =
                                             SpanStyle(
-                                                color = Color.Blue,
+                                                color = Color(0xFFDD3825),
                                                 textDecoration = TextDecoration.Underline,
                                             ),
                                     ) {
-                                        append("adminemail@arche.global")
+                                        append("admindesk@arche.global")
                                     }
                                     pop()
                                 }
@@ -1066,7 +1066,7 @@ fun MeetSpaceScreen(
                                         fontSize = 13.sp,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
-                                        color = Color.Red,
+                                        color = Color.Black,
                                         lineHeight = 18.sp,
                                     ),
                             )

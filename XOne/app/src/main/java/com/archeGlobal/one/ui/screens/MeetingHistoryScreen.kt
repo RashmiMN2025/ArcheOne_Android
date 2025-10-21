@@ -62,6 +62,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import com.archeGlobal.one.model.VerifyCheckInRequest
@@ -76,6 +77,7 @@ import java.util.concurrent.Executors
 import kotlinx.coroutines.withContext
 import retrofit2.Response
 import androidx.compose.runtime.derivedStateOf
+import java.util.Calendar
 
 private fun truncateBookingId(bookingId: String): String {
     return if (bookingId.length > 16) {
@@ -122,6 +124,7 @@ fun MeetingHistoryScreen(
     // QR Scanner state
     var showQrScanner by remember { mutableStateOf(false) }
     var selectedBookingId by remember { mutableStateOf("") }
+    var selectedRoomId by remember { mutableStateOf("") }
 
     val bookings by controller.bookings.collectAsState()
     val isLoading by controller.isLoading.collectAsState()
@@ -137,9 +140,10 @@ fun MeetingHistoryScreen(
             val normalizedStatus = booking.meetingStatus.lowercase()
             val matchesStatus = when (selectedCategoryFilter) {
                 "All" -> true
-                "Approved" -> normalizedStatus.contains("approv") || normalizedStatus == "confirmed"
-                "Rejected" -> normalizedStatus == "rejected" || normalizedStatus == "canceled"
-                "Pending" -> normalizedStatus == "requested"
+                "Booked" -> normalizedStatus.contains("approv") || normalizedStatus == "confirmed" || normalizedStatus == "booked"
+                "Rejected" -> normalizedStatus == "rejected"
+                "Cancelled" -> normalizedStatus == "cancelled"
+                "Requested" -> normalizedStatus == "requested"
                 else -> true
             }
 
@@ -429,9 +433,10 @@ fun MeetingHistoryScreen(
                                     ) {
                                         listOf(
                                             "All",
-                                            "Approved",
+                                            "Booked",
+                                            "Cancelled",
                                             "Rejected",
-                                            "Pending"
+                                            "Requested"
                                         ).forEach { filter ->
                                             DropdownMenuItem(
                                                 text = { Text(filter) },
@@ -524,13 +529,11 @@ fun MeetingHistoryScreen(
 
                         // LazyColumn with filtered bookings
                         if (isLoading) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
+                            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                         } else if (errorMessage != null) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text(text = errorMessage ?: "Error loading bookings", color = Color.Red)
-                            }
+                            Text(errorMessage ?: "", color = Color.Red, modifier = Modifier.align(Alignment.CenterHorizontally))
+                        } else if (filteredBookings.isEmpty()) {
+                            Text("No bookings found", modifier = Modifier.align(Alignment.CenterHorizontally))
                         } else {
                             LazyColumn(
                                 modifier = Modifier
@@ -546,9 +549,10 @@ fun MeetingHistoryScreen(
                                         host = item.hostEmail,
                                         meetingDate = dateFormate(item.meetingStarttime),
                                         meetingTime = "${formatTime(item.meetingStarttime)} - ${formatTime(item.meetingEndtime)}",
-                                        pendingFrom = if (item.meetingType == "internal") "Admin" else "Manager/CEO",
+                                        pendingFrom = item.pendingFrom,
                                         status = item.meetingStatus,
                                         remark = item.remark,
+                                        checkIn = item.checkedIn,
                                         onClick = {
                                             val intent = Intent(context, MeetingHistoryDetailActivity::class.java).apply {
                                                 putExtra("source", source)
@@ -574,12 +578,9 @@ fun MeetingHistoryScreen(
                                             context.startActivity(intent)
                                         },
                                         onCheckIn = {
-                                            if (ContextCompat.checkSelfPermission(
-                                                    context,
-                                                    Manifest.permission.CAMERA
-                                                ) == PackageManager.PERMISSION_GRANTED
-                                            ) {
-                                                selectedBookingId = item.bookingId
+                                            selectedBookingId = item.bookingId
+                                            selectedRoomId = item.roomId
+                                            if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                                                 showQrScanner = true
                                             } else {
                                                 permissionLauncher.launch(Manifest.permission.CAMERA)
@@ -594,7 +595,8 @@ fun MeetingHistoryScreen(
                                             context.startActivity(intent)
                                         },
                                         source = source ?: "history",
-                                        meetingType = item.meetingType
+                                        meetingType = item.meetingType,
+                                        meetingStarttime = item.meetingStarttime
                                     )
                                 }
                             }
@@ -605,43 +607,16 @@ fun MeetingHistoryScreen(
                             QrScannerDialog(
                                 bookingId = selectedBookingId,
                                 onDismiss = { showQrScanner = false },
-                                onQrCodeScanned = { scannedQrCode ->
-                                    CoroutineScope(Dispatchers.Main).launch {
-                                        try {
-                                            val request =
-                                                VerifyCheckInRequest(qr_code = scannedQrCode)
-                                            val response: Response<VerifyCheckInResponse> = withContext(Dispatchers.IO) {
-                                                RetrofitClient.apiService.verifyAndCheckIn(selectedBookingId, request)
+                                onQrCodeScanned = { qrCode ->
+                                    if (qrCode == selectedRoomId) {
+                                        CoroutineScope(Dispatchers.IO).launch {
+                                            performCheckIn(selectedBookingId, context, controller) {
+                                                showQrScanner = false
                                             }
-                                            if (response.isSuccessful) {
-                                                val body = response.body()
-                                                if (body?.status == 200 && body.data?.is_valid == true) {
-                                                    android.widget.Toast.makeText(
-                                                        context,
-                                                        "Check-in successful: ${body.data.message}",
-                                                        android.widget.Toast.LENGTH_LONG
-                                                    ).show()
-                                                    showQrScanner = false
-                                                } else {
-                                                    android.widget.Toast.makeText(
-                                                        context,
-                                                        "Check-in failed: ${body?.data?.message ?: "Invalid QR code"}",
-                                                        android.widget.Toast.LENGTH_LONG
-                                                    ).show()
-                                                }
-                                            } else {
-                                                android.widget.Toast.makeText(
-                                                    context,
-                                                    "API error: HTTP ${response.code()} - ${response.message()}",
-                                                    android.widget.Toast.LENGTH_LONG
-                                                ).show()
-                                            }
-                                        } catch (e: Exception) {
-                                            android.widget.Toast.makeText(
-                                                context,
-                                                "Network error: ${e.message}",
-                                                android.widget.Toast.LENGTH_LONG
-                                            ).show()
+                                        }
+                                    } else {
+                                        CoroutineScope(Dispatchers.Main).launch {
+                                            android.widget.Toast.makeText(context, "QR code does not match the room", android.widget.Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
@@ -706,6 +681,34 @@ fun MeetingHistoryScreen(
     }
 }
 
+private suspend fun performCheckIn(bookingId: String, context: android.content.Context, controller: MeetingHistoryController, onSuccess: () -> Unit) {
+    try {
+        val response = RetrofitClient.apiService.verifyAndCheckIn(bookingId)
+        if (response.isSuccessful) {
+            val body = response.body()
+            if (body?.status == 200 && body.data?.is_valid == true) {
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, body.data.message, android.widget.Toast.LENGTH_SHORT).show()
+                    onSuccess()
+                    controller.fetchBookingHistory()
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, body?.data?.message ?: "Check-in failed", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            withContext(Dispatchers.Main) {
+                android.widget.Toast.makeText(context, "API error: ${response.message()}", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    } catch (e: Exception) {
+        withContext(Dispatchers.Main) {
+            android.widget.Toast.makeText(context, "Network error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
 @Composable
 fun QrScannerDialog(
     bookingId: String,
@@ -715,6 +718,8 @@ fun QrScannerDialog(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    var hasScanned by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -771,18 +776,76 @@ fun QrScannerDialog(
                         .clip(RoundedCornerShape(18.dp))
                 ) {
                     AndroidView(
-                        factory = {
-                            PreviewView(context).apply {
-                                this.scaleType = PreviewView.ScaleType.FILL_CENTER
-                                previewView = this
+                        factory = { ctx ->
+                            PreviewView(ctx).apply {
+                                // Ensure the view is properly initialized
+                                this.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black)
+                        update = { view ->
+                            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+                            cameraProviderFuture.addListener({
+                                val cameraProvider = cameraProviderFuture.get()
+
+                                val preview = Preview.Builder().build().also {
+                                    it.setSurfaceProvider(view.surfaceProvider)
+                                }
+
+                                val imageAnalysis = ImageAnalysis.Builder()
+                                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                    .build()
+                                    .also {
+                                        it.setAnalyzer(cameraExecutor) { imageProxy ->
+                                            val mediaImage = imageProxy.image
+                                            if (mediaImage != null && !hasScanned) {
+                                                val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+                                                val scanner = BarcodeScanning.getClient()
+                                                scanner.process(image)
+                                                    .addOnSuccessListener { barcodes ->
+                                                        for (barcode in barcodes) {
+                                                            val qrCode = barcode.displayValue ?: barcode.rawValue
+                                                            if (qrCode != null) {
+                                                                hasScanned = true
+                                                                onQrCodeScanned(qrCode)
+                                                                break
+                                                            }
+                                                        }
+                                                    }
+                                                    .addOnFailureListener { e ->
+                                                        Log.e("QRScanner", "Scan failed", e)
+                                                    }
+                                                    .addOnCompleteListener {
+                                                        imageProxy.close()
+                                                    }
+                                            } else {
+                                                imageProxy.close()
+                                            }
+                                        }
+                                    }
+
+                                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                                try {
+                                    cameraProvider.unbindAll()
+                                    cameraProvider.bindToLifecycle(
+                                        lifecycleOwner,
+                                        cameraSelector,
+                                        preview,
+                                        imageAnalysis
+                                    )
+                                } catch (exc: Exception) {
+                                    Log.e("QRScanner", "Use case binding failed", exc)
+                                }
+                            }, context.mainExecutor)
+                        }
                     )
                 }
 
+            DisposableEffect(Unit) {
+                onDispose {
+                    cameraExecutor.shutdown()
+                }
+            }
                 // Cancel Button
                 Button(
                     onClick = onDismiss,
@@ -804,56 +867,6 @@ fun QrScannerDialog(
                     )
                 }
             }
-        }
-
-        // Setup CameraX and QR scanning
-        LaunchedEffect(Unit) {
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-            cameraProviderFuture.addListener({
-                val cameraProvider = cameraProviderFuture.get()
-                val preview = Preview.Builder().build().also {
-                    it.setSurfaceProvider(previewView?.surfaceProvider)
-                }
-
-                val barcodeScanner = BarcodeScanning.getClient()
-                val imageAnalysis = ImageAnalysis.Builder()
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
-
-                imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
-                    val mediaImage = imageProxy.image
-                    if (mediaImage != null) {
-                        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-                        barcodeScanner.process(image)
-                            .addOnSuccessListener { barcodes ->
-                                for (barcode in barcodes) {
-                                    val value = barcode.rawValue
-                                    if (value != null) {
-                                        onQrCodeScanned(value)
-                                    }
-                                }
-                            }
-                            .addOnFailureListener { e ->
-                                Log.e("QrScanner", "QR scan failed: ${e.message}")
-                            }
-                            .addOnCompleteListener {
-                                imageProxy.close()
-                            }
-                    }
-                }
-
-                try {
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        CameraSelector.DEFAULT_BACK_CAMERA,
-                        preview,
-                        imageAnalysis
-                    )
-                } catch (e: Exception) {
-                    Log.e("QrScanner", "Camera binding failed: ${e.message}")
-                }
-            }, ContextCompat.getMainExecutor(context))
         }
     }
 }
@@ -890,34 +903,96 @@ fun MeetingBookingCard(
     pendingFrom: String,
     status: String,
     remark: String,
+    checkIn: String,
+    meetingStarttime: String,
     onClick: () -> Unit,
     onApprove: () -> Unit,
     onReject: () -> Unit,
     onCheckIn: () -> Unit,
     onCancel: () -> Unit,
     source: String,
-    meetingType: String
+    meetingType: String,
+    onQrScanSuccess: () -> Unit = {}
 ) {
     val normalizedStatus = status.lowercase()
     val normalizedType = meetingType.lowercase()
+    val normalizePending = pendingFrom.lowercase()
     val isInternal = normalizedType == "internal"
-    val isPending = normalizedStatus == "requested"
-    val isStatus = normalizedStatus == "approved by line manager"
+    val isStatus = normalizedStatus == "requested"
+    val isPending =  normalizePending == "linemanager"
+    val isPendingCeo = normalizePending == "ceo"
 
     val showApproveReject = when (source) {
-        "admin" -> isInternal && isPending
-        "linemanager" -> !isInternal && isPending
-        "ceo" -> !isInternal && isStatus
+        "admin" -> isInternal && isStatus
+        "linemanager" -> !isInternal && isStatus && isPending
+        "ceo" -> !isInternal && isStatus && isPendingCeo
         else -> false
     }
 
-    val showCheckInCancel = source == "history" &&
-            (normalizedStatus == "approve" || normalizedStatus == "approved" || normalizedStatus == "approved by admin")
+    val pendingFrom = when (pendingFrom) {
+        "admin" -> "Admin"
+        "linemanager" -> "Reporting Manager"
+        "ceo" -> "CEO"
+        else -> "Unknown"
+    }
+
+    val showCheckInCancel = source == "history" && normalizedStatus == "booked"
 
     val (backgroundColor, textColor) = when (normalizedStatus) {
-        "confirmed" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000))
-        "rejected" , "canceled" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000))
+        "booked" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000))
+        "rejected" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000))
+        "cancelled" -> Color.Gray.copy(alpha = 0.15f) to Color.Gray
         else -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500))
+    }
+
+    val titleCaseStatus = status.split(" ")
+        .joinToString(" ") { it.lowercase().replaceFirstChar { c -> c.uppercase() } }
+
+    // Parse start time
+    val startCalendar = remember(meetingStarttime) {
+        try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
+            val startDate = inputFormat.parse(meetingStarttime)
+            if (startDate != null) {
+                Calendar.getInstance().apply { time = startDate }
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // Current time
+    val currentCalendar = Calendar.getInstance()
+
+    // Logic for buttons
+    val isBeforeStart = startCalendar != null && currentCalendar.before(startCalendar)
+    val isWithinCheckInWindow = startCalendar != null &&
+            currentCalendar.after(startCalendar) &&
+            currentCalendar.before(startCalendar.apply { add(Calendar.MINUTE, 15) })
+    val isAfterCheckInWindow = startCalendar != null &&
+            currentCalendar.after(startCalendar.apply { add(Calendar.MINUTE, 15) })
+
+    val alreadyCheckedIn   = checkIn.lowercase() == "true"
+    var qrScanSuccess by remember { mutableStateOf(false) }
+    val showCancelButton = isBeforeStart
+    val showCheckInButton = !isBeforeStart && (isWithinCheckInWindow || isAfterCheckInWindow)
+    val enableCheckInButton = isWithinCheckInWindow && !alreadyCheckedIn && !qrScanSuccess
+
+    val showPendingFrom = normalizedStatus == "requested"
+    val showRemark      = normalizedStatus in listOf("booked","requested","cancelled","rejected")
+    val showCheckIn     = normalizedStatus == "booked"
+    val remarkLabel     = when (normalizedStatus) {
+        "cancelled" -> "Cancellation reason"
+        "rejected"  -> "Rejection reason"
+        else        -> "Remark"
+    }
+
+    val remarkIcon = when (normalizedStatus) {
+        "cancelled" -> R.drawable.remark1   // ← same drawable as above
+        "rejected"  -> R.drawable.remark1     // ← same drawable as above
+        else        -> R.drawable.justification
     }
 
     Card(
@@ -953,7 +1028,7 @@ fun MeetingBookingCard(
                     modifier = Modifier.wrapContentWidth()
                 ) {
                     Text(
-                        text = "Status: $status",
+                        text = "Status: $titleCaseStatus",
                         fontSize = 12.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
@@ -973,41 +1048,51 @@ fun MeetingBookingCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            MeetingDetailItem(
-                icon = R.drawable.mroomtype,
-                label = "Room",
-                value = "$roomName"
-            )
-            MeetingDetailItem(
-                icon = R.drawable.person_3x,
-                label = "Host",
-                value = host
-            )
-            MeetingDetailItem(
-                icon = R.drawable.meetcalender,
-                label = "Meeting date",
-                value = meetingDate
-            )
-            MeetingDetailItem(
-                icon = R.drawable.pending,
-                label = "Meeting time",
-                value = meetingTime
-            )
-            MeetingDetailItem(
-                icon = R.drawable.mrrompending,
-                label = "Pending from",
-                value = pendingFrom
-            )
-            MeetingDetailItem(
-                icon = R.drawable.justification,
-                label = "Remark",
-                value = remark
-            )
-            MeetingDetailItem(
-                icon = R.drawable.checkinstatus,
-                label = "Check-in Status",
-                value = remark
-            )
+            Column(
+                verticalArrangement = Arrangement.Top
+            ) {
+                MeetingDetailItem(
+                    icon = R.drawable.mroomtype,
+                    label = "Room",
+                    value = "$roomName"
+                )
+                MeetingDetailItem(
+                    icon = R.drawable.person_3x,
+                    label = "Host Email",
+                    value = host
+                )
+                MeetingDetailItem(
+                    icon = R.drawable.meetcalender,
+                    label = "Meeting date",
+                    value = meetingDate
+                )
+                MeetingDetailItem(
+                    icon = R.drawable.pending,
+                    label = "Meeting time",
+                    value = meetingTime
+                )
+                if (showPendingFrom) {
+                    MeetingDetailItem(
+                        icon = R.drawable.mrrompending,
+                        label = "Pending from",
+                        value = pendingFrom
+                    )
+                }
+                if (showRemark) {
+                    MeetingDetailItem(
+                        icon = remarkIcon,
+                        label = remarkLabel,
+                        value = remark
+                    )
+                }
+                if (showCheckIn) {
+                    MeetingDetailItem(
+                        icon = R.drawable.checkinstatus,
+                        label = "Check-in Status",
+                        value = if (alreadyCheckedIn) "Done" else "Pending"
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -1061,40 +1146,60 @@ fun MeetingBookingCard(
                             )
                         }
                     } else if (showCheckInCancel) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(color = Color(0xFF14B8D5))
-                                .padding(vertical = 12.dp)
-                                .clickable(onClick = onCheckIn),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Check-in",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = GraphikFontFamily
-                            )
+                        if (showCheckInButton) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(color = if (enableCheckInButton) Color(0xFF007AFF) else Color.Gray)
+                                    .padding(vertical = 12.dp)
+                                    .clickable(enabled = enableCheckInButton, onClick = onCheckIn),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(
+                                            id =  R.drawable.checkin
+                                        ),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = if (enableCheckInButton) "Scan to Check-in" else "Checked In",
+                                        color = Color.White,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = GraphikFontFamily
+                                    )
+                                }
+                            }
                         }
 
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(color = PrimaryRed)
-                                .padding(vertical = 12.dp)
-                                .clickable(onClick = onCancel),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Cancel",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = GraphikFontFamily
-                            )
+                        if (showCancelButton) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(color = PrimaryRed)
+                                    .padding(vertical = 12.dp)
+                                    .clickable(onClick = onCancel),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Cancel",
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily
+                                )
+                            }
                         }
                     }
                 }
@@ -1109,33 +1214,44 @@ fun MeetingDetailItem(
     label: String,
     value: String
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = label,
-            tint = Color.Gray,
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = label,
-            fontSize = 13.sp,
-            color = Color.Gray,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = value,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Normal,
-            fontFamily = GraphikFontFamily,
-            color = Color.Black
-        )
+    if (value.isNotEmpty()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 2.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = label,
+                tint = Color.Gray,
+                modifier = Modifier
+                    .size(20.dp)
+                    .padding(top = 2.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = label,
+                fontSize = 13.sp,
+                color = Color.Gray,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .weight(0.4f)
+                    .padding(top = 2.dp)
+            )
+            Text(
+                text = value,
+                fontSize = 13.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
+                color = Color.Black,
+                textAlign = TextAlign.End,
+                maxLines = 20,
+                modifier = Modifier
+                    .weight(0.6f)
+                    .padding(end = 8.dp)
+            )
+        }
     }
 }
