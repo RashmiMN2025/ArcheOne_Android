@@ -54,6 +54,7 @@ import com.archeGlobal.one.controller.MeetingHistoryController
 import androidx.compose.foundation.lazy.items
 import com.google.gson.Gson
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.window.Dialog
@@ -217,6 +218,12 @@ fun MeetingHistoryScreen(
         }
     }
 
+    val detailLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            controller.fetchBookingHistory()
+        }
+    }
+
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
             modifier = Modifier
@@ -362,7 +369,10 @@ fun MeetingHistoryScreen(
                                     )
                                     ExposedDropdownMenu(
                                         expanded = showDateFilterDropdown,
-                                        onDismissRequest = { showDateFilterDropdown = false }
+                                        onDismissRequest = { showDateFilterDropdown = false },
+                                        modifier = Modifier
+                                            .background(Color.White)  // Dropdown background color
+                                            .clip(RoundedCornerShape(18.dp))  // Rounded corners
                                     ) {
                                         listOf(
                                             "All",
@@ -371,10 +381,22 @@ fun MeetingHistoryScreen(
                                             "Date Range"
                                         ).forEach { filter ->
                                             DropdownMenuItem(
-                                                text = { Text(filter) },
+                                                text = {
+                                                    Text(
+                                                        text = filter,
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Normal,
+                                                        color = Color.Black,
+                                                        fontFamily = GraphikFontFamily
+                                                    )
+                                                },
                                                 onClick = {
                                                     selectedDateFilter = filter
                                                     showDateFilterDropdown = false
+                                                    if (filter == "Date Range") {
+                                                        showDatePicker = true
+                                                        isFromDatePicker = true
+                                                    }
                                                 }
                                             )
                                         }
@@ -429,7 +451,10 @@ fun MeetingHistoryScreen(
                                     )
                                     ExposedDropdownMenu(
                                         expanded = showCategoryDropdown,
-                                        onDismissRequest = { showCategoryDropdown = false }
+                                        onDismissRequest = { showCategoryDropdown = false },
+                                        modifier = Modifier
+                                            .background(Color.White)  // Dropdown background color
+                                            .clip(RoundedCornerShape(18.dp))  // Rounded corners
                                     ) {
                                         listOf(
                                             "All",
@@ -439,7 +464,15 @@ fun MeetingHistoryScreen(
                                             "Requested"
                                         ).forEach { filter ->
                                             DropdownMenuItem(
-                                                text = { Text(filter) },
+                                                text = {
+                                                    Text(
+                                                        text = filter,
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Normal,
+                                                        color = Color.Black,
+                                                        fontFamily = GraphikFontFamily
+                                                    )
+                                                },
                                                 onClick = {
                                                     selectedCategoryFilter = filter
                                                     showCategoryDropdown = false
@@ -559,7 +592,7 @@ fun MeetingHistoryScreen(
                                                 putExtra("action", "view")
                                                 putExtra("booking_json", Gson().toJson(item))
                                             }
-                                            context.startActivity(intent)
+                                            detailLauncher.launch(intent)
                                         },
                                         onApprove = {
                                             val intent = Intent(context, MeetingHistoryDetailActivity::class.java).apply {
@@ -567,7 +600,7 @@ fun MeetingHistoryScreen(
                                                 putExtra("action", "approve")
                                                 putExtra("booking_json", Gson().toJson(item))
                                             }
-                                            context.startActivity(intent)
+                                            detailLauncher.launch(intent)
                                         },
                                         onReject = {
                                             val intent = Intent(context, MeetingHistoryDetailActivity::class.java).apply {
@@ -575,7 +608,7 @@ fun MeetingHistoryScreen(
                                                 putExtra("action", "reject")
                                                 putExtra("booking_json", Gson().toJson(item))
                                             }
-                                            context.startActivity(intent)
+                                            detailLauncher.launch(intent)
                                         },
                                         onCheckIn = {
                                             selectedBookingId = item.bookingId
@@ -592,7 +625,7 @@ fun MeetingHistoryScreen(
                                                 putExtra("action", "cancel")
                                                 putExtra("booking_json", Gson().toJson(item))
                                             }
-                                            context.startActivity(intent)
+                                            detailLauncher.launch(intent)
                                         },
                                         source = source ?: "history",
                                         meetingType = item.meetingType,
