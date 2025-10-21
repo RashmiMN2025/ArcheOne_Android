@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import com.archeGlobal.one.ui.screens.MeetingHistoryDetailScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.model.BookingHistoryItem
+import android.app.Activity.RESULT_OK
 import com.google.gson.Gson
 
 class MeetingHistoryDetailActivity : ComponentActivity() {

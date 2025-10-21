@@ -595,7 +595,7 @@ fun MeetingRoomScreen(
                                     onValueChange = { clientName = it },
                                     placeholder = {
                                         Text(
-                                            "Client Name",
+                                            "Client Name *",
                                             color = Color.LightGray,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
@@ -622,7 +622,7 @@ fun MeetingRoomScreen(
                                     onValueChange = { projectName = it },
                                     placeholder = {
                                         Text(
-                                            "Project Name",
+                                            "Project Name *",
                                             color = Color.LightGray,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
@@ -649,7 +649,7 @@ fun MeetingRoomScreen(
                                     onValueChange = { meetingSubject = it },
                                     placeholder = {
                                         Text(
-                                            "Meeting Subject",
+                                            "Meeting Subject *",
                                             color = Color.LightGray,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
@@ -676,7 +676,7 @@ fun MeetingRoomScreen(
                                 onValueChange = { businessJustification = it },
                                 placeholder = {
                                     Text(
-                                        "Business Justification",
+                                        "Business Justification *",
                                         color = Color.LightGray,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
@@ -727,7 +727,7 @@ fun MeetingRoomScreen(
                                             },
                                             placeholder = {
                                                 Text(
-                                                    "Search for Attendees to Add",
+                                                    "Search for Attendees to Add *",
                                                     color = Color.LightGray,
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Normal
@@ -901,7 +901,7 @@ fun MeetingRoomScreen(
                                         onValueChange = { guestEmail = it },
                                         placeholder = {
                                             Text(
-                                                "Enter Guest Email to Add",
+                                                "Enter Guest Email to Add *",
                                                 color = Color.LightGray,
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal
@@ -1021,7 +1021,7 @@ fun MeetingRoomScreen(
                                     onValueChange = { meetingSubject = it },
                                     placeholder = {
                                         Text(
-                                            "Meeting Subject",
+                                            "Meeting Subject *",
                                             color = Color.LightGray,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
@@ -1069,7 +1069,7 @@ fun MeetingRoomScreen(
                                             },
                                             placeholder = {
                                                 Text(
-                                                    "Search for Attendees to Add",
+                                                    "Search for Attendees to Add *",
                                                     color = Color.LightGray,
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Normal
@@ -1242,7 +1242,7 @@ fun MeetingRoomScreen(
                                     onValueChange = { businessJustification = it },
                                     placeholder = {
                                         Text(
-                                            "Business Justification",
+                                            "Business Justification *",
                                             color = Color.LightGray,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,

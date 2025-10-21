@@ -42,6 +42,10 @@ import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
+import com.archeGlobal.one.ui.components.UniversalLoader
+import android.app.Activity
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 private fun truncateBookingId(bookingId: String): String {
     return if (bookingId.length > 16) {
@@ -130,6 +134,8 @@ fun MeetingHistoryDetailScreen(
         "rejected"  -> R.drawable.remark1      // ← same drawable as above
         else        -> R.drawable.justification
     }
+
+    var isLoading by remember { mutableStateOf(false) }
 
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
@@ -298,17 +304,17 @@ fun MeetingHistoryDetailScreen(
                                         value = booking?.additionalRequest ?: ""
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.subject,
                                         label = "Subject",
                                         value = booking?.meetingSubject ?: ""
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.client,
                                         label = "Client Name",
                                         value = booking?.clientName ?: ""
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.projectname,
                                         label = "Project Name",
                                         value = booking?.projectName ?: ""
                                     )
@@ -373,6 +379,7 @@ fun MeetingHistoryDetailScreen(
                                     Button(
                                         onClick = {
                                             coroutineScope.launch {
+                                                isLoading = true
                                                 try {
                                                     val userRole = when (source) {
                                                         "history" -> "host"
@@ -387,6 +394,12 @@ fun MeetingHistoryDetailScreen(
                                                         "Cancel Booking" -> "rejected"
                                                         else -> return@launch
                                                     }
+                                                    val toastMessage = when (buttonText) {
+                                                        "Approve Booking" -> "Approved successfully"
+                                                        "Reject Booking" -> "Rejected successfully"
+                                                        "Cancel Booking" -> "Meeting Cancelled Successfully"
+                                                        else -> return@launch
+                                                    }
                                                     val request = MeetingApprovalRequest(
                                                         designation = userRole,
                                                         response = responseStr,
@@ -397,13 +410,16 @@ fun MeetingHistoryDetailScreen(
                                                         request
                                                     )
                                                     if (apiResponse.isSuccessful) {
-                                                        Toast.makeText(context, "$responseStr successful", Toast.LENGTH_SHORT).show()
+                                                        (context as Activity).setResult(Activity.RESULT_OK)
+                                                        Toast.makeText(context, toastMessage , Toast.LENGTH_SHORT).show()
                                                         onBackPressed()
                                                     } else {
                                                         Toast.makeText(context, "Error: ${apiResponse.message()}", Toast.LENGTH_SHORT).show()
                                                     }
                                                 } catch (e: Exception) {
                                                     Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                                } finally {
+                                                    isLoading = false  // Hide loader
                                                 }
                                             }
                                         },
@@ -416,19 +432,32 @@ fun MeetingHistoryDetailScreen(
                                         ),
                                         shape = RoundedCornerShape(24.dp)
                                     ) {
-                                        Text(
-                                            text = buttonText,
-                                            fontSize = 16.sp,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            color = Color.White
-                                        )
+                                        if (isLoading) {
+                                            Text(
+                                                text = buttonText,
+                                                fontSize = 16.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color.White
+                                            )
+                                        } else {
+                                            Text(
+                                                text = buttonText,
+                                                fontSize = 16.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color.White
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
+            if (isLoading) {
+                UniversalLoader(isLoading = true)
             }
         }
     }
