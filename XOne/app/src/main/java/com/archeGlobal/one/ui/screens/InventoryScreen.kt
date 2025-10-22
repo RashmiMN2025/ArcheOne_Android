@@ -518,7 +518,7 @@ fun InventoryItemCard(
 
                 InventoryItemDetail(
                     icon = painterResource(id = R.drawable.closing_stock),
-                    label = "Total Stock:",
+                    label = "Existing Stock:",
                     value = item.totalStock.toString(),
                 )
 

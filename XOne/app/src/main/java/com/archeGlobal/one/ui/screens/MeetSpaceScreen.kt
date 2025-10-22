@@ -463,18 +463,17 @@ fun MeetSpaceScreen(
                                         },
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(60.dp)
-                                            .border(1.dp, Color.Gray, RoundedCornerShape(12.dp)),
+                                            .height(40.dp),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color.Transparent,
-                                            contentColor = Color.Black
+                                            containerColor = Color(0xFFDD3825),
+                                            contentColor = Color.White
                                         ),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(18.dp)
                                     ) {
                                         Text(
                                             text = "Admin Dashboard",
                                             fontSize = 12.sp,
-                                            color = Color.Black,
+                                            color = Color.White,
                                             textAlign = TextAlign.Center,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Medium
@@ -492,18 +491,17 @@ fun MeetSpaceScreen(
                                         },
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(60.dp)
-                                            .border(1.dp, Color.Gray, RoundedCornerShape(12.dp)),
+                                            .height(40.dp),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color.Transparent,
-                                            contentColor = Color.Black
+                                            containerColor = Color(0xFFDD3825),
+                                            contentColor = Color.White
                                         ),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(18.dp)
                                     ) {
                                         Text(
                                             text = "Manager Approval",
                                             fontSize = 12.sp,
-                                            color = Color.Black,
+                                            color = Color.White,
                                             textAlign = TextAlign.Center,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Medium
@@ -521,18 +519,17 @@ fun MeetSpaceScreen(
                                         },
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(60.dp)
-                                            .border(1.dp, Color.Gray, RoundedCornerShape(12.dp)),
+                                            .height(40.dp),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color.Transparent,
-                                            contentColor = Color.Black
+                                            containerColor = Color(0xFFDD3825),
+                                            contentColor = Color.White
                                         ),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(18.dp)
                                     ) {
                                         Text(
                                             text = "CEO Approval",
                                             fontSize = 12.sp,
-                                            color = Color.Black,
+                                            color = Color.White,
                                             textAlign = TextAlign.Center,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Medium
@@ -575,17 +572,16 @@ fun MeetSpaceScreen(
                                     },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = when {
-                                            userRoles.contains("admin") -> Color.Transparent // Red for Admin
-                                            userRoles.contains("linemanager") -> Color.Transparent // Green for Manager
-                                            userRoles.contains("ceo") -> Color.Transparent // Cyan for CEO
+                                            userRoles.contains("admin") -> Color(0xFFDD3825) // Red for Admin
+                                            userRoles.contains("linemanager") -> Color(0xFFDD3825) // Green for Manager
+                                            userRoles.contains("ceo") -> Color(0xFFDD3825) // Cyan for CEO
                                             else -> Color(0xFFF6F4EE) // Fallback, though not expected
                                         },
-                                        contentColor = Color.Black
+                                        contentColor = Color.White
                                     ),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(18.dp),
                                     modifier = Modifier
                                         .height(35.dp)
-                                        .border(1.dp, Color.Gray, RoundedCornerShape(12.dp)),
                                 ) {
                                     Text(
                                         text = when {
@@ -595,7 +591,7 @@ fun MeetSpaceScreen(
                                             else -> "" // Fallback, though not expected
                                         },
                                         fontSize = 10.5.sp,
-                                        color = Color.Black,
+                                        color = Color.White,
                                         textAlign = TextAlign.Center,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium

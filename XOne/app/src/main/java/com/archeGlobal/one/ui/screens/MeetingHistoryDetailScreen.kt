@@ -46,6 +46,7 @@ import com.archeGlobal.one.ui.components.UniversalLoader
 import android.app.Activity
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import com.archeGlobal.one.utils.UserDataManager
 
 private fun truncateBookingId(bookingId: String): String {
     return if (bookingId.length > 16) {
@@ -236,6 +237,26 @@ fun MeetingHistoryDetailScreen(
                                         )
                                     }
                                 }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text (
+                                        text = "Created Date:",
+                                        fontSize = 14.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Black
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text (
+                                        text = dateFormate(booking?.createdAt ?: ""),
+                                        fontSize = 14.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color.Gray
+                                    )
+                                }
                                 HorizontalDivider(
                                     modifier = Modifier.fillMaxWidth(),
                                     thickness = 1.dp,
@@ -254,14 +275,19 @@ fun MeetingHistoryDetailScreen(
                                     verticalArrangement = Arrangement.Top
                                 ) {
                                     MeetingDetailRow(
+                                        icon = R.drawable.host,
+                                        label = "Host",
+                                        value = booking?.hostEmail ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.subject,
+                                        label = "Subject",
+                                        value = booking?.meetingSubject ?: ""
+                                    )
+                                    MeetingDetailRow(
                                         icon = R.drawable.mroomtype,
                                         label = "Room",
                                         value = booking?.roomName ?: ""
-                                    )
-                                    MeetingDetailRow(
-                                        icon = R.drawable.host,
-                                        label = "Host Email",
-                                        value = booking?.hostEmail ?: ""
                                     )
                                     MeetingDetailRow(
                                         icon = R.drawable.meetcalender,
@@ -302,11 +328,6 @@ fun MeetingHistoryDetailScreen(
                                         icon = R.drawable.additionalrequest,
                                         label = "Additional Request",
                                         value = booking?.additionalRequest ?: ""
-                                    )
-                                    MeetingDetailRow(
-                                        icon = R.drawable.subject,
-                                        label = "Subject",
-                                        value = booking?.meetingSubject ?: ""
                                     )
                                     MeetingDetailRow(
                                         icon = R.drawable.client,
@@ -467,7 +488,7 @@ private fun dateFormate(timeStr: String): String {
     return try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
         val date = inputFormat.parse(timeStr) ?: return ""
-        val outputFormat = SimpleDateFormat("yyyy MMM dd", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
         outputFormat.format(date)
     } catch (e: Exception) {
         ""

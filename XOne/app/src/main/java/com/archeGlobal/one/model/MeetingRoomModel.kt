@@ -95,6 +95,8 @@ data class BookingHistoryItem(
     val pendingFrom: String,
     @SerializedName("checked_in")
     val checkedIn: String,
+    @SerializedName("created_at")
+    val createdAt: String
 )
 
 data class BookingHistoryResponse(
