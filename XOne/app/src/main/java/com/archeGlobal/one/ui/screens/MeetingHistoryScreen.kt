@@ -984,7 +984,7 @@ fun MeetingBookingCard(
     val pendingFrom = when (pendingFrom) {
         "admin" -> "Admin"
         "linemanager" -> "Reporting Manager"
-        "ceo" -> "CEO"
+        "ceo" -> "CEO Office"
         else -> "Unknown"
     }
 
@@ -1220,7 +1220,7 @@ fun MeetingBookingCard(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "Cancel",
+                                    text = "Cancel Booking",
                                     color = Color.White,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium,
@@ -1240,7 +1240,7 @@ fun MeetingBookingCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Cancel",
+                                text = "Cancel Booking",
                                 color = Color.White,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,

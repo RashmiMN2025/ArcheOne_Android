@@ -1909,7 +1909,7 @@ class HomeActivity : AppCompatActivity() {
                 if (showWhatsNewDialog && !whatsNewData.isNullOrEmpty()) {
                     WhatsNewDialog(
                         whatsNewItems = whatsNewData,
-                        appVersion = "1.6",
+                        appVersion = "1.5",
                         onDismiss = {
                             controller.dismissWhatsNewDialog()
                         },

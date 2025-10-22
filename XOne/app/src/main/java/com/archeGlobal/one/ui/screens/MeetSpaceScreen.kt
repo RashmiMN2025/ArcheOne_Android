@@ -587,7 +587,7 @@ fun MeetSpaceScreen(
                                         text = when {
                                             userRoles.contains("admin") -> "Admin Dashboard"
                                             userRoles.contains("linemanager") -> "Manager Approval"
-                                            userRoles.contains("ceo") -> "CEO Approval"
+                                            userRoles.contains("ceo") -> "CEO Office Approval"
                                             else -> "" // Fallback, though not expected
                                         },
                                         fontSize = 10.5.sp,

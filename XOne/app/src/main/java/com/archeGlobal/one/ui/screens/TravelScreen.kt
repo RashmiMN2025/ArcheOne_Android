@@ -19,6 +19,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Notifications
@@ -2769,7 +2770,7 @@ fun CabBookingSection(controller: TravelController) {
                             fontFamily = GraphikFontFamily,
                         )
                         Icon(
-                            painter = painterResource(id = android.R.drawable.ic_menu_today),
+                            imageVector = Icons.Default.CalendarMonth,
                             contentDescription = "Calendar",
                             tint = Color.Gray,
                         )

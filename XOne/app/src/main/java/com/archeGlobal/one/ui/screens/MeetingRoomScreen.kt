@@ -59,6 +59,11 @@ import androidx.wear.compose.material3.Dialog
 import com.archeGlobal.one.MeetSpaceActivity
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.utils.UserDataManager
+import java.text.SimpleDateFormat
+import java.util.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,6 +140,39 @@ fun MeetingRoomScreen(
         isSearchFieldFocused = false
         focusRequester.freeFocus()
     }
+
+    // Helper: Calculate duration in hours between fromTime and toTime (format: "HH:mm")
+    fun parseTimeToMinutes(timeStr: String): Int {
+        return try {
+            val clean = timeStr.trim().uppercase()
+            val fmt = if (clean.contains("AM") || clean.contains("PM")) {
+                SimpleDateFormat("hh:mm a", Locale.US)
+            } else {
+                SimpleDateFormat("HH:mm", Locale.US)
+            }
+            val date = fmt.parse(clean) ?: return 0
+            val cal = Calendar.getInstance().apply { time = date }
+            cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+        } catch (e: Exception) { 0 }
+    }
+
+    val durationInHours = remember(fromTime, toTime) {
+        val fromMin = parseTimeToMinutes(fromTime)
+        val toMin   = parseTimeToMinutes(toTime)
+        val diffMin = if (toMin >= fromMin) toMin - fromMin else (toMin + 1440) - fromMin
+        diffMin / 60.0
+    }
+    val showRefreshmentForInternal = meetingType == "Internal Meeting" && durationInHours >= 2.0
+
+    // ---------- DATE-CHECK (7-days-past) ----------
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy MMM dd", Locale.getDefault())
+    val selectedDate = remember(date) {
+        try { LocalDate.parse(date, dateFormatter) } catch (e: Exception) { null }
+    }
+    val isBookingAtLeast7DaysAhead = selectedDate?.let { bookingDate ->
+        val now = LocalDate.now()
+        ChronoUnit.DAYS.between(now, bookingDate) >= 7
+    } ?: false
 
     BackHandler {
         onBackPressed()
@@ -1014,6 +1052,285 @@ fun MeetingRoomScreen(
                                         }
                                     }
                                 }
+
+                                // Toggle Options
+                                // ---------- UNIFIED REFRESHMENT SECTION ----------
+                                if (meetingType == "Meeting with Guest" || showRefreshmentForInternal) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(horizontal = 4.dp)
+                                            .fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Refreshment Required?",
+                                                fontSize = 16.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color.Black
+                                            )
+                                            Switch(
+                                                checked = refreshmentRequired,
+                                                onCheckedChange = { refreshmentRequired = it },
+                                                colors = SwitchDefaults.colors(
+                                                    checkedThumbColor = Color.White,
+                                                    checkedTrackColor = Color(0xFFDD3825),
+                                                    uncheckedThumbColor = Color.White,
+                                                    uncheckedTrackColor = Color.LightGray
+                                                )
+                                            )
+                                        }
+
+                                        if (refreshmentRequired) {
+                                            OutlinedTextField(
+                                                value = refreshmentDetails,
+                                                onValueChange = { refreshmentDetails = it },
+                                                placeholder = {
+                                                    Text(
+                                                        "Refreshment Details (e.g.,\nCoffee, Snacks)",
+                                                        color = Color.LightGray,
+                                                        fontFamily = GraphikFontFamily,
+                                                        fontWeight = FontWeight.Normal
+                                                    )
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(110.dp),
+                                                maxLines = 4,
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    unfocusedBorderColor = Color.LightGray,
+                                                    focusedBorderColor = Color.LightGray,
+                                                    cursorColor = Color.Gray,
+                                                    unfocusedTextColor = Color.Black,
+                                                    focusedTextColor = Color.Black,
+                                                    unfocusedContainerColor = Color.White,
+                                                    focusedContainerColor = Color.White
+                                                ),
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                                // ---------- ADDITIONAL REQUESTS (Guest only) ----------
+                                if (meetingType == "Meeting with Guest" && isBookingAtLeast7DaysAhead) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(horizontal = 4.dp)
+                                            .fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                text = "Additional Requests?",
+                                                fontSize = 16.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color.Black,
+                                            )
+                                            Switch(
+                                                checked = additionalRequests,
+                                                onCheckedChange = { additionalRequests = it },
+                                                colors = SwitchDefaults.colors(
+                                                    checkedThumbColor = Color.White,
+                                                    checkedTrackColor = Color(0xFFDD3825),
+                                                    uncheckedThumbColor = Color.White,
+                                                    uncheckedTrackColor = Color.LightGray,
+                                                ),
+                                            )
+                                        }
+                                        if (additionalRequests) {
+                                            OutlinedTextField(
+                                                value = additionalDetails,
+                                                onValueChange = { additionalDetails = it },
+                                                placeholder = {
+                                                    Text(
+                                                        "Additional Requests (e.g.,\nSecurity, Parking)",
+                                                        color = Color.LightGray,
+                                                        fontFamily = GraphikFontFamily,
+                                                        fontWeight = FontWeight.Normal,
+                                                    )
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(110.dp),
+                                                maxLines = 4,
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    unfocusedBorderColor = Color.LightGray,
+                                                    focusedBorderColor = Color.LightGray,
+                                                    cursorColor = Color.Gray,
+                                                    unfocusedTextColor = Color.Black,
+                                                    focusedTextColor = Color.Black,
+                                                    unfocusedContainerColor = Color.White,
+                                                    focusedContainerColor = Color.White
+                                                ),
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    // Submit Button
+                                    Button(
+                                        onClick = {
+                                            val isValid = when (meetingType) {
+                                                "Meeting with Guest" -> {
+                                                    clientName.isNotBlank() &&
+                                                            projectName.isNotBlank() &&
+                                                            meetingSubject.isNotBlank() &&
+                                                            businessJustification.isNotBlank() &&
+                                                            emailList.isNotEmpty() &&
+                                                            archeEmailList.isNotEmpty() &&
+                                                            (!refreshmentRequired || refreshmentDetails.isNotBlank()) &&
+                                                            (!isBookingAtLeast7DaysAhead || !additionalRequests || additionalDetails.isNotBlank())
+                                                }
+                                                else -> { // Internal Meeting
+                                                    meetingSubject.isNotBlank() &&
+                                                            archeEmailList.isNotEmpty() &&
+                                                            businessJustification.isNotBlank() &&
+                                                            (!showRefreshmentForInternal || !refreshmentRequired || refreshmentDetails.isNotBlank()) &&
+                                                            true  // No additional requests for internal
+                                                }
+                                            }
+
+                                            if (!isValid) {
+                                                android.widget.Toast.makeText(
+                                                    context,
+                                                    "Please fill in all required fields",
+                                                    android.widget.Toast.LENGTH_LONG
+                                                ).show()
+                                                return@Button
+                                            }
+
+                                            isLoading = true
+                                            val refreshmentReq =
+                                                if (refreshmentRequired) "yes" else "no"
+
+                                            var additional = additionalDetails
+                                            if (refreshmentRequired && refreshmentDetails.isNotBlank()) {
+                                                additional =
+                                                    "Refreshment: $refreshmentDetails\n$additional"
+                                            }
+
+                                            val lineManager =
+                                                if (meetingType == "Meeting with Guest") lineManagerEmail else ""
+                                            val client =
+                                                if (meetingType == "Meeting with Guest") clientName else ""
+                                            val project =
+                                                if (meetingType == "Meeting with Guest") projectName else ""
+                                            val business =
+                                                if (meetingType == "Meeting with Guest") businessJustification else ""
+                                            val guestAtt =
+                                                if (meetingType == "Meeting with Guest") emailList else emptyList()
+
+                                            val apiMeetingType = when (meetingType) {
+                                                "Meeting with Guest" -> "external"
+                                                "Internal Meeting" -> "internal"
+                                                else -> meetingType // Fallback to original if unexpected
+                                            }
+
+                                            val request = BookingRequest(
+                                                room_id = room.room_id,
+                                                room_name = room.name,
+                                                room_location = location,
+                                                host_email = hostEmail,
+                                                meeting_type = apiMeetingType,
+                                                meeting_subject = meetingSubject,
+                                                meeting_starttime = startDate,
+                                                meeting_endtime = endDate,
+                                                arche_attendees = archeEmailList,
+                                                guest_attendees = guestAtt,
+                                                business_justification = business,
+                                                client_name = client,
+                                                project_name = project,
+//                                        meeting_extension = meetingExtension,
+                                                refreshment_required = refreshmentReq,
+                                                additional_request = additional,
+                                                line_manager_email = lineManager
+                                            )
+
+                                            coroutineScope.launch {
+                                                try {
+                                                    val response: Response<BookingResponse> = RetrofitClient.apiService.requestBooking(request)
+                                                    if (response.isSuccessful) {
+                                                        val body = response.body()
+                                                        body?.let {
+                                                            bookingId = it.booking_id
+                                                            successMessage = it.message
+                                                            showSuccessDialog = true
+                                                        }
+
+                                                        // Clear fields
+                                                        clientName = ""
+                                                        projectName = ""
+                                                        meetingSubject = ""
+                                                        businessJustification = ""
+                                                        guestEmail = ""
+                                                        emailList = emptyList()
+                                                        archeAttendees = ""
+                                                        archeEmailList = emptyList()
+                                                        showAttendeesDropdown = false
+                                                        isSearchFieldFocused = false
+                                                        refreshmentRequired = false
+                                                        additionalRequests = false
+                                                        refreshmentDetails = ""
+                                                        additionalDetails = ""
+                                                        onSubmit()
+                                                    } else {
+                                                        android.widget.Toast.makeText(
+                                                            context,
+                                                            "Error: ${response.message()}",
+                                                            android.widget.Toast.LENGTH_LONG
+                                                        ).show()
+                                                    }
+                                                } catch (e: Exception) {
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "Network error: ${e.message}",
+                                                        android.widget.Toast.LENGTH_LONG
+                                                    ).show()
+                                                } finally {
+                                                    // Hide loader
+                                                    isLoading = false
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(50.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFFDD3825),
+                                            contentColor = Color.White
+                                        ),
+                                        shape = RoundedCornerShape(28.dp),
+                                        enabled = !isLoading
+                                    ) {
+                                        if (isLoading)  {
+                                            Text(
+                                                text = "Book Meeting Room",
+                                                fontSize = 18.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                            )
+                                        } else {
+                                            Text(
+                                                text = "Book Meeting Room",
+                                                fontSize = 18.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                            )
+                                        }
+                                    }
                             } else {
                                 // Meeting Subject
                                 OutlinedTextField(
@@ -1041,6 +1358,34 @@ fun MeetingRoomScreen(
                                     ),
                                     shape = RoundedCornerShape(12.dp)
                                 )
+
+                                // Business Justification
+                                OutlinedTextField(
+                                    value = businessJustification,
+                                    onValueChange = { businessJustification = it },
+                                    placeholder = {
+                                        Text(
+                                            "Business Justification *",
+                                            color = Color.LightGray,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                        ) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(100.dp),
+                                    maxLines = 4,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.LightGray,
+                                        focusedBorderColor = Color.LightGray,
+                                        cursorColor = Color.Gray,
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+
 
                                 // Search for Attendees
                                 Column {
@@ -1236,301 +1581,223 @@ fun MeetingRoomScreen(
                                     }
                                 }
 
-                                // Business Justification
-                                OutlinedTextField(
-                                    value = businessJustification,
-                                    onValueChange = { businessJustification = it },
-                                    placeholder = {
-                                        Text(
-                                            "Business Justification *",
-                                            color = Color.LightGray,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal,
-                                        ) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(100.dp),
-                                    maxLines = 4,
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.LightGray,
-                                        cursorColor = Color.Gray,
-                                        unfocusedTextColor = Color.Black,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedContainerColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                            }
-                        }
-
-                        // Toggle Options
-                        Column(
-                            modifier = Modifier
-                                .padding(start = 20.dp, end = 20.dp, top = 0.dp, bottom = 20.dp),
-                            verticalArrangement = Arrangement.spacedBy(5.dp)
-                        )
-                        {
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = "Refreshment Required?",
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black,
-                                )
-                                Switch(
-                                    checked = refreshmentRequired,
-                                    onCheckedChange = { refreshmentRequired = it },
-                                    colors =
-                                        SwitchDefaults.colors(
-                                            checkedThumbColor = Color.White,
-                                            checkedTrackColor = Color(0xFFDD3825),
-                                            uncheckedThumbColor = Color.White,
-                                            uncheckedTrackColor = Color.LightGray,
-                                        ),
-                                )
-                            }
-                            if (refreshmentRequired) {
-                                OutlinedTextField(
-                                    value = refreshmentDetails,
-                                    onValueChange = { refreshmentDetails = it },
-                                    placeholder = {
-                                        Text(
-                                            "Refreshment Details (e.g.,\nCoffee, Snacks)",
-                                            color = Color.LightGray,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal,
-                                        ) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(110.dp),
-                                    maxLines = 4,
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.LightGray,
-                                        cursorColor = Color.Gray,
-                                        unfocusedTextColor = Color.Black,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedContainerColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = "Additional Requests?",
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black,
-                                )
-                                Switch(
-                                    checked = additionalRequests,
-                                    onCheckedChange = { additionalRequests = it },
-                                    colors =
-                                        SwitchDefaults.colors(
-                                            checkedThumbColor = Color.White,
-                                            checkedTrackColor = Color(0xFFDD3825),
-                                            uncheckedThumbColor = Color.White,
-                                            uncheckedTrackColor = Color.LightGray,
-                                        ),
-                                )
-                            }
-                            if (additionalRequests) {
-                                OutlinedTextField(
-                                    value = additionalDetails,
-                                    onValueChange = { additionalDetails = it },
-                                    placeholder = {
-                                        Text(
-                                            "Additional Requests (e.g.,\nSecurity, Parking)",
-                                            color = Color.LightGray,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal,
-                                        ) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(110.dp),
-                                    maxLines = 4,
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.LightGray,
-                                        cursorColor = Color.Gray,
-                                        unfocusedTextColor = Color.Black,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedContainerColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Submit Button
-                            Button(
-                                onClick = {
-                                    val isValid = when (meetingType) {
-                                        "Meeting with Guest" -> {
-                                            clientName.isNotBlank() &&
-                                                    projectName.isNotBlank() &&
-                                                    meetingSubject.isNotBlank() &&
-                                                    businessJustification.isNotBlank() &&
-                                                    emailList.isNotEmpty() &&
-                                                    archeEmailList.isNotEmpty() &&
-                                                    (!refreshmentRequired || refreshmentDetails.isNotBlank()) &&
-                                                    (!additionalRequests || additionalDetails.isNotBlank())
+                                // Toggle Options
+                                // ---------- UNIFIED REFRESHMENT SECTION ----------
+                                if (meetingType == "Meeting with Guest" || showRefreshmentForInternal) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(horizontal = 4.dp)
+                                            .fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Refreshment Required?",
+                                                fontSize = 16.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color.Black
+                                            )
+                                            Switch(
+                                                checked = refreshmentRequired,
+                                                onCheckedChange = { refreshmentRequired = it },
+                                                colors = SwitchDefaults.colors(
+                                                    checkedThumbColor = Color.White,
+                                                    checkedTrackColor = Color(0xFFDD3825),
+                                                    uncheckedThumbColor = Color.White,
+                                                    uncheckedTrackColor = Color.LightGray
+                                                )
+                                            )
                                         }
-                                        else -> { // Internal Meeting
-                                            meetingSubject.isNotBlank() &&
-                                                    archeEmailList.isNotEmpty() &&
-                                                    businessJustification.isNotBlank() &&
-                                                    (!refreshmentRequired || refreshmentDetails.isNotBlank()) &&
-                                                    (!additionalRequests || additionalDetails.isNotBlank())
+
+                                        if (refreshmentRequired) {
+                                            OutlinedTextField(
+                                                value = refreshmentDetails,
+                                                onValueChange = { refreshmentDetails = it },
+                                                placeholder = {
+                                                    Text(
+                                                        "Refreshment Details (e.g.,\nCoffee, Snacks)",
+                                                        color = Color.LightGray,
+                                                        fontFamily = GraphikFontFamily,
+                                                        fontWeight = FontWeight.Normal
+                                                    )
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(110.dp),
+                                                maxLines = 4,
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    unfocusedBorderColor = Color.LightGray,
+                                                    focusedBorderColor = Color.LightGray,
+                                                    cursorColor = Color.Gray,
+                                                    unfocusedTextColor = Color.Black,
+                                                    focusedTextColor = Color.Black,
+                                                    unfocusedContainerColor = Color.White,
+                                                    focusedContainerColor = Color.White
+                                                ),
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
                                         }
                                     }
+                                }
 
-                                    if (!isValid) {
-                                        android.widget.Toast.makeText(
-                                            context,
-                                            "Please fill in all required fields",
-                                            android.widget.Toast.LENGTH_LONG
-                                        ).show()
-                                        return@Button
-                                    }
-
-                                    isLoading = true
-                                        val refreshmentReq =
-                                            if (refreshmentRequired) "yes" else "no"
-
-                                        var additional = additionalDetails
-                                        if (refreshmentRequired && refreshmentDetails.isNotBlank()) {
-                                            additional =
-                                                "Refreshment: $refreshmentDetails\n$additional"
-                                        }
-
-                                        val lineManager =
-                                            if (meetingType == "Meeting with Guest") lineManagerEmail else ""
-                                        val client =
-                                            if (meetingType == "Meeting with Guest") clientName else ""
-                                        val project =
-                                            if (meetingType == "Meeting with Guest") projectName else ""
-                                        val business =
-                                            if (meetingType == "Meeting with Guest") businessJustification else ""
-                                        val guestAtt =
-                                            if (meetingType == "Meeting with Guest") emailList else emptyList()
-
-                                        val apiMeetingType = when (meetingType) {
-                                            "Meeting with Guest" -> "external"
-                                            "Internal Meeting" -> "internal"
-                                            else -> meetingType // Fallback to original if unexpected
-                                        }
-
-                                        val request = BookingRequest(
-                                            room_id = room.room_id,
-                                            room_name = room.name,
-                                            room_location = location,
-                                            host_email = hostEmail,
-                                            meeting_type = apiMeetingType,
-                                            meeting_subject = meetingSubject,
-                                            meeting_starttime = startDate,
-                                            meeting_endtime = endDate,
-                                            arche_attendees = archeEmailList,
-                                            guest_attendees = guestAtt,
-                                            business_justification = business,
-                                            client_name = client,
-                                            project_name = project,
-//                                        meeting_extension = meetingExtension,
-                                            refreshment_required = refreshmentReq,
-                                            additional_request = additional,
-                                            line_manager_email = lineManager
-                                        )
-
-                                    coroutineScope.launch {
-                                        try {
-                                            val response: Response<BookingResponse> = RetrofitClient.apiService.requestBooking(request)
-                                            if (response.isSuccessful) {
-                                                val body = response.body()
-                                                body?.let {
-                                                    bookingId = it.booking_id
-                                                    successMessage = it.message
-                                                    showSuccessDialog = true
+                                    // Submit Button
+                                    Button(
+                                        onClick = {
+                                            val isValid = when (meetingType) {
+                                                "Meeting with Guest" -> {
+                                                    clientName.isNotBlank() &&
+                                                            projectName.isNotBlank() &&
+                                                            meetingSubject.isNotBlank() &&
+                                                            businessJustification.isNotBlank() &&
+                                                            emailList.isNotEmpty() &&
+                                                            archeEmailList.isNotEmpty() &&
+                                                            (!refreshmentRequired || refreshmentDetails.isNotBlank()) &&
+                                                            (!isBookingAtLeast7DaysAhead || !additionalRequests || additionalDetails.isNotBlank())
                                                 }
+                                                else -> { // Internal Meeting
+                                                    meetingSubject.isNotBlank() &&
+                                                            archeEmailList.isNotEmpty() &&
+                                                            businessJustification.isNotBlank() &&
+                                                            (!showRefreshmentForInternal || !refreshmentRequired || refreshmentDetails.isNotBlank()) &&
+                                                            true  // No additional requests for internal
+                                                }
+                                            }
 
-                                                // Clear fields
-                                                clientName = ""
-                                                projectName = ""
-                                                meetingSubject = ""
-                                                businessJustification = ""
-                                                guestEmail = ""
-                                                emailList = emptyList()
-                                                archeAttendees = ""
-                                                archeEmailList = emptyList()
-                                                showAttendeesDropdown = false
-                                                isSearchFieldFocused = false
-                                                refreshmentRequired = false
-                                                additionalRequests = false
-                                                refreshmentDetails = ""
-                                                additionalDetails = ""
-                                                onSubmit()
-                                            } else {
+                                            if (!isValid) {
                                                 android.widget.Toast.makeText(
                                                     context,
-                                                    "Error: ${response.message()}",
+                                                    "Please fill in all required fields",
                                                     android.widget.Toast.LENGTH_LONG
                                                 ).show()
+                                                return@Button
                                             }
-                                        } catch (e: Exception) {
-                                            android.widget.Toast.makeText(
-                                                context,
-                                                "Network error: ${e.message}",
-                                                android.widget.Toast.LENGTH_LONG
-                                            ).show()
-                                        } finally {
-                                            // Hide loader
-                                            isLoading = false
+
+                                            isLoading = true
+                                            val refreshmentReq =
+                                                if (refreshmentRequired) "yes" else "no"
+
+                                            var additional = additionalDetails
+                                            if (refreshmentRequired && refreshmentDetails.isNotBlank()) {
+                                                additional =
+                                                    "Refreshment: $refreshmentDetails\n$additional"
+                                            }
+
+                                            val lineManager =
+                                                if (meetingType == "Meeting with Guest") lineManagerEmail else ""
+                                            val client =
+                                                if (meetingType == "Meeting with Guest") clientName else ""
+                                            val project =
+                                                if (meetingType == "Meeting with Guest") projectName else ""
+                                            val business =
+                                                if (meetingType == "Meeting with Guest") businessJustification else ""
+                                            val guestAtt =
+                                                if (meetingType == "Meeting with Guest") emailList else emptyList()
+
+                                            val apiMeetingType = when (meetingType) {
+                                                "Meeting with Guest" -> "external"
+                                                "Internal Meeting" -> "internal"
+                                                else -> meetingType // Fallback to original if unexpected
+                                            }
+
+                                            val request = BookingRequest(
+                                                room_id = room.room_id,
+                                                room_name = room.name,
+                                                room_location = location,
+                                                host_email = hostEmail,
+                                                meeting_type = apiMeetingType,
+                                                meeting_subject = meetingSubject,
+                                                meeting_starttime = startDate,
+                                                meeting_endtime = endDate,
+                                                arche_attendees = archeEmailList,
+                                                guest_attendees = guestAtt,
+                                                business_justification = business,
+                                                client_name = client,
+                                                project_name = project,
+//                                        meeting_extension = meetingExtension,
+                                                refreshment_required = refreshmentReq,
+                                                additional_request = additional,
+                                                line_manager_email = lineManager
+                                            )
+
+                                            coroutineScope.launch {
+                                                try {
+                                                    val response: Response<BookingResponse> = RetrofitClient.apiService.requestBooking(request)
+                                                    if (response.isSuccessful) {
+                                                        val body = response.body()
+                                                        body?.let {
+                                                            bookingId = it.booking_id
+                                                            successMessage = it.message
+                                                            showSuccessDialog = true
+                                                        }
+
+                                                        // Clear fields
+                                                        clientName = ""
+                                                        projectName = ""
+                                                        meetingSubject = ""
+                                                        businessJustification = ""
+                                                        guestEmail = ""
+                                                        emailList = emptyList()
+                                                        archeAttendees = ""
+                                                        archeEmailList = emptyList()
+                                                        showAttendeesDropdown = false
+                                                        isSearchFieldFocused = false
+                                                        refreshmentRequired = false
+                                                        additionalRequests = false
+                                                        refreshmentDetails = ""
+                                                        additionalDetails = ""
+                                                        onSubmit()
+                                                    } else {
+                                                        android.widget.Toast.makeText(
+                                                            context,
+                                                            "Error: ${response.message()}",
+                                                            android.widget.Toast.LENGTH_LONG
+                                                        ).show()
+                                                    }
+                                                } catch (e: Exception) {
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "Network error: ${e.message}",
+                                                        android.widget.Toast.LENGTH_LONG
+                                                    ).show()
+                                                } finally {
+                                                    // Hide loader
+                                                    isLoading = false
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(50.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFFDD3825),
+                                            contentColor = Color.White
+                                        ),
+                                        shape = RoundedCornerShape(28.dp),
+                                        enabled = !isLoading
+                                    ) {
+                                        if (isLoading)  {
+                                            Text(
+                                                text = "Book Meeting Room",
+                                                fontSize = 18.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                            )
+                                        } else {
+                                            Text(
+                                                text = "Book Meeting Room",
+                                                fontSize = 18.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                            )
                                         }
                                     }
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFDD3825),
-                                    contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(28.dp),
-                                enabled = !isLoading
-                            ) {
-                                if (isLoading)  {
-                                    Text(
-                                        text = "Submit",
-                                        fontSize = 18.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium,
-                                    )
-                                } else {
-                                    Text(
-                                        text = "Submit",
-                                        fontSize = 18.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium,
-                                    )
                                 }
                             }
-                        }
 
                         errorMessage?.let {
                             Spacer(modifier = Modifier.height(8.dp))

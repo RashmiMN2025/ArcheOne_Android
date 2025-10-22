@@ -72,7 +72,7 @@ fun MeetingHistoryDetailScreen(
     val pendingFrom = when (booking?.pendingFrom) {
         "admin" -> "Admin"
         "linemanager" -> "Reporting Manager"
-        "ceo" -> "CEO"
+        "ceo" -> "CEO Office"
         else -> "Unknown"
     }
 
@@ -305,6 +305,16 @@ fun MeetingHistoryDetailScreen(
                                         value = booking?.meetingType ?: ""
                                     )
                                     MeetingDetailRow(
+                                        icon = R.drawable.client,
+                                        label = "Client Name",
+                                        value = booking?.clientName ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.projectname,
+                                        label = "Project Name",
+                                        value = booking?.projectName ?: ""
+                                    )
+                                    MeetingDetailRow(
                                         icon = R.drawable.archeattendees,
                                         label = "Arche Attendees",
                                         value = archeAttendeesList.joinToString(", ")
@@ -328,16 +338,6 @@ fun MeetingHistoryDetailScreen(
                                         icon = R.drawable.additionalrequest,
                                         label = "Additional Request",
                                         value = booking?.additionalRequest ?: ""
-                                    )
-                                    MeetingDetailRow(
-                                        icon = R.drawable.client,
-                                        label = "Client Name",
-                                        value = booking?.clientName ?: ""
-                                    )
-                                    MeetingDetailRow(
-                                        icon = R.drawable.projectname,
-                                        label = "Project Name",
-                                        value = booking?.projectName ?: ""
                                     )
                                     if (showPendingFrom) {
                                         MeetingDetailRow(
