@@ -136,9 +136,22 @@ fun TravelApprovalDetailScreen(
                                 TravelApprovalStatusBadge(status = travelRequest.status)
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                            // Divider line below ticket number/status
+                            // Created date - right after ID and status
+                            val formattedCreatedDate =
+                                formatTravelDate(
+                                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(travelRequest.createdDate),
+                                )
+                            TravelDetailRowWithIcon(
+                                iconRes = R.drawable.calendar_3x,
+                                label = "Created",
+                                value = formattedCreatedDate,
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Divider line below created date
                             androidx.compose.material3.HorizontalDivider(
                                 thickness = 1.dp,
                                 color = Color.LightGray.copy(alpha = 0.5f),
@@ -327,7 +340,7 @@ fun TravelApprovalDetailScreen(
                                 travelRequest.travelType?.let {
                                     if (it.isNotBlank()) {
                                         TravelDetailRowWithIcon(
-                                            iconRes = R.drawable.car_3x,
+                                            iconRes = R.drawable.traveltype,
                                             label = "Travel Type",
                                             value = it,
                                         )
@@ -336,7 +349,7 @@ fun TravelApprovalDetailScreen(
                                 travelRequest.cabType?.let {
                                     if (it.isNotBlank()) {
                                         TravelDetailRowWithIcon(
-                                            iconRes = R.drawable.car_3x,
+                                            iconRes = R.drawable.cabtype,
                                             label = "Cab Type",
                                             value = it,
                                         )
@@ -345,34 +358,50 @@ fun TravelApprovalDetailScreen(
                                 travelRequest.duration?.let {
                                     if (it.isNotBlank()) {
                                         TravelDetailRowWithIcon(
-                                            iconRes = R.drawable.person_badge_clock,
+                                            iconRes = R.drawable.duration,
                                             label = "Duration",
                                             value = it,
                                         )
                                     }
                                 }
+
+                                // Show all pickup locations
                                 travelRequest.pickupLocations?.let { locations ->
-                                    if (locations.isNotEmpty()) {
-                                        TravelDetailRowWithIcon(
-                                            iconRes = R.drawable.mappin_and_ellipse,
-                                            label = "Pickup Location 1",
-                                            value = locations[0],
-                                        )
+                                    locations.forEachIndexed { index, location ->
+                                        if (location.isNotBlank()) {
+                                            TravelDetailRowWithIcon(
+                                                iconRes = R.drawable.pickupl,
+                                                label = "Pickup Location ${index + 1}",
+                                                value = location,
+                                            )
+                                        }
                                     }
                                 }
+
                                 travelRequest.dropLocation?.let {
                                     if (it.isNotBlank()) {
                                         TravelDetailRowWithIcon(
-                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            iconRes = R.drawable.dropl,
                                             label = "Drop Location",
                                             value = it,
                                         )
                                     }
                                 }
+
+                                travelRequest.dropMapDetails?.let {
+                                    if (it.isNotBlank()) {
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.mapdetails,
+                                            label = "Map Details",
+                                            value = it,
+                                        )
+                                    }
+                                }
+
                                 travelRequest.additionalMembers?.let {
                                     if (it.isNotBlank()) {
                                         TravelDetailRowWithIcon(
-                                            iconRes = R.drawable.person_3x,
+                                            iconRes = R.drawable.additional,
                                             label = "Additional Members",
                                             value = it,
                                         )
@@ -458,17 +487,6 @@ fun TravelApprovalDetailScreen(
                                     }
                                 }
                             }
-
-                            // Created Date
-                            val formattedCreatedDate =
-                                formatTravelDate(
-                                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(travelRequest.createdDate),
-                                )
-                            TravelDetailRowWithIcon(
-                                iconRes = R.drawable.calendar_3x,
-                                label = "Created Date",
-                                value = formattedCreatedDate,
-                            )
 
                             Spacer(modifier = Modifier.height(24.dp))
 

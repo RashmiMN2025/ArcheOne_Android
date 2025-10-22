@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -68,6 +69,11 @@ fun TravelScreen(controller: TravelController) {
     // Get context and font adjustment for consistent font scaling
     val context = LocalContext.current
     val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
+
+    // Handle system back gesture (swipe back)
+    BackHandler {
+        controller.onBackPressed()
+    }
 
     // State for date picker dialogs
     var showDepartureDatePicker by remember { mutableStateOf(false) }
@@ -228,7 +234,7 @@ fun TravelScreen(controller: TravelController) {
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .height(48.dp),
-                                                shape = RoundedCornerShape(8.dp),
+                                                shape = RoundedCornerShape(12.dp),
                                                 colors = ButtonDefaults.buttonColors(
                                                     containerColor = PrimaryRed,
                                                     contentColor = Color.White
@@ -253,12 +259,17 @@ fun TravelScreen(controller: TravelController) {
                                                         .background(
                                                             color = Color.White,
                                                             shape = RoundedCornerShape(12.dp)
+                                                        )
+                                                        .border(
+                                                            width = 1.dp,
+                                                            color = PrimaryRed,
+                                                            shape = RoundedCornerShape(12.dp)
                                                         ),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Text(
                                                         text = controller.pendingApprovalCount.toString(),
-                                                        color = Color.Red,
+                                                        color = PrimaryRed,
                                                         fontSize = 12.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         fontFamily = GraphikFontFamily
@@ -275,7 +286,7 @@ fun TravelScreen(controller: TravelController) {
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .height(48.dp),
-                                            shape = RoundedCornerShape(8.dp),
+                                            shape = RoundedCornerShape(12.dp),
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = PrimaryRed,
                                                 contentColor = Color.White
@@ -1452,7 +1463,7 @@ fun TravelScreen(controller: TravelController) {
                             controller.submissionError?.let { error ->
                                 Text(
                                     text = error,
-                                    color = Color.Red,
+                                    color = PrimaryRed,
                                     fontSize = 14.sp,
                                     fontFamily = GraphikFontFamily,
                                     modifier = Modifier.padding(bottom = 8.dp),
@@ -1651,7 +1662,7 @@ fun MultiDestinationSection(controller: TravelController) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.bin),
                                     contentDescription = "Delete Destination",
-                                    tint = Color.Red,
+                                    tint = PrimaryRed,
                                     modifier = Modifier.size(18.dp),
                                 )
                             }
@@ -2343,7 +2354,7 @@ fun CabBookingSection(controller: TravelController) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.bin),
                                     contentDescription = "Remove",
-                                    tint = Color.Red,
+                                    tint = PrimaryRed,
                                     modifier = Modifier.size(14.dp),
                                 )
                             }
@@ -2565,7 +2576,7 @@ fun CabBookingSection(controller: TravelController) {
                             Icon(
                                 painter = painterResource(id = R.drawable.bin),
                                 contentDescription = "Remove Pickup Location",
-                                tint = Color.Red,
+                                tint = PrimaryRed,
                                 modifier = Modifier.size(18.dp),
                             )
                         }
@@ -2817,7 +2828,7 @@ fun CabBookingSection(controller: TravelController) {
         controller.cabSubmissionError?.let { error ->
             Text(
                 text = error,
-                color = Color.Red,
+                color = PrimaryRed,
                 fontSize = 14.sp,
                 fontFamily = GraphikFontFamily,
                 modifier = Modifier.padding(bottom = 8.dp),
