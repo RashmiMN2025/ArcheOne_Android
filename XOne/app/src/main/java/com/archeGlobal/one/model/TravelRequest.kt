@@ -38,7 +38,7 @@ data class TravelRequest(
     val pickupLocations: List<String>? = null, // List of pickup locations
     val pickupMapDetails: List<String>? = null, // Map details for pickup locations
     val dropLocation: String? = null, // Drop location
-    val dropMapDetails: String? = null, // Map details for drop location
+    val dropMapDetails: String? = null, // Map details for drop location (displayed as Map Details in UI)
     val additionalMembers: String? = null, // Additional members for cab
     val projectId: String? = null, // Project ID
     val opportunityId: String? = null, // Opportunity ID

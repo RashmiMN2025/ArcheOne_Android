@@ -218,7 +218,7 @@ fun TravelApprovalDetailScreen(
                                 value = travelRequest.businessJustification ?: "N/A",
                             )
                             TravelDetailRowWithIcon(
-                                iconRes = R.drawable.car_3x,
+                                iconRes = R.drawable.modeoft,
                                 label = "Mode of Transport",
                                 value = travelRequest.modeOfTransport ?: "N/A",
                             )

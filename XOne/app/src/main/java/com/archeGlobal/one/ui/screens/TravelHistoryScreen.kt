@@ -240,7 +240,7 @@ fun TravelRequestCard(
 
             // Mode of Transport
             DetailItem(
-                icon = R.drawable.car_3x,
+                icon = R.drawable.modeoft,
                 label = "Mode of Transport",
                 value = travelRequest.modeOfTransport ?: "N/A",
             )

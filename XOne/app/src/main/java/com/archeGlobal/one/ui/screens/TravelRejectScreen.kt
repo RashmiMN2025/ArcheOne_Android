@@ -222,25 +222,25 @@ fun TravelRejectScreen(
                             RejectDetailRow(
                                 iconRes = R.drawable.person_3x,
                                 label = "Employee",
-                                value = travelRequest.employeeName ?: "N/A",
+                                value = if (travelRequest.employeeName.isNullOrBlank()) "N/A" else travelRequest.employeeName,
                             )
 
                             RejectDetailRow(
                                 iconRes = R.drawable.person_badge_clock,
                                 label = "Employee ID",
-                                value = travelRequest.employeeId ?: "N/A",
+                                value = if (travelRequest.employeeId.isNullOrBlank()) "N/A" else travelRequest.employeeId,
                             )
 
                             RejectDetailRow(
                                 iconRes = R.drawable.envelope_3x,
                                 label = "Email",
-                                value = travelRequest.employeeEmail ?: "N/A",
+                                value = if (travelRequest.employeeEmail.isNullOrBlank()) "N/A" else travelRequest.employeeEmail,
                             )
 
                             RejectDetailRow(
                                 iconRes = R.drawable.phone_3x,
                                 label = "Mobile",
-                                value = travelRequest.employeeMobile ?: "N/A",
+                                value = if (travelRequest.employeeMobile.isNullOrBlank()) "N/A" else travelRequest.employeeMobile,
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -249,25 +249,25 @@ fun TravelRejectScreen(
                             RejectDetailRow(
                                 iconRes = R.drawable.folder_3x,
                                 label = "Project",
-                                value = travelRequest.project,
+                                value = if (travelRequest.project.isBlank()) "N/A" else travelRequest.project,
                             )
 
                             RejectDetailRow(
                                 iconRes = R.drawable.projectid,
                                 label = "Project ID",
-                                value = travelRequest.projectId ?: "N/A",
+                                value = if (travelRequest.projectId.isNullOrBlank()) "N/A" else travelRequest.projectId,
                             )
 
                             RejectDetailRow(
                                 iconRes = R.drawable.opportunityid,
                                 label = "Opportunity ID",
-                                value = travelRequest.opportunityId ?: "N/A",
+                                value = if (travelRequest.opportunityId.isNullOrBlank()) "N/A" else travelRequest.opportunityId,
                             )
 
                             RejectDetailRow(
                                 iconRes = R.drawable.crmid,
                                 label = "CRM ID",
-                                value = travelRequest.crmId ?: "N/A",
+                                value = if (travelRequest.crmId.isNullOrBlank()) "N/A" else travelRequest.crmId,
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -276,116 +276,171 @@ fun TravelRejectScreen(
                             RejectDetailRow(
                                 iconRes = R.drawable.busjust,
                                 label = "Business Justification",
-                                value = travelRequest.businessJustification ?: "N/A",
+                                value = if (travelRequest.businessJustification.isNullOrBlank()) "N/A" else travelRequest.businessJustification,
                             )
 
                             RejectDetailRow(
-                                iconRes = R.drawable.car_3x,
+                                iconRes = R.drawable.modeoft,
                                 label = "Mode of Transport",
-                                value = travelRequest.modeOfTransport ?: "Flight",
+                                value = if (travelRequest.modeOfTransport.isNullOrBlank()) "N/A" else travelRequest.modeOfTransport,
                             )
 
-                            RejectDetailRow(
-                                iconRes = R.drawable.stayreq,
-                                label = "Stay Required",
-                                value = travelRequest.stayRequired ?: "N/A",
-                            )
-
-                            RejectDetailRow(
-                                iconRes = R.drawable.car_3x,
-                                label = "Cab Required",
-                                value = "No", // Default value, update based on actual field if available
-                            )
-
-                            RejectDetailRow(
-                                iconRes = R.drawable.meal,
-                                label = "Meal Preference",
-                                value = travelRequest.mealPreference ?: "N/A",
-                            )
-
-                            RejectDetailRow(
-                                iconRes = R.drawable.seat,
-                                label = "Seat Preference",
-                                value = travelRequest.seatPreference ?: "N/A",
-                            )
-
-                            RejectDetailRow(
-                                iconRes = R.drawable.noimage,
-                                label = "Frequent Flyer Number",
-                                value = travelRequest.frequentFlyerNumber ?: "N/A",
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Travel Details - Handle multi-destination vs single destination
-                            val destinations = travelRequest.getAllDestinations()
-
-                            if (destinations.isEmpty() || destinations.size == 1) {
-                                // Single destination display (no trip label)
-                                val destination = destinations.firstOrNull()
-
+                            // Show different fields based on mode of transport
+                            if (travelRequest.modeOfTransport?.lowercase() == "cab") {
+                                // Cab-specific fields
                                 RejectDetailRow(
-                                    iconRes = R.drawable.mappin_and_ellipse,
-                                    label = "Origin City",
-                                    value = destination?.originCity ?: "N/A",
+                                    iconRes = R.drawable.traveltype,
+                                    label = "Travel Type",
+                                    value = if (travelRequest.travelType.isNullOrBlank()) "N/A" else travelRequest.travelType,
                                 )
 
                                 RejectDetailRow(
-                                    iconRes = R.drawable.mappin_and_ellipse,
-                                    label = "Destination City",
-                                    value = destination?.destinationCity ?: travelRequest.destination,
+                                    iconRes = R.drawable.cabtype,
+                                    label = "Cab Type",
+                                    value = if (travelRequest.cabType.isNullOrBlank()) "N/A" else travelRequest.cabType,
                                 )
 
                                 RejectDetailRow(
-                                    iconRes = R.drawable.airplane_departure,
-                                    label = "Date of Departure",
-                                    value = destination?.departureDate ?: travelRequest.departureDate ?: "N/A",
+                                    iconRes = R.drawable.calendar_3x,
+                                    label = "Travel Date",
+                                    value = if (travelRequest.travelDate.isNullOrBlank()) "N/A" else travelRequest.travelDate,
                                 )
 
                                 RejectDetailRow(
-                                    iconRes = R.drawable.airplane_arrival,
-                                    label = "Date of Arrival",
-                                    value = destination?.arrivalDate ?: travelRequest.arrivalDate ?: "N/A",
+                                    iconRes = R.drawable.duration,
+                                    label = "Duration",
+                                    value = if (travelRequest.duration.isNullOrBlank()) "N/A" else travelRequest.duration,
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Pickup Locations
+                                val pickupLocations = travelRequest.pickupLocations
+                                if (pickupLocations != null && pickupLocations.isNotEmpty() && pickupLocations.any { it.isNotBlank() }) {
+                                    pickupLocations.forEachIndexed { index, location ->
+                                        RejectDetailRow(
+                                            iconRes = R.drawable.pickupl,
+                                            label = "Pickup Location ${index + 1}",
+                                            value = if (location.isBlank()) "N/A" else location,
+                                        )
+                                    }
+                                } else {
+                                    RejectDetailRow(
+                                        iconRes = R.drawable.pickupl,
+                                        label = "Pickup Location 1",
+                                        value = "N/A",
+                                    )
+                                }
+
+                                RejectDetailRow(
+                                    iconRes = R.drawable.dropl,
+                                    label = "Drop Location",
+                                    value = if (travelRequest.dropLocation.isNullOrBlank()) "N/A" else travelRequest.dropLocation,
+                                )
+
+                                RejectDetailRow(
+                                    iconRes = R.drawable.mapdetails,
+                                    label = "Map Details",
+                                    value = if (travelRequest.dropMapDetails.isNullOrBlank()) "N/A" else travelRequest.dropMapDetails,
                                 )
                             } else {
-                                // Multi-destination display (with trip labels)
-                                destinations.forEachIndexed { index, destination ->
-                                    if (index > 0) {
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                    }
+                                // Non-cab travel fields
+                                RejectDetailRow(
+                                    iconRes = R.drawable.stayreq,
+                                    label = "Stay Required",
+                                    value = if (travelRequest.stayRequired.isNullOrBlank()) "N/A" else travelRequest.stayRequired,
+                                )
 
-                                    Text(
-                                        text = "Trip ${index + 1}",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontFamily = GraphikFontFamily,
-                                        color = Color.Black,
-                                        modifier = Modifier.padding(bottom = 4.dp),
-                                    )
+                                RejectDetailRow(
+                                    iconRes = R.drawable.meal,
+                                    label = "Meal Preference",
+                                    value = if (travelRequest.mealPreference.isNullOrBlank()) "N/A" else travelRequest.mealPreference,
+                                )
+
+                                RejectDetailRow(
+                                    iconRes = R.drawable.seat,
+                                    label = "Seat Preference",
+                                    value = if (travelRequest.seatPreference.isNullOrBlank()) "N/A" else travelRequest.seatPreference,
+                                )
+
+                                RejectDetailRow(
+                                    iconRes = R.drawable.noimage,
+                                    label = "Frequent Flyer Number",
+                                    value = if (travelRequest.frequentFlyerNumber.isNullOrBlank()) "N/A" else travelRequest.frequentFlyerNumber,
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Travel Details - Handle multi-destination vs single destination
+                                val destinations = travelRequest.getAllDestinations()
+
+                                if (destinations.isEmpty() || destinations.size == 1) {
+                                    // Single destination display (no trip label)
+                                    val destination = destinations.firstOrNull()
 
                                     RejectDetailRow(
                                         iconRes = R.drawable.mappin_and_ellipse,
                                         label = "Origin City",
-                                        value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
+                                        value = destination?.originCity ?: "N/A",
                                     )
 
                                     RejectDetailRow(
                                         iconRes = R.drawable.mappin_and_ellipse,
                                         label = "Destination City",
-                                        value = destination.destinationCity,
+                                        value = destination?.destinationCity ?: travelRequest.destination,
                                     )
 
                                     RejectDetailRow(
                                         iconRes = R.drawable.airplane_departure,
                                         label = "Date of Departure",
-                                        value = destination.departureDate,
+                                        value = destination?.departureDate ?: travelRequest.departureDate ?: "N/A",
                                     )
 
                                     RejectDetailRow(
                                         iconRes = R.drawable.airplane_arrival,
                                         label = "Date of Arrival",
-                                        value = destination.arrivalDate,
+                                        value = destination?.arrivalDate ?: travelRequest.arrivalDate ?: "N/A",
                                     )
+                                } else {
+                                    // Multi-destination display (with trip labels)
+                                    destinations.forEachIndexed { index, destination ->
+                                        if (index > 0) {
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                        }
+
+                                        Text(
+                                            text = "Trip ${index + 1}",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontFamily = GraphikFontFamily,
+                                            color = Color.Black,
+                                            modifier = Modifier.padding(bottom = 4.dp),
+                                        )
+
+                                        RejectDetailRow(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Origin City",
+                                            value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
+                                        )
+
+                                        RejectDetailRow(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Destination City",
+                                            value = destination.destinationCity,
+                                        )
+
+                                        RejectDetailRow(
+                                            iconRes = R.drawable.airplane_departure,
+                                            label = "Date of Departure",
+                                            value = destination.departureDate,
+                                        )
+
+                                        RejectDetailRow(
+                                            iconRes = R.drawable.airplane_arrival,
+                                            label = "Date of Arrival",
+                                            value = destination.arrivalDate,
+                                        )
+                                    }
                                 }
                             }
 

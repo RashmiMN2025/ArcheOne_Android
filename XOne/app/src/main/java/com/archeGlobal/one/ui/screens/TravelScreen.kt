@@ -230,35 +230,35 @@ fun TravelScreen(controller: TravelController) {
                                                     .height(48.dp),
                                                 shape = RoundedCornerShape(8.dp),
                                                 colors = ButtonDefaults.buttonColors(
-                                                    containerColor = Color.White,
-                                                    contentColor = Color.Black
-                                                ),
-                                                border = BorderStroke(1.dp, Color.LightGray)
+                                                    containerColor = PrimaryRed,
+                                                    contentColor = Color.White
+                                                )
                                             ) {
                                                 Text(
                                                     text = "Manager Approval",
                                                     fontSize = 13.sp,
                                                     fontWeight = FontWeight.Medium,
+                                                    color = Color.White,
                                                     fontFamily = GraphikFontFamily
                                                 )
                                             }
 
-                                            // Notification badge - shows pending count
+                                            // Notification badge - shows pending count (positioned at top right corner)
                                             if (controller.pendingApprovalCount > 0) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .align(Alignment.CenterEnd)
-                                                        .offset(x = (-12).dp)
+                                                        .align(Alignment.TopEnd)
+                                                        .offset(x = 8.dp, y = (-8).dp)
                                                         .size(24.dp)
                                                         .background(
-                                                            color = Color.Red,
+                                                            color = Color.White,
                                                             shape = RoundedCornerShape(12.dp)
                                                         ),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Text(
                                                         text = controller.pendingApprovalCount.toString(),
-                                                        color = Color.White,
+                                                        color = Color.Red,
                                                         fontSize = 12.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         fontFamily = GraphikFontFamily
@@ -277,15 +277,15 @@ fun TravelScreen(controller: TravelController) {
                                                 .height(48.dp),
                                             shape = RoundedCornerShape(8.dp),
                                             colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color.White,
-                                                contentColor = Color.Black
-                                            ),
-                                            border = BorderStroke(1.dp, Color.LightGray)
+                                                containerColor = PrimaryRed,
+                                                contentColor = Color.White
+                                            )
                                         ) {
                                             Text(
                                                 text = "Admin Dashboard",
                                                 fontSize = 13.sp,
                                                 fontWeight = FontWeight.Medium,
+                                                color = Color.White,
                                                 fontFamily = GraphikFontFamily
                                             )
                                         }
@@ -1503,7 +1503,7 @@ fun TravelScreen(controller: TravelController) {
                                     )
                                 } else {
                                     Text(
-                                        text = if (controller.modeOfTransport == "Cab") "Submit Cab Request" else "Submit Travel Request",
+                                        text = if (controller.modeOfTransport == "Cab") "Submit Travel Request" else "Submit Travel Request",
                                         fontSize = 16.sp,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium,
@@ -2503,7 +2503,7 @@ fun CabBookingSection(controller: TravelController) {
                 }
             }
 
-            // Add Pickup Location Button (only for local travel)
+            // Add Pickup Location Button (only for local travel, max 3 total pickup locations)
             if (controller.isLocalTravel) {
                 Row(
                     modifier = Modifier
@@ -2517,6 +2517,8 @@ fun CabBookingSection(controller: TravelController) {
                             ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF2196F3),
                                 contentColor = Color.White,
+                                disabledContainerColor = Color(0xFFB0B0B0),
+                                disabledContentColor = Color(0xFF888888),
                             ),
                         shape = RoundedCornerShape(10.dp),
                         modifier =
@@ -2524,6 +2526,7 @@ fun CabBookingSection(controller: TravelController) {
                                 .height(32.dp)
                                 .width(160.dp),
                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 3.dp),
+                        enabled = controller.cabPickupLocations.size < 2,
                     ) {
                         Text(
                             text = "Add Pickup Location",

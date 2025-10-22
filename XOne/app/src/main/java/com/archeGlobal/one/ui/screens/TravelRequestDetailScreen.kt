@@ -151,9 +151,26 @@ fun TravelRequestDetailScreen(
                                 TravelRequestStatusBadge(status = travelRequest.status)
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                            // Divider line below ticket number/status
+                            // Created date - right after ID and status
+                            val formattedCreatedDate =
+                                formatDate(
+                                    java.text
+                                        .SimpleDateFormat(
+                                            "yyyy-MM-dd",
+                                            java.util.Locale.getDefault(),
+                                        ).format(travelRequest.createdDate),
+                                )
+                            DetailRowWithDrawableIcon(
+                                iconRes = R.drawable.calendar_3x,
+                                label = "Created",
+                                value = formattedCreatedDate,
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Divider line below created date
                             androidx.compose.material3.HorizontalDivider(
                                 thickness = 1.dp,
                                 color = Color.LightGray.copy(alpha = 0.5f),
@@ -396,6 +413,15 @@ fun TravelRequestDetailScreen(
                                         )
                                     }
                                 }
+                                travelRequest.dropMapDetails?.let {
+                                    if (it.isNotBlank()) {
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.mapdetails,
+                                            label = "Map Details",
+                                            value = it,
+                                        )
+                                    }
+                                }
                                 travelRequest.additionalMembers?.let {
                                     if (it.isNotBlank()) {
                                         DetailRowWithDrawableIcon(
@@ -407,20 +433,24 @@ fun TravelRequestDetailScreen(
                                 }
                             }
 
-                            // Format created date
-                            val formattedCreatedDate =
-                                formatDate(
-                                    java.text
-                                        .SimpleDateFormat(
-                                            "yyyy-MM-dd",
-                                            java.util.Locale.getDefault(),
-                                        ).format(travelRequest.createdDate),
+                            // Rejection Reason - only show when request is rejected
+                            if (travelRequest.status == TravelStatus.REJECTED && !travelRequest.rejectionReason.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Divider line above rejection reason
+                                androidx.compose.material3.HorizontalDivider(
+                                    thickness = 1.dp,
+                                    color = Color.LightGray.copy(alpha = 0.5f),
                                 )
-                            DetailRowWithDrawableIcon(
-                                iconRes = R.drawable.calendar_3x,
-                                label = "Created",
-                                value = formattedCreatedDate,
-                            )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                DetailRowWithDrawableIcon(
+                                    iconRes = R.drawable.rejectionreason,
+                                    label = "Rejection Reason",
+                                    value = travelRequest.rejectionReason,
+                                )
+                            }
 
                             // Cancel button - only show when request is approved and coming from admin dashboard
                             if (travelRequest.status == TravelStatus.APPROVED && controller.isFromAdminDashboard) {

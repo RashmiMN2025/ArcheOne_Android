@@ -1110,7 +1110,7 @@ fun ApprovalRequestCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.car_3x),
+                    painter = painterResource(id = R.drawable.modeoft),
                     contentDescription = "Mode of Transport",
                     tint = Color.Gray,
                     modifier = Modifier.size(18.dp),
@@ -1132,11 +1132,14 @@ fun ApprovalRequestCard(
                 )
             }
 
-            // Show trip details only for non-cab bookings
-            if (request.modeOfTransport?.lowercase() != "cab") {
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-                // Trip details based on single or multi destination
+            // Show different details based on mode of transport
+            if (request.modeOfTransport?.lowercase() == "cab") {
+                // Show cab-specific fields
+                CabTripDetails(travelRequest = request)
+            } else {
+                // Show trip details for non-cab bookings
                 if (request.isMultiDestination()) {
                     MultiDestinationTripDetails(
                         travelRequest = request,
@@ -1453,6 +1456,231 @@ fun MultiDestinationTripDetails(travelRequest: TravelRequest) {
             if (index < destinations.size - 1) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
+        }
+    }
+}
+
+@Composable
+fun CabTripDetails(travelRequest: TravelRequest) {
+    Column {
+        // Travel Type
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.traveltype),
+                contentDescription = "Travel Type",
+                tint = Color.Gray,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = "Travel Type",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = GraphikFontFamily,
+                color = Color.Gray,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = if (travelRequest.travelType.isNullOrBlank()) "N/A" else travelRequest.travelType,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Cab Type
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.cabtype),
+                contentDescription = "Cab Type",
+                tint = Color.Gray,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = "Cab Type",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = GraphikFontFamily,
+                color = Color.Gray,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = if (travelRequest.cabType.isNullOrBlank()) "N/A" else travelRequest.cabType,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Duration
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.duration),
+                contentDescription = "Duration",
+                tint = Color.Gray,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = "Duration",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = GraphikFontFamily,
+                color = Color.Gray,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = if (travelRequest.duration.isNullOrBlank()) "N/A" else travelRequest.duration,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Pickup Locations
+        val pickupLocations = travelRequest.pickupLocations
+        if (pickupLocations != null && pickupLocations.isNotEmpty() && pickupLocations.any { it.isNotBlank() }) {
+            pickupLocations.forEachIndexed { index, location ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.pickupl),
+                        contentDescription = "Pickup Location ${index + 1}",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Text(
+                        text = "Pickup Location ${index + 1}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Gray,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = if (location.isBlank()) "N/A" else location,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Black,
+                    )
+                }
+                if (index < pickupLocations.size - 1) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.pickupl),
+                    contentDescription = "Pickup Location 1",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = "Pickup Location 1",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "N/A",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black,
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Drop Location
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.dropl),
+                contentDescription = "Drop Location",
+                tint = Color.Gray,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = "Drop Location",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = GraphikFontFamily,
+                color = Color.Gray,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = if (travelRequest.dropLocation.isNullOrBlank()) "N/A" else travelRequest.dropLocation,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Travel Dates
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.calendar_3x),
+                contentDescription = "Travel Date",
+                tint = Color.Gray,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = "Travel Date",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = GraphikFontFamily,
+                color = Color.Gray,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = if (travelRequest.travelDate.isNullOrBlank()) "N/A" else travelRequest.travelDate,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black,
+            )
         }
     }
 }
