@@ -83,7 +83,7 @@ fun TravelRequestDetailScreen(
                             // Determine header text based on navigation source
                             val headerText = when {
                                 controller.isFromAdminDashboard -> "Travel Admin Details"
-                                controller.isFromTravelApprovals -> "Travel Approvals Detail"
+                                controller.isFromTravelApprovals -> "Travel Approvals Detail view"
                                 else -> "Travel Request Details"
                             }
 

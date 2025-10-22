@@ -1748,6 +1748,8 @@ class TravelController(
                                 // Refresh travel history to show the new request
                                 loadCombinedTravelHistory()
                                 navigator.navigateToTravelHistory()
+                                // Reset form fields after navigation (to avoid visible blink)
+                                resetTravelForm()
                             } else {
                                 // Server returned an error
                                 submissionError = responseBody.message
@@ -1801,6 +1803,8 @@ class TravelController(
                         // Refresh travel history to show the new request
                         loadCombinedTravelHistory()
                         navigator.navigateToTravelHistory()
+                        // Reset form fields after navigation (to avoid visible blink)
+                        resetTravelForm()
                     } else {
                         // Genuine network error
                         submissionError = "Network error. Please check your connection and try again."
@@ -2036,9 +2040,10 @@ class TravelController(
      * top-left back arrow behaves like the system back gesture.
      */
     fun onBackPressed() {
-        // Reset travel form when going back to home
-        resetTravelForm()
+        // Navigate back to home
         navigator.popBackStack()
+        // Reset travel form after navigation (to avoid visible blink)
+        resetTravelForm()
     }
 
     /**
@@ -2644,6 +2649,9 @@ class TravelController(
                             // Navigate to travel history
                             loadCombinedTravelHistory()
                             navigator.navigateToTravelHistory()
+
+                            // Reset form fields after navigation (to avoid visible blink)
+                            resetTravelForm()
                         } else {
                             cabSubmissionError = cabResponse.message
                             Log.e("TravelController", "Error submitting cab booking: ${cabResponse.message}")
