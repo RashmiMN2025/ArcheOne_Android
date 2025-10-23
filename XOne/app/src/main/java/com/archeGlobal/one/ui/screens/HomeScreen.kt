@@ -1673,7 +1673,7 @@ private fun AppItem(
                         fontSize = 8.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.offset(y = (-3.1).dp),
+                        modifier = Modifier.offset(y = (-3.8).dp,x = (3.8).dp),
                     )
                 }
             }
