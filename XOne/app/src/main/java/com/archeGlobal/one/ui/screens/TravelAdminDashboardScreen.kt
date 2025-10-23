@@ -1091,7 +1091,7 @@ fun AdminRequestCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.airplane_departure),
+                    painter = painterResource(id = R.drawable.modeoft),
                     contentDescription = "Mode of Transport",
                     tint = Color.Gray,
                     modifier = Modifier.size(18.dp),
