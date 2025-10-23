@@ -1821,7 +1821,14 @@ class TravelController(
     /**
      * Download travel admin report as CSV
      */
-    fun downloadAdminReport() {
+    fun downloadAdminReport(
+        dateRange: String? = null,
+        startDate: String? = null,
+        endDate: String? = null,
+        userLocation: String? = null,
+        modeOfTransport: String? = null,
+        status: String? = null
+    ) {
         val userDataManager = UserDataManager.getInstance(context)
         val employeeEmail = userDataManager.getUserData()?.email
 
@@ -1837,8 +1844,15 @@ class TravelController(
         Thread {
             kotlinx.coroutines.runBlocking {
                 try {
-                    val request = TravelV2Request(employeeEmail = employeeEmail)
-                    val response = RetrofitClient.apiService.downloadTravelAdminReport(request)
+                    val response = RetrofitClient.apiService.downloadTravelAdminReport(
+                        employeeEmail = employeeEmail,
+                        dateRange = dateRange,
+                        startDate = startDate,
+                        endDate = endDate,
+                        userLocation = if (userLocation == "All") null else userLocation,
+                        modeOfTransport = if (modeOfTransport == "All") null else modeOfTransport,
+                        status = if (status == "All") null else status?.lowercase()
+                    )
 
                     if (response.isSuccessful && response.body() != null) {
                         val responseBody = response.body()!!
@@ -1858,6 +1872,14 @@ class TravelController(
 
                         (context as? android.app.Activity)?.runOnUiThread {
                             CustomToast.show(context, "Report downloaded to Downloads/$fileName")
+
+                            // Show notification in dropdown
+                            com.archeGlobal.one.utils.DownloadNotificationHelper.showDownloadNotification(
+                                context = context,
+                                fileName = fileName,
+                                filePath = file.absolutePath,
+                                fileDescription = "Travel Admin Report"
+                            )
                         }
 
                         Log.d("TravelController", "Report downloaded successfully: ${file.absolutePath}")

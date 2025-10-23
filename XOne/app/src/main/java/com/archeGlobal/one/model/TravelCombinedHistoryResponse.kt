@@ -570,6 +570,16 @@ data class TravelV2ApprovalHistoryResponse(
 data class TravelV2Request(
     @SerializedName("employeeEmail")
     val employeeEmail: String,
+    @SerializedName("user_location")
+    val userLocation: String? = null,
+    @SerializedName("mode_of_transport")
+    val modeOfTransport: String? = null,
+    @SerializedName("status")
+    val status: String? = null,
+    @SerializedName("start_date")
+    val startDate: String? = null,
+    @SerializedName("end_date")
+    val endDate: String? = null,
 )
 
 /**

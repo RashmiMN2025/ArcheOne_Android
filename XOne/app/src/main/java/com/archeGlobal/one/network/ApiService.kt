@@ -309,10 +309,16 @@ interface ApiService {
         @Body request: TravelV2Request,
     ): Call<TravelV2AdminHistoryResponse>
 
-    @POST("travel/v2/admin/history")
+    @GET("travel/v2/admin/history")
     @Streaming
     suspend fun downloadTravelAdminReport(
-        @Body request: TravelV2Request,
+        @Query("employeeEmail") employeeEmail: String,
+        @Query("date_range") dateRange: String? = null,
+        @Query("start_date") startDate: String? = null,
+        @Query("end_date") endDate: String? = null,
+        @Query("user_location") userLocation: String? = null,
+        @Query("mode_of_transport") modeOfTransport: String? = null,
+        @Query("status") status: String? = null,
     ): Response<ResponseBody>
 }
 

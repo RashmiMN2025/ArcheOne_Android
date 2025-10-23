@@ -906,7 +906,56 @@ fun TravelAdminDashboardScreen(controller: TravelController) {
                     .padding(end = 16.dp, bottom = 24.dp) // Move button up slightly
                     .clip(RoundedCornerShape(20.dp)) // More rounded edges
                     .background(PrimaryRed)
-                    .clickable { controller.downloadAdminReport() }
+                    .clickable {
+                        // Calculate date_range and dates based on date filter
+                        val (dateRangeParam, calculatedStartDate, calculatedEndDate) = when (selectedDateFilter) {
+                            "All" -> Triple("all", null, null)
+                            "1 Week" -> Triple("1week", null, null)
+                            "1 Month" -> Triple("1month", null, null)
+                            "Date Range" -> {
+                                try {
+                                    val displayFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                                    val apiFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                    val fromDateParsed = displayFormatter.parse(fromDate)
+                                    val toDateParsed = displayFormatter.parse(toDate)
+                                    if (fromDateParsed != null && toDateParsed != null) {
+                                        Triple(
+                                            null,
+                                            apiFormatter.format(fromDateParsed),
+                                            apiFormatter.format(toDateParsed)
+                                        )
+                                    } else {
+                                        Triple(null, null, null)
+                                    }
+                                } catch (e: Exception) {
+                                    Triple(null, null, null)
+                                }
+                            }
+                            else -> Triple(null, null, null)
+                        }
+
+                        // Determine which filter values to pass based on category
+                        val locationFilter = if (selectedCategoryFilter == "Location" || selectedCategoryFilter == "All") {
+                            selectedLocationFilter
+                        } else null
+
+                        val transportFilter = if (selectedCategoryFilter == "Mode of Transport" || selectedCategoryFilter == "All") {
+                            selectedTransportFilter
+                        } else null
+
+                        val statusFilter = if (selectedCategoryFilter == "Status" || selectedCategoryFilter == "All") {
+                            selectedStatusFilter
+                        } else null
+
+                        controller.downloadAdminReport(
+                            dateRange = dateRangeParam,
+                            startDate = calculatedStartDate,
+                            endDate = calculatedEndDate,
+                            userLocation = locationFilter,
+                            modeOfTransport = transportFilter,
+                            status = statusFilter
+                        )
+                    }
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Row(
