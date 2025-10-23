@@ -30,6 +30,7 @@ data class TravelRequest(
     val employeeEmail: String? = null, // Email of the employee who requested the travel
     val employeeId: String? = null, // ID of the employee who requested the travel
     val employeeMobile: String? = null, // Mobile number of the employee who requested the travel
+    val userLocation: String? = null, // User's location/office location
     // Cab booking fields
     val travelType: String? = null, // Local Travel or Out of Local Station
     val cabType: String? = null, // Cab type (5 Seats, 7 Seats)

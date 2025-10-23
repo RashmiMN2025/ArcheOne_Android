@@ -484,12 +484,13 @@ fun TravelAdminDashboardScreen(controller: TravelController) {
                                             .background(Color(0xFF424242))
                                             .clip(RoundedCornerShape(8.dp))
                                     ) {
-                                        // Get unique locations from the current state
+                                        // Get unique user locations from the current state
                                         val locations = remember(controller.travelApprovalsState) {
                                             val currentState = controller.travelApprovalsState
                                             if (currentState is TravelController.TravelApprovalsState.Success) {
                                                 listOf("All") + currentState.approvalRequests
-                                                    .mapNotNull { it.destination }
+                                                    .mapNotNull { it.userLocation }
+                                                    .filter { it.isNotBlank() }
                                                     .distinct()
                                                     .sorted()
                                             } else {
@@ -674,9 +675,9 @@ fun TravelAdminDashboardScreen(controller: TravelController) {
                                 val matchesStatus = selectedStatusFilter == "All" ||
                                     request.status.name.equals(selectedStatusFilter, ignoreCase = true)
 
-                                // Apply location filter
+                                // Apply location filter (using userLocation field)
                                 val matchesLocation = selectedLocationFilter == "All" ||
-                                    request.destination?.equals(selectedLocationFilter, ignoreCase = true) == true
+                                    request.userLocation?.equals(selectedLocationFilter, ignoreCase = true) == true
 
                                 // Apply transport filter
                                 val matchesTransport = selectedTransportFilter == "All" ||

@@ -192,6 +192,7 @@ data class TravelOrderHistoryItem(
             employeeEmail = employeeEmail,
             employeeId = employeeId,
             employeeMobile = mobile,
+            userLocation = userLocation,
             // Cab booking fields
             travelType = cabTravelType,
             cabType = cabTypeValue,
@@ -287,6 +288,8 @@ data class TravelApprovalHistoryItem(
     val employeeId: String,
     @SerializedName("mobile")
     val mobile: String,
+    @SerializedName("user_location")
+    val userLocation: String? = null,
     @SerializedName("project_name")
     val projectName: String,
     @SerializedName("project_id")
@@ -490,6 +493,7 @@ data class TravelApprovalHistoryItem(
                 employeeEmail = employeeEmail,
                 employeeId = employeeId,
                 employeeMobile = mobile,
+                userLocation = userLocation,
                 // Cab booking fields (prefer cabDetails object)
                 travelType = cabTravelType,
                 cabType = cabTypeValue,
