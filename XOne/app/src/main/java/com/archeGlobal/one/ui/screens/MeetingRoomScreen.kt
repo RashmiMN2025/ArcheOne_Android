@@ -1213,14 +1213,9 @@ fun MeetingRoomScreen(
                                             }
 
                                             isLoading = true
-                                            val refreshmentReq =
-                                                if (refreshmentRequired) "yes" else "no"
+                                            val refreshmentReq = refreshmentDetails
 
                                             var additional = additionalDetails
-                                            if (refreshmentRequired && refreshmentDetails.isNotBlank()) {
-                                                additional =
-                                                    "Refreshment: $refreshmentDetails\n$additional"
-                                            }
 
                                             val lineManager =
                                                 if (meetingType == "Meeting with Guest") lineManagerEmail else ""
@@ -1678,14 +1673,9 @@ fun MeetingRoomScreen(
                                             }
 
                                             isLoading = true
-                                            val refreshmentReq =
-                                                if (refreshmentRequired) "yes" else "no"
+                                            val refreshmentReq = refreshmentDetails
 
                                             var additional = additionalDetails
-                                            if (refreshmentRequired && refreshmentDetails.isNotBlank()) {
-                                                additional =
-                                                    "Refreshment: $refreshmentDetails\n$additional"
-                                            }
 
                                             val lineManager =
                                                 if (meetingType == "Meeting with Guest") lineManagerEmail else ""

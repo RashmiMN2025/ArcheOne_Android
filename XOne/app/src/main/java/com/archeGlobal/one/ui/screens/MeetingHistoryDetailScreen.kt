@@ -138,6 +138,8 @@ fun MeetingHistoryDetailScreen(
 
     var isLoading by remember { mutableStateOf(false) }
 
+    val isRemarkRequired = (action == "reject" || action == "cancel")
+
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
             modifier = Modifier
@@ -188,6 +190,7 @@ fun MeetingHistoryDetailScreen(
                     )
 
                     val scrollState = rememberScrollState()
+
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -274,6 +277,7 @@ fun MeetingHistoryDetailScreen(
                                 Column(
                                     verticalArrangement = Arrangement.Top
                                 ) {
+
                                     MeetingDetailRow(
                                         icon = R.drawable.host,
                                         label = "Host",
@@ -368,13 +372,18 @@ fun MeetingHistoryDetailScreen(
                                         thickness = 1.dp,
                                         color = Color.LightGray
                                     )
+
+                                    var remarkError by remember { mutableStateOf<String?>(null) }
                                     // Remark Text Field
                                     OutlinedTextField(
                                         value = enterRemark,
-                                        onValueChange = { enterRemark = it },
+                                        onValueChange = {
+                                            enterRemark = it
+                                            if (remarkError != null) remarkError = null
+                                                        },
                                         placeholder = {
                                             Text(
-                                                "Enter remark(optional)",
+                                                "Enter remark${if (isRemarkRequired) " *" else ""}",
                                                 color = Color.LightGray,
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
@@ -399,6 +408,14 @@ fun MeetingHistoryDetailScreen(
                                     // Submit Button
                                     Button(
                                         onClick = {
+                                            if (isRemarkRequired && enterRemark.isBlank()) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Remark is required",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                return@Button
+                                            }
                                             coroutineScope.launch {
                                                 isLoading = true
                                                 try {

@@ -1112,8 +1112,9 @@ fun MeetingBookingCard(
                 MeetingDetailItem(icon = R.drawable.meetcalender, label = "Meeting date", value = meetingDate)
                 MeetingDetailItem(icon = R.drawable.pending, label = "Meeting time", value = meetingTime)
 
-                if (showPendingFrom) MeetingDetailItem(icon = R.drawable.mrrompending, label = "Pending from", value = pendingFrom)
+
                 if (showRemark) MeetingDetailItem(icon = remarkIcon, label = remarkLabel, value = remark)
+                if (showPendingFrom) MeetingDetailItem(icon = R.drawable.mrrompending, label = "Pending from", value = pendingFrom)
 
                 if (showCheckIn) {
                     MeetingDetailItem(
