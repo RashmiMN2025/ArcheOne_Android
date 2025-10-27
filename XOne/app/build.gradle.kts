@@ -14,7 +14,7 @@ android {
         applicationId = "com.archeGlobal.one"
         minSdk = 26
         targetSdk = 35
-        versionCode = 19
+        versionCode = 20
         versionName = "1.6"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
