@@ -50,6 +50,7 @@ class ChatActivity : ComponentActivity() {
                         ChatBottomNavigationBar(
                             onHomeClick = { navigator.navigateToHome() },
                             onChatClick = { /* Already on Chat screen */ },
+                            onHeadsUpClick = { /* TODO: Navigate to HeadsUp from ChatActivity */ },
                             onSOSClick = { navigator.navigateToSOS(true) },
                             onProfileClick = { navigator.navigateToProfile() },
                             isUsingPrideIcon = isUsingPrideIcon,

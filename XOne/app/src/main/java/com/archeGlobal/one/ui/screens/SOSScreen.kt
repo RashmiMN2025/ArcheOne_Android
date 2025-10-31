@@ -43,6 +43,7 @@ fun SOSScreen(
     onNavigateToEmergencyContact: () -> Unit = {},
     onFooterHomeClick: () -> Unit = {},
     onFooterChatClick: () -> Unit = {},
+    onFooterHeadsUpClick: () -> Unit = {},
     onFooterSOSClick: () -> Unit = {},
     onFooterProfileClick: () -> Unit = {},
     showHeader: Boolean = false, // Default to true
@@ -79,6 +80,7 @@ fun SOSScreen(
                 footerNavigation = footerNavigation,
                 onFooterHomeClick = onFooterHomeClick,
                 onFooterChatClick = onFooterChatClick,
+                onFooterHeadsUpClick = onFooterHeadsUpClick,
                 onFooterSOSClick = onFooterSOSClick,
                 onFooterProfileClick = onFooterProfileClick,
             ) {

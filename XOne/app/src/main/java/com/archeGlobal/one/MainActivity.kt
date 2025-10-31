@@ -153,6 +153,7 @@ class MainActivity : ComponentActivity() {
                                     onToggleFavorite = homeController::onToggleFavorite,
                                     onFooterHomeClick = homeController::onFooterHomeClick,
                                     onFooterChatClick = homeController::onFooterChatClick,
+                                    onFooterHeadsUpClick = { /* TODO: Navigate to HeadsUp */ },
                                     onFooterProfileClick = homeController::onFooterProfileClick,
                                     onFooterSOSClick = homeController::onFooterSOSClick,
                                     onXCardClick = homeController::onXCardClick,

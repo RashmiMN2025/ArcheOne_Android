@@ -15,6 +15,7 @@ fun FooterScaffold(
     isUsingPrideIcon: Boolean = false,
     onFooterHomeClick: () -> Unit,
     onFooterChatClick: () -> Unit,
+    onFooterHeadsUpClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
     content: @Composable () -> Unit,
@@ -31,6 +32,7 @@ fun FooterScaffold(
                 isUsingPrideIcon = prideFlag,
                 onHomeClick = onFooterHomeClick,
                 onChatClick = onFooterChatClick,
+                onHeadsUpClick = onFooterHeadsUpClick,
                 onSOSClick = onFooterSOSClick,
                 onProfileClick = onFooterProfileClick,
                 modifier = Modifier.zIndex(1f), // Ensure navigation bar is always on top

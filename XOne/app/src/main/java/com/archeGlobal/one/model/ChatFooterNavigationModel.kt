@@ -28,6 +28,7 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 fun ChatBottomNavigationBar(
     onHomeClick: () -> Unit,
     onChatClick: () -> Unit,
+    onHeadsUpClick: () -> Unit,
     onSOSClick: () -> Unit,
     onProfileClick: () -> Unit,
     isUsingPrideIcon: Boolean = false,
@@ -116,6 +117,44 @@ fun ChatBottomNavigationBar(
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
                             color = selectedColor,
+                        )
+                    }
+                }
+            },
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor,
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor,
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
+        )
+
+        // Heads Up item - always unselected in Chat screen
+        NavigationBarItem(
+            selected = false,
+            onClick = onHeadsUpClick,
+            icon = {
+                CompositionLocalProvider(LocalContentColor provides unselectedColor) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(top = 4.dp),
+                    ) {
+                        Icon(
+                            painterResource(id = R.drawable.headsup),
+                            contentDescription = "Heads Up",
+                            modifier = Modifier.size(24.dp),
+                            tint = unselectedColor,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Heads Up",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = unselectedColor,
                         )
                     }
                 }

@@ -3,6 +3,7 @@ package com.archeGlobal.one.model
 data class FooterNavigationModel(
     val showHome: Boolean = true,
     val showChat: Boolean = true,
+    val showHeadsUp: Boolean = false,
     val showSOS: Boolean = true,
     val showProfile: Boolean = true,
 )

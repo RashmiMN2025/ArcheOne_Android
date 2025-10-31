@@ -593,6 +593,7 @@ class HomeActivity : AppCompatActivity() {
                             onToggleFavorite = controller::onToggleFavorite,
                             onFooterHomeClick = controller::onFooterHomeClick,
                             onFooterChatClick = { navigator.navigateToChat() },
+                            onFooterHeadsUpClick = { navController.navigate("headsup") },
                             onFooterSOSClick = controller::onFooterSOSClick,
                             onFooterProfileClick = controller::onFooterProfileClick,
                             onXCardClick = controller::onXCardClick,
@@ -633,6 +634,33 @@ class HomeActivity : AppCompatActivity() {
                             navController = navController,
                             onBackPressed = chatController::onBackPressed,
                             showBottomBar = true,
+                        )
+                    }
+
+                    // Add HeadsUp screen composable
+                    composable(
+                        route = "headsup",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                    ) {
+                        HeadsUpScreen(
+                            footerNavigation = controller.model.footerNavigation,
+                            isUsingPrideIcon = controller.isUsingPrideIcon(),
+                            onFooterHomeClick = { navController.navigate("home") },
+                            onFooterChatClick = { navController.navigate("chat") },
+                            onFooterHeadsUpClick = { /* Already on HeadsUp */ },
+                            onFooterSOSClick = { navController.navigate("sos") },
+                            onFooterProfileClick = { navController.navigate("profile") },
                         )
                     }
 
@@ -923,6 +951,7 @@ class HomeActivity : AppCompatActivity() {
                                 ),
                             onFooterHomeClick = { navController.navigate("home") },
                             onFooterChatClick = { navigator.navigateToChat() },
+                            onFooterHeadsUpClick = { navController.navigate("headsup") },
                             onFooterSOSClick = { navController.navigate("sos") },
                             onFooterProfileClick = { /* Already on Profile screen */ },
                         )
@@ -1111,6 +1140,9 @@ class HomeActivity : AppCompatActivity() {
                                 },
                                 onFooterChatClick = {
                                     navigator.navigateToChat()
+                                },
+                                onFooterHeadsUpClick = {
+                                    navController.navigate("headsup")
                                 },
                                 onFooterSOSClick = {
                                     // Already on SOS screen, do nothing

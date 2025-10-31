@@ -280,6 +280,7 @@ fun ChatScreen(
                         ChatBottomNavigationBar(
                             onHomeClick = { navController.navigate("home") },
                             onChatClick = { /* Already on Chat screen */ },
+                            onHeadsUpClick = { navController.navigate("headsup") },
                             onSOSClick = { navController.navigate("sos") },
                             onProfileClick = { navController.navigate("profile") },
                             isUsingPrideIcon = isUsingPrideIcon,

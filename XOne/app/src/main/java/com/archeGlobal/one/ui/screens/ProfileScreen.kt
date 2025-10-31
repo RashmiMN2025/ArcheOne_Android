@@ -58,6 +58,7 @@ fun ProfileScreen(
     footerNavigation: FooterNavigationModel = FooterNavigationModel(showProfile = true),
     onFooterHomeClick: () -> Unit = { controller.onBackPressed() },
     onFooterChatClick: () -> Unit = {},
+    onFooterHeadsUpClick: () -> Unit = {},
     onFooterSOSClick: () -> Unit = {},
     onFooterProfileClick: () -> Unit = {},
 ) {
@@ -132,6 +133,7 @@ fun ProfileScreen(
             footerNavigation = footerNavigation,
             onFooterHomeClick = onFooterHomeClick,
             onFooterChatClick = onFooterChatClick,
+            onFooterHeadsUpClick = onFooterHeadsUpClick,
             onFooterSOSClick = onFooterSOSClick,
             onFooterProfileClick = onFooterProfileClick,
         ) {

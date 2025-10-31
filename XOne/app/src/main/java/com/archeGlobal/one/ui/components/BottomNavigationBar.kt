@@ -1,6 +1,7 @@
 package com.archeGlobal.one.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,7 @@ fun BottomNavigationBar(
     isUsingPrideIcon: Boolean,
     onHomeClick: () -> Unit,
     onChatClick: () -> Unit,
+    onHeadsUpClick: () -> Unit,
     onSOSClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -123,6 +125,44 @@ fun BottomNavigationBar(
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
                             color = if (model.showChat) selectedColor else unselectedColor,
+                        )
+                    }
+                }
+            },
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor,
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor,
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
+        )
+
+        // Heads Up item
+        NavigationBarItem(
+            selected = model.showHeadsUp,
+            onClick = onHeadsUpClick,
+            icon = {
+                CompositionLocalProvider(LocalContentColor provides if (model.showHeadsUp) selectedColor else unselectedColor) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(top = 4.dp),
+                    ) {
+                        Icon(
+                            painterResource(id = R.drawable.headsup),
+                            contentDescription = "Heads Up",
+                            modifier = Modifier.size(24.dp),
+                            tint = if (model.showHeadsUp) selectedColor else unselectedColor,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Heads Up",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = if (model.showHeadsUp) selectedColor else unselectedColor,
                         )
                     }
                 }
