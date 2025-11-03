@@ -1,5 +1,4 @@
 package com.archeGlobal.one.ui.screens
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -120,7 +119,7 @@ fun HeadsUpScreen(
                 onClick = { showNewPostDialog = true },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(bottom = 100.dp, end = 24.dp),
+                    .padding(bottom = 40.dp, end = 24.dp),
                 containerColor = Color(0xFFDD3825),
                 contentColor = Color.White,
                 shape = RoundedCornerShape(50)

@@ -32,7 +32,7 @@ fun NewPostDialog(
     onSubmit: (title: String, description: String, category: String) -> Unit,
 ) {
     var postType by remember { mutableStateOf("Planned") }
-    var postSubject by remember { mutableStateOf("Townhalls or leadership visits") }
+    var postSubject by remember { mutableStateOf("Select Post Subject") }
     var postPriority by remember { mutableStateOf("Select Post Priority") }
     var postGroup by remember { mutableStateOf("Employee-based") }
     var employee by remember { mutableStateOf("") }
@@ -45,10 +45,46 @@ fun NewPostDialog(
     var endDurationTime by remember { mutableStateOf("") }
     var supportChannelDetails by remember { mutableStateOf("") }
 
-    val postTypes = listOf("Planned", "Unplanned", "Emergency")
-    val postSubjects = listOf("Townhalls or leadership visits", "General Announcement", "Event", "Update", "News")
+    val postTypes = listOf("Planned", "Unplanned/Emergency")
+
+    val plannedSubjects = listOf(
+        "Housekeeping schedule",
+        "Pest control or deep cleaning activities",
+        "Pantry & cafeteria updates",
+        "Air conditioning or lighting maintenance",
+        "Fire drills or emergency activities",
+        "Lost & found notifications",
+        "Security protocol reminders",
+        "Access restriction or badge issues",
+        "Lift/escalator maintenance",
+        "Parking space updates",
+        "Delivery or courier notifications",
+        "Clean desk policy reminders",
+        "Power outage or generator testing",
+        "Visitor on floor alerts",
+        "Noise level reminders",
+        "Seating arrangement changes"
+    )
+
+    val unplannedSubjects = listOf(
+        "Air conditioning/lighting maintenance",
+        "Pantry & cafeteria update",
+        "Fire drills/emergency",
+        "Lost & found",
+        "Lift/escalator maintenance",
+        "Delivery or courier notification",
+        "Power outage/generator testing",
+        "Noise level reminder"
+    )
+
+    val postSubjects = if (postType == "Planned") plannedSubjects else unplannedSubjects
     val postPriorities = listOf("High", "Medium", "Low")
     val postGroups = listOf("Employee-based", "Department-based", "Location-based", "All")
+
+    // Reset post subject when post type changes
+    LaunchedEffect(postType) {
+        postSubject = "Select Post Subject"
+    }
 
     val scrollState = rememberScrollState()
     val showCloseButton by remember {
@@ -306,6 +342,7 @@ fun NewPostDialog(
                             .fillMaxWidth()
                             .height(52.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.White,
                             contentColor = Color(0xFF0066FF),
                         ),
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color.Transparent),
@@ -341,6 +378,8 @@ fun NewPostDialog(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = PrimaryRed,
                             contentColor = Color.White,
+                            disabledContainerColor = PrimaryRed,
+                            disabledContentColor = Color.White,
                         ),
                         shape = RoundedCornerShape(12.dp),
                         enabled = announcementDescription.isNotBlank(),
