@@ -63,7 +63,7 @@ fun TodoScreen(
     val isPastDay = controller.model.selectedDay < currentDayOfWeek
     val context = LocalContext.current
 
-    val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+    val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
     LaunchedEffect(tasksForSelectedDay.size, controller.model.selectedDay) {
         // If there are no tasks, clear newTask

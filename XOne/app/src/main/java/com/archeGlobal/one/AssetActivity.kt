@@ -21,16 +21,6 @@ class AssetActivity : ComponentActivity() {
         // Load asset data immediately when AssetActivity is created
         controller.onServiceAccessed()
 
-        // Handle back gesture and back button
-//        onBackPressedDispatcher.addCallback(
-//            this,
-//            object : OnBackPressedCallback(true) {
-//                override fun handleOnBackPressed() {
-//                    controller.onBackPressed()
-//                }
-//            }
-//        )
-
         setContent {
             XOneTheme {
                 AssetScreen(

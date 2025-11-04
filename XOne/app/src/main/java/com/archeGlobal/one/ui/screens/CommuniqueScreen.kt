@@ -293,7 +293,7 @@ fun CommuniqueScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center,
                     ) {
-                        CircularProgressIndicator()
+                        UniversalLoader(isLoading = true)
                     }
                 } else {
                     if (filteredCommuniques.isEmpty()) {

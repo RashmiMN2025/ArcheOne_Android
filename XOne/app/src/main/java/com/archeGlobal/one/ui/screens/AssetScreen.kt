@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Text
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,9 +19,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.archeGlobal.one.AssetITAdminActivity
+import com.archeGlobal.one.MeetingHistoryActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.AssetController
 import com.archeGlobal.one.model.AssetDetails
@@ -35,6 +40,8 @@ fun AssetScreen(
     controller: AssetController,
     onBackPressed: () -> Unit,
 ) {
+    val context = LocalContext.current
+
     Box(
         modifier =
             Modifier
@@ -94,6 +101,8 @@ fun AssetScreen(
                             text = "Track Tickets",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
+                            color = Color(0xFFDD3825),
+                            fontSize = 14.sp
                         )
                     }
                 },
@@ -137,14 +146,45 @@ fun AssetScreen(
                                         .verticalScroll(rememberScrollState()),
                             ) {
                                 // User Information Section
-                                Text(
-                                    "User Information",
-                                    fontSize = 20.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 16.dp),
-                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "User Information",
+                                        fontSize = 20.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Black,
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(context, AssetITAdminActivity::class.java)
+                                            context.startActivity(intent)
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFFDD3825),
+                                            contentColor = Color.White
+                                        ),
+                                        shape = RoundedCornerShape(18.dp),
+                                        modifier = Modifier
+                                            .height(35.dp)
+                                    ) {
+                                        Text(
+                                            text =  "Admin Dashboard",
+                                            fontSize = 12.sp,
+                                            color = Color.White,
+                                            textAlign = TextAlign.Center,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
 
                                 InfoRow("Name:", model.name)
                                 InfoRow("Employee ID:", model.employeeId)
@@ -207,7 +247,7 @@ fun AssetScreen(
                                             painter = painterResource(id = R.drawable.info),
                                             contentDescription = "Information",
                                             tint = Color(0xFFE94235),
-                                            modifier = Modifier.size(24.dp),
+                                            modifier = Modifier.size(22.dp),
                                         )
                                         Spacer(modifier = Modifier.width(16.dp))
                                         Text(
@@ -216,6 +256,7 @@ fun AssetScreen(
                                             fontSize = 16.sp,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
+                                            lineHeight = 22.sp,
                                         )
                                     }
                                 }

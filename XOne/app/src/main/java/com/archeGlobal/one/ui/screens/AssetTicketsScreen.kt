@@ -33,12 +33,11 @@ import androidx.compose.material.Text
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.Modifier as ComposeModifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AssetITAdminScreen(
-    items : List<AssetAdminItem>,
+fun AssetTicketsScreen(
+    items : List<AssetTicketsItem>,
     onBackPressed: () -> Unit,
     onItemClick: (String) -> Unit,
 ) {
@@ -61,7 +60,10 @@ fun AssetITAdminScreen(
                     )
                 )
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
 
                 TopAppBar(
                     title = {
@@ -71,7 +73,7 @@ fun AssetITAdminScreen(
                         ) {
                             Text(
                                 modifier = Modifier.offset(x = 5.dp),
-                                text = "IT Admin Dashboard",
+                                text = "Asset Tickets",
                                 color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
@@ -109,7 +111,7 @@ fun AssetITAdminScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         items(items) { item ->
-                            AssetAdminCard(
+                            AssetTickets(
                                 item = item,
                                 onClick = { onItemClick(item.name) }
                             )
@@ -123,8 +125,8 @@ fun AssetITAdminScreen(
 }
 
 @Composable
-fun AssetAdminCard (
-    item: AssetAdminItem,
+fun AssetTickets (
+    item: AssetTicketsItem,
     onClick: () -> Unit,
 ) {
     Card(
@@ -192,36 +194,36 @@ fun AssetAdminCard (
     }
 }
 
-data class AssetAdminItem(
+data class AssetTicketsItem(
     val name: String,
     val description: String,
     val image: String
 )
 
-fun assetAdminItem(): List<AssetAdminItem> =
+fun assetTicketsItem(): List<AssetTicketsItem> =
     listOf(
-        AssetAdminItem(
-            name = "Asset Inventory",
-            description = "View and assign asset inventory",
-            image = "ic_inventory"
+        AssetTicketsItem(
+            name = "Open Tickets",
+            description = "Count: 10",
+            image = "ic_open_ticket"
         ),
-        AssetAdminItem(
-            name = "Tickets",
-            description = "Manage and track asset tickets",
-            image = "ic_order_received"
+        AssetTicketsItem(
+            name = "Closed Tickets",
+            description = "Count: 8",
+            image = "ic_closed_ticket"
         ),
-        AssetAdminItem(
-            name = "Asset Consumption",
-            description = "Check usage and consumption",
-            image = "ic_consumption_report"
+        AssetTicketsItem(
+            name = "In Progress Tickets",
+            description = "Count: 6",
+            image = "ic_progress_ticket"
         )
     )
 
 @Composable
 private fun getIcon (image: String): Int =
     when (image) {
-        "ic_inventory" -> R.drawable.inventory
-        "ic_order_received" -> R.drawable.order_received
-        "ic_consumption_report" -> R.drawable.consumption_report
+        "ic_open_ticket" -> R.drawable.inventory
+        "ic_closed_ticket" -> R.drawable.approved
+        "ic_progress_ticket" -> R.drawable.mrrompending
         else -> R.drawable.ic_file
     }

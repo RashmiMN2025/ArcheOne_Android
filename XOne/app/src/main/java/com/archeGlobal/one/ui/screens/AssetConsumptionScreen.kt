@@ -37,8 +37,8 @@ import androidx.compose.ui.Modifier as ComposeModifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AssetITAdminScreen(
-    items : List<AssetAdminItem>,
+fun AssetConsumptionScreen(
+    items : List<AssetConsumptionItem>,
     onBackPressed: () -> Unit,
     onItemClick: (String) -> Unit,
 ) {
@@ -71,7 +71,7 @@ fun AssetITAdminScreen(
                         ) {
                             Text(
                                 modifier = Modifier.offset(x = 5.dp),
-                                text = "IT Admin Dashboard",
+                                text = "Asset Consumption",
                                 color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
@@ -109,7 +109,7 @@ fun AssetITAdminScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         items(items) { item ->
-                            AssetAdminCard(
+                            AssetConsumption(
                                 item = item,
                                 onClick = { onItemClick(item.name) }
                             )
@@ -123,8 +123,8 @@ fun AssetITAdminScreen(
 }
 
 @Composable
-fun AssetAdminCard (
-    item: AssetAdminItem,
+fun AssetConsumption (
+    item: AssetConsumptionItem,
     onClick: () -> Unit,
 ) {
     Card(
@@ -192,36 +192,36 @@ fun AssetAdminCard (
     }
 }
 
-data class AssetAdminItem(
+data class AssetConsumptionItem(
     val name: String,
     val description: String,
     val image: String
 )
 
-fun assetAdminItem(): List<AssetAdminItem> =
+fun assetConsumptionItem(): List<AssetConsumptionItem> =
     listOf(
-        AssetAdminItem(
-            name = "Asset Inventory",
-            description = "View and assign asset inventory",
-            image = "ic_inventory"
+        AssetConsumptionItem(
+            name = "Tagged Assets",
+            description = "View tagged assets",
+            image = "ic_tagged_assets"
         ),
-        AssetAdminItem(
-            name = "Tickets",
-            description = "Manage and track asset tickets",
-            image = "ic_order_received"
+        AssetConsumptionItem(
+            name = "Download Reports",
+            description = "Download asset reports",
+            image = "ic_download_reports"
         ),
-        AssetAdminItem(
-            name = "Asset Consumption",
-            description = "Check usage and consumption",
-            image = "ic_consumption_report"
+        AssetConsumptionItem(
+            name = "Bulk Upload",
+            description = "Upload assets in bulk",
+            image = "ic_bulk_upload"
         )
     )
 
 @Composable
 private fun getIcon (image: String): Int =
     when (image) {
-        "ic_inventory" -> R.drawable.inventory
-        "ic_order_received" -> R.drawable.order_received
-        "ic_consumption_report" -> R.drawable.consumption_report
+        "ic_tagged_assets" -> R.drawable.list
+        "ic_download_reports" -> R.drawable.download1
+        "ic_bulk_upload" -> R.drawable.share
         else -> R.drawable.ic_file
     }
