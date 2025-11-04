@@ -6,7 +6,9 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -31,7 +33,10 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.controller.SOSController
 import com.archeGlobal.one.model.APIError
+import com.archeGlobal.one.model.DynamicFormFieldValue
 import com.archeGlobal.one.model.SOSRequest
+import com.archeGlobal.one.ui.components.DynamicFormFieldComponent
+import com.archeGlobal.one.ui.components.validateDynamicField
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.delay
@@ -83,6 +88,13 @@ fun RaiseConcernScreen(
     var showAnonymousDialog by remember { mutableStateOf(false) }
     var showTimerDialog by remember { mutableStateOf(false) }
     var timerSeconds by remember { mutableStateOf(20) }
+
+    // Dynamic form fields state
+    val dynamicFormFields by helpDeskController.dynamicFormFields.collectAsState()
+    val dynamicFieldsLoading by helpDeskController.dynamicFieldsLoading.collectAsState()
+    val dynamicFieldsError by helpDeskController.dynamicFieldsError.collectAsState()
+    var dynamicFieldValues by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var dynamicFieldErrors by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
 
     // Get categories based on context
     val helpDeskModel by helpDeskController.model.collectAsState()
@@ -208,6 +220,26 @@ fun RaiseConcernScreen(
         }
     }
 
+    // Load dynamic form fields when category or subcategory changes (only for help desk tickets)
+    LaunchedEffect(selectedCategory, selectedSubcategory) {
+        if (isHelpDeskTicket && selectedCategory != null) {
+            // Clear previous field values and errors
+            dynamicFieldValues = emptyMap()
+            dynamicFieldErrors = emptyMap()
+
+            // Load dynamic fields based on category and subcategory
+            helpDeskController.loadDynamicFormFields(
+                category = selectedCategory!!,
+                subcategory = selectedSubcategory,
+            )
+        } else if (selectedCategory == null) {
+            // Clear dynamic fields when no category is selected
+            helpDeskController.clearDynamicFormFields()
+            dynamicFieldValues = emptyMap()
+            dynamicFieldErrors = emptyMap()
+        }
+    }
+
     // Submit function for help desk tickets (using SOS endpoint, no anonymous option)
     suspend fun submitHelpDeskTicket() {
         if (selectedCategory == null || issueDescription.isBlank()) {
@@ -230,6 +262,30 @@ fun RaiseConcernScreen(
             return
         }
 
+        // Validate dynamic form fields
+        val fieldValidationErrors = mutableMapOf<String, String>()
+        dynamicFormFields.forEach { field ->
+            val value = dynamicFieldValues[field.fieldId] ?: ""
+            val error = validateDynamicField(field, value)
+            if (error != null) {
+                fieldValidationErrors[field.fieldId] = error
+            }
+        }
+
+        if (fieldValidationErrors.isNotEmpty()) {
+            dynamicFieldErrors = fieldValidationErrors
+            Toast
+                .makeText(
+                    context,
+                    "Please fill in all required fields correctly",
+                    Toast.LENGTH_SHORT,
+                ).show()
+            return
+        }
+
+        // Clear any previous validation errors
+        dynamicFieldErrors = emptyMap()
+
         val user = userData
         if (user == null) {
             Toast.makeText(context, "User information not available", Toast.LENGTH_SHORT).show()
@@ -239,6 +295,17 @@ fun RaiseConcernScreen(
         isSubmitting = true
 
         try {
+            // Prepare dynamic field values for submission
+            val dynamicFieldValuesList =
+                dynamicFormFields.map { field ->
+                    DynamicFormFieldValue(
+                        fieldId = field.fieldId,
+                        value = dynamicFieldValues[field.fieldId] ?: "",
+                    )
+                }
+
+            // TODO: When API is ready, replace SOSRequest with DynamicTicketSubmissionRequest
+            // that includes the dynamicFields parameter
             val request =
                 SOSRequest(
                     name = user.name ?: "",
@@ -256,6 +323,10 @@ fun RaiseConcernScreen(
             Log.d("RaiseConcern", "Available Subcategories: ${availableSubcategories}")
             Log.d("RaiseConcern", "Issue Description: '$issueDescription'")
             Log.d("RaiseConcern", "Request subcategory value: '${request.subcategory}'")
+            Log.d("RaiseConcern", "Dynamic Fields Count: ${dynamicFieldValuesList.size}")
+            dynamicFieldValuesList.forEach { fieldValue ->
+                Log.d("RaiseConcern", "  Field ${fieldValue.fieldId}: '${fieldValue.value}'")
+            }
             Log.d("RaiseConcern", "======================================")
 
             val result = sosController.submitEncryptedHelpdeskRequest(request)
@@ -283,6 +354,9 @@ fun RaiseConcernScreen(
                         selectedCategory = null
                         selectedSubcategory = null
                         issueDescription = ""
+                        dynamicFieldValues = emptyMap()
+                        dynamicFieldErrors = emptyMap()
+                        helpDeskController.clearDynamicFormFields()
 
                         // Show timer dialog for helpdesk tickets only
                         showTimerDialog = true
@@ -463,18 +537,20 @@ fun RaiseConcernScreen(
                         ),
                     ),
         ) {
+            val scrollState = rememberScrollState()
+
             Column(
                 modifier =
                     Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
+                        .fillMaxSize(),
             ) {
-                // Top app bar
+                // Top app bar (fixed at top, not scrollable)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier =
                         Modifier
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .padding(16.dp),
                 ) {
                     IconButton(onClick = onBackPressed) {
                         Icon(
@@ -496,7 +572,15 @@ fun RaiseConcernScreen(
                     Spacer(modifier = Modifier.width(48.dp))
                 }
 
-                Spacer(modifier = Modifier.height(30.dp))
+                // Scrollable content
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .padding(horizontal = 16.dp),
+                ) {
+                    Spacer(modifier = Modifier.height(10.dp))
 
                 // Category dropdown (hide when pre-filled from FAQ)
                 if (!isCategoryLocked) {
@@ -758,6 +842,61 @@ fun RaiseConcernScreen(
                     }
                 }
 
+                // Dynamic form fields section
+                if (isHelpDeskTicket && dynamicFormFields.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    dynamicFormFields.forEach { field ->
+                        DynamicFormFieldComponent(
+                            field = field,
+                            value = dynamicFieldValues[field.fieldId] ?: "",
+                            onValueChange = { newValue ->
+                                dynamicFieldValues = dynamicFieldValues.toMutableMap().apply {
+                                    put(field.fieldId, newValue)
+                                }
+                                // Clear error when user starts typing
+                                if (dynamicFieldErrors.containsKey(field.fieldId)) {
+                                    dynamicFieldErrors = dynamicFieldErrors.toMutableMap().apply {
+                                        remove(field.fieldId)
+                                    }
+                                }
+                            },
+                            isError = dynamicFieldErrors.containsKey(field.fieldId),
+                            errorMessage = dynamicFieldErrors[field.fieldId],
+                        )
+                    }
+                }
+
+                // Show loading indicator for dynamic fields
+                if (dynamicFieldsLoading) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color(0xFFD32F2F),
+                        )
+                    }
+                }
+
+                // Show error message for dynamic fields loading
+                if (dynamicFieldsError != null) {
+                    Text(
+                        text = dynamicFieldsError ?: "",
+                        color = Color(0xFFD32F2F),
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 15.dp, vertical = 8.dp),
+                    )
+                }
+
                 // Issue description
                 OutlinedTextField(
                     value = issueDescription,
@@ -837,7 +976,11 @@ fun RaiseConcernScreen(
                         fontFamily = GraphikFontFamily,
                     )
                 }
+
+                // Bottom padding for scrollable content
+                Spacer(modifier = Modifier.height(30.dp))
             }
+        }
 
             // Anonymous submission dialog (only for SOS concerns)
             if (showAnonymousDialog && !isHelpDeskTicket) {

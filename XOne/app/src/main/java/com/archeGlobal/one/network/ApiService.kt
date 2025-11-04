@@ -200,6 +200,11 @@ interface ApiService {
         @Body request: TicketsRequest,
     ): Call<TicketsResponse>
 
+    @POST("helpdesk/dynamic-fields")
+    suspend fun getDynamicFormFields(
+        @Body request: DynamicFormFieldsRequest,
+    ): Response<com.archeGlobal.one.model.DynamicFormFieldsResponse>
+
     @POST("admin/orders")
     fun getOrders(
         @Body request: com.archeGlobal.one.model.OrdersRequest,
@@ -561,6 +566,11 @@ data class TicketItem(
     val closure_comments: String? = null,
     val resolved_time: String? = null,
     val subject: String? = null, // Make subject optional since API doesn't always return it
+)
+
+data class DynamicFormFieldsRequest(
+    val category: String,
+    val subcategory: String? = null,
 )
 
 data class FAQCategory(

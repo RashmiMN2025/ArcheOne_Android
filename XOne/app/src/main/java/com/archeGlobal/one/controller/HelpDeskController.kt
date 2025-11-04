@@ -4,13 +4,18 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.*
 import com.archeGlobal.one.model.*
+import com.archeGlobal.one.network.DynamicFormFieldsRequest
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.network.TicketsRequest
 import com.archeGlobal.one.network.TicketsResponse
 import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -29,6 +34,16 @@ class HelpDeskController(
     // Add navigation trigger counter for auto-refresh
     private val _navigationTrigger = MutableStateFlow(0L)
     val navigationTrigger: StateFlow<Long> = _navigationTrigger.asStateFlow()
+
+    // Dynamic form fields state
+    private val _dynamicFormFields = MutableStateFlow<List<DynamicFormField>>(emptyList())
+    val dynamicFormFields: StateFlow<List<DynamicFormField>> = _dynamicFormFields.asStateFlow()
+
+    private val _dynamicFieldsLoading = MutableStateFlow(false)
+    val dynamicFieldsLoading: StateFlow<Boolean> = _dynamicFieldsLoading.asStateFlow()
+
+    private val _dynamicFieldsError = MutableStateFlow<String?>(null)
+    val dynamicFieldsError: StateFlow<String?> = _dynamicFieldsError.asStateFlow()
 
     fun setNavigationCallback(navCallback: (String) -> Unit) {
         navigate = navCallback
@@ -312,5 +327,232 @@ class HelpDeskController(
     fun onLoginCompleted() {
         Log.d("HelpDeskController", "onLoginCompleted - deprecated, tickets now loaded only when needed")
         // Don't load tickets automatically anymore
+    }
+
+    /**
+     * Mock API for testing dynamic form fields
+     * TODO: Remove this and use real API when backend is ready
+     */
+    private fun getMockDynamicFields(
+        category: String,
+        subcategory: String?,
+    ): List<DynamicFormField> {
+        Log.d("HelpDeskController", "Using MOCK API for category: $category, subcategory: $subcategory")
+
+        return when (category) {
+            "Hardware Issues" -> {
+                when (subcategory) {
+                    "Laptop/Desktop not booting" ->
+                        listOf(
+                            DynamicFormField(
+                                fieldId = "device_type",
+                                fieldName = "Device Type",
+                                fieldType = DynamicFieldType.DROPDOWN,
+                                isRequired = true,
+                                placeholder = "Select device type",
+                                dropdownOptions = listOf("Laptop", "Desktop", "Workstation"),
+                            ),
+                            DynamicFormField(
+                                fieldId = "serial_number",
+                                fieldName = "Serial Number",
+                                fieldType = DynamicFieldType.TEXT,
+                                isRequired = true,
+                                placeholder = "Enter device serial number",
+                                maxLength = 50,
+                                minLength = 5,
+                            ),
+                            DynamicFormField(
+                                fieldId = "error_message",
+                                fieldName = "Error Message (if any)",
+                                fieldType = DynamicFieldType.LONG_TEXT,
+                                isRequired = false,
+                                placeholder = "Describe any error messages you see",
+                                maxLength = 500,
+                            ),
+                            DynamicFormField(
+                                fieldId = "last_working",
+                                fieldName = "Last Working Date",
+                                fieldType = DynamicFieldType.TEXT,
+                                isRequired = false,
+                                placeholder = "e.g., 2025-01-15",
+                            ),
+                        )
+                    "Printer not working" ->
+                        listOf(
+                            DynamicFormField(
+                                fieldId = "printer_model",
+                                fieldName = "Printer Model",
+                                fieldType = DynamicFieldType.TEXT,
+                                isRequired = true,
+                                placeholder = "Enter printer model",
+                            ),
+                            DynamicFormField(
+                                fieldId = "printer_location",
+                                fieldName = "Printer Location",
+                                fieldType = DynamicFieldType.TEXT,
+                                isRequired = true,
+                                placeholder = "e.g., Floor 3, Room 301",
+                            ),
+                            DynamicFormField(
+                                fieldId = "issue_type",
+                                fieldName = "Issue Type",
+                                fieldType = DynamicFieldType.DROPDOWN,
+                                isRequired = true,
+                                dropdownOptions =
+                                    listOf(
+                                        "Not printing",
+                                        "Paper jam",
+                                        "Poor print quality",
+                                        "Network connection issue",
+                                        "Other",
+                                    ),
+                            ),
+                        )
+                    else ->
+                        listOf(
+                            DynamicFormField(
+                                fieldId = "asset_id",
+                                fieldName = "Asset ID",
+                                fieldType = DynamicFieldType.TEXT,
+                                isRequired = false,
+                                placeholder = "Enter asset ID if known",
+                            ),
+                        )
+                }
+            }
+            "Network & Connectivity" ->
+                listOf(
+                    DynamicFormField(
+                        fieldId = "connection_type",
+                        fieldName = "Connection Type",
+                        fieldType = DynamicFieldType.DROPDOWN,
+                        isRequired = true,
+                        dropdownOptions = listOf("WiFi", "Ethernet", "VPN", "Mobile Hotspot"),
+                    ),
+                    DynamicFormField(
+                        fieldId = "location",
+                        fieldName = "Your Location",
+                        fieldType = DynamicFieldType.TEXT,
+                        isRequired = true,
+                        placeholder = "e.g., Office Floor 2",
+                    ),
+                    DynamicFormField(
+                        fieldId = "when_started",
+                        fieldName = "When Did This Start?",
+                        fieldType = DynamicFieldType.TEXT,
+                        isRequired = false,
+                        placeholder = "e.g., This morning, 3 days ago",
+                    ),
+                    DynamicFormField(
+                        fieldId = "troubleshooting_steps",
+                        fieldName = "Troubleshooting Steps Tried",
+                        fieldType = DynamicFieldType.LONG_TEXT,
+                        isRequired = false,
+                        placeholder = "Describe what you've already tried to fix the issue",
+                    ),
+                )
+            "Other Issue" ->
+                listOf(
+                    DynamicFormField(
+                        fieldId = "urgency",
+                        fieldName = "Urgency Level",
+                        fieldType = DynamicFieldType.DROPDOWN,
+                        isRequired = true,
+                        dropdownOptions = listOf("Low", "Medium", "High", "Critical"),
+                    ),
+                    DynamicFormField(
+                        fieldId = "affected_users",
+                        fieldName = "Number of Affected Users",
+                        fieldType = DynamicFieldType.DROPDOWN,
+                        isRequired = false,
+                        dropdownOptions = listOf("Just me", "2-5 people", "6-10 people", "More than 10"),
+                    ),
+                )
+            else ->
+                listOf(
+                    DynamicFormField(
+                        fieldId = "additional_info",
+                        fieldName = "Additional Information",
+                        fieldType = DynamicFieldType.LONG_TEXT,
+                        isRequired = false,
+                        placeholder = "Any additional details that might help us resolve your issue",
+                    ),
+                )
+        }
+    }
+
+    /**
+     * Fetch dynamic form fields for a specific category and optional subcategory
+     * This will be called when a category is selected in the raise ticket form
+     */
+    fun loadDynamicFormFields(
+        category: String,
+        subcategory: String? = null,
+    ) {
+        _dynamicFieldsLoading.value = true
+        _dynamicFieldsError.value = null
+
+        // Use mock API for now - toggle this flag when real API is ready
+        val useMockApi = true
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                if (useMockApi) {
+                    // Simulate network delay
+                    kotlinx.coroutines.delay(800)
+
+                    withContext(Dispatchers.Main) {
+                        val mockFields = getMockDynamicFields(category, subcategory)
+                        _dynamicFormFields.value = mockFields
+                        _dynamicFieldsLoading.value = false
+                        Log.d(
+                            "HelpDeskController",
+                            "Loaded ${mockFields.size} MOCK dynamic fields for category: $category, subcategory: $subcategory",
+                        )
+                    }
+                } else {
+                    // Real API call
+                    val request = DynamicFormFieldsRequest(category = category, subcategory = subcategory)
+                    val response = apiService.getDynamicFormFields(request)
+
+                    withContext(Dispatchers.Main) {
+                        if (response.isSuccessful && response.body() != null) {
+                            val fieldsResponse = response.body()!!
+                            if (fieldsResponse.status == 200) {
+                                _dynamicFormFields.value = fieldsResponse.fields
+                                _dynamicFieldsLoading.value = false
+                                Log.d(
+                                    "HelpDeskController",
+                                    "Loaded ${fieldsResponse.fields.size} dynamic fields for category: $category, subcategory: $subcategory",
+                                )
+                            } else {
+                                _dynamicFieldsError.value = fieldsResponse.message ?: "Failed to load form fields"
+                                _dynamicFieldsLoading.value = false
+                                Log.e("HelpDeskController", "API returned non-200 status: ${fieldsResponse.status}")
+                            }
+                        } else {
+                            _dynamicFieldsError.value = "Failed to load form fields: ${response.message()}"
+                            _dynamicFieldsLoading.value = false
+                            Log.e("HelpDeskController", "API call failed: ${response.code()} - ${response.message()}")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _dynamicFieldsError.value = "Error loading form fields: ${e.message}"
+                    _dynamicFieldsLoading.value = false
+                    Log.e("HelpDeskController", "Exception loading dynamic fields", e)
+                }
+            }
+        }
+    }
+
+    /**
+     * Clear dynamic form fields when category changes or form is reset
+     */
+    fun clearDynamicFormFields() {
+        _dynamicFormFields.value = emptyList()
+        _dynamicFieldsError.value = null
+        _dynamicFieldsLoading.value = false
     }
 }

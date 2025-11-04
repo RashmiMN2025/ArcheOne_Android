@@ -75,6 +75,48 @@ fun TicketItem.toSupportTicket(): SupportTicket {
     )
 }
 
+// Dynamic Form Field Models
+enum class DynamicFieldType {
+    TEXT,
+    DROPDOWN,
+    LONG_TEXT,
+}
+
+data class DynamicFormField(
+    val fieldId: String,
+    val fieldName: String,
+    val fieldType: DynamicFieldType,
+    val isRequired: Boolean = false,
+    val placeholder: String? = null,
+    val dropdownOptions: List<String>? = null, // Only for DROPDOWN type
+    val maxLength: Int? = null,
+    val minLength: Int? = null,
+    val validationRegex: String? = null,
+    val errorMessage: String? = null,
+)
+
+data class DynamicFormFieldsResponse(
+    val status: Int,
+    val message: String? = null,
+    val fields: List<DynamicFormField>,
+)
+
+data class DynamicFormFieldValue(
+    val fieldId: String,
+    val value: String,
+)
+
+data class DynamicTicketSubmissionRequest(
+    val name: String,
+    val email: String,
+    val mobile: String,
+    val category: String,
+    val subcategory: String? = null,
+    val query: String, // Main description field
+    val dynamicFields: List<DynamicFormFieldValue>, // Dynamic field values
+    val anonymous: Boolean = false,
+)
+
 // Extension function to convert API FAQ structure to HelpDeskFAQ list
 fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
     val faqs = mutableListOf<HelpDeskFAQ>()
