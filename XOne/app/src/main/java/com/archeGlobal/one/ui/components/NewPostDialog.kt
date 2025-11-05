@@ -31,6 +31,10 @@ fun NewPostDialog(
     onDismiss: () -> Unit,
     onSubmit: (title: String, description: String, category: String) -> Unit,
 ) {
+    // Form type switcher state
+    var formType by remember { mutableStateOf("Post") } // "Post" or "Event"
+
+    // Post form states
     var postType by remember { mutableStateOf("Planned") }
     var postSubject by remember { mutableStateOf("Select Post Subject") }
     var postPriority by remember { mutableStateOf("Select Post Priority") }
@@ -44,6 +48,14 @@ fun NewPostDialog(
     var endDurationDate by remember { mutableStateOf("") }
     var endDurationTime by remember { mutableStateOf("") }
     var supportChannelDetails by remember { mutableStateOf("") }
+
+    // Event form states
+    var eventTitle by remember { mutableStateOf("") }
+    var eventDate by remember { mutableStateOf("") }
+    var eventFromDate by remember { mutableStateOf("") }
+    var eventToDate by remember { mutableStateOf("") }
+    var eventDescription by remember { mutableStateOf("") }
+    var eventImage by remember { mutableStateOf("") }
 
     val postTypes = listOf("Planned", "Unplanned/Emergency")
 
@@ -116,13 +128,57 @@ fun NewPostDialog(
 
                 // Title
                 Text(
-                    text = "Create Post",
+                    text = if (formType == "Post") "Create Post" else "Create Event",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 25.sp,
                     color = Color.Black,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp),
                 )
+
+                // Form Type Switcher
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Button(
+                        onClick = { formType = "Post" },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (formType == "Post") PrimaryRed else Color.White,
+                            contentColor = if (formType == "Post") Color.White else Color.Black,
+                        ),
+                        shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp, topEnd = 0.dp, bottomEnd = 0.dp),
+                    ) {
+                        Text(
+                            text = "Create Post",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp,
+                        )
+                    }
+
+                    Button(
+                        onClick = { formType = "Event" },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (formType == "Event") PrimaryRed else Color.White,
+                            contentColor = if (formType == "Event") Color.White else Color.Black,
+                        ),
+                        shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp),
+                    ) {
+                        Text(
+                            text = "Create Event",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Content
                 Column(
@@ -132,273 +188,64 @@ fun NewPostDialog(
                 ) {
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Post Type Dropdown
-                    PostDropdown(
-                        label = "Post Type",
-                        selectedValue = postType,
-                        options = postTypes,
-                        onValueSelected = { postType = it },
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Post Subject Dropdown
-                    PostDropdown(
-                        label = "Post Subject",
-                        selectedValue = postSubject,
-                        options = postSubjects,
-                        onValueSelected = { postSubject = it },
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Post Priority Dropdown
-                    PostDropdown(
-                        label = "Post Priority",
-                        selectedValue = postPriority,
-                        options = postPriorities,
-                        onValueSelected = { postPriority = it },
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Post Group Dropdown
-                    PostDropdown(
-                        label = "Post Group",
-                        selectedValue = postGroup,
-                        options = postGroups,
-                        onValueSelected = { postGroup = it },
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Employee Search Field
-                    PostTextField(
-                        label = "Employee",
-                        value = employee,
-                        onValueChange = { employee = it },
-                        placeholder = "Search and Select Employee",
-                        singleLine = true,
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Announcement Description (multiline)
-                    PostTextField(
-                        label = "Announcement Description",
-                        value = announcementDescription,
-                        onValueChange = { announcementDescription = it },
-                        placeholder = "Announcement Description...",
-                        singleLine = false,
-                        minLines = 5,
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Select images to attach button
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .background(
-                                color = Color.White,
-                                shape = RoundedCornerShape(12.dp),
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.ic_gallery),
-                                contentDescription = "Gallery",
-                                tint = Color.Gray,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Select images to attach",
-                                fontFamily = GraphikFontFamily,
-                                fontSize = 16.sp,
-                                color = Color.Gray,
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Post Start Date
-                    PostDateField(
-                        label = "Post Start Date",
-                        value = postStartDate,
-                        onValueChange = { postStartDate = it },
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Post End Date
-                    PostDateField(
-                        label = "Post End Date",
-                        value = postEndDate,
-                        onValueChange = { postEndDate = it },
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Activity Duration Section
-                    Text(
-                        text = "Activity Duration",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp,
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 12.dp),
-                    )
-
-                    // Start Duration
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Start Duration",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 14.sp,
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 8.dp),
-                            )
-                            PostDateField(
-                                label = "",
-                                value = startDurationDate,
-                                onValueChange = { startDurationDate = it },
-                                compact = true,
-                            )
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Spacer(modifier = Modifier.height(28.dp))
-                            PostTimeField(
-                                label = "",
-                                value = startDurationTime,
-                                onValueChange = { startDurationTime = it },
-                                compact = true,
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // End Duration
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "End Duration",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 14.sp,
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 8.dp),
-                            )
-                            PostDateField(
-                                label = "",
-                                value = endDurationDate,
-                                onValueChange = { endDurationDate = it },
-                                compact = true,
-                            )
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Spacer(modifier = Modifier.height(28.dp))
-                            PostTimeField(
-                                label = "",
-                                value = endDurationTime,
-                                onValueChange = { endDurationTime = it },
-                                compact = true,
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Support Channel Details (optional)
-                    PostTextField(
-                        label = "Support Channel Details (optional)",
-                        value = supportChannelDetails,
-                        onValueChange = { supportChannelDetails = it },
-                        placeholder = "Support Channel Details (optional)",
-                        singleLine = true,
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Preview Button
-                    OutlinedButton(
-                        onClick = { /* TODO: Preview functionality */ },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.White,
-                            contentColor = Color(0xFF0066FF),
-                        ),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Transparent),
-                        shape = RoundedCornerShape(12.dp),
-                    ) {
-                        Icon(
-                            painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.ic_view_eye),
-                            contentDescription = "Preview",
-                            tint = Color(0xFF0066FF),
-                            modifier = Modifier.size(20.dp)
+                    // Show Post Form or Event Form based on formType
+                    if (formType == "Post") {
+                        // POST FORM CONTENT
+                        PostFormContent(
+                            postType = postType,
+                            onPostTypeChange = { postType = it },
+                            postSubject = postSubject,
+                            onPostSubjectChange = { postSubject = it },
+                            postPriority = postPriority,
+                            onPostPriorityChange = { postPriority = it },
+                            postGroup = postGroup,
+                            onPostGroupChange = { postGroup = it },
+                            employee = employee,
+                            onEmployeeChange = { employee = it },
+                            announcementDescription = announcementDescription,
+                            onAnnouncementDescriptionChange = { announcementDescription = it },
+                            postStartDate = postStartDate,
+                            onPostStartDateChange = { postStartDate = it },
+                            postEndDate = postEndDate,
+                            onPostEndDateChange = { postEndDate = it },
+                            startDurationDate = startDurationDate,
+                            onStartDurationDateChange = { startDurationDate = it },
+                            startDurationTime = startDurationTime,
+                            onStartDurationTimeChange = { startDurationTime = it },
+                            endDurationDate = endDurationDate,
+                            onEndDurationDateChange = { endDurationDate = it },
+                            endDurationTime = endDurationTime,
+                            onEndDurationTimeChange = { endDurationTime = it },
+                            supportChannelDetails = supportChannelDetails,
+                            onSupportChannelDetailsChange = { supportChannelDetails = it },
+                            onSubmit = {
+                                if (announcementDescription.isNotBlank()) {
+                                    onSubmit("", announcementDescription, "post")
+                                }
+                            },
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Preview",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
+                    } else {
+                        // EVENT FORM CONTENT
+                        EventFormContent(
+                            eventTitle = eventTitle,
+                            onEventTitleChange = { eventTitle = it },
+                            eventDate = eventDate,
+                            onEventDateChange = { eventDate = it },
+                            eventFromDate = eventFromDate,
+                            onEventFromDateChange = { eventFromDate = it },
+                            eventToDate = eventToDate,
+                            onEventToDateChange = { eventToDate = it },
+                            eventDescription = eventDescription,
+                            onEventDescriptionChange = { eventDescription = it },
+                            eventImage = eventImage,
+                            onEventImageChange = { eventImage = it },
+                            onSubmit = {
+                                if (eventTitle.isNotBlank() && eventDescription.isNotBlank()) {
+                                    onSubmit(eventTitle, eventDescription, "event")
+                                }
+                            },
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Post Button
-                    Button(
-                        onClick = {
-                            if (announcementDescription.isNotBlank()) {
-                                onSubmit("", announcementDescription, "")
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryRed,
-                            contentColor = Color.White,
-                            disabledContainerColor = PrimaryRed,
-                            disabledContentColor = Color.White,
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = announcementDescription.isNotBlank(),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Send,
-                            contentDescription = "Post",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Post",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 18.sp,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
 
@@ -443,6 +290,508 @@ fun NewPostDialog(
             }
         }
     }
+}
+
+@Composable
+private fun PostFormContent(
+    postType: String,
+    onPostTypeChange: (String) -> Unit,
+    postSubject: String,
+    onPostSubjectChange: (String) -> Unit,
+    postPriority: String,
+    onPostPriorityChange: (String) -> Unit,
+    postGroup: String,
+    onPostGroupChange: (String) -> Unit,
+    employee: String,
+    onEmployeeChange: (String) -> Unit,
+    announcementDescription: String,
+    onAnnouncementDescriptionChange: (String) -> Unit,
+    postStartDate: String,
+    onPostStartDateChange: (String) -> Unit,
+    postEndDate: String,
+    onPostEndDateChange: (String) -> Unit,
+    startDurationDate: String,
+    onStartDurationDateChange: (String) -> Unit,
+    startDurationTime: String,
+    onStartDurationTimeChange: (String) -> Unit,
+    endDurationDate: String,
+    onEndDurationDateChange: (String) -> Unit,
+    endDurationTime: String,
+    onEndDurationTimeChange: (String) -> Unit,
+    supportChannelDetails: String,
+    onSupportChannelDetailsChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+) {
+    val postTypes = listOf("Planned", "Unplanned/Emergency")
+
+    val plannedSubjects = listOf(
+        "Housekeeping schedule",
+        "Pest control or deep cleaning activities",
+        "Pantry & cafeteria updates",
+        "Air conditioning or lighting maintenance",
+        "Fire drills or emergency activities",
+        "Lost & found notifications",
+        "Security protocol reminders",
+        "Access restriction or badge issues",
+        "Lift/escalator maintenance",
+        "Parking space updates",
+        "Delivery or courier notifications",
+        "Clean desk policy reminders",
+        "Power outage or generator testing",
+        "Visitor on floor alerts",
+        "Noise level reminders",
+        "Seating arrangement changes"
+    )
+
+    val unplannedSubjects = listOf(
+        "Air conditioning/lighting maintenance",
+        "Pantry & cafeteria update",
+        "Fire drills/emergency",
+        "Lost & found",
+        "Lift/escalator maintenance",
+        "Delivery or courier notification",
+        "Power outage/generator testing",
+        "Noise level reminder"
+    )
+
+    val postSubjects = if (postType == "Planned") plannedSubjects else unplannedSubjects
+    val postPriorities = listOf("High", "Medium", "Low")
+    val postGroups = listOf("Employee-based", "Department-based", "Location-based", "All")
+
+    // Post Type Dropdown
+    PostDropdown(
+        label = "Post Type",
+        selectedValue = postType,
+        options = postTypes,
+        onValueSelected = onPostTypeChange,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Post Subject Dropdown
+    PostDropdown(
+        label = "Post Subject",
+        selectedValue = postSubject,
+        options = postSubjects,
+        onValueSelected = onPostSubjectChange,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Post Priority Dropdown
+    PostDropdown(
+        label = "Post Priority",
+        selectedValue = postPriority,
+        options = postPriorities,
+        onValueSelected = onPostPriorityChange,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Post Group Dropdown
+    PostDropdown(
+        label = "Post Group",
+        selectedValue = postGroup,
+        options = postGroups,
+        onValueSelected = onPostGroupChange,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Employee Search Field
+    PostTextField(
+        label = "Employee",
+        value = employee,
+        onValueChange = onEmployeeChange,
+        placeholder = "Search and Select Employee",
+        singleLine = true,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Announcement Description (multiline)
+    PostTextField(
+        label = "Announcement Description",
+        value = announcementDescription,
+        onValueChange = onAnnouncementDescriptionChange,
+        placeholder = "Announcement Description...",
+        singleLine = false,
+        minLines = 5,
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Select images to attach button
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .background(
+                color = Color.White,
+                shape = RoundedCornerShape(12.dp),
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.ic_gallery),
+                contentDescription = "Gallery",
+                tint = Color.Gray,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Select images to attach",
+                fontFamily = GraphikFontFamily,
+                fontSize = 16.sp,
+                color = Color.Gray,
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Post Start Date
+    PostDateField(
+        label = "Post Start Date",
+        value = postStartDate,
+        onValueChange = onPostStartDateChange,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Post End Date
+    PostDateField(
+        label = "Post End Date",
+        value = postEndDate,
+        onValueChange = onPostEndDateChange,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Activity Duration Section
+    Text(
+        text = "Activity Duration",
+        fontFamily = GraphikFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 16.sp,
+        color = Color.Black,
+        modifier = Modifier.padding(bottom = 12.dp),
+    )
+
+    // Start Duration
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Start Duration",
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            PostDateField(
+                label = "",
+                value = startDurationDate,
+                onValueChange = onStartDurationDateChange,
+                compact = true,
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Spacer(modifier = Modifier.height(28.dp))
+            PostTimeField(
+                label = "",
+                value = startDurationTime,
+                onValueChange = onStartDurationTimeChange,
+                compact = true,
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // End Duration
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "End Duration",
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            PostDateField(
+                label = "",
+                value = endDurationDate,
+                onValueChange = onEndDurationDateChange,
+                compact = true,
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Spacer(modifier = Modifier.height(28.dp))
+            PostTimeField(
+                label = "",
+                value = endDurationTime,
+                onValueChange = onEndDurationTimeChange,
+                compact = true,
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Support Channel Details (optional)
+    PostTextField(
+        label = "Support Channel Details (optional)",
+        value = supportChannelDetails,
+        onValueChange = onSupportChannelDetailsChange,
+        placeholder = "Support Channel Details (optional)",
+        singleLine = true,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Preview Button
+    OutlinedButton(
+        onClick = { /* TODO: Preview functionality */ },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.White,
+            contentColor = Color(0xFF0066FF),
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Transparent),
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Icon(
+            painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.ic_view_eye),
+            contentDescription = "Preview",
+            tint = Color(0xFF0066FF),
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Preview",
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+        )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Post Button
+    Button(
+        onClick = onSubmit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = PrimaryRed,
+            contentColor = Color.White,
+            disabledContainerColor = PrimaryRed,
+            disabledContentColor = Color.White,
+        ),
+        shape = RoundedCornerShape(12.dp),
+        enabled = announcementDescription.isNotBlank(),
+    ) {
+        Icon(
+            imageVector = Icons.Default.Send,
+            contentDescription = "Post",
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Post",
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 18.sp,
+        )
+    }
+
+    Spacer(modifier = Modifier.height(48.dp))
+}
+
+@Composable
+private fun EventFormContent(
+    eventTitle: String,
+    onEventTitleChange: (String) -> Unit,
+    eventDate: String,
+    onEventDateChange: (String) -> Unit,
+    eventFromDate: String,
+    onEventFromDateChange: (String) -> Unit,
+    eventToDate: String,
+    onEventToDateChange: (String) -> Unit,
+    eventDescription: String,
+    onEventDescriptionChange: (String) -> Unit,
+    eventImage: String,
+    onEventImageChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+) {
+    // Event Title
+    PostTextField(
+        label = "Event Title *",
+        value = eventTitle,
+        onValueChange = onEventTitleChange,
+        placeholder = "Enter event title",
+        singleLine = true,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Event Date (single date field - optional)
+    PostDateField(
+        label = "Event Date",
+        value = eventDate,
+        onValueChange = onEventDateChange,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Event Date Range Section
+    Text(
+        text = "Event Date Range",
+        fontFamily = GraphikFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 16.sp,
+        color = Color.Black,
+        modifier = Modifier.padding(bottom = 12.dp),
+    )
+
+    // From Date
+    PostDateField(
+        label = "From Date",
+        value = eventFromDate,
+        onValueChange = onEventFromDateChange,
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // To Date
+    PostDateField(
+        label = "To Date",
+        value = eventToDate,
+        onValueChange = onEventToDateChange,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Event Description
+    PostTextField(
+        label = "Event Description *",
+        value = eventDescription,
+        onValueChange = onEventDescriptionChange,
+        placeholder = "Enter event description...",
+        singleLine = false,
+        minLines = 5,
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Select event image button
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .background(
+                color = Color.White,
+                shape = RoundedCornerShape(12.dp),
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.ic_gallery),
+                contentDescription = "Gallery",
+                tint = Color.Gray,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Select event image",
+                fontFamily = GraphikFontFamily,
+                fontSize = 16.sp,
+                color = Color.Gray,
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Preview Button
+    OutlinedButton(
+        onClick = { /* TODO: Preview functionality */ },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.White,
+            contentColor = Color(0xFF0066FF),
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Transparent),
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Icon(
+            painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.ic_view_eye),
+            contentDescription = "Preview",
+            tint = Color(0xFF0066FF),
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Preview",
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+        )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Create Event Button
+    Button(
+        onClick = onSubmit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = PrimaryRed,
+            contentColor = Color.White,
+            disabledContainerColor = PrimaryRed,
+            disabledContentColor = Color.White,
+        ),
+        shape = RoundedCornerShape(12.dp),
+        enabled = eventTitle.isNotBlank() && eventDescription.isNotBlank(),
+    ) {
+        Icon(
+            imageVector = Icons.Default.Send,
+            contentDescription = "Create Event",
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Create Event",
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 18.sp,
+        )
+    }
+
+    Spacer(modifier = Modifier.height(48.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
