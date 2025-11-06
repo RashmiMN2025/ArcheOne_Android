@@ -1,7 +1,12 @@
 package com.archeGlobal.one.ui.components
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -16,12 +21,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 
@@ -50,12 +58,13 @@ fun NewPostDialog(
     var supportChannelDetails by remember { mutableStateOf("") }
 
     // Event form states
-    var eventTitle by remember { mutableStateOf("") }
-    var eventDate by remember { mutableStateOf("") }
-    var eventFromDate by remember { mutableStateOf("") }
-    var eventToDate by remember { mutableStateOf("") }
+    var eventSubject by remember { mutableStateOf("") }
     var eventDescription by remember { mutableStateOf("") }
-    var eventImage by remember { mutableStateOf("") }
+    var eventImageUri by remember { mutableStateOf<Uri?>(null) }
+    var eventDate by remember { mutableStateOf("") }
+    var eventStartDate by remember { mutableStateOf("") }
+    var eventEndDate by remember { mutableStateOf("") }
+    var showEventPreview by remember { mutableStateOf(false) }
 
     val postTypes = listOf("Planned", "Unplanned/Emergency")
 
@@ -227,21 +236,22 @@ fun NewPostDialog(
                     } else {
                         // EVENT FORM CONTENT
                         EventFormContent(
-                            eventTitle = eventTitle,
-                            onEventTitleChange = { eventTitle = it },
-                            eventDate = eventDate,
-                            onEventDateChange = { eventDate = it },
-                            eventFromDate = eventFromDate,
-                            onEventFromDateChange = { eventFromDate = it },
-                            eventToDate = eventToDate,
-                            onEventToDateChange = { eventToDate = it },
+                            eventSubject = eventSubject,
+                            onEventSubjectChange = { eventSubject = it },
                             eventDescription = eventDescription,
                             onEventDescriptionChange = { eventDescription = it },
-                            eventImage = eventImage,
-                            onEventImageChange = { eventImage = it },
+                            eventImageUri = eventImageUri,
+                            onEventImageUriChange = { eventImageUri = it },
+                            eventDate = eventDate,
+                            onEventDateChange = { eventDate = it },
+                            eventStartDate = eventStartDate,
+                            onEventStartDateChange = { eventStartDate = it },
+                            eventEndDate = eventEndDate,
+                            onEventEndDateChange = { eventEndDate = it },
+                            onPreview = { showEventPreview = true },
                             onSubmit = {
-                                if (eventTitle.isNotBlank() && eventDescription.isNotBlank()) {
-                                    onSubmit(eventTitle, eventDescription, "event")
+                                if (eventSubject.isNotBlank() && eventDescription.isNotBlank()) {
+                                    onSubmit(eventSubject, eventDescription, "event")
                                 }
                             },
                         )
@@ -288,6 +298,19 @@ fun NewPostDialog(
                     }
                 }
             }
+        }
+
+        // Show Event Preview Dialog
+        if (showEventPreview) {
+            EventPreviewDialog(
+                eventSubject = eventSubject,
+                eventDescription = eventDescription,
+                eventImageUri = eventImageUri,
+                eventDate = eventDate,
+                eventStartDate = eventStartDate,
+                eventEndDate = eventEndDate,
+                onDismiss = { showEventPreview = false }
+            )
         }
     }
 }
@@ -625,81 +648,53 @@ private fun PostFormContent(
 
 @Composable
 private fun EventFormContent(
-    eventTitle: String,
-    onEventTitleChange: (String) -> Unit,
-    eventDate: String,
-    onEventDateChange: (String) -> Unit,
-    eventFromDate: String,
-    onEventFromDateChange: (String) -> Unit,
-    eventToDate: String,
-    onEventToDateChange: (String) -> Unit,
+    eventSubject: String,
+    onEventSubjectChange: (String) -> Unit,
     eventDescription: String,
     onEventDescriptionChange: (String) -> Unit,
-    eventImage: String,
-    onEventImageChange: (String) -> Unit,
+    eventImageUri: Uri?,
+    onEventImageUriChange: (Uri?) -> Unit,
+    eventDate: String,
+    onEventDateChange: (String) -> Unit,
+    eventStartDate: String,
+    onEventStartDateChange: (String) -> Unit,
+    eventEndDate: String,
+    onEventEndDateChange: (String) -> Unit,
+    onPreview: () -> Unit,
     onSubmit: () -> Unit,
 ) {
-    // Event Title
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            onEventImageUriChange(it)
+        }
+    }
+    // Post Subject (Event Subject)
     PostTextField(
-        label = "Event Title *",
-        value = eventTitle,
-        onValueChange = onEventTitleChange,
-        placeholder = "Enter event title",
+        label = "Post Subject",
+        value = eventSubject,
+        onValueChange = onEventSubjectChange,
+        placeholder = "Enter Subject",
         singleLine = true,
     )
 
     Spacer(modifier = Modifier.height(24.dp))
 
-    // Event Date (single date field - optional)
-    PostDateField(
-        label = "Event Date",
-        value = eventDate,
-        onValueChange = onEventDateChange,
-    )
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    // Event Date Range Section
-    Text(
-        text = "Event Date Range",
-        fontFamily = GraphikFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 16.sp,
-        color = Color.Black,
-        modifier = Modifier.padding(bottom = 12.dp),
-    )
-
-    // From Date
-    PostDateField(
-        label = "From Date",
-        value = eventFromDate,
-        onValueChange = onEventFromDateChange,
-    )
-
-    Spacer(modifier = Modifier.height(16.dp))
-
-    // To Date
-    PostDateField(
-        label = "To Date",
-        value = eventToDate,
-        onValueChange = onEventToDateChange,
-    )
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    // Event Description
+    // Post Description (Event Description)
     PostTextField(
-        label = "Event Description *",
+        label = "Post Description",
         value = eventDescription,
         onValueChange = onEventDescriptionChange,
-        placeholder = "Enter event description...",
+        placeholder = "Enter post description...",
         singleLine = false,
         minLines = 5,
     )
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    // Select event image button
+    // Select image to attach button
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -707,7 +702,8 @@ private fun EventFormContent(
             .background(
                 color = Color.White,
                 shape = RoundedCornerShape(12.dp),
-            ),
+            )
+            .clickable { imagePickerLauncher.launch("image/*") },
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -722,7 +718,7 @@ private fun EventFormContent(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Select event image",
+                text = "Select image to attach",
                 fontFamily = GraphikFontFamily,
                 fontSize = 16.sp,
                 color = Color.Gray,
@@ -730,11 +726,94 @@ private fun EventFormContent(
         }
     }
 
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Attached Photo Section
+    eventImageUri?.let { uri ->
+        Text(
+            text = "Attached Photo",
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 12.dp),
+        )
+
+        // Single image preview
+        Box(
+            modifier = Modifier
+                .width(120.dp)
+                .height(180.dp)
+        ) {
+            Card(
+                modifier = Modifier.fillMaxSize(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(uri),
+                    contentDescription = "Attached Image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            // Remove image button (X)
+            IconButton(
+                onClick = {
+                    onEventImageUriChange(null)
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+                    .size(28.dp)
+                    .background(
+                        color = PrimaryRed,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Remove Image",
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+
+    // Event Date
+    PostDateField(
+        label = "Event Date",
+        value = eventDate,
+        onValueChange = onEventDateChange,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Post Start Date
+    PostDateField(
+        label = "Post Start Date",
+        value = eventStartDate,
+        onValueChange = onEventStartDateChange,
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Post End Date
+    PostDateField(
+        label = "Post End Date",
+        value = eventEndDate,
+        onValueChange = onEventEndDateChange,
+    )
+
     Spacer(modifier = Modifier.height(24.dp))
 
     // Preview Button
     OutlinedButton(
-        onClick = { /* TODO: Preview functionality */ },
+        onClick = onPreview,
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp),
@@ -771,11 +850,11 @@ private fun EventFormContent(
         colors = ButtonDefaults.buttonColors(
             containerColor = PrimaryRed,
             contentColor = Color.White,
-            disabledContainerColor = PrimaryRed,
+            disabledContainerColor = Color.Gray,
             disabledContentColor = Color.White,
         ),
         shape = RoundedCornerShape(12.dp),
-        enabled = eventTitle.isNotBlank() && eventDescription.isNotBlank(),
+        enabled = eventSubject.isNotBlank() && eventDescription.isNotBlank(),
     ) {
         Icon(
             imageVector = Icons.Default.Send,
@@ -1096,5 +1175,148 @@ private fun getMonthName(month: Int): String {
         10 -> "November"
         11 -> "December"
         else -> ""
+    }
+}
+
+@Composable
+private fun EventPreviewDialog(
+    eventSubject: String,
+    eventDescription: String,
+    eventImageUri: Uri?,
+    eventDate: String,
+    eventStartDate: String,
+    eventEndDate: String,
+    onDismiss: () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+        ),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .wrapContentHeight(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF0EBE3)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Event Image
+                    eventImageUri?.let { uri ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                        ) {
+                            Image(
+                                painter = rememberAsyncImagePainter(uri),
+                                contentDescription = "Event Image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+
+                    // Event Title/Subject
+                    Text(
+                        text = eventSubject.ifEmpty { "Event Title" },
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Event Date
+                    if (eventDate.isNotEmpty()) {
+                        Text(
+                            text = eventDate,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp,
+                            color = Color.Black.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    // Start and End Dates
+                    if (eventStartDate.isNotEmpty() && eventEndDate.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Text(
+                                text = "Start: $eventStartDate",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 14.sp,
+                                color = Color.Black.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                text = "End: $eventEndDate",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 14.sp,
+                                color = Color.Black.copy(alpha = 0.6f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    // Event Description
+                    if (eventDescription.isNotEmpty()) {
+                        Text(
+                            text = eventDescription,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 22.sp
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+
+                    // Close Button
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PrimaryRed,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "Close",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
+            }
+        }
     }
 }
