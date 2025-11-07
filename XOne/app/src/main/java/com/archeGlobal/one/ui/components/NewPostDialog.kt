@@ -56,6 +56,8 @@ fun NewPostDialog(
     var endDurationDate by remember { mutableStateOf("") }
     var endDurationTime by remember { mutableStateOf("") }
     var supportChannelDetails by remember { mutableStateOf("") }
+    var postImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var showPostPreview by remember { mutableStateOf(false) }
 
     // Event form states
     var eventSubject by remember { mutableStateOf("") }
@@ -162,7 +164,7 @@ fun NewPostDialog(
                         shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp, topEnd = 0.dp, bottomEnd = 0.dp),
                     ) {
                         Text(
-                            text = "Create Post",
+                            text = "HeadsUp",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 16.sp,
@@ -179,7 +181,7 @@ fun NewPostDialog(
                         shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp),
                     ) {
                         Text(
-                            text = "Create Event",
+                            text = "Home Page",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 16.sp,
@@ -227,6 +229,9 @@ fun NewPostDialog(
                             onEndDurationTimeChange = { endDurationTime = it },
                             supportChannelDetails = supportChannelDetails,
                             onSupportChannelDetailsChange = { supportChannelDetails = it },
+                            postImageUris = postImageUris,
+                            onPostImageUrisChange = { postImageUris = it },
+                            onPreview = { showPostPreview = true },
                             onSubmit = {
                                 if (announcementDescription.isNotBlank()) {
                                     onSubmit("", announcementDescription, "post")
@@ -300,6 +305,27 @@ fun NewPostDialog(
             }
         }
 
+        // Show Post Preview Dialog
+        if (showPostPreview) {
+            PostPreviewDialog(
+                postType = postType,
+                postSubject = postSubject,
+                postPriority = postPriority,
+                postGroup = postGroup,
+                employee = employee,
+                announcementDescription = announcementDescription,
+                postStartDate = postStartDate,
+                postEndDate = postEndDate,
+                startDurationDate = startDurationDate,
+                startDurationTime = startDurationTime,
+                endDurationDate = endDurationDate,
+                endDurationTime = endDurationTime,
+                supportChannelDetails = supportChannelDetails,
+                postImageUris = postImageUris,
+                onDismiss = { showPostPreview = false }
+            )
+        }
+
         // Show Event Preview Dialog
         if (showEventPreview) {
             EventPreviewDialog(
@@ -343,6 +369,9 @@ private fun PostFormContent(
     onEndDurationTimeChange: (String) -> Unit,
     supportChannelDetails: String,
     onSupportChannelDetailsChange: (String) -> Unit,
+    postImageUris: List<Uri>,
+    onPostImageUrisChange: (List<Uri>) -> Unit,
+    onPreview: () -> Unit,
     onSubmit: () -> Unit,
 ) {
     val postTypes = listOf("Planned", "Unplanned/Emergency")
@@ -379,7 +408,16 @@ private fun PostFormContent(
 
     val postSubjects = if (postType == "Planned") plannedSubjects else unplannedSubjects
     val postPriorities = listOf("High", "Medium", "Low")
-    val postGroups = listOf("Employee-based", "Department-based", "Location-based", "All")
+    val postGroups = listOf("Employee-based", "Department-based", "Location-based", "Everyone.global")
+
+    // Image picker launcher for multiple images
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            onPostImageUrisChange(postImageUris + it)
+        }
+    }
 
     // Post Type Dropdown
     PostDropdown(
@@ -452,7 +490,8 @@ private fun PostFormContent(
             .background(
                 color = Color.White,
                 shape = RoundedCornerShape(12.dp),
-            ),
+            )
+            .clickable { imagePickerLauncher.launch("image/*") },
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -473,6 +512,73 @@ private fun PostFormContent(
                 color = Color.Gray,
             )
         }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Attached Photos Section
+    if (postImageUris.isNotEmpty()) {
+        Text(
+            text = "Attached Photos",
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 12.dp),
+        )
+
+        // Horizontal scrollable row of images
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            postImageUris.forEach { uri ->
+                Box(
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(180.dp)
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(uri),
+                            contentDescription = "Attached Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    // Remove image button (X)
+                    IconButton(
+                        onClick = {
+                            onPostImageUrisChange(postImageUris.filter { it != uri })
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp)
+                            .size(28.dp)
+                            .background(
+                                color = PrimaryRed,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Remove Image",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
     }
 
     Spacer(modifier = Modifier.height(24.dp))
@@ -586,7 +692,7 @@ private fun PostFormContent(
 
     // Preview Button
     OutlinedButton(
-        onClick = { /* TODO: Preview functionality */ },
+        onClick = onPreview,
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp),
@@ -681,6 +787,31 @@ private fun EventFormContent(
     )
 
     Spacer(modifier = Modifier.height(24.dp))
+
+    // Note about home screen display
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "*",
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 14.sp,
+            color = Color.Red,
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = "This will be displayed on the home screen",
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 14.sp,
+            color = Color.Gray,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+        )
+    }
+
+    Spacer(modifier = Modifier.height(12.dp))
 
     // Post Description (Event Description)
     PostTextField(
@@ -1175,6 +1306,237 @@ private fun getMonthName(month: Int): String {
         10 -> "November"
         11 -> "December"
         else -> ""
+    }
+}
+
+@Composable
+private fun PostPreviewDialog(
+    postType: String,
+    postSubject: String,
+    postPriority: String,
+    postGroup: String,
+    employee: String,
+    announcementDescription: String,
+    postStartDate: String,
+    postEndDate: String,
+    startDurationDate: String,
+    startDurationTime: String,
+    endDurationDate: String,
+    endDurationTime: String,
+    supportChannelDetails: String,
+    postImageUris: List<Uri>,
+    onDismiss: () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+        ),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF6F4EE))
+                .systemBarsPadding(),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+            ) {
+                Spacer(modifier = Modifier.height(60.dp))
+
+                // Header with priority badge
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = "Nova O'Sullivan",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                        color = Color.Black,
+                    )
+
+                    // Priority badge
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = when (postPriority) {
+                                    "High" -> Color(0xFFD32F2F)
+                                    "Medium" -> Color(0xFFFFA726)
+                                    "Low" -> Color(0xFF66BB6A)
+                                    else -> Color.Gray
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = postPriority,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            color = Color.White,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Timestamp
+                Text(
+                    text = "7 Nov 2025 at 2:26 PM",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Post Type and Subject
+                Text(
+                    text = "[$postType] $postSubject · $postGroup",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 16.sp,
+                    color = Color.Black.copy(alpha = 0.7f),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Start and End dates
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (postStartDate.isNotEmpty()) {
+                        Text(
+                            text = "Start: $postStartDate",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp,
+                            color = Color.Black.copy(alpha = 0.6f)
+                        )
+                    }
+                    if (postEndDate.isNotEmpty()) {
+                        Text(
+                            text = "End: $postEndDate",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp,
+                            color = Color.Black.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+
+                if (supportChannelDetails.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Support: $supportChannelDetails",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        color = Color.Black.copy(alpha = 0.6f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Announcement Description
+                Text(
+                    text = announcementDescription.ifEmpty { "No description provided" },
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    lineHeight = 22.sp
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Attached Images
+                if (postImageUris.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        postImageUris.forEach { uri ->
+                            Card(
+                                modifier = Modifier
+                                    .width(120.dp)
+                                    .height(180.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(uri),
+                                    contentDescription = "Attached Image",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                // Close Button
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryRed,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Close",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(48.dp))
+            }
+
+            // Close button at top
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(20.dp)
+                    .size(35.dp)
+                    .background(
+                        color = Color.Gray.copy(alpha = 0.3f),
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(28.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        }
     }
 }
 
