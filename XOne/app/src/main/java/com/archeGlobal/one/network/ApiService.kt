@@ -200,7 +200,7 @@ interface ApiService {
         @Body request: TicketsRequest,
     ): Call<TicketsResponse>
 
-    @POST("helpdesk/dynamic-fields")
+    @POST("helpdsk/dynamic-fields")
     suspend fun getDynamicFormFields(
         @Body request: DynamicFormFieldsRequest,
     ): Response<com.archeGlobal.one.model.DynamicFormFieldsResponse>
@@ -291,7 +291,11 @@ interface ApiService {
         @Body request: EmployeeSearchRequest,
     ): Call<EmployeeSearchResponse>
 
+    @GET("announcements/v1/uniqueLocAndDept")
+    suspend fun getLocationsAndDepartments(): Response<LocationsAndDepartmentsResponse>
 
+    @POST("announcements/v1/createdPosts")
+    suspend fun getCreatedPosts(@Body request: CreatedPostsRequest): Response<CreatedPostsResponse>
 
     // V2 Travel APIs
     @POST("travel/v2/approval-history-count")
@@ -581,6 +585,7 @@ data class FAQCategory(
 data class FAQItem(
     val question: String,
     val answer: List<FAQAnswer>,
+    val dynamicFields: Boolean = false,
 )
 
 data class FAQAnswer(
@@ -716,4 +721,70 @@ data class BookingResponse(
     val status: Int,
     val booking_id: String,
     val message: String
+)
+
+data class LocationsAndDepartmentsResponse(
+    val status: Int,
+    val counts: LocationsAndDepartmentsCounts,
+    val data: LocationsAndDepartmentsData
+)
+
+data class LocationsAndDepartmentsCounts(
+    val departments: Int,
+    val cities: Int,
+    val announcementCategories: Int
+)
+
+data class LocationsAndDepartmentsData(
+    val departments: List<String>,
+    val cities: List<String>,
+    val announcementCategories: List<AnnouncementCategory>
+)
+
+data class AnnouncementCategory(
+    val access: String,
+    val fields: List<AnnouncementField>
+)
+
+data class AnnouncementField(
+    val category: String,
+    val subcategory: List<String>
+)
+
+data class CreatedPostsRequest(
+    val email: String? = null,
+    val target_group: String? = null,
+    val target_department: List<String>? = null,
+    val target_location: List<String>? = null,
+    val target_employee: List<String>? = null
+)
+
+data class CreatedPostsResponse(
+    val status: Int,
+    val posts: List<CreatedPost>
+)
+
+data class CreatedPost(
+    val post_id: String,
+    val user_email: String,
+    val username: String,
+    val emp_id: String,
+    val profile_pic: String?,
+    val post_type: String,
+    val subject: String,
+    val priority: String,
+    val target_group: String,
+    val target_department: List<String>?,
+    val target_location: List<String>?,
+    val target_employee: List<String>?,
+    val description: String,
+    val image_urls: List<String>?,
+    val start_date: String?,
+    val end_date: String?,
+    val event_date: String?,
+    val activity_start: String?,
+    val activity_end: String?,
+    val support_channel: String?,
+    val created_at: String,
+    val updated_at: String?
 )

@@ -49,6 +49,8 @@ fun RaiseConcernScreen(
     source: String = "helpdesk", // Add source parameter to track where we came from
     prefilledCategory: String? = null, // FAQ category to prefill and lock
     prefilledSubcategory: String? = null, // FAQ subcategory to prefill and lock
+    prefilledFaqId: String? = null, // FAQ ID to check if dynamic fields should be loaded
+    helpDeskController: HelpDeskController? = null, // Pass controller from HomeActivity for FAQ lookup
     onNavigateToTrackTickets: ((String) -> Unit)? = null, // Add navigation callback for track tickets
 ) {
     val context = LocalContext.current
@@ -58,7 +60,7 @@ fun RaiseConcernScreen(
     val userDataManager = remember { UserDataManager.getInstance(context) }
     val userData = remember { userDataManager.getUserData() }
     val sosController = remember { SOSController(context.applicationContext as Application) }
-    val helpDeskController = remember { HelpDeskController(context) }
+    val localHelpDeskController = remember { helpDeskController ?: HelpDeskController(context) }
 
     // Determine if this is a help desk ticket or SOS concern
     val isHelpDeskTicket = title.contains("Ticket", ignoreCase = true)
@@ -90,14 +92,14 @@ fun RaiseConcernScreen(
     var timerSeconds by remember { mutableStateOf(20) }
 
     // Dynamic form fields state
-    val dynamicFormFields by helpDeskController.dynamicFormFields.collectAsState()
-    val dynamicFieldsLoading by helpDeskController.dynamicFieldsLoading.collectAsState()
-    val dynamicFieldsError by helpDeskController.dynamicFieldsError.collectAsState()
+    val dynamicFormFields by localHelpDeskController.dynamicFormFields.collectAsState()
+    val dynamicFieldsLoading by localHelpDeskController.dynamicFieldsLoading.collectAsState()
+    val dynamicFieldsError by localHelpDeskController.dynamicFieldsError.collectAsState()
     var dynamicFieldValues by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var dynamicFieldErrors by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
 
     // Get categories based on context
-    val helpDeskModel by helpDeskController.model.collectAsState()
+    val helpDeskModel by localHelpDeskController.model.collectAsState()
     val categories =
         if (isHelpDeskTicket) {
             // Extract categories from help desk FAQ data in their original order
@@ -221,20 +223,38 @@ fun RaiseConcernScreen(
     }
 
     // Load dynamic form fields when category or subcategory changes (only for help desk tickets)
-    LaunchedEffect(selectedCategory, selectedSubcategory) {
+    LaunchedEffect(selectedCategory, selectedSubcategory, prefilledFaqId) {
         if (isHelpDeskTicket && selectedCategory != null) {
-            // Clear previous field values and errors
-            dynamicFieldValues = emptyMap()
-            dynamicFieldErrors = emptyMap()
+            // Check if we should load dynamic fields
+            val shouldLoad = if (prefilledFaqId != null) {
+                // If coming from FAQ, only load if FAQ has dynamicFields = true
+                localHelpDeskController.shouldLoadDynamicFields(prefilledFaqId)
+            } else {
+                // If user manually selected category, always load dynamic fields
+                true
+            }
 
-            // Load dynamic fields based on category and subcategory
-            helpDeskController.loadDynamicFormFields(
-                category = selectedCategory!!,
-                subcategory = selectedSubcategory,
-            )
+            if (shouldLoad) {
+                // Clear previous field values and errors
+                dynamicFieldValues = emptyMap()
+                dynamicFieldErrors = emptyMap()
+
+                // Load dynamic fields based on category and subcategory
+                localHelpDeskController.loadDynamicFormFields(
+                    category = selectedCategory!!,
+                    subcategory = selectedSubcategory,
+                )
+                Log.d("RaiseConcernScreen", "Loading dynamic fields for category: $selectedCategory, subcategory: $selectedSubcategory")
+            } else {
+                // Clear dynamic fields if FAQ doesn't require them
+                localHelpDeskController.clearDynamicFormFields()
+                dynamicFieldValues = emptyMap()
+                dynamicFieldErrors = emptyMap()
+                Log.d("RaiseConcernScreen", "FAQ does not require dynamic fields, skipping load")
+            }
         } else if (selectedCategory == null) {
             // Clear dynamic fields when no category is selected
-            helpDeskController.clearDynamicFormFields()
+            localHelpDeskController.clearDynamicFormFields()
             dynamicFieldValues = emptyMap()
             dynamicFieldErrors = emptyMap()
         }
@@ -356,7 +376,7 @@ fun RaiseConcernScreen(
                         issueDescription = ""
                         dynamicFieldValues = emptyMap()
                         dynamicFieldErrors = emptyMap()
-                        helpDeskController.clearDynamicFormFields()
+                        localHelpDeskController.clearDynamicFormFields()
 
                         // Show timer dialog for helpdesk tickets only
                         showTimerDialog = true
@@ -1101,7 +1121,7 @@ fun RaiseConcernScreen(
                             onNavigateToTrackTickets("Helpdesk")
                         } else {
                             // Fallback: try controller navigation
-                            helpDeskController.navigateToTrackTickets("Helpdesk")
+                            localHelpDeskController.navigateToTrackTickets("Helpdesk")
                         }
                     }
                 }

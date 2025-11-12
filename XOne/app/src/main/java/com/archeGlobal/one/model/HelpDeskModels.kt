@@ -39,6 +39,7 @@ data class HelpDeskFAQ(
     val question: String,
     val answer: String,
     val category: String = "General",
+    val dynamicFields: Boolean = false,
 )
 
 data class HelpDeskModel(
@@ -140,6 +141,7 @@ fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
                     question = item.question,
                     answer = combinedAnswer,
                     category = category.title,
+                    dynamicFields = item.dynamicFields,
                 ),
             )
         }

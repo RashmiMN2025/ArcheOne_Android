@@ -661,12 +661,34 @@ class HomeActivity : AppCompatActivity() {
                             onFooterHeadsUpClick = { /* Already on HeadsUp */ },
                             onFooterSOSClick = { navController.navigate("sos") },
                             onFooterProfileClick = { navController.navigate("profile") },
+                            onHistoryClick = { navController.navigate("post_history") },
+                        )
+                    }
+
+                    // Post History Screen
+                    composable(
+                        route = "post_history",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                    ) {
+                        PostHistoryScreen(
+                            onBackPressed = { navController.popBackStack() }
                         )
                     }
 
                     // Add raise concern screen with customizable title
                     composable(
-                        route = "raise_concern/{title}?category={category}&subcategory={subcategory}",
+                        route = "raise_concern/{title}?category={category}&subcategory={subcategory}&faqId={faqId}",
                         arguments =
                             listOf(
                                 navArgument("title") { type = NavType.StringType },
@@ -676,6 +698,11 @@ class HomeActivity : AppCompatActivity() {
                                     defaultValue = null
                                 },
                                 navArgument("subcategory") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                },
+                                navArgument("faqId") {
                                     type = NavType.StringType
                                     nullable = true
                                     defaultValue = null
@@ -700,12 +727,16 @@ class HomeActivity : AppCompatActivity() {
                         val decodedCategory = category?.let { java.net.URLDecoder.decode(it, "UTF-8") }
                         val subcategory = backStackEntry.arguments?.getString("subcategory")
                         val decodedSubcategory = subcategory?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+                        val faqId = backStackEntry.arguments?.getString("faqId")
+                        val decodedFaqId = faqId?.let { java.net.URLDecoder.decode(it, "UTF-8") }
 
                         RaiseConcernScreen(
                             onBackPressed = { navController.popBackStack() },
                             title = decodedTitle,
                             prefilledCategory = decodedCategory,
                             prefilledSubcategory = decodedSubcategory,
+                            prefilledFaqId = decodedFaqId,
+                            helpDeskController = helpDeskController,
                             onNavigateToTrackTickets = { category ->
                                 helpDeskController.navigateToTrackTickets(category)
                             },

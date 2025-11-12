@@ -57,6 +57,7 @@ class HelpDeskController(
     fun getNavigationSource(): String? = navigationSource
 
     init {
+        Log.d("HelpDeskController", "=== HelpDeskController initialized ===")
         loadFAQFromLogin()
         // Note: loadTicketsData() is called separately when user navigates to ticket tracking
     }
@@ -106,14 +107,16 @@ class HelpDeskController(
                 title = "Hardware Issues",
                 question = "Laptop/Desktop not booting",
                 answer = "• Check Power Supply: Ensure the power cable is securely connected to both the device and the power outlet. Try a different outlet or adapter if available. For laptops, check if the battery is charged.\n\n• Look for Indicator Lights or Sounds: Check for power or charging lights, and listen for fan noise or beeps.\n\n• Try a Hard Reset: Hold the power button for 10-15 seconds, then restart the device.\n\n• Disconnect External Devices: Remove all USB devices and accessories to eliminate hardware conflicts.\n\n• Boot into Safe Mode or BIOS: Press F2, F10, DEL, or ESC during startup to enter BIOS or Safe Mode.\n\n• Check Display Connection: Ensure the monitor is securely connected to the CPU or laptop's display output.\n\n• Use Recovery Media: Insert a bootable USB or recovery disk to troubleshoot startup issues.\n\n• Document Any Error Messages: Note down any error codes or messages for further IT support.",
-                category = "Hardware",
+                category = "Hardware Issues",
+                dynamicFields = true,
             ),
             HelpDeskFAQ(
                 id = "printer_not_working",
                 title = "Hardware Issues",
                 question = "Printer not working",
                 answer = "• Check Power and Connections: Ensure the printer is powered on and all cables are securely connected.\n\n• Verify Network Connection: For network printers, check if they're connected to the correct network.\n\n• Update Printer Drivers: Download and install the latest drivers from the manufacturer's website.\n\n• Clear Print Queue: Cancel all pending print jobs and restart the print spooler service.\n\n• Run Printer Troubleshooter: Use the built-in Windows or Mac printer troubleshooter.\n\n• Check Ink/Toner Levels: Replace cartridges if they're low or empty.\n\n• Clean Print Heads: Use the printer's maintenance utility to clean print heads if quality is poor.",
-                category = "Hardware",
+                category = "Hardware Issues",
+                dynamicFields = true,
             ),
             // Network & Connectivity
             HelpDeskFAQ(
@@ -121,28 +124,30 @@ class HelpDeskController(
                 title = "Network & Connectivity",
                 question = "Unable to connect to VPN",
                 answer = "• Check Internet Connection: Ensure your base internet connection is stable before connecting to VPN.\n\n• Verify VPN Credentials: Double-check your username, password, and server settings.\n\n• Try Different VPN Servers: Switch to a different server location if available.\n\n• Restart Network Services: Disable and re-enable your network adapter or restart your router.\n\n• Update VPN Client: Ensure you're using the latest version of your VPN software.\n\n• Check Firewall Settings: Temporarily disable firewall or add VPN client to exceptions.\n\n• Contact IT Support: If issues persist, contact your IT department for corporate VPN configuration.",
-                category = "Network",
+                category = "Network & Connectivity",
+                dynamicFields = true,
             ),
             HelpDeskFAQ(
                 id = "wifi_issues",
                 title = "Network & Connectivity",
                 question = "Wi-Fi not working or slow",
                 answer = "• Restart Your Device: Turn off Wi-Fi on your device, wait 30 seconds, then turn it back on.\n\n• Restart Router/Modem: Unplug your router for 30 seconds, then plug it back in.\n\n• Check Signal Strength: Move closer to the router or check for physical obstructions.\n\n• Forget and Reconnect: Remove the Wi-Fi network from your device and reconnect with the password.\n\n• Update Network Drivers: Ensure your device's network drivers are up to date.\n\n• Check for Interference: Move away from other electronic devices that might cause interference.\n\n• Reset Network Settings: As a last resort, reset your device's network settings to defaults.",
-                category = "Network",
+                category = "Network & Connectivity",
+                dynamicFields = true,
             ),
             HelpDeskFAQ(
                 id = "network_drive_access",
                 title = "Network & Connectivity",
                 question = "Network drive access issues",
                 answer = "• Verify Network Connection: Ensure you're connected to the corporate network or VPN.\n\n• Check Drive Mapping: Verify the network drive path and mapping in File Explorer.\n\n• Re-enter Credentials: Try disconnecting and reconnecting with your domain credentials.\n\n• Test with UNC Path: Try accessing the drive directly using \\\\server\\share format.\n\n• Clear Stored Credentials: Remove old credentials from Windows Credential Manager.\n\n• Contact IT Support: Network drives often require specific permissions from IT department.",
-                category = "Network",
+                category = "Network & Connectivity",
             ),
             HelpDeskFAQ(
                 id = "internet_connectivity",
                 title = "Network & Connectivity",
                 question = "Internet connectivity problems",
                 answer = "• Check Physical Connections: Ensure all ethernet cables are securely connected.\n\n• Restart Network Equipment: Power cycle your modem, router, and device.\n\n• Run Network Troubleshooter: Use your operating system's built-in network diagnostic tools.\n\n• Check DNS Settings: Try using public DNS servers like 8.8.8.8 or 1.1.1.1.\n\n• Disable VPN/Proxy: Temporarily disable any VPN or proxy connections.\n\n• Update Network Drivers: Ensure your network adapter drivers are current.\n\n• Contact ISP: If all else fails, contact your internet service provider for assistance.",
-                category = "Network",
+                category = "Network & Connectivity",
             ),
             // Other Issues
             HelpDeskFAQ(
@@ -150,11 +155,16 @@ class HelpDeskController(
                 title = "Other Issues",
                 question = "Other issue raise concern",
                 answer = "For any other issues not covered in the FAQ, please use the 'Raise a Ticket' button to create a support ticket.",
-                category = "General",
+                category = "Other Issue",
+                dynamicFields = true,
             ),
         )
 
     fun loadTicketsData(category: String = "Helpdesk", subCategory: String? = null) {
+        Log.d("HelpDeskController", "🎟️ loadTicketsData called")
+        Log.d("HelpDeskController", "🎟️ Category: $category")
+        Log.d("HelpDeskController", "🎟️ SubCategory: $subCategory")
+
         // Set loading state and clear existing tickets to prevent showing old data
         _model.value =
             _model.value.copy(
@@ -165,8 +175,10 @@ class HelpDeskController(
 
         // Get user name from login data
         val userName = OtpVerificationController.getUserData()?.name ?: ""
+        Log.d("HelpDeskController", "🎟️ User name from login data: $userName")
 
         if (userName.isBlank()) {
+            Log.e("HelpDeskController", "🎟️ ERROR: User name is blank!")
             _model.value =
                 _model.value.copy(
                     isLoading = false,
@@ -182,16 +194,19 @@ class HelpDeskController(
                 subCategory = subCategory,
             )
 
-        Log.d("HelpDeskController", "Starting API call for tickets with category: $category, subCategory: $subCategory")
+        Log.d("HelpDeskController", "🎟️ Starting API call for tickets with request: $request")
         apiService.getTickets(request).enqueue(
             object : Callback<TicketsResponse> {
                 override fun onResponse(
                     call: Call<TicketsResponse>,
                     response: Response<TicketsResponse>,
                 ) {
+                    Log.d("HelpDeskController", "🎟️ API Response received - Code: ${response.code()}")
                     if (response.isSuccessful && response.body() != null) {
                         val ticketsResponse = response.body()!!
+                        Log.d("HelpDeskController", "🎟️ Tickets count: ${ticketsResponse.tickets.size}")
                         val supportTickets = ticketsResponse.tickets.map { it.toSupportTicket() }
+                        Log.d("HelpDeskController", "🎟️ Converted to SupportTickets count: ${supportTickets.size}")
 
                         _model.value =
                             _model.value.copy(
@@ -199,7 +214,9 @@ class HelpDeskController(
                                 isLoading = false,
                                 error = null,
                             )
+                        Log.d("HelpDeskController", "🎟️ Model updated with tickets successfully")
                     } else {
+                        Log.e("HelpDeskController", "🎟️ API Error: ${response.message()}, Code: ${response.code()}")
                         _model.value =
                             _model.value.copy(
                                 isLoading = false,
@@ -212,6 +229,7 @@ class HelpDeskController(
                     call: Call<TicketsResponse>,
                     t: Throwable,
                 ) {
+                    Log.e("HelpDeskController", "🎟️ Network Error: ${t.message}", t)
                     _model.value =
                         _model.value.copy(
                             isLoading = false,
@@ -223,16 +241,20 @@ class HelpDeskController(
     }
 
     fun navigateToTrackTickets(category: String = "Helpdesk") {
+        Log.d("HelpDeskController", "🎯 navigateToTrackTickets called with category: $category")
         // Load tickets data when navigating to ticket tracking
         loadTicketsData(category)
 
         // Trigger navigation counter to force refresh in TicketTrackingScreen
         _navigationTrigger.value = System.currentTimeMillis()
+        Log.d("HelpDeskController", "🎯 Navigation trigger updated: ${_navigationTrigger.value}")
 
+        Log.d("HelpDeskController", "🎯 Navigating to track_tickets screen")
         navigate("track_tickets")
     }
 
     fun navigateToFAQDetail(faqId: String) {
+        Log.d("HelpDeskController", "📄 navigateToFAQDetail called with faqId: $faqId")
         navigate("faq_detail/$faqId")
     }
 
@@ -274,7 +296,12 @@ class HelpDeskController(
         }
     }
 
-    fun getFAQById(id: String): HelpDeskFAQ? = _model.value.faqItems.find { it.id == id }
+    fun getFAQById(id: String): HelpDeskFAQ? {
+        Log.d("HelpDeskController", "🔍 getFAQById called with id: $id")
+        val faq = _model.value.faqItems.find { it.id == id }
+        Log.d("HelpDeskController", "🔍 FAQ found: ${faq != null}, title: ${faq?.title}, category: ${faq?.category}")
+        return faq
+    }
 
     fun raiseConcern(
         question: String,
@@ -287,38 +314,57 @@ class HelpDeskController(
         question: String,
         description: String,
     ) {
+        Log.d("HelpDeskController", "🎫 raiseTicket called")
+        Log.d("HelpDeskController", "🎫 Question: $question")
+        Log.d("HelpDeskController", "🎫 Description: $description")
+
         // Get the FAQ by question to find its category
         val faq = _model.value.faqItems.find { it.question == question }
+        Log.d("HelpDeskController", "🎫 FAQ found for question: ${faq != null}")
+
         if (faq != null) {
+            Log.d("HelpDeskController", "🎫 FAQ Details - ID: ${faq.id}, Category: ${faq.category}, Question: ${faq.question}")
             val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
             val encodedCategory = java.net.URLEncoder.encode(faq.category, "UTF-8")
             val encodedSubcategory = java.net.URLEncoder.encode(faq.question, "UTF-8")
-            navigate("raise_concern/$encodedTitle?category=$encodedCategory&subcategory=$encodedSubcategory")
+            val encodedFaqId = java.net.URLEncoder.encode(faq.id, "UTF-8")
+            val navigationRoute = "raise_concern/$encodedTitle?category=$encodedCategory&subcategory=$encodedSubcategory&faqId=$encodedFaqId"
+            Log.d("HelpDeskController", "🎫 Navigating to: $navigationRoute")
+            navigate(navigationRoute)
         } else {
+            Log.w("HelpDeskController", "🎫 FAQ not found - using fallback navigation")
             // Fallback to old behavior if FAQ not found
             val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
             val encodedCategory = java.net.URLEncoder.encode(question, "UTF-8")
-            navigate("raise_concern/$encodedTitle?category=$encodedCategory")
+            val fallbackRoute = "raise_concern/$encodedTitle?category=$encodedCategory"
+            Log.d("HelpDeskController", "🎫 Fallback navigation to: $fallbackRoute")
+            navigate(fallbackRoute)
         }
     }
 
     fun navigateToRaiseConcern(title: String = "Raise a Concern") {
+        Log.d("HelpDeskController", "📝 navigateToRaiseConcern called with title: $title")
         val encodedTitle = java.net.URLEncoder.encode(title, "UTF-8")
+        Log.d("HelpDeskController", "📝 Navigating to: raise_concern/$encodedTitle")
         navigate("raise_concern/$encodedTitle")
     }
 
     fun refreshTickets() {
+        Log.d("HelpDeskController", "🔄 refreshTickets called - reloading tickets with default category")
         loadTicketsData()
     }
 
     fun triggerNavigationRefresh() {
+        Log.d("HelpDeskController", "🔄 triggerNavigationRefresh called")
         // Trigger navigation counter to force refresh
         _navigationTrigger.value = System.currentTimeMillis()
+        Log.d("HelpDeskController", "🔄 Navigation trigger updated to: ${_navigationTrigger.value}")
         // Also refresh the tickets data
         refreshTickets()
     }
 
     fun refreshFAQData() {
+        Log.d("HelpDeskController", "🔄 refreshFAQData called - reloading FAQ data from login")
         loadFAQFromLogin()
     }
 
@@ -489,11 +535,16 @@ class HelpDeskController(
         category: String,
         subcategory: String? = null,
     ) {
+        Log.d("HelpDeskController", "📋 loadDynamicFormFields called")
+        Log.d("HelpDeskController", "📋 Category: $category")
+        Log.d("HelpDeskController", "📋 Subcategory: $subcategory")
+
         _dynamicFieldsLoading.value = true
         _dynamicFieldsError.value = null
 
-        // Use mock API for now - toggle this flag when real API is ready
-        val useMockApi = true
+        // Use real API endpoint
+        val useMockApi = false
+        Log.d("HelpDeskController", "📋 Using Real API (useMockApi: $useMockApi)")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -512,28 +563,35 @@ class HelpDeskController(
                     }
                 } else {
                     // Real API call
+                    Log.d("HelpDeskController", "📋 Making real API call to /helpdesk/dynamic-fields")
                     val request = DynamicFormFieldsRequest(category = category, subcategory = subcategory)
+                    Log.d("HelpDeskController", "📋 Request body: category='$category', subcategory='$subcategory'")
+
                     val response = apiService.getDynamicFormFields(request)
+                    Log.d("HelpDeskController", "📋 API response code: ${response.code()}")
 
                     withContext(Dispatchers.Main) {
                         if (response.isSuccessful && response.body() != null) {
                             val fieldsResponse = response.body()!!
+                            Log.d("HelpDeskController", "📋 Response status: ${fieldsResponse.status}")
                             if (fieldsResponse.status == 200) {
                                 _dynamicFormFields.value = fieldsResponse.fields
                                 _dynamicFieldsLoading.value = false
                                 Log.d(
                                     "HelpDeskController",
-                                    "Loaded ${fieldsResponse.fields.size} dynamic fields for category: $category, subcategory: $subcategory",
+                                    "📋 ✅ Loaded ${fieldsResponse.fields.size} dynamic fields for category: $category, subcategory: $subcategory",
                                 )
                             } else {
                                 _dynamicFieldsError.value = fieldsResponse.message ?: "Failed to load form fields"
                                 _dynamicFieldsLoading.value = false
-                                Log.e("HelpDeskController", "API returned non-200 status: ${fieldsResponse.status}")
+                                Log.e("HelpDeskController", "📋 ❌ API returned non-200 status: ${fieldsResponse.status}, message: ${fieldsResponse.message}")
                             }
                         } else {
+                            val errorBody = response.errorBody()?.string()
                             _dynamicFieldsError.value = "Failed to load form fields: ${response.message()}"
                             _dynamicFieldsLoading.value = false
-                            Log.e("HelpDeskController", "API call failed: ${response.code()} - ${response.message()}")
+                            Log.e("HelpDeskController", "📋 ❌ API call failed: ${response.code()} - ${response.message()}")
+                            Log.e("HelpDeskController", "📋 ❌ Error body: $errorBody")
                         }
                     }
                 }
@@ -541,7 +599,8 @@ class HelpDeskController(
                 withContext(Dispatchers.Main) {
                     _dynamicFieldsError.value = "Error loading form fields: ${e.message}"
                     _dynamicFieldsLoading.value = false
-                    Log.e("HelpDeskController", "Exception loading dynamic fields", e)
+                    Log.e("HelpDeskController", "📋 ❌ Exception loading dynamic fields: ${e.message}", e)
+                    e.printStackTrace()
                 }
             }
         }
@@ -551,8 +610,21 @@ class HelpDeskController(
      * Clear dynamic form fields when category changes or form is reset
      */
     fun clearDynamicFormFields() {
+        Log.d("HelpDeskController", "🗑️ clearDynamicFormFields called - clearing all dynamic fields")
         _dynamicFormFields.value = emptyList()
         _dynamicFieldsError.value = null
         _dynamicFieldsLoading.value = false
+    }
+
+    /**
+     * Check if dynamic fields should be loaded for a given FAQ
+     * Returns true if the FAQ has dynamicFields flag set to true
+     */
+    fun shouldLoadDynamicFields(faqId: String): Boolean {
+        Log.d("HelpDeskController", "🔍 shouldLoadDynamicFields called for faqId: $faqId")
+        val faq = _model.value.faqItems.find { it.id == faqId }
+        val shouldLoad = faq?.dynamicFields == true
+        Log.d("HelpDeskController", "🔍 FAQ dynamicFields flag: ${faq?.dynamicFields}, Should load: $shouldLoad")
+        return shouldLoad
     }
 }

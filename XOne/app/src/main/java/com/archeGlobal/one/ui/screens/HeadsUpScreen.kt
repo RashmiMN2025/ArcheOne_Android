@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -20,6 +21,7 @@ import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.components.NewPostDialog
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.utils.UserDataManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,7 +36,14 @@ fun HeadsUpScreen(
     onFooterHeadsUpClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
+    onHistoryClick: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val userDataManager = UserDataManager.getInstance(context)
+    val userData = userDataManager.getUserData()
+    val profilePicUrl = userData?.profilePic
+    val userName = userData?.name ?: "User"
+
     var showNewPostDialog by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
@@ -149,11 +158,14 @@ fun HeadsUpScreen(
         // Show New Post Dialog
         if (showNewPostDialog) {
             NewPostDialog(
+                profilePicUrl = profilePicUrl,
+                userName = userName,
                 onDismiss = { showNewPostDialog = false },
                 onSubmit = { title, description, category ->
                     // TODO: Handle post submission
                     showNewPostDialog = false
-                }
+                },
+                onHistoryClick = onHistoryClick
             )
         }
     }
