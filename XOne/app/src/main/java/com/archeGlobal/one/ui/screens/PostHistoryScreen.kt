@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -29,6 +31,7 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.network.CreatedPost
 import com.archeGlobal.one.network.CreatedPostsRequest
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.ui.components.NewPostDialog
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.launch
@@ -48,23 +51,77 @@ fun PostHistoryScreen(
     var selectedTab by remember { mutableStateOf(0) }
     var posts by remember { mutableStateOf<List<CreatedPost>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
+    var refreshTrigger by remember { mutableStateOf(0) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var postToEdit by remember { mutableStateOf<CreatedPost?>(null) }
     val scope = rememberCoroutineScope()
 
-    // Load posts
-    LaunchedEffect(selectedTab) {
+    // Function to load posts
+    val loadPosts = suspend {
+        isLoading = true
+        try {
+            val postType = if (selectedTab == 0) "headsUp" else "homeView"
+            android.util.Log.d("PostHistoryScreen", "Loading posts for type: $postType")
+            android.util.Log.d("PostHistoryScreen", "User email: $userEmail")
+
+            val request = CreatedPostsRequest(email = userEmail)
+            val response = RetrofitClient.apiService.getCreatedPosts(request)
+
+            android.util.Log.d("PostHistoryScreen", "Response code: ${response.code()}")
+            android.util.Log.d("PostHistoryScreen", "Response successful: ${response.isSuccessful}")
+            android.util.Log.d("PostHistoryScreen", "Response body status: ${response.body()?.status}")
+
+            if (response.isSuccessful && response.body()?.status == 200) {
+                val allPosts = response.body()?.posts ?: emptyList()
+                android.util.Log.d("PostHistoryScreen", "Total posts received: ${allPosts.size}")
+
+                allPosts.forEachIndexed { index, post ->
+                    android.util.Log.d("PostHistoryScreen", "Post $index: type=${post.post_type}, subject=${post.subject}, images=${post.image_urls?.size ?: 0}")
+                    if (!post.image_urls.isNullOrEmpty()) {
+                        post.image_urls.forEach { url ->
+                            android.util.Log.d("PostHistoryScreen", "  Image URL: $url")
+                        }
+                    }
+                }
+
+                posts = allPosts.filter { it.post_type == postType }
+                android.util.Log.d("PostHistoryScreen", "Filtered posts for $postType: ${posts.size}")
+
+                posts.forEach { post ->
+                    android.util.Log.d("PostHistoryScreen", "Displaying post: ${post.post_id}, images: ${post.image_urls?.size ?: 0}")
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("PostHistoryScreen", "Error loading posts", e)
+        } finally {
+            isLoading = false
+        }
+    }
+
+    // Load posts when tab changes or refresh is triggered
+    LaunchedEffect(selectedTab, refreshTrigger) {
+        android.util.Log.d("PostHistoryScreen", "LaunchedEffect triggered - selectedTab=$selectedTab, refreshTrigger=$refreshTrigger")
         scope.launch {
-            isLoading = true
+            loadPosts()
+        }
+    }
+
+    // Delete post function
+    val deletePost: (String) -> Unit = { postId ->
+        scope.launch {
             try {
-                val postType = if (selectedTab == 0) "headsUp" else "homePage"
-                val request = CreatedPostsRequest(email = userEmail)
-                val response = RetrofitClient.apiService.getCreatedPosts(request)
+                android.util.Log.d("PostHistoryScreen", "Deleting post: $postId")
+                val response = RetrofitClient.apiService.deletePost(postId)
+
                 if (response.isSuccessful && response.body()?.status == 200) {
-                    posts = response.body()?.posts?.filter { it.post_type == postType } ?: emptyList()
+                    android.util.Log.d("PostHistoryScreen", "Post deleted successfully")
+                    // Refresh the list
+                    refreshTrigger++
+                } else {
+                    android.util.Log.e("PostHistoryScreen", "Failed to delete post: ${response.code()}")
                 }
             } catch (e: Exception) {
-                // Handle error
-            } finally {
-                isLoading = false
+                android.util.Log.e("PostHistoryScreen", "Error deleting post", e)
             }
         }
     }
@@ -180,16 +237,58 @@ fun PostHistoryScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(posts) { post ->
-                        PostHistoryCard(post = post)
+                        if (post.post_type == "homeView") {
+                            HomePagePostCard(
+                                post = post,
+                                onDelete = deletePost,
+                                onEdit = { postData ->
+                                    postToEdit = postData
+                                    showEditDialog = true
+                                }
+                            )
+                        } else {
+                            PostHistoryCard(
+                                post = post,
+                                onDelete = deletePost,
+                                onEdit = { postData ->
+                                    postToEdit = postData
+                                    showEditDialog = true
+                                }
+                            )
+                        }
                     }
                 }
             }
         }
     }
+
+    // Edit dialog
+    if (showEditDialog && postToEdit != null) {
+        NewPostDialog(
+            profilePicUrl = postToEdit?.profile_pic,
+            userName = postToEdit?.username ?: "",
+            onDismiss = {
+                showEditDialog = false
+                postToEdit = null
+            },
+            onSubmit = { _: String, _: String, _: String ->
+                // Refresh the list after edit
+                android.util.Log.d("PostHistoryScreen", "onSubmit called - triggering refresh")
+                refreshTrigger++
+                android.util.Log.d("PostHistoryScreen", "refreshTrigger incremented to: $refreshTrigger")
+                showEditDialog = false
+                postToEdit = null
+            },
+            onHistoryClick = {},
+            existingPost = postToEdit
+        )
+    }
 }
 
 @Composable
-fun PostHistoryCard(post: CreatedPost) {
+fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (CreatedPost) -> Unit) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -252,15 +351,57 @@ fun PostHistoryCard(post: CreatedPost) {
                             fontSize = 16.sp,
                             color = Color.Black
                         )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = formatPostDate(post.created_at),
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                        // Tagged Employees or Target Departments
+                        if (post.target_group == "DepartmentBased" && !post.target_department.isNullOrEmpty()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.item_name),
+                                    contentDescription = "Target Departments",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = Color.Gray
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Target Departments",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
                             Text(
-                                text = formatPostDate(post.created_at),
+                                text = post.target_department.joinToString(", "),
                                 fontFamily = GraphikFontFamily,
                                 fontSize = 12.sp,
                                 color = Color.Gray
                             )
+                        } else if (!post.target_employee.isNullOrEmpty()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.item_name),
+                                    contentDescription = "Tagged Employees",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = Color.Gray
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Tagged Employees",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
                             Text(
-                                text = " • ${if (post.post_type == "headsUp") "headsUp" else "homePage"}",
+                                text = post.target_employee.joinToString(", "),
                                 fontFamily = GraphikFontFamily,
                                 fontSize = 12.sp,
                                 color = Color.Gray
@@ -286,7 +427,7 @@ fun PostHistoryCard(post: CreatedPost) {
                                 },
                                 shape = RoundedCornerShape(12.dp)
                             )
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = post.priority,
@@ -297,17 +438,46 @@ fun PostHistoryCard(post: CreatedPost) {
                         )
                     }
 
-                    // Delete button
-                    IconButton(
-                        onClick = { /* TODO: Handle delete */ },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.bin),
-                            contentDescription = "Delete",
-                            tint = Color(0xFFD32F2F),
-                            modifier = Modifier.size(18.dp)
-                        )
+                    // Menu button
+                    Box {
+                        IconButton(
+                            onClick = { showMenu = true },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(Color(0xFFDD3825), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Menu",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Edit") },
+                                onClick = {
+                                    showMenu = false
+                                    onEdit(post)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete") },
+                                onClick = {
+                                    showMenu = false
+                                    onDelete(post.post_id)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -355,7 +525,7 @@ fun PostHistoryCard(post: CreatedPost) {
                         .fillMaxWidth()
                         .height(140.dp)
                         .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     post.image_urls.forEach { imageUrl ->
@@ -365,8 +535,8 @@ fun PostHistoryCard(post: CreatedPost) {
                             modifier = Modifier
                                 .width(130.dp)
                                 .height(130.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Inside
+                                .clip(RoundedCornerShape(4.dp)),
+                            contentScale = ContentScale.Fit
                         )
                     }
                 }
@@ -379,7 +549,7 @@ fun PostHistoryCard(post: CreatedPost) {
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     if (!post.start_date.isNullOrEmpty()) {
                         Column(horizontalAlignment = Alignment.Start) {
@@ -440,7 +610,7 @@ fun PostHistoryCard(post: CreatedPost) {
     }
 }
 
-private fun formatPostDate(dateString: String): String {
+fun formatPostDate(dateString: String): String {
     return try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
         val outputFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
@@ -451,7 +621,7 @@ private fun formatPostDate(dateString: String): String {
     }
 }
 
-private fun formatPostDateShort(dateString: String): String {
+fun formatPostDateShort(dateString: String): String {
     return try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
         val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
@@ -459,5 +629,301 @@ private fun formatPostDateShort(dateString: String): String {
         outputFormat.format(date ?: Date())
     } catch (e: Exception) {
         dateString
+    }
+}
+
+@Composable
+fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (CreatedPost) -> Unit) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    android.util.Log.d("HomePagePostCard", "Rendering card for post: ${post.post_id}")
+    android.util.Log.d("HomePagePostCard", "Post type: ${post.post_type}")
+    android.util.Log.d("HomePagePostCard", "Subject: ${post.subject}")
+    android.util.Log.d("HomePagePostCard", "Image URLs: ${post.image_urls}")
+    android.util.Log.d("HomePagePostCard", "Image URLs null? ${post.image_urls == null}")
+    android.util.Log.d("HomePagePostCard", "Image URLs empty? ${post.image_urls?.isEmpty()}")
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(16.dp)
+        ) {
+            // Header with profile, name, and edit button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // Profile picture
+                    if (!post.profile_pic.isNullOrEmpty()) {
+                        Image(
+                            painter = rememberAsyncImagePainter(post.profile_pic),
+                            contentDescription = "Profile",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.Gray),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = post.username.take(1).uppercase(),
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Column {
+                        Text(
+                            text = post.username,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = formatPostDate(post.created_at),
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                // Menu button
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(Color(0xFFDD3825), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Menu",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                showMenu = false
+                                onEdit(post)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete") },
+                            onClick = {
+                                showMenu = false
+                                onDelete(post.post_id)
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Banner Image - Smaller and show full image
+            if (!post.image_urls.isNullOrEmpty() && post.image_urls.isNotEmpty()) {
+                android.util.Log.d("HomePagePostCard", "Loading image: ${post.image_urls[0]}")
+                android.util.Log.d("HomePagePostCard", "Total images: ${post.image_urls.size}")
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            model = post.image_urls[0],
+                            onError = {
+                                android.util.Log.e("HomePagePostCard", "Failed to load image: ${post.image_urls[0]}")
+                                android.util.Log.e("HomePagePostCard", "Error: ${it.result.throwable}")
+                            },
+                            onSuccess = {
+                                android.util.Log.d("HomePagePostCard", "Image loaded successfully: ${post.image_urls[0]}")
+                            }
+                        ),
+                        contentDescription = "Post banner",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            } else {
+                android.util.Log.d("HomePagePostCard", "No images to display. image_urls: ${post.image_urls}")
+                // Show placeholder when no image
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No Image",
+                        color = Color.Gray,
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Subject/Title - Centered and bold
+            if (post.subject.isNotEmpty()) {
+                Text(
+                    text = post.subject,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Date - Centered and gray
+            Text(
+                text = formatPostDateShort(post.created_at),
+                fontFamily = GraphikFontFamily,
+                fontSize = 14.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Description - Centered
+            Text(
+                text = post.description,
+                fontFamily = GraphikFontFamily,
+                fontSize = 14.sp,
+                color = Color.Black,
+                lineHeight = 20.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Dates section
+            if (!post.start_date.isNullOrEmpty() || !post.end_date.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    if (!post.start_date.isNullOrEmpty()) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Post Start Date",
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .background(Color(0xFF66BB6A), CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = formatPostDateShort(post.start_date),
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 13.sp,
+                                    color = Color.Black
+                                )
+                            }
+                        }
+                    }
+
+                    if (!post.end_date.isNullOrEmpty()) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Post End Date",
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .background(Color(0xFFD32F2F), CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = formatPostDateShort(post.end_date),
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 13.sp,
+                                    color = Color.Black
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

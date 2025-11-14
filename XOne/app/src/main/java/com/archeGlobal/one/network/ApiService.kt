@@ -54,10 +54,12 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.Multipart
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
@@ -296,6 +298,27 @@ interface ApiService {
 
     @POST("announcements/v1/createdPosts")
     suspend fun getCreatedPosts(@Body request: CreatedPostsRequest): Response<CreatedPostsResponse>
+
+    @POST("announcements/v1/posts/headsUp")
+    suspend fun getHeadsUpPosts(@Body request: HeadsUpPostsRequest): Response<CreatedPostsResponse>
+
+    @DELETE("announcements/v1/post/{post_id}")
+    suspend fun deletePost(@Path("post_id") postId: String): Response<DeletePostResponse>
+
+    @Multipart
+    @PATCH("announcements/v1/post/{post_id}")
+    suspend fun updatePost(
+        @Path("post_id") postId: String,
+        @Part("post") post: okhttp3.RequestBody,
+        @Part files: List<okhttp3.MultipartBody.Part>?
+    ): Response<UpdatePostResponse>
+
+    @Multipart
+    @POST("announcements/v1/post")
+    suspend fun createPost(
+        @Part("post") post: okhttp3.RequestBody,
+        @Part files: List<okhttp3.MultipartBody.Part>?
+    ): Response<CreatePostResponse>
 
     // V2 Travel APIs
     @POST("travel/v2/approval-history-count")
@@ -752,16 +775,30 @@ data class AnnouncementField(
 )
 
 data class CreatedPostsRequest(
-    val email: String? = null,
-    val target_group: String? = null,
-    val target_department: List<String>? = null,
-    val target_location: List<String>? = null,
-    val target_employee: List<String>? = null
+    val email: String? = null
+)
+
+data class HeadsUpPostsRequest(
+    val department: String = "",
+    val location: String = "",
+    val email: String = ""
 )
 
 data class CreatedPostsResponse(
     val status: Int,
     val posts: List<CreatedPost>
+)
+
+data class DeletePostResponse(
+    val status: Int,
+    val message: String,
+    val post_id: String
+)
+
+data class UpdatePostResponse(
+    val status: Int,
+    val message: String,
+    val post_id: String
 )
 
 data class CreatedPost(
@@ -787,4 +824,32 @@ data class CreatedPost(
     val support_channel: String?,
     val created_at: String,
     val updated_at: String?
+)
+
+data class CreatePostRequest(
+    val user_email: String,
+    val username: String,
+    val emp_id: String,
+    val profile_pic: String? = null,
+    val post_type: String,
+    val subject: String,
+    val priority: String,
+    val target_group: String,
+    val target_department: List<String>? = null,
+    val target_location: List<String>? = null,
+    val target_employee: List<String>? = null,
+    val description: String,
+    val start_date: String,
+    val end_date: String,
+    val event_date: String? = null,
+    val activity_start: String? = null,
+    val activity_end: String? = null,
+    val support_channel: String? = null
+)
+
+data class CreatePostResponse(
+    val status: Int,
+    val message: String? = null,
+    val post_id: String? = null,
+    val error: String? = null
 )

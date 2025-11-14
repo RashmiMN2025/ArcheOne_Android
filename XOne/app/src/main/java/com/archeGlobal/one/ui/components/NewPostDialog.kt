@@ -1,6 +1,8 @@
 package com.archeGlobal.one.ui.components
 
+import android.content.Context
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -32,10 +34,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.rememberAsyncImagePainter
+import com.archeGlobal.one.network.CreatePostRequest
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
+import com.archeGlobal.one.utils.UserDataManager
+import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,26 +62,93 @@ fun NewPostDialog(
     onDismiss: () -> Unit,
     onSubmit: (title: String, description: String, category: String) -> Unit,
     onHistoryClick: () -> Unit = {},
+    existingPost: com.archeGlobal.one.network.CreatedPost? = null,
 ) {
-    // Form type switcher state
-    var formType by remember { mutableStateOf("Post") } // "Post" or "Event"
+    // Form type switcher state - initialize based on existing post type
+    var formType by remember {
+        mutableStateOf(
+            if (existingPost?.post_type == "homeView") "Event" else "Post"
+        )
+    }
+
+    // Context and user data
+    val context = LocalContext.current
+    val userDataManager = UserDataManager.getInstance(context)
+    val userData = userDataManager.getUserData()
+    val coroutineScope = rememberCoroutineScope()
+
+    // Submission state
+    var isSubmitting by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     // Fetched locations and departments
     var fetchedLocations by remember { mutableStateOf<List<String>>(emptyList()) }
     var fetchedDepartments by remember { mutableStateOf<List<String>>(emptyList()) }
 
-    // Post form states
-    var postType by remember { mutableStateOf("Planned") }
-    var postSubject by remember { mutableStateOf("Select Post Subject") }
-    var postPriority by remember { mutableStateOf("Select Post Priority") }
-    var postGroup by remember { mutableStateOf("Employee-based") }
+    // Determine if we're in edit mode
+    val isEditMode = existingPost != null
+
+    // Helper function to convert ISO date to display format (dd-MM-yyyy)
+    fun formatISOToDisplayDate(isoDateString: String?): String {
+        if (isoDateString.isNullOrEmpty()) return ""
+        return try {
+            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = isoFormat.parse(isoDateString)
+
+            if (date != null) {
+                val displayFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+                displayFormat.format(date)
+            } else {
+                ""
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("NewPostDialog", "Error converting ISO to display date: $isoDateString", e)
+            ""
+        }
+    }
+
+    // Helper function to extract time from ISO date (HH:mm)
+    fun formatISOToDisplayTime(isoDateString: String?): String {
+        if (isoDateString.isNullOrEmpty()) return ""
+        return try {
+            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = isoFormat.parse(isoDateString)
+
+            if (date != null) {
+                val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                timeFormat.format(date)
+            } else {
+                ""
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("NewPostDialog", "Error converting ISO to display time: $isoDateString", e)
+            ""
+        }
+    }
+
+    // Post form states - initialize with existing post data if in edit mode
+    var postType by remember { mutableStateOf(existingPost?.post_type ?: "Planned") }
+    var postSubject by remember { mutableStateOf(existingPost?.subject ?: "Select Post Subject") }
+    var postPriority by remember { mutableStateOf(existingPost?.priority ?: "Select Post Priority") }
+    var postGroup by remember { mutableStateOf(
+        when (existingPost?.target_group) {
+            "DepartmentBased" -> "Department-based"
+            "LocationBased" -> "Location-based"
+            "EmployeeBased" -> "Employee-based"
+            else -> "Employee-based"
+        }
+    ) }
     var employeeSearchQuery by remember { mutableStateOf("") }
     var selectedEmployee by remember { mutableStateOf<com.archeGlobal.one.model.SuggestedUser?>(null) }
     var suggestedEmployees by remember { mutableStateOf<List<com.archeGlobal.one.model.SuggestedUser>>(emptyList()) }
     var isSearchingEmployees by remember { mutableStateOf(false) }
-    var department by remember { mutableStateOf("Select Department") }
-    var location by remember { mutableStateOf("Select Location") }
-    var announcementDescription by remember { mutableStateOf("") }
+    var department by remember { mutableStateOf(existingPost?.target_department?.firstOrNull() ?: "Select Department") }
+    var location by remember { mutableStateOf(existingPost?.target_location?.firstOrNull() ?: "Select Location") }
+    var announcementDescription by remember { mutableStateOf(existingPost?.description ?: "") }
 
     // Fetch locations and departments from API
     LaunchedEffect(Unit) {
@@ -110,23 +194,40 @@ fun NewPostDialog(
             }
         })
     }
-    var postStartDate by remember { mutableStateOf("") }
-    var postEndDate by remember { mutableStateOf("") }
-    var startDurationDate by remember { mutableStateOf("") }
-    var startDurationTime by remember { mutableStateOf("") }
-    var endDurationDate by remember { mutableStateOf("") }
-    var endDurationTime by remember { mutableStateOf("") }
-    var supportChannelDetails by remember { mutableStateOf("") }
+    var postStartDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.start_date)) }
+    var postEndDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.end_date)) }
+    var startDurationDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.activity_start)) }
+    var startDurationTime by remember { mutableStateOf<String>(formatISOToDisplayTime(existingPost?.activity_start)) }
+    var endDurationDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.activity_end)) }
+    var endDurationTime by remember { mutableStateOf<String>(formatISOToDisplayTime(existingPost?.activity_end)) }
+    var supportChannelDetails by remember { mutableStateOf(existingPost?.support_channel ?: "") }
     var postImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var existingImageUrls by remember { mutableStateOf(existingPost?.image_urls ?: emptyList()) }
     var showPostPreview by remember { mutableStateOf(false) }
 
-    // Event form states
-    var eventSubject by remember { mutableStateOf("") }
-    var eventDescription by remember { mutableStateOf("") }
+    // Event form states - initialize with existing post data if in edit mode and post type is event
+    var eventSubject by remember {
+        mutableStateOf(
+            if (existingPost?.post_type == "homeView") existingPost.subject else ""
+        )
+    }
+    var eventDescription by remember {
+        mutableStateOf(
+            if (existingPost?.post_type == "homeView") existingPost.description else ""
+        )
+    }
     var eventImageUri by remember { mutableStateOf<Uri?>(null) }
-    var eventDate by remember { mutableStateOf("") }
-    var eventStartDate by remember { mutableStateOf("") }
-    var eventEndDate by remember { mutableStateOf("") }
+    var eventDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.event_date)) }
+    var eventStartDate by remember {
+        mutableStateOf<String>(
+            if (existingPost?.post_type == "homeView") formatISOToDisplayDate(existingPost.start_date) else ""
+        )
+    }
+    var eventEndDate by remember {
+        mutableStateOf<String>(
+            if (existingPost?.post_type == "homeView") formatISOToDisplayDate(existingPost.end_date) else ""
+        )
+    }
     var showEventPreview by remember { mutableStateOf(false) }
 
     val postTypes = listOf("Planned", "Unplanned/Emergency")
@@ -165,9 +266,369 @@ fun NewPostDialog(
     val postPriorities = listOf("High", "Medium", "Low")
     val postGroups = listOf("Employee-based", "Department-based", "Location-based", "All")
 
-    // Reset post subject when post type changes
+    // Helper function to convert URI to MultipartBody.Part
+    fun uriToMultipartBodyPart(context: Context, uri: Uri, partName: String): MultipartBody.Part? {
+        return try {
+            android.util.Log.d("NewPostDialog", "Converting URI to multipart: $uri")
+            val contentResolver = context.contentResolver
+            val inputStream = contentResolver.openInputStream(uri)
+
+            if (inputStream == null) {
+                android.util.Log.e("NewPostDialog", "Failed to open input stream for URI: $uri")
+                return null
+            }
+
+            // Get filename
+            var filename = "image.jpg"
+            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                cursor.moveToFirst()
+                filename = cursor.getString(nameIndex)
+            }
+            android.util.Log.d("NewPostDialog", "Filename: $filename")
+
+            // Create temp file
+            val tempFile = File(context.cacheDir, filename)
+            android.util.Log.d("NewPostDialog", "Creating temp file: ${tempFile.absolutePath}")
+
+            FileOutputStream(tempFile).use { outputStream ->
+                val bytesCopied = inputStream.copyTo(outputStream)
+                android.util.Log.d("NewPostDialog", "Copied $bytesCopied bytes to temp file")
+            }
+            inputStream.close()
+
+            android.util.Log.d("NewPostDialog", "Temp file size: ${tempFile.length()} bytes")
+
+            // Create multipart body part
+            val requestBody = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
+            val part = MultipartBody.Part.createFormData(partName, tempFile.name, requestBody)
+            android.util.Log.d("NewPostDialog", "Multipart body part created successfully")
+            part
+        } catch (e: Exception) {
+            android.util.Log.e("NewPostDialog", "Error converting URI to multipart", e)
+            e.printStackTrace()
+            null
+        }
+    }
+
+    // Helper function to format date to ISO 8601
+    fun formatDateToISO(dateString: String, timeString: String = "00:00"): String {
+        return try {
+            if (dateString.isEmpty()) {
+                android.util.Log.d("NewPostDialog", "formatDateToISO: Empty date string, returning empty")
+                return ""
+            }
+
+            android.util.Log.d("NewPostDialog", "formatDateToISO: Input date='$dateString', time='$timeString'")
+
+            // Try to parse date with multiple formats
+            val date = when {
+                // ISO format (yyyy-MM-dd)
+                dateString.matches(Regex("\\d{4}-\\d{2}-\\d{2}.*")) -> {
+                    android.util.Log.d("NewPostDialog", "formatDateToISO: Date in ISO format")
+                    val isoFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    isoFormat.parse(dateString.substring(0, 10))
+                }
+                // "dd MMM yyyy" format (e.g., "14 Nov 2025")
+                dateString.matches(Regex("\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}")) -> {
+                    android.util.Log.d("NewPostDialog", "formatDateToISO: Date in 'dd MMM yyyy' format")
+                    val shortMonthFormat = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
+                    shortMonthFormat.parse(dateString)
+                }
+                // dd-MM-yyyy format
+                else -> {
+                    android.util.Log.d("NewPostDialog", "formatDateToISO: Trying dd-MM-yyyy format")
+                    val inputFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+                    inputFormat.parse(dateString)
+                }
+            }
+
+            if (date == null) {
+                android.util.Log.e("NewPostDialog", "formatDateToISO: Failed to parse date '$dateString'")
+                return ""
+            }
+
+            // Use UTC timezone for calendar to avoid timezone conversion issues
+            val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                time = date
+                // Parse time if provided
+                if (timeString.isNotEmpty()) {
+                    val timeParts = timeString.split(":")
+                    if (timeParts.size == 2) {
+                        val hour = timeParts[0].toIntOrNull() ?: 0
+                        val minute = timeParts[1].toIntOrNull() ?: 0
+                        set(Calendar.HOUR_OF_DAY, hour)
+                        set(Calendar.MINUTE, minute)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                        android.util.Log.d("NewPostDialog", "formatDateToISO: Time set to $hour:$minute in UTC")
+                    }
+                } else {
+                    // Set time to 00:00:00 if not provided
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+            }
+
+            val outputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            outputFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val result = outputFormat.format(calendar.time)
+
+            android.util.Log.d("NewPostDialog", "formatDateToISO: Output='$result'")
+            result
+        } catch (e: Exception) {
+            android.util.Log.e("NewPostDialog", "formatDateToISO: Exception occurred", e)
+            e.printStackTrace()
+            ""
+        }
+    }
+
+    // Submit post function
+    fun submitPost() {
+        android.util.Log.d("NewPostDialog", "=== POST CREATION STARTED ===")
+        android.util.Log.d("NewPostDialog", "Form Type: $formType")
+        android.util.Log.d("NewPostDialog", "User Email: ${userData?.email}")
+        android.util.Log.d("NewPostDialog", "Username: ${userData?.name}")
+        android.util.Log.d("NewPostDialog", "Employee ID: ${userData?.employeeId}")
+
+        coroutineScope.launch {
+            isSubmitting = true
+            android.util.Log.d("NewPostDialog", "Submission state set to true")
+
+            try {
+                android.util.Log.d("NewPostDialog", "--- STEP 1: Preparing target group ---")
+
+                // Determine target group (Events default to Everyone)
+                val targetGroup = if (formType == "Event") {
+                    "Everyone"
+                } else {
+                    when (postGroup) {
+                        "Employee-based" -> "EmployeeBased"
+                        "Department-based" -> "DepartmentBased"
+                        "Location-based" -> "LocationBased"
+                        "All" -> "Everyone"
+                        else -> "Everyone"
+                    }
+                }
+                android.util.Log.d("NewPostDialog", "Target Group: $targetGroup (from postGroup: $postGroup)")
+
+                android.util.Log.d("NewPostDialog", "--- STEP 2: Preparing target arrays ---")
+
+                // Prepare target arrays based on group (only for Posts)
+                val targetDepartment = if (formType == "Post" && postGroup == "Department-based" && department != "Select Department") {
+                    listOf(department)
+                } else null
+                android.util.Log.d("NewPostDialog", "Target Department: $targetDepartment")
+
+                val targetLocation = if (formType == "Post" && postGroup == "Location-based" && location != "Select Location") {
+                    listOf(location)
+                } else null
+                android.util.Log.d("NewPostDialog", "Target Location: $targetLocation")
+
+                val targetEmployee = if (formType == "Post" && postGroup == "Employee-based" && selectedEmployee != null) {
+                    listOf(selectedEmployee!!.mail)
+                } else null
+                android.util.Log.d("NewPostDialog", "Target Employee: $targetEmployee")
+
+                android.util.Log.d("NewPostDialog", "--- STEP 3: Creating post request object ---")
+
+                // Format activity start/end as ISO dates (combining date + time)
+                val activityStartISO = if (startDurationDate.isNotEmpty() && startDurationTime.isNotEmpty()) {
+                    formatDateToISO(startDurationDate, startDurationTime)
+                } else null
+
+                val activityEndISO = if (endDurationDate.isNotEmpty() && endDurationTime.isNotEmpty()) {
+                    formatDateToISO(endDurationDate, endDurationTime)
+                } else null
+
+                android.util.Log.d("NewPostDialog", "Activity Start ISO: $activityStartISO")
+                android.util.Log.d("NewPostDialog", "Activity End ISO: $activityEndISO")
+
+                // Create post request
+                val postRequest = CreatePostRequest(
+                    user_email = userData?.email ?: "",
+                    username = userData?.name ?: userName,
+                    emp_id = userData?.employeeId ?: "",
+                    profile_pic = userData?.profilePic,
+                    post_type = if (formType == "Post") "headsUp" else "homeView",
+                    subject = if (formType == "Post") postSubject else eventSubject,
+                    priority = if (formType == "Post") postPriority else "Medium",
+                    target_group = targetGroup,
+                    target_department = targetDepartment,
+                    target_location = targetLocation,
+                    target_employee = targetEmployee,
+                    description = if (formType == "Post") announcementDescription else eventDescription,
+                    start_date = formatDateToISO(if (formType == "Post") postStartDate else eventStartDate),
+                    end_date = formatDateToISO(if (formType == "Post") postEndDate else eventEndDate),
+                    event_date = if (formType == "Event" && eventDate.isNotEmpty()) formatDateToISO(eventDate) else null,
+                    activity_start = activityStartISO,
+                    activity_end = activityEndISO,
+                    support_channel = if (supportChannelDetails.isNotEmpty()) supportChannelDetails else null
+                )
+
+                android.util.Log.d("NewPostDialog", "Post Type: ${postRequest.post_type}")
+                android.util.Log.d("NewPostDialog", "Subject: ${postRequest.subject}")
+                android.util.Log.d("NewPostDialog", "Priority: ${postRequest.priority}")
+                android.util.Log.d("NewPostDialog", "Description length: ${postRequest.description.length}")
+                android.util.Log.d("NewPostDialog", "Start Date - Display: ${if (formType == "Post") postStartDate else eventStartDate} → ISO: ${postRequest.start_date}")
+                android.util.Log.d("NewPostDialog", "End Date - Display: ${if (formType == "Post") postEndDate else eventEndDate} → ISO: ${postRequest.end_date}")
+                android.util.Log.d("NewPostDialog", "Event Date - Display: $eventDate → ISO: ${postRequest.event_date}")
+                android.util.Log.d("NewPostDialog", "Activity Start - Display: $startDurationDate $startDurationTime → ISO: ${postRequest.activity_start}")
+                android.util.Log.d("NewPostDialog", "Activity End - Display: $endDurationDate $endDurationTime → ISO: ${postRequest.activity_end}")
+
+                android.util.Log.d("NewPostDialog", "--- STEP 4: Validating ISO dates ---")
+
+                // Validate ISO dates
+                val isoDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+                isoDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+
+                val datesToValidate = mapOf(
+                    "start_date" to postRequest.start_date,
+                    "end_date" to postRequest.end_date,
+                    "activity_start" to postRequest.activity_start,
+                    "activity_end" to postRequest.activity_end
+                )
+
+                datesToValidate.forEach { (fieldName, dateValue) ->
+                    if (dateValue != null && dateValue.isNotEmpty()) {
+                        try {
+                            val parsedDate = isoDateFormat.parse(dateValue)
+                            if (parsedDate != null) {
+                                android.util.Log.d("NewPostDialog", "✓ $fieldName is valid ISO date: $dateValue")
+                            } else {
+                                android.util.Log.e("NewPostDialog", "✗ $fieldName parsing returned null: $dateValue")
+                                throw IllegalArgumentException("Invalid ISO date in $fieldName: $dateValue")
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.e("NewPostDialog", "✗ $fieldName has invalid ISO date: $dateValue - ${e.message}")
+                            throw IllegalArgumentException("Invalid ISO date in $fieldName: $dateValue")
+                        }
+                    }
+                }
+
+                android.util.Log.d("NewPostDialog", "--- STEP 5: Converting to JSON ---")
+
+                // Convert to JSON
+                val gson = Gson()
+                val postJson = gson.toJson(postRequest)
+                android.util.Log.d("NewPostDialog", "JSON Data: $postJson")
+
+                val postRequestBody = postJson.toRequestBody("application/json".toMediaTypeOrNull())
+                android.util.Log.d("NewPostDialog", "Request body created successfully")
+
+                android.util.Log.d("NewPostDialog", "--- STEP 6: Processing images ---")
+
+                // Convert image URIs to multipart
+                val imageParts = if (formType == "Post") {
+                    android.util.Log.d("NewPostDialog", "Processing ${postImageUris.size} post images")
+                    postImageUris.mapIndexedNotNull { index, uri ->
+                        android.util.Log.d("NewPostDialog", "Converting image $index: $uri")
+                        val part = uriToMultipartBodyPart(context, uri, "files")
+                        if (part != null) {
+                            android.util.Log.d("NewPostDialog", "Image $index converted successfully")
+                        } else {
+                            android.util.Log.e("NewPostDialog", "Failed to convert image $index")
+                        }
+                        part
+                    }
+                } else {
+                    if (eventImageUri != null) {
+                        android.util.Log.d("NewPostDialog", "Processing 1 event image: $eventImageUri")
+                        val part = uriToMultipartBodyPart(context, eventImageUri!!, "files")
+                        if (part != null) {
+                            android.util.Log.d("NewPostDialog", "Event image converted successfully")
+                            listOf(part)
+                        } else {
+                            android.util.Log.e("NewPostDialog", "Failed to convert event image")
+                            emptyList()
+                        }
+                    } else {
+                        android.util.Log.d("NewPostDialog", "No event image to process")
+                        emptyList()
+                    }
+                }
+                android.util.Log.d("NewPostDialog", "Total images ready for upload: ${imageParts?.size ?: 0}")
+
+                android.util.Log.d("NewPostDialog", "--- STEP 7: Making API call ---")
+                android.util.Log.d("NewPostDialog", "API Endpoint: POST /announcements/v1/post")
+                android.util.Log.d("NewPostDialog", "Number of file parts: ${imageParts?.size ?: 0}")
+
+                val response = withContext(Dispatchers.IO) {
+                    android.util.Log.d("NewPostDialog", "Executing API request...")
+                    try {
+                        val result = if (isEditMode && existingPost != null) {
+                            android.util.Log.d("NewPostDialog", "Updating existing post: ${existingPost.post_id}")
+                            RetrofitClient.apiService.updatePost(existingPost.post_id, postRequestBody, imageParts)
+                        } else {
+                            android.util.Log.d("NewPostDialog", "Creating new post")
+                            RetrofitClient.apiService.createPost(postRequestBody, imageParts)
+                        }
+                        android.util.Log.d("NewPostDialog", "API request completed")
+                        result
+                    } catch (e: Exception) {
+                        android.util.Log.e("NewPostDialog", "API request threw exception", e)
+                        throw e
+                    }
+                }
+
+                android.util.Log.d("NewPostDialog", "--- STEP 8: Processing response ---")
+                android.util.Log.d("NewPostDialog", "Response Code: ${response.code()}")
+                android.util.Log.d("NewPostDialog", "Response Message: ${response.message()}")
+                android.util.Log.d("NewPostDialog", "Response Body: ${response.body()}")
+                android.util.Log.d("NewPostDialog", "Response Error Body: ${response.errorBody()?.string()}")
+
+                isSubmitting = false
+                android.util.Log.d("NewPostDialog", "Submission state set to false")
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body()
+                    val responseStatus = if (isEditMode) {
+                        (responseBody as? com.archeGlobal.one.network.UpdatePostResponse)?.status
+                    } else {
+                        (responseBody as? com.archeGlobal.one.network.CreatePostResponse)?.status
+                    }
+
+                    if (responseStatus == 200) {
+                        android.util.Log.d("NewPostDialog", "✓ SUCCESS: Post ${if (isEditMode) "updated" else "created"}!")
+                        showSuccessDialog = true
+                    } else {
+                        val errorMsg = if (isEditMode) {
+                            (responseBody as? com.archeGlobal.one.network.UpdatePostResponse)?.message ?: "Failed to update post"
+                        } else {
+                            (responseBody as? com.archeGlobal.one.network.CreatePostResponse)?.error ?: "Failed to create post"
+                        }
+                        errorMessage = errorMsg
+                        android.util.Log.e("NewPostDialog", "✗ FAILED: $errorMessage")
+                        showErrorDialog = true
+                    }
+                } else {
+                    errorMessage = response.errorBody()?.string() ?: "Failed to ${if (isEditMode) "update" else "create"} post (Code: ${response.code()})"
+                    android.util.Log.e("NewPostDialog", "✗ FAILED: $errorMessage")
+                    showErrorDialog = true
+                }
+                android.util.Log.d("NewPostDialog", "=== POST CREATION COMPLETED ===")
+            } catch (e: Exception) {
+                android.util.Log.e("NewPostDialog", "=== POST CREATION FAILED WITH EXCEPTION ===")
+                android.util.Log.e("NewPostDialog", "Exception Type: ${e.javaClass.simpleName}")
+                android.util.Log.e("NewPostDialog", "Exception Message: ${e.message}")
+                android.util.Log.e("NewPostDialog", "Stack Trace:", e)
+                isSubmitting = false
+                errorMessage = e.message ?: "An error occurred"
+                showErrorDialog = true
+            }
+        }
+    }
+
+    // Reset post subject when post type changes (but not during initial load in edit mode)
+    var isInitialLoad by remember { mutableStateOf(true) }
     LaunchedEffect(postType) {
-        postSubject = "Select Post Subject"
+        if (!isInitialLoad) {
+            postSubject = "Select Post Subject"
+        } else {
+            isInitialLoad = false
+        }
     }
 
     val scrollState = rememberScrollState()
@@ -337,12 +798,15 @@ fun NewPostDialog(
                             onSupportChannelDetailsChange = { supportChannelDetails = it },
                             postImageUris = postImageUris,
                             onPostImageUrisChange = { postImageUris = it },
+                            existingImageUrls = existingImageUrls,
+                            onExistingImageUrlsChange = { existingImageUrls = it },
+                            isEditMode = isEditMode,
                             onPreview = { showPostPreview = true },
                             onSubmit = {
-                                if (announcementDescription.isNotBlank()) {
-                                    onSubmit("", announcementDescription, "post")
-                                }
+                                android.util.Log.d("NewPostDialog", "Post button clicked!")
+                                submitPost()
                             },
+                            isSubmitting = isSubmitting,
                         )
                     } else {
                         // EVENT FORM CONTENT
@@ -353,6 +817,8 @@ fun NewPostDialog(
                             onEventDescriptionChange = { eventDescription = it },
                             eventImageUri = eventImageUri,
                             onEventImageUriChange = { eventImageUri = it },
+                            existingImageUrls = existingImageUrls,
+                            onExistingImageUrlsChange = { existingImageUrls = it },
                             eventDate = eventDate,
                             onEventDateChange = { eventDate = it },
                             eventStartDate = eventStartDate,
@@ -361,10 +827,10 @@ fun NewPostDialog(
                             onEventEndDateChange = { eventEndDate = it },
                             onPreview = { showEventPreview = true },
                             onSubmit = {
-                                if (eventSubject.isNotBlank() && eventDescription.isNotBlank()) {
-                                    onSubmit(eventSubject, eventDescription, "event")
-                                }
+                                android.util.Log.d("NewPostDialog", "Event button clicked!")
+                                submitPost()
                             },
+                            isSubmitting = isSubmitting,
                         )
                     }
                 }
@@ -404,6 +870,79 @@ fun NewPostDialog(
                 eventStartDate = eventStartDate,
                 eventEndDate = eventEndDate,
                 onDismiss = { showEventPreview = false }
+            )
+        }
+
+        // Success Dialog
+        if (showSuccessDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    android.util.Log.d("NewPostDialog", "Success dialog dismissed - calling onSubmit callback")
+                    showSuccessDialog = false
+                    val title = if (formType == "Post") postSubject else eventSubject
+                    val description = if (formType == "Post") announcementDescription else eventDescription
+                    onSubmit(title, description, formType)
+                },
+                title = {
+                    Text(
+                        text = "Success!",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Your ${if (formType == "Post") "post" else "event"} has been ${if (isEditMode) "updated" else "created"} successfully.",
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 16.sp
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            android.util.Log.d("NewPostDialog", "Success dialog OK clicked - calling onSubmit callback")
+                            showSuccessDialog = false
+                            val title = if (formType == "Post") postSubject else eventSubject
+                            val description = if (formType == "Post") announcementDescription else eventDescription
+                            onSubmit(title, description, formType)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+                    ) {
+                        Text("OK", fontFamily = GraphikFontFamily)
+                    }
+                }
+            )
+        }
+
+        // Error Dialog
+        if (showErrorDialog) {
+            AlertDialog(
+                onDismissRequest = { showErrorDialog = false },
+                title = {
+                    Text(
+                        text = "Error",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = Color.Red
+                    )
+                },
+                text = {
+                    Text(
+                        text = errorMessage,
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 16.sp
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { showErrorDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+                    ) {
+                        Text("OK", fontFamily = GraphikFontFamily)
+                    }
+                }
             )
         }
     }
@@ -449,8 +988,12 @@ private fun PostFormContent(
     onSupportChannelDetailsChange: (String) -> Unit,
     postImageUris: List<Uri>,
     onPostImageUrisChange: (List<Uri>) -> Unit,
+    existingImageUrls: List<String>,
+    onExistingImageUrlsChange: (List<String>) -> Unit,
+    isEditMode: Boolean = false,
     onPreview: () -> Unit,
     onSubmit: () -> Unit,
+    isSubmitting: Boolean = false,
 ) {
     val postTypes = listOf("Planned", "Unplanned/Emergency")
 
@@ -497,7 +1040,8 @@ private fun PostFormContent(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            if (postImageUris.size < 3) {
+            val totalImages = existingImageUrls.size + postImageUris.size
+            if (totalImages < 3) {
                 onPostImageUrisChange(postImageUris + it)
             }
         }
@@ -759,16 +1303,17 @@ private fun PostFormContent(
     Spacer(modifier = Modifier.height(16.dp))
 
     // Select images to attach button (max 3 images)
+    val totalImages = existingImageUrls.size + postImageUris.size
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
             .background(
-                color = if (postImageUris.size < 3) Color.White else Color.Gray.copy(alpha = 0.3f),
+                color = if (totalImages < 3) Color.White else Color.Gray.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(12.dp),
             )
-            .clickable(enabled = postImageUris.size < 3) {
-                if (postImageUris.size < 3) {
+            .clickable(enabled = totalImages < 3) {
+                if (totalImages < 3) {
                     imagePickerLauncher.launch("image/*")
                 }
             },
@@ -781,26 +1326,26 @@ private fun PostFormContent(
             Icon(
                 painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.ic_gallery),
                 contentDescription = "Gallery",
-                tint = if (postImageUris.size < 3) Color.Gray else Color.Gray.copy(alpha = 0.5f),
+                tint = if (totalImages < 3) Color.Gray else Color.Gray.copy(alpha = 0.5f),
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (postImageUris.size < 3)
-                    "Select images to attach (${postImageUris.size}/3)"
+                text = if (totalImages < 3)
+                    "Select images to attach ($totalImages/3)"
                 else
                     "Maximum 3 images reached",
                 fontFamily = GraphikFontFamily,
                 fontSize = 16.sp,
-                color = if (postImageUris.size < 3) Color.Gray else Color.Gray.copy(alpha = 0.5f),
+                color = if (totalImages < 3) Color.Gray else Color.Gray.copy(alpha = 0.5f),
             )
         }
     }
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    // Attached Photos Section
-    if (postImageUris.isNotEmpty()) {
+    // Attached Photos Section (show if there are existing images OR new images)
+    if (existingImageUrls.isNotEmpty() || postImageUris.isNotEmpty()) {
         Text(
             text = "Attached Photos",
             fontFamily = GraphikFontFamily,
@@ -817,6 +1362,52 @@ private fun PostFormContent(
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Display existing images (from URL)
+            existingImageUrls.forEach { imageUrl ->
+                Box(
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(150.dp)
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(imageUrl),
+                            contentDescription = "Existing Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    // Remove image button (X)
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(3.dp)
+                            .size(20.dp)
+                            .background(
+                                color = PrimaryRed,
+                                shape = CircleShape
+                            )
+                            .clickable {
+                                onExistingImageUrlsChange(existingImageUrls.filter { it != imageUrl })
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Remove Image",
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
+            }
+
+            // Display newly selected images (from URI)
             postImageUris.forEach { uri ->
                 Box(
                     modifier = Modifier
@@ -831,7 +1422,7 @@ private fun PostFormContent(
                     ) {
                         Image(
                             painter = rememberAsyncImagePainter(uri),
-                            contentDescription = "Attached Image",
+                            contentDescription = "New Image",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
@@ -1014,20 +1605,28 @@ private fun PostFormContent(
             colors = ButtonDefaults.buttonColors(
                 containerColor = PrimaryRed,
                 contentColor = Color.White,
-                disabledContainerColor = PrimaryRed,
+                disabledContainerColor = Color.Gray,
                 disabledContentColor = Color.White,
             ),
             shape = RoundedCornerShape(12.dp),
-            enabled = announcementDescription.isNotBlank(),
+            enabled = !isSubmitting && announcementDescription.isNotBlank() && postSubject != "Select Post Subject" && postPriority != "Select Post Priority",
         ) {
+            if (isSubmitting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
             Icon(
                 imageVector = Icons.Default.Send,
-                contentDescription = "Post",
+                contentDescription = if (isEditMode) "Update" else "Post",
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Post",
+                text = if (isEditMode) "Update" else "Post",
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp,
@@ -1046,6 +1645,8 @@ private fun EventFormContent(
     onEventDescriptionChange: (String) -> Unit,
     eventImageUri: Uri?,
     onEventImageUriChange: (Uri?) -> Unit,
+    existingImageUrls: List<String>,
+    onExistingImageUrlsChange: (List<String>) -> Unit,
     eventDate: String,
     onEventDateChange: (String) -> Unit,
     eventStartDate: String,
@@ -1054,6 +1655,7 @@ private fun EventFormContent(
     onEventEndDateChange: (String) -> Unit,
     onPreview: () -> Unit,
     onSubmit: () -> Unit,
+    isSubmitting: Boolean = false,
 ) {
     // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -1145,8 +1747,8 @@ private fun EventFormContent(
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    // Attached Photo Section
-    eventImageUri?.let { uri ->
+    // Attached Photo Section (show if there are existing images OR new image)
+    if (existingImageUrls.isNotEmpty() || eventImageUri != null) {
         Text(
             text = "Attached Photo",
             fontFamily = GraphikFontFamily,
@@ -1156,46 +1758,101 @@ private fun EventFormContent(
             modifier = Modifier.padding(bottom = 12.dp),
         )
 
-        // Single image preview
-        Box(
+        // Horizontal scrollable row for images
+        Row(
             modifier = Modifier
-                .width(100.dp)
-                .height(150.dp)
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxSize(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Image(
-                    painter = rememberAsyncImagePainter(uri),
-                    contentDescription = "Attached Image",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+            // Display existing images (from URL)
+            existingImageUrls.forEach { imageUrl ->
+                Box(
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(150.dp)
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(imageUrl),
+                            contentDescription = "Existing Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    // Remove image button (X)
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(3.dp)
+                            .size(20.dp)
+                            .background(
+                                color = PrimaryRed,
+                                shape = CircleShape
+                            )
+                            .clickable {
+                                onExistingImageUrlsChange(existingImageUrls.filter { it != imageUrl })
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Remove Image",
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
             }
-            // Remove image button (X)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(3.dp)
-                    .size(20.dp)
-                    .background(
-                        color = PrimaryRed,
-                        shape = CircleShape
-                    )
-                    .clickable {
-                        onEventImageUriChange(null)
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Remove Image",
-                    tint = Color.White,
-                    modifier = Modifier.size(12.dp)
-                )
+
+            // Display new image (from URI)
+            eventImageUri?.let { uri ->
+                Box(
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(150.dp)
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(uri),
+                            contentDescription = "New Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    // Remove image button (X)
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(3.dp)
+                            .size(20.dp)
+                            .background(
+                                color = PrimaryRed,
+                                shape = CircleShape
+                            )
+                            .clickable {
+                                onEventImageUriChange(null)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Remove Image",
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
             }
         }
 
@@ -1274,8 +1931,16 @@ private fun EventFormContent(
                 disabledContentColor = Color.White,
             ),
             shape = RoundedCornerShape(12.dp),
-            enabled = eventSubject.isNotBlank() && eventDescription.isNotBlank(),
+            enabled = !isSubmitting && eventSubject.isNotBlank() && eventDescription.isNotBlank(),
         ) {
+            if (isSubmitting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
             Icon(
                 imageVector = Icons.Default.Send,
                 contentDescription = "Create Event",

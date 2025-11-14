@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
-      "Bash(./gradlew assembleDebug:*)"
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(awk:*)",
+      "Bash(\"C:/Users/User/Documents/GitHub/XOne---Android/XOne/temp_modified.kt\")"
     ],
     "deny": [],
     "ask": []

@@ -2,31 +2,44 @@ package com.archeGlobal.one.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.FooterNavigationModel
+import com.archeGlobal.one.network.CreatedPost
+import com.archeGlobal.one.network.HeadsUpPostsRequest
+import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.components.NewPostDialog
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HeadsUpScreen(
     footerNavigation: FooterNavigationModel,
@@ -43,12 +56,55 @@ fun HeadsUpScreen(
     val userData = userDataManager.getUserData()
     val profilePicUrl = userData?.profilePic
     val userName = userData?.name ?: "User"
+    val userEmail = userData?.email ?: ""
 
     var showNewPostDialog by remember { mutableStateOf(false) }
+    var posts by remember { mutableStateOf<List<CreatedPost>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+    var refreshTrigger by remember { mutableStateOf(0) }
+    val scope = rememberCoroutineScope()
+
+    // Function to load HeadsUp posts
+    val loadPosts = suspend {
+        isLoading = true
+        try {
+            android.util.Log.d("HeadsUpScreen", "Loading HeadsUp posts for email: $userEmail")
+
+            val request = HeadsUpPostsRequest(
+                department = "",
+                location = "",
+                email = userEmail
+            )
+            val response = RetrofitClient.apiService.getHeadsUpPosts(request)
+
+            android.util.Log.d("HeadsUpScreen", "Response code: ${response.code()}")
+            android.util.Log.d("HeadsUpScreen", "Response successful: ${response.isSuccessful}")
+
+            if (response.isSuccessful && response.body()?.status == 200) {
+                posts = response.body()?.posts ?: emptyList()
+                android.util.Log.d("HeadsUpScreen", "Loaded ${posts.size} HeadsUp posts")
+            } else {
+                android.util.Log.e("HeadsUpScreen", "Failed to load posts: ${response.code()}")
+                posts = emptyList()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("HeadsUpScreen", "Error loading posts", e)
+            posts = emptyList()
+        } finally {
+            isLoading = false
+        }
+    }
+
+    // Load posts on screen launch and when refresh is triggered
+    LaunchedEffect(refreshTrigger) {
+        scope.launch {
+            loadPosts()
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding(),
     ) {
         FooterScaffold(
@@ -66,61 +122,123 @@ fun HeadsUpScreen(
             onFooterSOSClick = onFooterSOSClick,
             onFooterProfileClick = onFooterProfileClick,
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF6F4EE)),
-                contentAlignment = Alignment.Center
-            ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(32.dp)
-            ) {
-                // Icon
-                Surface(
-                    modifier = Modifier.size(120.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color(0xFFE8E3D9)
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.headsup),
-                            contentDescription = "No Posts",
-                            modifier = Modifier.size(64.dp),
-                            tint = Color(0xFF999999)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFFE0DCD1), // Light grey at top
+                                Color(0xFFC8C8CA), // Medium grey in middle
+                                Color(0xFF474749), // Dark grey at bottom
+                            )
                         )
+                    )
+            ) {
+                // Top App Bar
+                TopAppBar(
+                    title = {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "HeadsUp",
+                                color = Color.Black,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    },
+                    navigationIcon = {},
+                    actions = {
+                        Spacer(modifier = Modifier.width(48.dp))
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                )
+
+                SwipeRefresh(
+                    state = rememberSwipeRefreshState(isLoading),
+                    onRefresh = {
+                        scope.launch {
+                            loadPosts()
+                        }
+                    }
+                ) {
+                    if (posts.isEmpty() && !isLoading) {
+                        // Empty state
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.padding(32.dp)
+                            ) {
+                                // Icon
+                                Surface(
+                                    modifier = Modifier.size(120.dp),
+                                    shape = RoundedCornerShape(24.dp),
+                                    color = Color(0xFFE8E3D9)
+                                ) {
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.headsup),
+                                            contentDescription = "No Posts",
+                                            modifier = Modifier.size(64.dp),
+                                            tint = Color(0xFF999999)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                // Title
+                                Text(
+                                    text = "No Posts Found",
+                                    fontSize = 24.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                // Subtitle
+                                Text(
+                                    text = "Create a post by clicking on New Post!",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color(0xFF666666),
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(modifier = Modifier.height(200.dp))
+                            }
+                        }
+                    } else {
+                        // Posts list
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(posts) { post ->
+                                HeadsUpPostCard(post = post)
+                            }
+                        }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Title
-                Text(
-                    text = "No Posts Found",
-                    fontSize = 24.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.Black,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Subtitle
-                Text(
-                    text = "Create a post by clicking on New Post!",
-                    fontSize = 16.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    color = Color(0xFF666666),
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(200.dp))
             }
 
             // Floating Action Button at bottom right
@@ -152,7 +270,6 @@ fun HeadsUpScreen(
                     )
                 }
             }
-            }
         }
 
         // Show New Post Dialog
@@ -161,12 +278,269 @@ fun HeadsUpScreen(
                 profilePicUrl = profilePicUrl,
                 userName = userName,
                 onDismiss = { showNewPostDialog = false },
-                onSubmit = { title, description, category ->
-                    // TODO: Handle post submission
+                onSubmit = { _, _, _ ->
                     showNewPostDialog = false
+                    // Refresh posts after creating new post
+                    refreshTrigger++
                 },
                 onHistoryClick = onHistoryClick
             )
         }
+    }
+}
+
+@Composable
+fun HeadsUpPostCard(post: CreatedPost) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Header with profile, name, and priority
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // Profile picture
+                    if (!post.profile_pic.isNullOrEmpty()) {
+                        Image(
+                            painter = rememberAsyncImagePainter(post.profile_pic),
+                            contentDescription = "Profile",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.Gray),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = post.username.take(1).uppercase(),
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
+                        Text(
+                            text = post.username,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = formatPostTime(post.created_at),
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                        // Target audience with icon
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.item_name),
+                                contentDescription = "Target Audience",
+                                modifier = Modifier.size(12.dp),
+                                tint = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = formatTargetAudience(post),
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 12.sp,
+                                color = Color(0xFF666666)
+                            )
+                        }
+                    }
+                }
+
+                // Priority badge
+                Box(
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .background(
+                            color = when (post.priority.lowercase()) {
+                                "high" -> Color(0xFFD32F2F)
+                                "medium" -> Color(0xFFFFA726)
+                                "low" -> Color(0xFF66BB6A)
+                                else -> Color.Gray
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = post.priority,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = Color.White
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Subject
+            Text(
+                text = post.subject,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+                color = Color.Black
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Description
+            Text(
+                text = post.description,
+                fontFamily = GraphikFontFamily,
+                fontSize = 14.sp,
+                color = Color(0xFF666666),
+                lineHeight = 20.sp
+            )
+
+            // Images if available
+            if (!post.image_urls.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(post.image_urls[0]),
+                        contentDescription = "Post Image",
+                        modifier = Modifier
+                            .width(130.dp)
+                            .height(130.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+            }
+
+            // Support Details if available
+            if (!post.support_channel.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Support Details :",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Color.Black
+                )
+                Text(
+                    text = post.support_channel,
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    color = Color(0xFF666666)
+                )
+            }
+
+            // Activity Duration if available
+            if (!post.activity_start.isNullOrEmpty() && !post.activity_end.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Acitivity Duration :",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Color.Black
+                )
+                Text(
+                    text = "${formatActivityTime(post.activity_start)} - ${formatActivityTime(post.activity_end)}",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    color = Color(0xFF666666)
+                )
+            }
+        }
+    }
+}
+
+// Helper function to format post time
+private fun formatPostTime(createdAt: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val date = inputFormat.parse(createdAt)
+
+        if (date != null) {
+            val now = Calendar.getInstance().time
+            val diff = now.time - date.time
+            val seconds = diff / 1000
+            val minutes = seconds / 60
+            val hours = minutes / 60
+            val days = hours / 24
+
+            when {
+                days > 0 -> "$days day${if (days > 1) "s" else ""} ago"
+                hours > 0 -> "$hours hour${if (hours > 1) "s" else ""} ago"
+                minutes > 0 -> "$minutes minute${if (minutes > 1) "s" else ""} ago"
+                else -> "Just now"
+            }
+        } else {
+            "Unknown"
+        }
+    } catch (e: Exception) {
+        "Unknown"
+    }
+}
+
+// Helper function to format activity time
+private fun formatActivityTime(isoTime: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val date = inputFormat.parse(isoTime)
+
+        if (date != null) {
+            val outputFormat = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+            outputFormat.format(date)
+        } else {
+            isoTime
+        }
+    } catch (e: Exception) {
+        isoTime
+    }
+}
+
+// Helper function to format target audience
+private fun formatTargetAudience(post: CreatedPost): String {
+    return when (post.target_group) {
+        "Everyone" -> "Everyone@arche.global"
+        "DepartmentBased" -> post.target_department?.joinToString(", ") ?: "Department"
+        "LocationBased" -> post.target_location?.joinToString(", ") ?: "Location"
+        "EmployeeBased" -> post.target_employee?.firstOrNull() ?: "Specific Employee"
+        else -> "Everyone@arche.global"
     }
 }
