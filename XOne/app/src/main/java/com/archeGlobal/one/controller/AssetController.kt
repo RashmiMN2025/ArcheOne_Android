@@ -7,22 +7,29 @@ import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.room.util.copy
 import com.archeGlobal.one.AssetActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.TrackTicketsActivity
 import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.AssetDetails
 import com.archeGlobal.one.model.AssetModel
+import com.archeGlobal.one.model.AssetV2Request
 import com.archeGlobal.one.model.EncryptedSOSResponse
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.model.SOSResponse
+import com.archeGlobal.one.model.SelfTagAssetRequest
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.EncryptedAPIService
+import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
 import kotlinx.coroutines.withContext
+import kotlin.jvm.java
 
 class AssetController(
     private val context: Context,
@@ -32,7 +39,40 @@ class AssetController(
         private set
 
     private var isDataLoaded = false
+    private val apiService = RetrofitClient.apiService
     private val encryptedApiService = EncryptedAPIService.getInstance(context)
+
+    private var _showSelfTagDialog by mutableStateOf(false)
+    private var _selectedAssetType by mutableStateOf("")
+    private var _modelNumberInput by mutableStateOf("")
+    private var _serialNumberInput by mutableStateOf("")
+    private var _selfTagSubmitting by mutableStateOf(false)
+    private var _selfTagResult by mutableStateOf<String?>(null)
+
+    // Public access with recomposition support
+    var showSelfTagDialog: Boolean
+        get() = _showSelfTagDialog
+        private set(value) { _showSelfTagDialog = value }
+
+    var selectedAssetType: String
+        get() = _selectedAssetType
+        set(value) { _selectedAssetType = value }
+
+    var modelNumberInput: String
+        get() = _modelNumberInput
+        set(value) { _modelNumberInput = value }
+
+    var serialNumberInput: String
+        get() = _serialNumberInput
+        set(value) { _serialNumberInput = value }
+
+    var selfTagSubmitting: Boolean
+        get() = _selfTagSubmitting
+        private set(value) { _selfTagSubmitting = value }
+
+    var selfTagResult: String?
+        get() = _selfTagResult
+        private set(value) { _selfTagResult = value }
 
     init {
         Log.d("AssetController", "AssetController created - data will be loaded on first access")
@@ -54,59 +94,76 @@ class AssetController(
 
     private fun loadAssetDetails() {
         val userData = OtpVerificationController.getUserData()
-        val assetDetails = UserDataManager.getInstance(context).getAssetDetails()
+        if (userData == null) {
+            model = model.copy(error = "User data not found", isLoading = false)
+            return
+        }
 
-        if (userData != null) {
-            // If we have user data but no asset details
-            if (assetDetails.isNullOrEmpty()) {
-                model =
-                    model.copy(
-                        name = userData.name,
-                        employeeId = userData.employeeId,
-                        mobile = userData.mobile,
-                        email = userData.email,
-                        location = userData.location,
-                        department = userData.department,
-                        designation = userData.designation,
-                        error = "No asset details found",
-                        isLoading = false,
-                    )
-            } else {
-                // Map the asset details to a list of AssetDetails objects
-                val assetDetailsList =
-                    assetDetails.map { asset ->
-                        Log.d("AssetController", "Mapping asset: hostname=${asset.hostname}")
-                        AssetDetails(
-                            serialNo = asset.serial_number,
-                            deviceModel = asset.model,
-                            dateOfIssue = formatDate(asset.date_of_issue),
-                            configuration = asset.configuration,
-                            assetType = asset.asset_type,
-                            purchaseDate = formatDate(asset.purchase_date ?: ""),
-                            hostName = asset.hostname ?: "",
+        val reportingToFromDetails = userData.userDetails?.reporting_manager?.takeIf { it.isNotBlank() }
+            ?: "N/A"
+
+        // ---- 1. Fill the static user fields (Employee ID, Location, Reporting To…) ----
+        model = model.copy(
+            name = userData.name,
+            employeeId = userData.employeeId,
+            mobile = userData.mobile,
+            email = userData.email,
+            location = userData.location,
+            department = userData.department,
+            designation = userData.designation,
+            reportingTo = reportingToFromDetails,
+            isLoading = true
+        )
+
+        // ---- 2. Call the new API -------------------------------------------------
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val request = AssetV2Request(employeeCode = userData.employeeId)
+                val response = apiService.getAssetsV2(request)
+
+                withContext(Dispatchers.Main) {
+                    if (response.success && response.data.isNotEmpty()) {
+                        val group = response.data[0]                     // one employee
+                        val assets = group.assets.map { api ->
+                            AssetDetails(
+                                assetType = api.assetType,
+                                oldAssetId = api.oldAssetId ?: "",
+                                newAssetId = api.newAssetId ?: "",
+                                purchaseDate = api.purchaseDate,
+                                modelNumber = api.modelNumber,
+                                configuration = api.configuration,
+                                reportingTo = api.reportingTo,
+                                divisionalHead = api.divisionalHead,
+                                warrantyStart = api.warrantyStart ?: "",
+                                warrantyEnd = api.warrantyEnd ?: "",
+                                dateOfIssue = api.dateOfIssue,
+                                serialNumber = api.serialNumber,
+                                isTagged = api.isTagged,
+                                division = api.division ?: "",
+                                location = api.location ?: ""
+                            )
+                        }
+
+                        model = model.copy(
+                            assetDetails = assets,
+                            isLoading = false
+                        )
+                    } else {
+                        model = model.copy(
+                            error = "No asset details found",
+                            isLoading = false
                         )
                     }
-
-                // Update the model with the list of asset details
-                model =
-                    model.copy(
-                        name = userData.name,
-                        employeeId = userData.employeeId,
-                        mobile = userData.mobile,
-                        email = userData.email,
-                        location = userData.location,
-                        department = userData.department,
-                        designation = userData.designation,
-                        assetDetails = assetDetailsList, // Assign the list here
-                        isLoading = false,
+                }
+            } catch (e: Exception) {
+                Log.e("AssetController", "API error", e)
+                withContext(Dispatchers.Main) {
+                    model = model.copy(
+                        error = "Failed to load assets",
+                        isLoading = false
                     )
+                }
             }
-        } else {
-            model =
-                model.copy(
-                    error = "User data not found",
-                    isLoading = false,
-                )
         }
     }
 
@@ -267,5 +324,83 @@ class AssetController(
         // Apply forward animation
         (context as? AssetActivity)?.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         // Finish AssetActivity to prevent going back to itS
+    }
+
+    fun showSelfTagDialog() {
+        selectedAssetType = ""
+        modelNumberInput = ""
+        serialNumberInput = ""
+        selfTagResult = null
+        showSelfTagDialog = true
+    }
+
+    fun hideSelfTagDialog() {
+        showSelfTagDialog = false
+    }
+
+    /** Called from UI when the user presses **Submit** */
+    fun submitSelfTagAsset() {
+        val user = OtpVerificationController.getUserData() ?: run {
+            Toast.makeText(context, "User data not available", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // ---- Validation -------------------------------------------------
+        if (selectedAssetType.isBlank() || modelNumberInput.isBlank() || serialNumberInput.isBlank()) {
+            Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        selfTagSubmitting = true
+        selfTagResult = null
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val apiDivision = if (model.assetDetails.isNotEmpty()) {
+                    model.assetDetails[0].division.takeIf { it.isNotBlank() }
+                } else null
+
+                val request = SelfTagAssetRequest(
+                    assetType = selectedAssetType,
+                    modelNumber = modelNumberInput,
+                    serialNumber = serialNumberInput,
+                    employeeCode = user.employeeId,
+                    username = user.name,
+                    mailId = user.email,
+                    mobileNumber = user.mobile,
+                    location = user.location,
+                    designation = user.designation,
+                    division = apiDivision ?: "",
+                    department = user.department,
+                    dateOfIssue = "",                         // can be current date if needed
+                    reportingTo = user.userDetails?.reporting_manager ?: "",
+                    divisionalHead = user.userDetails?.divisional_head ?: ""
+                )
+
+                val response = apiService.selfTagAsset(request)
+
+                withContext(Dispatchers.Main) {
+                    selfTagSubmitting = false
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        selfTagResult = response.body()?.message
+                            ?: "Self-tag request submitted successfully."
+                        // optional: refresh asset list after a short delay
+                        CoroutineScope(Dispatchers.IO).launch {
+                            delay(800)
+                            loadAssetDetails()
+                        }
+                    } else {
+                        selfTagResult = response.body()?.message
+                            ?: "Failed to submit self-tag."
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    selfTagSubmitting = false
+                    selfTagResult = "Network error. Please try again."
+                    Log.e("AssetController", "Self-tag asset error", e)
+                }
+            }
+        }
     }
 }

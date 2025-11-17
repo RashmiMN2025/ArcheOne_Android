@@ -118,6 +118,9 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.ui.text)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.foundation)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.room.ktx)
 
     // Testing
     testImplementation(libs.junit)

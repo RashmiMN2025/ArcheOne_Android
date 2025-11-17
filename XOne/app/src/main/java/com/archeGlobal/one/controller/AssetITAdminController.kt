@@ -19,16 +19,6 @@ class AssetITAdminController : ViewModel() {
         navController?.popBackStack()
     }
 
-    fun onDashboardItemClick(itemName: String) {
-        val route = when (itemName) {
-            "Asset Inventory" -> "asset_inventory"
-            "Tickets" -> "tickets"
-            "Asset Consumption" -> "asset_consumption"
-            else -> return
-        }
-        navController?.navigate(route)
-    }
-
     fun onInventoryItemClick(assetName: String) {
         val safeName = assetName.lowercase().replace(" ", "_")
         navController?.navigate("inventory_detail/$safeName")

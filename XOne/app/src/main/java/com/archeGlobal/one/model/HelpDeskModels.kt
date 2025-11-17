@@ -31,6 +31,7 @@ enum class TicketStatus {
     IN_PROGRESS,
     CLOSED,
     PENDING,
+    ONHOLD
 }
 
 data class HelpDeskFAQ(
@@ -56,6 +57,7 @@ fun TicketItem.toSupportTicket(): SupportTicket {
             "IN_PROGRESS", "IN PROGRESS" -> TicketStatus.IN_PROGRESS
             "CLOSED" -> TicketStatus.CLOSED
             "PENDING" -> TicketStatus.PENDING
+            "ONHOLD" -> TicketStatus.ONHOLD
             else -> TicketStatus.CLOSED // Default to closed for unknown statuses
         }
 

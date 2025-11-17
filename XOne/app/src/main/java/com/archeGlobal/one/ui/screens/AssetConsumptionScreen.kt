@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -33,15 +34,41 @@ import androidx.compose.material.Text
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.Modifier as ComposeModifier
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
+import com.archeGlobal.one.ui.theme.PrimaryRed
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.archeGlobal.one.controller.OtpVerificationController
+import com.archeGlobal.one.model.BulkUploadRequest
+import com.archeGlobal.one.model.Message
+import com.archeGlobal.one.network.RetrofitClient
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AssetConsumptionScreen(
     items : List<AssetConsumptionItem>,
     onBackPressed: () -> Unit,
-    onItemClick: (String) -> Unit,
+    onItemClick: (String, NavController?) -> Unit, // Updated to accept NavController
+    navController: NavController? = null
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val userData = OtpVerificationController.getUserData()
+    val userEmail = userData?.email ?: ""
+
+    var showBulkUploadDialog by remember { mutableStateOf(false) }
+    var bulkSuccessMessage by remember { mutableStateOf("") }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -111,11 +138,125 @@ fun AssetConsumptionScreen(
                         items(items) { item ->
                             AssetConsumption(
                                 item = item,
-                                onClick = { onItemClick(item.name) }
+                                onClick = {
+                                    when (item.name) {
+                                        "Tagged Assets" -> {
+                                            navController?.navigate("tagged_assets")
+                                        }
+                                        "Bulk Upload" -> {
+                                            if (userEmail.isBlank()) {
+                                                Toast.makeText(context, "Email not found", Toast.LENGTH_LONG).show()
+                                                return@AssetConsumption
+                                            }
+                                            scope.launch {
+                                                try {
+                                                    val request = BulkUploadRequest(userEmail)
+                                                    val response = RetrofitClient.apiService.initiateBulkUpload(request)
+                                                    if (response.success) {
+                                                        bulkSuccessMessage = response.message
+                                                        showBulkUploadDialog = true
+                                                    } else {
+                                                        Toast.makeText(context, response.message, Toast.LENGTH_LONG).show()
+                                                    }
+                                                } catch (e: Exception) {
+                                                    Toast.makeText(context, "Failed: ${e.message}", Toast.LENGTH_LONG).show()
+                                                }
+                                            }
+                                        }
+                                        "Download Reports" -> {
+                                            navController?.navigate("download_reports")
+                                        }
+                                        else -> onItemClick(item.name, navController)
+                                    }
+                                }
                             )
                         }
                     }
                 }
+
+            }
+        }
+    }
+
+    if (showBulkUploadDialog) {
+        BulkUploadSuccessDialog(
+            message = bulkSuccessMessage,
+            onDismiss = { showBulkUploadDialog = false }
+        )
+    }
+}
+
+@Composable
+fun BulkUploadSuccessDialog(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .width(420.dp)
+                .wrapContentHeight()
+                .padding(20.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
+            elevation = CardDefaults.cardElevation(20.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(24.dp))
+
+                // Green Checkmark
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .background(Color(0xFF4CAF50), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(35.dp)
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                Text(
+                    text = message,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+
+                Spacer(Modifier.height(32.dp))
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Text(
+                        "OK",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
 
             }
         }
@@ -132,7 +273,7 @@ fun AssetConsumption (
             .fillMaxWidth(0.55f)
             .height(230.dp)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
@@ -207,12 +348,12 @@ fun assetConsumptionItem(): List<AssetConsumptionItem> =
         ),
         AssetConsumptionItem(
             name = "Download Reports",
-            description = "Download asset reports",
+            description = "Download \n asset reports",
             image = "ic_download_reports"
         ),
         AssetConsumptionItem(
             name = "Bulk Upload",
-            description = "Upload assets in bulk",
+            description = "Upload assets \n in bulk",
             image = "ic_bulk_upload"
         )
     )

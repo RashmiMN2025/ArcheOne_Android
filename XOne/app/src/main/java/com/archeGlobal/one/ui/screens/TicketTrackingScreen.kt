@@ -263,7 +263,6 @@ fun TicketCard(
                         color = Color.Black,
                     )
                     // Show category for closed tickets, nothing for open tickets
-                    if (ticket.status == TicketStatus.CLOSED) {
                         Text(
                             text = ticket.category,
                             fontSize = 14.sp,
@@ -271,7 +270,6 @@ fun TicketCard(
                             fontFamily = GraphikFontFamily,
                             modifier = Modifier.padding(top = 2.dp),
                         )
-                    }
                 }
 
                 Row(
@@ -644,6 +642,7 @@ fun StatusChip(status: TicketStatus) {
     val (statusText, backgroundColor) =
         when (status) {
             TicketStatus.OPEN -> "Open" to Color(0xFFD32F2F) // Changed to red
+            TicketStatus.ONHOLD -> "OnHold" to Color(0xFF2196F3) // Blue
             TicketStatus.IN_PROGRESS -> "In Progress" to Color(0xFF2196F3)
             TicketStatus.CLOSED -> "Closed" to Color(0xFF4CAF50)
             TicketStatus.PENDING -> "Pending" to Color(0xFFFFC107)
@@ -654,7 +653,9 @@ fun StatusChip(status: TicketStatus) {
             Modifier
                 .clip(RoundedCornerShape(16.dp))
                 .background(backgroundColor)
-                .padding(horizontal = 8.dp, vertical = 1.dp),
+                .padding(horizontal = 10.dp, vertical = 2.dp)
+                .width(70.dp),
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = statusText,
@@ -662,6 +663,7 @@ fun StatusChip(status: TicketStatus) {
             fontWeight = FontWeight.Medium,
             fontFamily = GraphikFontFamily,
             color = Color.White,
+            textAlign = TextAlign.Center
         )
     }
 }

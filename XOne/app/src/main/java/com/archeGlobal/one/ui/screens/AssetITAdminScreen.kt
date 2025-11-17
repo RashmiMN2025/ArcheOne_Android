@@ -71,7 +71,7 @@ fun AssetITAdminScreen(
                         ) {
                             Text(
                                 modifier = Modifier.offset(x = 5.dp),
-                                text = "IT Admin Dashboard",
+                                text = "Admin Dashboard",
                                 color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
@@ -142,7 +142,7 @@ fun AssetAdminCard (
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
@@ -213,6 +213,11 @@ fun assetAdminItem(): List<AssetAdminItem> =
         AssetAdminItem(
             name = "Asset Consumption",
             description = "Check usage and consumption",
+            image = "ic_consumption_report"
+        ),
+        AssetAdminItem(
+            name = "Self-Tag Requests",
+            description = "Approve or reject user tagged assets",
             image = "ic_consumption_report"
         )
     )
