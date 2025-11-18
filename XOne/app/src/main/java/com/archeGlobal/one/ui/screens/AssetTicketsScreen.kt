@@ -33,15 +33,53 @@ import androidx.compose.material.Text
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.Modifier as ComposeModifier
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import com.archeGlobal.one.controller.AssetTicketsController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AssetITAdminScreen(
-    items : List<AssetAdminItem>,
+fun AssetTicketsScreen(
     onBackPressed: () -> Unit,
     onItemClick: (String) -> Unit,
 ) {
+    val context = LocalContext.current
+
+    val openController = remember { AssetTicketsController(context, "Open") }
+    val closedController = remember { AssetTicketsController(context, "Closed") }
+    val inProgressController = remember { AssetTicketsController(context, "InProgress") }
+
+    LaunchedEffect(Unit) {
+        openController.loadTicketsData()
+        closedController.loadTicketsData()
+        inProgressController.loadTicketsData()
+    }
+
+    val openModel by openController.model.collectAsState()
+    val closedModel by closedController.model.collectAsState()
+    val inProgressModel by inProgressController.model.collectAsState()
+
+    val items = listOf(
+        AssetTicketsItem(
+            name = "Open",
+            description = "Count: ${openModel.count}",
+            image = "ic_open_ticket"
+        ),
+        AssetTicketsItem(
+            name = "Closed",
+            description = "Count: ${closedModel.count}",
+            image = "ic_closed_ticket"
+        ),
+        AssetTicketsItem(
+            name = "InProgress",
+            description = "Count: ${inProgressModel.count}",
+            image = "ic_progress_ticket"
+        )
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -61,7 +99,10 @@ fun AssetITAdminScreen(
                     )
                 )
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
 
                 TopAppBar(
                     title = {
@@ -71,7 +112,7 @@ fun AssetITAdminScreen(
                         ) {
                             Text(
                                 modifier = Modifier.offset(x = 5.dp),
-                                text = "Admin Dashboard",
+                                text = "Ticket Status",
                                 color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
@@ -109,7 +150,7 @@ fun AssetITAdminScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         items(items) { item ->
-                            AssetAdminCard(
+                            AssetTickets(
                                 item = item,
                                 onClick = { onItemClick(item.name) }
                             )
@@ -123,8 +164,8 @@ fun AssetITAdminScreen(
 }
 
 @Composable
-fun AssetAdminCard (
-    item: AssetAdminItem,
+fun AssetTickets (
+    item: AssetTicketsItem,
     onClick: () -> Unit,
 ) {
     Card(
@@ -142,7 +183,7 @@ fun AssetAdminCard (
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(14.dp),
+                    .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
@@ -192,42 +233,17 @@ fun AssetAdminCard (
     }
 }
 
-data class AssetAdminItem(
+data class AssetTicketsItem(
     val name: String,
     val description: String,
     val image: String
 )
 
-fun assetAdminItem(): List<AssetAdminItem> =
-    listOf(
-        AssetAdminItem(
-            name = "Asset Inventory",
-            description = "View and assign asset inventory",
-            image = "ic_inventory"
-        ),
-        AssetAdminItem(
-            name = "Tickets",
-            description = "Manage and track asset tickets",
-            image = "ic_order_received"
-        ),
-        AssetAdminItem(
-            name = "Asset Consumption",
-            description = "Check usage and consumption",
-            image = "ic_consumption_report"
-        ),
-        AssetAdminItem(
-            name = "Self-Tag Requests",
-            description = "Approve or reject user tagged assets",
-            image = "ic_self_tag_request"
-        )
-    )
-
 @Composable
 private fun getIcon (image: String): Int =
     when (image) {
-        "ic_inventory" -> R.drawable.inventory
-        "ic_order_received" -> R.drawable.order_received
-        "ic_consumption_report" -> R.drawable.consumption_report
-        "ic_self_tag_request" -> R.drawable.self_tag
+        "ic_open_ticket" -> R.drawable.open_ticket
+        "ic_closed_ticket" -> R.drawable.closed_tickets
+        "ic_progress_ticket" -> R.drawable.mrrompending
         else -> R.drawable.ic_file
     }

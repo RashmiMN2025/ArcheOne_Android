@@ -1,11 +1,21 @@
 package com.archeGlobal.one.network
 
+import com.archeGlobal.one.model.AddInventoryAssetItemRequest
+import com.archeGlobal.one.model.AddInventoryAssetItemResponse
 import com.archeGlobal.one.model.AddInventoryItemRequest
 import com.archeGlobal.one.model.AddInventoryItemResponse
 import com.archeGlobal.one.model.ApiGreetingCategory
+import com.archeGlobal.one.model.AssetTicketsResponse
+import com.archeGlobal.one.model.AssetTypeCountResponse
+import com.archeGlobal.one.model.AssetV2Request
+import com.archeGlobal.one.model.AssetV2Response
+import com.archeGlobal.one.model.CreateAssetCategoryRequest
+import com.archeGlobal.one.model.CreateAssetCategoryResponse
 import com.archeGlobal.one.model.AvailableRoomsRequest
 import com.archeGlobal.one.model.AvailableRoomsResponse
 import com.archeGlobal.one.model.BookingHistoryResponse
+import com.archeGlobal.one.model.BulkUploadRequest
+import com.archeGlobal.one.model.BulkUploadResponse
 import com.archeGlobal.one.model.CabBookingRequest
 import com.archeGlobal.one.model.CabBookingResponse
 import com.archeGlobal.one.model.CabHistoryRequest
@@ -13,21 +23,37 @@ import com.archeGlobal.one.model.CabHistoryResponse
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.CelebrationResponse
 import com.archeGlobal.one.model.CommuniqueModel
+import com.archeGlobal.one.model.DeleteAssetResponse
+import com.archeGlobal.one.model.DeleteTagAssetRequest
+import com.archeGlobal.one.model.DeleteTagAssetResponse
+import com.archeGlobal.one.model.DownloadAssetInventoryRequest
+import com.archeGlobal.one.model.DownloadAssetInventoryResponse
 import com.archeGlobal.one.model.EmployeeSearchRequest
 import com.archeGlobal.one.model.EmployeeSearchResponse
 import com.archeGlobal.one.model.EventResponse
+import com.archeGlobal.one.model.InventoryRequest
+import com.archeGlobal.one.model.InventoryResponse
 import com.archeGlobal.one.model.LocationsResponse
+import com.archeGlobal.one.model.LocationAssetCountResponse
 import com.archeGlobal.one.model.MeetingApprovalRequest
 import com.archeGlobal.one.model.MeetingApprovalResponse
 import com.archeGlobal.one.model.PasswordResetRequest
 import com.archeGlobal.one.model.PasswordResetResponse
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SOSRequest
+import com.archeGlobal.one.model.SelfTagAssetRequest
+import com.archeGlobal.one.model.SelfTagAssetResponse
+import com.archeGlobal.one.model.SelfTagRequest
+import com.archeGlobal.one.model.SelfTagResponse
 import com.archeGlobal.one.model.SocialContent
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.StockListResponse
+import com.archeGlobal.one.model.SuggestAssetUsersResponse
 import com.archeGlobal.one.model.SuggestUsersResponse
 import com.archeGlobal.one.model.SuggestedUser
+import com.archeGlobal.one.model.TagActionResponse
+import com.archeGlobal.one.model.TagAssetCreateRequest
+import com.archeGlobal.one.model.TagAssetCreateResponse
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
 import com.archeGlobal.one.model.TravelCancelActionRequest
@@ -43,6 +69,8 @@ import com.archeGlobal.one.model.TravelV2ApprovalHistoryCountResponse
 import com.archeGlobal.one.model.TravelV2ApprovalHistoryResponse
 import com.archeGlobal.one.model.TravelV2OrderHistoryResponse
 import com.archeGlobal.one.model.TravelV2Request
+import com.archeGlobal.one.model.UpdateCommissionRequest
+import com.archeGlobal.one.model.UpdateCommissionResponse
 import com.archeGlobal.one.model.UpdateInventoryItemRequest
 import com.archeGlobal.one.model.UpdateInventoryItemResponse
 import com.archeGlobal.one.model.VerifyCheckInRequest
@@ -368,6 +396,66 @@ interface ApiService {
         @Query("mode_of_transport") modeOfTransport: String? = null,
         @Query("status") status: String? = null,
     ): Response<ResponseBody>
+
+    // ---- Asset Admin API's ----
+    @POST("/api/v1/itsm/asset_v2")
+    suspend fun getAssetsV2(@Body request: AssetV2Request): AssetV2Response
+
+    @GET("/api/v1/itsm/category/asset-type-count")
+    suspend fun getAssetTypeCounts(): AssetTypeCountResponse
+
+    @POST("/api/v1/itsm/category/create")
+    suspend fun createAssetCategory(@Body request: CreateAssetCategoryRequest): CreateAssetCategoryResponse
+
+    @POST("/api/v1/itsm/inventory")
+    suspend fun getInventory(@Body request: InventoryRequest): InventoryResponse
+
+    @PUT("/api/v1/itsm/inventory/commission-status")
+    suspend fun updateCommissionStatus(@Body request: UpdateCommissionRequest): UpdateCommissionResponse
+
+    @DELETE("/api/v1/itsm/inventory/{serialNumber}")
+    suspend fun deleteAsset(@Path("serialNumber") serialNumber: String): DeleteAssetResponse
+
+    @POST("/api/v1/itsm/inventory/create")
+    suspend fun createInventoryItem(@Body request: List<AddInventoryAssetItemRequest>): AddInventoryAssetItemResponse
+
+    @GET("/api/v1/itsm/asset/location-count")
+    suspend fun getLocationAssetCounts(): LocationAssetCountResponse
+
+    @POST("/api/v1/itsm/asset/download")
+    suspend fun downloadAssets(@Body request: DownloadAssetInventoryRequest): DownloadAssetInventoryResponse
+
+    @POST("/api/v1/itsm/inventory/download")
+    suspend fun downloadInventory(@Body request: DownloadAssetInventoryRequest): DownloadAssetInventoryResponse
+
+    @POST("/api/v1/itsm/asset/bulk-upload/initiate")
+    suspend fun initiateBulkUpload(@Body request: BulkUploadRequest): BulkUploadResponse
+
+    @GET("msp/asset/tickets") fun getAssetTickets(@Query("status") status: String): Call<AssetTicketsResponse>
+
+    @POST("/api/v1/itsm/asset")
+    fun fetchSelfTagRequests(@Body request: SelfTagRequest): Call<SelfTagResponse>
+
+    @POST("/api/v1/itsm/tag/approve_v1") fun approveTag(@Query("employeeCode") employeeCode: String, @Query("serialNumber") serialNumber: String): Call<TagActionResponse>
+
+    @POST("/api/v1/itsm/tag/reject_v1") fun rejectTag(@Query("employeeCode") employeeCode: String, @Query("serialNumber") serialNumber: String): Call<TagActionResponse>
+
+    @POST("api/v1/itsm/tag/self-tag") suspend fun selfTagAsset(@Body request: SelfTagAssetRequest): Response<SelfTagAssetResponse>
+
+    @GET("/api/v1/itsm/users/suggest")
+    suspend fun suggestAssetUsers(
+        @Query("name") name: String
+    ): SuggestAssetUsersResponse
+
+    @POST("/api/v1/itsm/asset/create")
+    suspend fun createTaggedAsset(
+        @Body request: TagAssetCreateRequest
+    ): TagAssetCreateResponse
+
+    @HTTP(method = "DELETE", path = "api/v1/itsm/asset/delete", hasBody = true)
+    suspend fun deleteTagAsset(
+        @Body request: DeleteTagAssetRequest
+    ): DeleteTagAssetResponse
 }
 
 data class FeedbackRequest(

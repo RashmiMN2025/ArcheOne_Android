@@ -92,6 +92,7 @@ fun MeetSpaceScreen(
 
     var selectedDate by remember { mutableStateOf<Date>(Calendar.getInstance().time) } // Default to current date
     var isDefaultDate by remember { mutableStateOf(true) }
+    var isToday by remember { mutableStateOf(true) }
     var showDatePicker by remember { mutableStateOf(false) }
 
     val timeFormatter = remember {
@@ -143,11 +144,27 @@ fun MeetSpaceScreen(
         initialIsAM: Boolean,
         onTimeSelected: (Int, Int) -> Unit,
         onDismiss: () -> Unit,
+        restrictPastTime: Boolean = false,      // ← NEW
+        currentHour24: Int = 0,                   // ← NEW
+        currentMinute: Int = 0,
     ) {
         var selectedHour by remember { mutableStateOf(if (initialHour == 0) 12 else initialHour) }
         var selectedMinute by remember { mutableStateOf(initialMinute) }
         var isAM by remember { mutableStateOf(initialIsAM) }
         var isSelectingMinute by remember { mutableStateOf(false) }
+
+        val context = LocalContext.current
+
+        val getHour24 = remember {
+            {
+                hour12: Int, isAM: Boolean ->
+                if (hour12 == 12) {
+                    if (isAM) 0 else 12
+                } else {
+                    if (isAM) hour12 else hour12 + 12
+                }
+            }
+        }
 
         Dialog(onDismissRequest = onDismiss) {
             Surface(
@@ -188,6 +205,9 @@ fun MeetSpaceScreen(
                                     val x = cos(angle) * radius
                                     val y = sin(angle) * radius
                                     val hour = if (i == 0) 12 else i
+                                    val candidateHour24 = getHour24(hour, isAM)
+                                    val isPast = restrictPastTime && candidateHour24 < currentHour24
+
                                     Box(
                                         modifier =
                                             Modifier
@@ -199,12 +219,12 @@ fun MeetSpaceScreen(
                                                 }.size(38.dp)
                                                 .clip(CircleShape)
                                                 .background(
-                                                    if (selectedHour == hour) Color(0xFFDD3825) else Color.Transparent,
+                                                    if (selectedHour == hour) Color(0xFFDD3825) else if (isPast) Color(0xFFF0F0F0) else Color.Transparent,
                                                 ).border(
                                                     1.dp,
-                                                    if (selectedHour == hour) Color(0xFFDD3825) else Color.Transparent,
+                                                    if (selectedHour == hour) Color(0xFFDD3825) else if (isPast) Color.LightGray else Color.Transparent,
                                                     CircleShape,
-                                                ).clickable {
+                                                ).clickable(enabled = !isPast) {
                                                     selectedHour = hour
                                                     isSelectingMinute = true // Switch to minute selection
                                                 },
@@ -215,7 +235,8 @@ fun MeetSpaceScreen(
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.Normal,
                                             fontFamily = GraphikFontFamily,
-                                            color = if (selectedHour == hour) Color.White else Color.Black,
+                                            color = if (isPast) Color(0xFF888888)
+                                            else if (selectedHour == hour) Color.White else Color.Black,
                                         )
                                     }
                                 }
@@ -254,7 +275,7 @@ fun MeetSpaceScreen(
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Medium,
                                             fontFamily = GraphikFontFamily,
-                                            color = if (!isAM) Color.White else Color(0xFFDD3825),
+                                            color = if (!isAM) Color.White else Color.Black,
                                         )
                                     }
                                 }
@@ -276,6 +297,9 @@ fun MeetSpaceScreen(
                                     val x = cos(angle) * radius
                                     val y = sin(angle) * radius
                                     val minute = (i * 5) % 60
+                                    val hour24 = getHour24(selectedHour, isAM)
+                                    val isPast = restrictPastTime && (hour24 < currentHour24 || (hour24 == currentHour24 && minute < currentMinute))
+
                                     Box(
                                         modifier =
                                             Modifier
@@ -287,20 +311,14 @@ fun MeetSpaceScreen(
                                                 }.size(38.dp)
                                                 .clip(CircleShape)
                                                 .background(
-                                                    if (selectedMinute == minute) Color(0xFFDD3825) else Color.Transparent,
+                                                    if (selectedMinute == minute) Color(0xFFDD3825) else if (isPast) Color(0xFFF0F0F0) else Color.Transparent,
                                                 ).border(
                                                     1.dp,
-                                                    if (selectedMinute == minute) Color(0xFFDD3825) else Color.Transparent,
+                                                    if (selectedMinute == minute) Color(0xFFDD3825) else if (isPast) Color.LightGray else Color.Transparent,
                                                     CircleShape,
-                                                ).clickable {
+                                                ).clickable(enabled = !isPast) {
                                                     selectedMinute = minute
-                                                    val hour24 =
-                                                        if (selectedHour == 12) {
-                                                            if (isAM) 0 else 12
-                                                        } else {
-                                                            if (isAM) selectedHour else selectedHour + 12
-                                                        }
-                                                    onTimeSelected(hour24, selectedMinute)
+                                                    onTimeSelected(hour24, minute)
                                                     onDismiss()
                                                 },
                                         contentAlignment = Alignment.Center,
@@ -310,7 +328,8 @@ fun MeetSpaceScreen(
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Normal,
                                             fontFamily = GraphikFontFamily,
-                                            color = if (selectedMinute == minute) Color.White else Color.Black,
+                                            color = if (isPast) Color(0xFF888888)
+                                            else if (selectedMinute == minute) Color.White else Color.Black,
                                         )
                                     }
                                 }
@@ -836,6 +855,12 @@ fun MeetSpaceScreen(
                                             TextButton(onClick = {
                                                 datePickerState.selectedDateMillis?.let { millis ->
                                                     selectedDate = Date(millis)
+                                                    val calSelected = Calendar.getInstance()
+                                                    calSelected.timeInMillis = millis
+                                                    val calToday = Calendar.getInstance()
+                                                    isToday = (calSelected.get(Calendar.YEAR) == calToday.get(Calendar.YEAR) &&
+                                                            calSelected.get(Calendar.MONTH) == calToday.get(Calendar.MONTH) &&
+                                                            calSelected.get(Calendar.DAY_OF_MONTH) == calToday.get(Calendar.DAY_OF_MONTH))
                                                     isDefaultDate = false
                                                 }
                                                 Log.d("MeetSpace", "DatePickerDialog OK clicked, selectedDate: $selectedDate")
@@ -971,17 +996,23 @@ fun MeetSpaceScreen(
                         }
 
                         if (showFromTimePicker) {
+                            val currentCal = Calendar.getInstance()
+                            val currentHour24 = currentCal.get(Calendar.HOUR_OF_DAY)
+                            val currentMinute = currentCal.get(Calendar.MINUTE)
                             val (hour, minute, isAM) = parseTime(fromTime)
+
                             CustomTimePicker(
                                 initialHour = hour,
                                 initialMinute = minute,
                                 initialIsAM = isAM,
-                                onTimeSelected = { hour24, minute ->
-                                    val calendar =
-                                        Calendar.getInstance().apply {
-                                            set(Calendar.HOUR_OF_DAY, hour24)
-                                            set(Calendar.MINUTE, minute)
-                                        }
+                                restrictPastTime = isToday,      // ← ENABLE RESTRICTION ONLY WHEN DATE IS TODAY
+                                currentHour24 = currentHour24,
+                                currentMinute = currentMinute,
+                                onTimeSelected = { hour24, min ->
+                                    val calendar = Calendar.getInstance().apply {
+                                        set(Calendar.HOUR_OF_DAY, hour24)
+                                        set(Calendar.MINUTE, min)
+                                    }
                                     fromTime = timeFormatter.format(calendar.time)
                                 },
                                 onDismiss = { showFromTimePicker = false },
@@ -990,17 +1021,23 @@ fun MeetSpaceScreen(
 
                         // Custom To Time Picker Dialog
                         if (showToTimePicker) {
+                            val currentCal = Calendar.getInstance()
+                            val currentHour24 = currentCal.get(Calendar.HOUR_OF_DAY)
+                            val currentMinute = currentCal.get(Calendar.MINUTE)
                             val (hour, minute, isAM) = parseTime(toTime)
+
                             CustomTimePicker(
                                 initialHour = hour,
                                 initialMinute = minute,
                                 initialIsAM = isAM,
-                                onTimeSelected = { hour24, minute ->
-                                    val calendar =
-                                        Calendar.getInstance().apply {
-                                            set(Calendar.HOUR_OF_DAY, hour24)
-                                            set(Calendar.MINUTE, minute)
-                                        }
+                                restrictPastTime = false,        // ← NO RESTRICTION FOR "TO" TIME
+                                currentHour24 = 0,
+                                currentMinute = 0,
+                                onTimeSelected = { hour24, min ->
+                                    val calendar = Calendar.getInstance().apply {
+                                        set(Calendar.HOUR_OF_DAY, hour24)
+                                        set(Calendar.MINUTE, min)
+                                    }
                                     toTime = timeFormatter.format(calendar.time)
                                 },
                                 onDismiss = { showToTimePicker = false },

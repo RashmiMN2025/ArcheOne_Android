@@ -170,7 +170,7 @@ fun AdminDashboardCard(
                 .height(230.dp)
                 .clickable(enabled = item.isEnabled) { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Box(

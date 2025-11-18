@@ -51,6 +51,7 @@ fun ResponsiveArticleGrid(
     type: String,
     socialController: SocialController,
     showArticleDetail: (SocialArticle, String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val activity = context as? android.app.Activity
@@ -67,7 +68,7 @@ fun ResponsiveArticleGrid(
         contentPadding = PaddingValues(8.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
     ) {
         items(articles) { article ->
             ArticleCard(
@@ -137,8 +138,7 @@ fun XConnectScreen(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
-                        .verticalScroll(rememberScrollState()),
+                        .padding(16.dp),
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -277,16 +277,18 @@ fun XConnectScreen(
                 }
 
                 // Content based on selected tab and search query
-                when (selectedTab) {
-                    "All Posts" -> AllPostsContent(socialController, searchQuery, showArticleDetail)
-                    "Case Studies" ->
-                        CaseStudiesContent(
-                            socialController,
-                            searchQuery,
-                            showArticleDetail,
-                        )
+                Box(modifier = Modifier.weight(1f)) {
+                    when (selectedTab) {
+                        "All Posts" -> AllPostsContent(socialController, searchQuery, showArticleDetail)
+                        "Case Studies" ->
+                            CaseStudiesContent(
+                                socialController,
+                                searchQuery,
+                                showArticleDetail,
+                            )
 
-                    "Blogs" -> BlogsContent(socialController, searchQuery, showArticleDetail)
+                        "Blogs" -> BlogsContent(socialController, searchQuery, showArticleDetail)
+                    }
                 }
             }
         }
@@ -475,7 +477,8 @@ fun AllPostsContent(
     Column(
         modifier =
             Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
     ) {
         Spacer(modifier = Modifier.height(16.dp)) // Added space after the search bar
 
@@ -613,31 +616,39 @@ fun CaseStudiesContent(
         }
 
     if (caseStudies.isEmpty()) {
-        NoResultsCard(
-            searchQuery = if (searchQuery.isEmpty()) "" else searchQuery,
-            message =
-                if (searchQuery.isEmpty()) {
-                    "No case studies available"
-                } else {
-                    "No case studies found"
-                },
-        )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            NoResultsCard(
+                searchQuery = if (searchQuery.isEmpty()) "" else searchQuery,
+                message =
+                    if (searchQuery.isEmpty()) {
+                        "No case studies available"
+                    } else {
+                        "No case studies found"
+                    },
+            )
+        }
     } else {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Case Studies",
-            fontSize = 20.sp,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 12.dp),
-        )
-        ResponsiveArticleGrid(
-            articles = caseStudies,
-            type = "Case Studies",
-            socialController = socialController,
-            showArticleDetail = showArticleDetail,
-        )
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Case Studies",
+                fontSize = 20.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 12.dp),
+            )
+            ResponsiveArticleGrid(
+                articles = caseStudies,
+                type = "Case Studies",
+                socialController = socialController,
+                showArticleDetail = showArticleDetail,
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
 
@@ -653,31 +664,38 @@ fun BlogsContent(
         }
 
     if (blogs.isEmpty()) {
-        NoResultsCard(
-            searchQuery = if (searchQuery.isEmpty()) "" else searchQuery,
-            message =
-                if (searchQuery.isEmpty()) {
-                    "No blogs available"
-                } else {
-                    "No blogs found"
-                },
-        )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            NoResultsCard(
+                searchQuery = if (searchQuery.isEmpty()) "" else searchQuery,
+                message =
+                    if (searchQuery.isEmpty()) {
+                        "No blogs available"
+                    } else {
+                        "No blogs found"
+                    },
+            )
+        }
     } else {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Blogs",
-            fontSize = 20.sp,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 12.dp),
-        )
-        ResponsiveArticleGrid(
-            articles = blogs,
-            type = "Blogs",
-            socialController = socialController,
-            showArticleDetail = showArticleDetail,
-        )
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Blogs",
+                fontSize = 20.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 12.dp),
+            )
+            ResponsiveArticleGrid(
+                articles = blogs,
+                type = "Blogs",
+                socialController = socialController,
+                showArticleDetail = showArticleDetail,
+            )
+        }
     }
 }
 

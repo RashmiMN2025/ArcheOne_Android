@@ -791,7 +791,7 @@ fun HomeScreenContent(
         if (showWhatsNewDialog && !whatsNewData.isNullOrEmpty()) {
             WhatsNewDialog(
                 whatsNewItems = whatsNewData,
-                appVersion = "1.4",
+                appVersion = "1.5",
                 onDismiss = {
                     controller.dismissWhatsNewDialog()
                 },
