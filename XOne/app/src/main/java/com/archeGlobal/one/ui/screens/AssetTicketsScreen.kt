@@ -242,8 +242,8 @@ data class AssetTicketsItem(
 @Composable
 private fun getIcon (image: String): Int =
     when (image) {
-        "ic_open_ticket" -> R.drawable.inventory
-        "ic_closed_ticket" -> R.drawable.approved
+        "ic_open_ticket" -> R.drawable.open_ticket
+        "ic_closed_ticket" -> R.drawable.closed_tickets
         "ic_progress_ticket" -> R.drawable.mrrompending
         else -> R.drawable.ic_file
     }

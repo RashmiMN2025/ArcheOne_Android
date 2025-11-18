@@ -221,7 +221,7 @@ fun AddAssetTypeDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.download1),
+                        painter = painterResource(id = R.drawable.new_asset_type),
                         contentDescription = null,
                         tint = PrimaryRed,
                         modifier = Modifier.size(32.dp)

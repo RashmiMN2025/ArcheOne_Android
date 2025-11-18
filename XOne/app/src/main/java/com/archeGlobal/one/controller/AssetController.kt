@@ -111,7 +111,7 @@ class AssetController(
             location = userData.location,
             department = userData.department,
             designation = userData.designation,
-            reportingTo = reportingToFromDetails,
+            reportingTo = reportingToFromDetails ,
             isLoading = true
         )
 
@@ -132,8 +132,8 @@ class AssetController(
                                 purchaseDate = api.purchaseDate,
                                 modelNumber = api.modelNumber,
                                 configuration = api.configuration,
-                                reportingTo = api.reportingTo,
-                                divisionalHead = api.divisionalHead,
+                                reportingTo = api.reportingTo ?: "",
+                                divisionalHead = api.divisionalHead ?: "",
                                 warrantyStart = api.warrantyStart ?: "",
                                 warrantyEnd = api.warrantyEnd ?: "",
                                 dateOfIssue = api.dateOfIssue,

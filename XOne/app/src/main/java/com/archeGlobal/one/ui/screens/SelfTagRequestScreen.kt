@@ -5,10 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -244,9 +240,14 @@ fun SelfTagRequestCard(
                 value = item.newAssetId
             )
             AssetDetailRow(
-                icon = R.drawable.laptop,
-                label = "Model Number",
+                icon = R.drawable.model_number,
+                label = "Model Name",
                 value = item.modelNumber
+            )
+            AssetDetailRow(
+                icon = R.drawable.item_no,
+                label = "Serial Number",
+                value = item.serialNumber
             )
             AssetDetailRow(
                 icon = R.drawable.configuration,
@@ -254,17 +255,17 @@ fun SelfTagRequestCard(
                 value = item.configuration
             )
             AssetDetailRow(
-                icon = if (item.isTagged == 1) R.drawable.approved else R.drawable.pending,
+                icon = if (item.isTagged == 1) R.drawable.closed_tickets else R.drawable.pending,
                 label = "Tagged",
                 value = if (item.isTagged == 1) "Yes" else "No"
             )
             AssetDetailRow(
-                icon = R.drawable.laptop,
+                icon = R.drawable.envelope_3x,
                 label = "Email",
                 value = item.mailId
             )
             AssetDetailRow(
-                icon = R.drawable.laptop,
+                icon = R.drawable.calendert,
                 label = "Purchase Date",
                 value = item.purchaseDate
             )
@@ -344,7 +345,7 @@ fun AssetDetailRow(
                 painter = painterResource(id = icon),
                 contentDescription = label,
                 modifier = Modifier.size(20.dp),
-                colorFilter = ColorFilter.tint(Color.Black)
+                colorFilter = ColorFilter.tint(Color.Gray)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(

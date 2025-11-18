@@ -57,6 +57,8 @@ fun AssetInventoryDetailScreen(
     var showAddSheet by remember { mutableStateOf(false) }
     var showActionDialog by remember { mutableStateOf<AssetInventoryDetailItem?>(null) }
 
+    val locationState by controller.locationState
+
 
     val filteredActive = model.activeItems.filter {
         it.model.contains(searchQuery, ignoreCase = true) ||
@@ -346,7 +348,10 @@ fun AssetInventoryDetailScreen(
                 onDismiss = { showAddSheet = false },
                 onAddAsset = { formData ->
                     controller.createAsset(formData, context)
-                }
+                },
+                locations = locationState.locations,
+                isLoadingLocations = locationState.isLoading,
+                locationError = locationState.error
             )
         }
 
@@ -472,8 +477,8 @@ fun AssetActionDialog(
                 InfoRow(icon = painterResource(R.drawable.meetroomlocation),"Location", item.location)
                 InfoRow(icon = painterResource(R.drawable.configuration),"Configuration", item.configuration)
                 InfoRow(icon = painterResource(R.drawable.supplied_date),"Purchase Date", item.purchaseDate)
-                InfoRow(icon = painterResource(R.drawable.supplied_date),"Warranty Start", item.warrantyStart)
-                InfoRow(icon = painterResource(R.drawable.supplied_date),"Warranty End", item.warrantyEnd)
+                InfoRow(icon = painterResource(R.drawable.warranty),"Warranty Start", item.warrantyStart)
+                InfoRow(icon = painterResource(R.drawable.warranty),"Warranty End", item.warrantyEnd)
 
                 Spacer(Modifier.height(32.dp))
 

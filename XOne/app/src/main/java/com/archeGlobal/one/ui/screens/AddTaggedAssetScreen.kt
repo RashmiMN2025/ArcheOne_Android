@@ -1,4 +1,3 @@
-// AddTaggedAssetScreen.kt (full updated file)
 package com.archeGlobal.one.ui.screens
 
 import android.util.Log
@@ -52,6 +51,8 @@ fun AddTaggedAssetBottomSheet(
     onDismiss: () -> Unit,
     onSave: () -> Unit = {}
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     val context = LocalContext.current
     val controller = remember { TagUserController(context) }
 
@@ -120,9 +121,11 @@ fun AddTaggedAssetBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         containerColor = Color(0xFFF6F4EE),
-        dragHandle = null
+        dragHandle = null,
+        tonalElevation = 8.dp
     ) {
         Column(
             modifier = Modifier

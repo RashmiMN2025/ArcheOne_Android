@@ -17,6 +17,7 @@ import com.archeGlobal.one.ui.screens.AssetInventoryDetailItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.runtime.State
 
 data class AssetInventoryDetailModel(
     val activeItems: List<AssetInventoryDetailItem> = emptyList(),
@@ -25,12 +26,22 @@ data class AssetInventoryDetailModel(
     val error: String? = null
 )
 
+data class LocationState(
+    val locations: List<String> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
+
 class AssetInventoryDetailController(private val assetType: String) : ViewModel() {
     var model by mutableStateOf(AssetInventoryDetailModel())
         private set
 
+    private val _locationState = mutableStateOf(LocationState(isLoading = true))
+    val locationState: State<LocationState> = _locationState
+
     init {
         loadData()
+        loadLocations()
     }
 
     private fun loadData() {
@@ -145,7 +156,6 @@ class AssetInventoryDetailController(private val assetType: String) : ViewModel(
                         serialNumber = formData.serialNo,
                         configuration = formData.configuration,
                         location = formData.location,
-                        updatedBy = formData.updatedBy,
                         purchaseDate = formData.purchaseDate,
                         warrantyStart = formData.warrantyStart,
                         warrantyEnd = formData.warrantyEnd,
@@ -168,4 +178,37 @@ class AssetInventoryDetailController(private val assetType: String) : ViewModel(
             }
         }
     }
+
+    private fun loadLocations() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _locationState.value = _locationState.value.copy(isLoading = true, error = null)
+
+                val response = RetrofitClient.apiService.getLocationAssetCounts()
+
+                withContext(Dispatchers.Main) {
+                    if (response.success) {
+                        val locations = response.data.map { it.location }.sorted()
+                        _locationState.value = LocationState(
+                            locations = locations,
+                            isLoading = false
+                        )
+                    } else {
+                        _locationState.value = _locationState.value.copy(
+                            error = response.message,
+                            isLoading = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _locationState.value = _locationState.value.copy(
+                        error = "Failed to load locations",
+                        isLoading = false
+                    )
+                }
+            }
+        }
+    }
+
 }

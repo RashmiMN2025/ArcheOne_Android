@@ -218,7 +218,7 @@ fun assetAdminItem(): List<AssetAdminItem> =
         AssetAdminItem(
             name = "Self-Tag Requests",
             description = "Approve or reject user tagged assets",
-            image = "ic_consumption_report"
+            image = "ic_self_tag_request"
         )
     )
 
@@ -228,5 +228,6 @@ private fun getIcon (image: String): Int =
         "ic_inventory" -> R.drawable.inventory
         "ic_order_received" -> R.drawable.order_received
         "ic_consumption_report" -> R.drawable.consumption_report
+        "ic_self_tag_request" -> R.drawable.self_tag
         else -> R.drawable.ic_file
     }

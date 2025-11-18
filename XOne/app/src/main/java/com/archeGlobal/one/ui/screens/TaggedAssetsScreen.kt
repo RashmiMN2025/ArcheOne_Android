@@ -59,12 +59,9 @@ fun TaggedAssetsScreen(
 
     // Debounce + Real-time Search (starts after 3 chars)
     LaunchedEffect(searchQuery) {
-        if (searchQuery.length >= 2) {
+        if (searchQuery.length >= 1) {
             isSearching = true
             searchError = null
-
-            // Debounce: Wait 400ms after user stops typing
-            delay(400L)
 
             withContext(Dispatchers.IO) {
                 try {
@@ -189,13 +186,9 @@ fun TaggedAssetsScreen(
                         }
                     }
 
-                    searchQuery.length >= 2 -> {
+                    searchQuery.length >= 1 -> {
                         // Show Employee Search Results
-                        if (isSearching) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                UniversalLoader(isLoading = true)
-                            }
-                        } else if (searchError != null) {
+                        if (searchError != null) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Text(text = searchError!!, color = Color.Red, fontSize = 16.sp)
                             }
@@ -312,7 +305,7 @@ fun TaggedAssetCard(
         ) {
             // Fixed Icon for all
             Image(
-                painter = painterResource(id = R.drawable.ic_home),
+                painter = painterResource(id = R.drawable.asset_location),
                 contentDescription = item.location,
                 modifier = Modifier.size(48.dp),
                 colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(0xFFDD3825))

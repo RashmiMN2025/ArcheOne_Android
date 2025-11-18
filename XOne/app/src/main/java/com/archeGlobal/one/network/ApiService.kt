@@ -556,6 +556,7 @@ data class UserDetails(
     val emergency_contact_relation: String = "",
     val emergency_contact: String = "",
     val documents: List<UserDocument> = emptyList(),
+    val access: String = ""
 )
 
 data class UserDocument(

@@ -361,7 +361,7 @@ fun assetConsumptionItem(): List<AssetConsumptionItem> =
 @Composable
 private fun getIcon (image: String): Int =
     when (image) {
-        "ic_tagged_assets" -> R.drawable.list
+        "ic_tagged_assets" -> R.drawable.tag_asset
         "ic_download_reports" -> R.drawable.download1
         "ic_bulk_upload" -> R.drawable.share
         else -> R.drawable.ic_file

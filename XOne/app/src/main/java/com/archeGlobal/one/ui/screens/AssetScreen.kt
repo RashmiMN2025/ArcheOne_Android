@@ -27,7 +27,10 @@ import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.AssetITAdminActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.AssetController
+import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.model.AssetModel
+import com.archeGlobal.one.network.User
+import com.archeGlobal.one.network.UserDetails
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
@@ -40,6 +43,10 @@ fun AssetScreen(
     onBackPressed: () -> Unit,
 ) {
     val context = LocalContext.current
+
+    val userData = OtpVerificationController.getUserData()
+
+    val access = userData?.userDetails?.access?.lowercase()
 
     Box(
         modifier =
@@ -117,18 +124,6 @@ fun AssetScreen(
                         .fillMaxSize()
                         .padding(horizontal = 15.dp),
             ) {
-                when {
-                    model.isLoading -> {
-                        UniversalLoader(isLoading = model.isLoading)
-                    }
-                    model.error != null -> {
-                        Text(
-                            text = model.error,
-                            color = Color.Red,
-                            modifier = Modifier.align(Alignment.Center),
-                        )
-                    }
-                    else -> {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -160,39 +155,43 @@ fun AssetScreen(
                                             modifier = Modifier.weight(1f)
                                         )
 
-                                        Button(
-                                            onClick = {
-                                                val intent = Intent(context, AssetITAdminActivity::class.java)
-                                                context.startActivity(intent)
-                                            },
-                                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
-                                            shape = RoundedCornerShape(18.dp),
-                                            modifier = Modifier.height(35.dp)
-                                        ) {
-                                            Text(
-                                                text = "Admin Dashboard",
-                                                fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Medium,
-                                                fontSize = 14.sp,
-                                                color = Color.White
-                                            )
-                                        }
+                                        val hasAssets = model.assetDetails.isNotEmpty()
+                                        val tagButtonColor = if (hasAssets) Color(0xFF9E9E9E) else PrimaryRed  // Red if no assets
+                                        val tagButtonText = if (hasAssets) "Tag Asset" else "Tag Asset"
 
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        Button(
-                                            onClick = { controller.showSelfTagDialog() },
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9E9E9E)), // Grey
-                                            shape = RoundedCornerShape(18.dp),
-                                            modifier = Modifier.height(35.dp)
-                                        ) {
-                                            Text(
-                                                "Tag Asset",
-                                                fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Medium,
-                                                fontSize = 14.sp,
-                                                color = Color.White
-                                            )
+                                        if (access == "it") {
+                                            Button(
+                                                onClick = {
+                                                    val intent = Intent(context, AssetITAdminActivity::class.java)
+                                                    context.startActivity(intent)
+                                                },
+                                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
+                                                shape = RoundedCornerShape(18.dp),
+                                                modifier = Modifier.height(35.dp)
+                                            ) {
+                                                Text(
+                                                    text = "Admin Dashboard",
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 14.sp,
+                                                    color = Color.White
+                                                )
+                                            }
+                                        } else if (access == "admin" || access == "hr" || access == "") {
+                                            Button(
+                                                onClick = { controller.showSelfTagDialog() },
+                                                colors = ButtonDefaults.buttonColors(containerColor = tagButtonColor), // Grey
+                                                shape = RoundedCornerShape(18.dp),
+                                                modifier = Modifier.height(35.dp)
+                                            ) {
+                                                Text(
+                                                    text = tagButtonText,
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 14.sp,
+                                                    color = Color.White
+                                                )
+                                            }
                                         }
 
                                     }
@@ -205,90 +204,109 @@ fun AssetScreen(
                             }
 
                             // ASSET BLOCKS (per asset)
-                            model.assetDetails.forEach { asset ->
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
+                            if (model.assetDetails.isEmpty()) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
                                 ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
+                                    Text(
+                                        text = "No Asset Assigned Yet",
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 18.sp,
+                                        color = Color.Gray,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            } else {
+                                model.assetDetails.forEach { asset ->
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                                     ) {
-                                        // Icon + Model Number + Serial Number
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.fillMaxWidth()
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp)
                                         ) {
-                                            val iconId = when (asset.assetType.trim().uppercase()) {
-                                                "LAPTOP" -> R.drawable.laptop
-                                                "MOBILE" -> R.drawable.mobile // Add your mobile icon
-                                                else -> R.drawable.asset // Fallback icon
-                                            }
-                                            Icon(
-                                                painter = painterResource(id = iconId),
-                                                contentDescription = "Asset",
-                                                tint = PrimaryRed,
-                                                modifier = Modifier.size(50.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(12.dp))
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    text = asset.modelNumber,
-                                                    fontFamily = GraphikFontFamily,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    fontSize = 18.sp,
-                                                    color = Color.Black
+                                            // Icon + Model Number + Serial Number
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                val iconId = when (asset.assetType.trim().uppercase()) {
+                                                    "LAPTOP" -> R.drawable.laptop
+                                                    "MOBILE" -> R.drawable.mobile // Add your mobile icon
+                                                    else -> R.drawable.asset // Fallback icon
+                                                }
+                                                Icon(
+                                                    painter = painterResource(id = iconId),
+                                                    contentDescription = "Asset",
+                                                    tint = PrimaryRed,
+                                                    modifier = Modifier.size(50.dp)
                                                 )
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Text(
-                                                    text = asset.serialNumber,
-                                                    fontFamily = GraphikFontFamily,
-                                                    fontWeight = FontWeight.Normal,
-                                                    fontSize = 14.sp,
-                                                    color = Color.Gray
-                                                )
-                                            }
-
-                                            if (asset.isTagged == 0) {
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    modifier = Modifier
-                                                        .background(
-                                                            color = Color(0xFFFFAA00).copy(alpha = 0.10f),
-                                                            shape = RoundedCornerShape(12.dp)
-                                                        )
-                                                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                                                ) {
-                                                    Icon(
-                                                        painter = painterResource(id = R.drawable.duration), // Warning/pending icon
-                                                        contentDescription = "Pending",
-                                                        tint = Color(0xFFFFA500),
-                                                        modifier = Modifier.size(16.dp)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Column(modifier = Modifier.weight(1f)) {
                                                     Text(
-                                                        text = "Approval Pending",
+                                                        text = asset.modelNumber,
                                                         fontFamily = GraphikFontFamily,
-                                                        fontWeight = FontWeight.Medium,
-                                                        fontSize = 12.sp,
-                                                        color = Color(0xFFFFA500)
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        fontSize = 18.sp,
+                                                        color = Color.Black
+                                                    )
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Text(
+                                                        text = asset.serialNumber,
+                                                        fontFamily = GraphikFontFamily,
+                                                        fontWeight = FontWeight.Normal,
+                                                        fontSize = 14.sp,
+                                                        color = Color.Gray
                                                     )
                                                 }
+
+                                                if (asset.isTagged == 0) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier
+                                                            .background(
+                                                                color = Color(0xFFFFAA00).copy(alpha = 0.10f),
+                                                                shape = RoundedCornerShape(12.dp)
+                                                            )
+                                                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                                                    ) {
+                                                        Icon(
+                                                            painter = painterResource(id = R.drawable.duration), // Warning/pending icon
+                                                            contentDescription = "Pending",
+                                                            tint = Color(0xFFFFA500),
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        Text(
+                                                            text = "Approval Pending",
+                                                            fontFamily = GraphikFontFamily,
+                                                            fontWeight = FontWeight.Medium,
+                                                            fontSize = 12.sp,
+                                                            color = Color(0xFFFFA500)
+                                                        )
+                                                    }
+                                                }
                                             }
-                                        }
 
-                                        Spacer(modifier = Modifier.height(8.dp))
+                                            Spacer(modifier = Modifier.height(8.dp))
 
-                                        // Updated key-value pairs with new fields
-                                        InfoRowCompact("Asset Type", asset.assetType)
-                                        InfoRowCompact("Asset ID/HostName", asset.newAssetId)
-                                        InfoRowCompact("Serial No", asset.serialNumber)
-                                        InfoRowCompact("Date Of Issue", asset.dateOfIssue)
-                                        InfoRowCompact("Configuration", asset.configuration)
-                                        if (asset.isTagged == 0) {
-                                            InfoRowCompact("Tagging status", "Pending from IT Team")
+                                            // Updated key-value pairs with new fields
+                                            InfoRowCompact("Asset Type", asset.assetType)
+                                            InfoRowCompact("Asset ID/HostName", asset.newAssetId)
+                                            InfoRowCompact("Serial No", asset.serialNumber)
+                                            InfoRowCompact("Date Of Issue", asset.dateOfIssue)
+                                            InfoRowCompact("Configuration", asset.configuration)
+                                            if (asset.isTagged == 0) {
+                                                InfoRowCompact("Tagging status", "Pending from IT Team")
+                                            }
                                         }
                                     }
                                 }
@@ -356,7 +374,6 @@ fun AssetScreen(
 
                             Spacer(modifier = Modifier.height(4.dp))
                         }
-                    }
                 }
             }
         }
@@ -368,7 +385,6 @@ fun AssetScreen(
             )
         }
     }
-}
 
 @Composable
 private fun InfoRowCompact(
