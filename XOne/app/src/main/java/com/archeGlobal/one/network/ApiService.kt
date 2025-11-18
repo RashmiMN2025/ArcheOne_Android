@@ -197,15 +197,28 @@ interface ApiService {
     @GET("employee-celebration")
     suspend fun getEmployeeCelebration(): Response<CelebrationResponse>
 
-    @POST("tickets")
+    @POST("msp/tickets")
     fun getTickets(
         @Body request: TicketsRequest,
     ): Call<TicketsResponse>
 
-    @POST("helpdsk/dynamic-fields")
+    @POST("helpdsk/v1/dynamic-fields")
     suspend fun getDynamicFormFields(
         @Body request: DynamicFormFieldsRequest,
     ): Response<com.archeGlobal.one.model.DynamicFormFieldsResponse>
+
+    @Multipart
+    @POST("helpdsk/v1/raise-req")
+    suspend fun submitDynamicFormRequest(
+        @Part("name") name: okhttp3.RequestBody,
+        @Part("userEmail") userEmail: okhttp3.RequestBody,
+        @Part("managerEmail") managerEmail: okhttp3.RequestBody,
+        @Part("category") category: okhttp3.RequestBody,
+        @Part("subCategory") subCategory: okhttp3.RequestBody,
+        @Part("query") query: okhttp3.RequestBody?,
+        @Part("formDetails") formDetails: okhttp3.RequestBody?,
+        @Part files: List<okhttp3.MultipartBody.Part>?,
+    ): Response<com.archeGlobal.one.model.DynamicFormSubmissionResponse>
 
     @POST("admin/orders")
     fun getOrders(

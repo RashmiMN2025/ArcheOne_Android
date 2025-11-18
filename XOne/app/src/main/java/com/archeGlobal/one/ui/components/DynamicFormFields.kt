@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -19,6 +20,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.DynamicFieldType
 import com.archeGlobal.one.model.DynamicFormField
+import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 /**
@@ -68,7 +70,7 @@ fun DynamicFormFieldComponent(
                 color = Color(0xFFD32F2F),
                 fontSize = 12.sp,
                 fontFamily = GraphikFontFamily,
-                modifier = Modifier.padding(start = 15.dp, top = 4.dp),
+                modifier = Modifier.padding(start = 0.dp, top = 4.dp),
             )
         }
     }
@@ -88,7 +90,7 @@ private fun DynamicTextField(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 15.dp)
+                .padding(horizontal = 0.dp)
                 .padding(bottom = 16.dp),
     ) {
         // Label above the text field
@@ -125,10 +127,13 @@ private fun DynamicTextField(
                 TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
+                    errorContainerColor = Color.White,
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black,
+                    errorTextColor = Color.Black,
                     focusedIndicatorColor = if (isError) Color(0xFFD32F2F) else Color.Gray,
                     unfocusedIndicatorColor = if (isError) Color(0xFFD32F2F) else Color.LightGray,
+                    errorIndicatorColor = Color(0xFFD32F2F),
                 ),
             textStyle =
                 TextStyle(
@@ -158,7 +163,7 @@ private fun DynamicLongTextField(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 15.dp)
+                .padding(horizontal = 0.dp)
                 .padding(bottom = 16.dp),
     ) {
         // Label above the text field
@@ -198,10 +203,13 @@ private fun DynamicLongTextField(
                 TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
+                    errorContainerColor = Color.White,
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black,
+                    errorTextColor = Color.Black,
                     focusedIndicatorColor = if (isError) Color(0xFFD32F2F) else Color.Gray,
                     unfocusedIndicatorColor = if (isError) Color(0xFFD32F2F) else Color.LightGray,
+                    errorIndicatorColor = Color(0xFFD32F2F),
                 ),
             textStyle =
                 TextStyle(
@@ -235,7 +243,7 @@ private fun DynamicDropdownField(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 15.dp)
+                .padding(horizontal = 0.dp)
                 .padding(bottom = 16.dp),
     ) {
         // Label above the text field
@@ -384,8 +392,8 @@ fun validateDynamicField(
         return field.errorMessage ?: "${field.fieldName} must not exceed ${field.maxLength} characters"
     }
 
-    // Check regex validation
-    if (field.validationRegex != null) {
+    // Check regex validation (skip if regex is null or empty string)
+    if (!field.validationRegex.isNullOrBlank()) {
         try {
             val regex = Regex(field.validationRegex)
             if (!regex.matches(value)) {
@@ -398,4 +406,93 @@ fun validateDynamicField(
     }
 
     return null
+}
+
+/**
+ * Employee Details Section Component
+ * Displays employee information in a card layout matching the UI reference
+ */
+@Composable
+fun EmployeeDetailsSection(
+    user: UserData?,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+        ) {
+            // Section Title
+            Text(
+                text = "Employee Details",
+                fontFamily = GraphikFontFamily,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 12.dp),
+            )
+
+            // Employee details rows
+            if (user != null) {
+                EmployeeDetailRow(label = "Name:", value = user.name)
+                EmployeeDetailRow(label = "Employee ID:", value = user.employeeId)
+                EmployeeDetailRow(label = "Mobile No:", value = user.mobile)
+                EmployeeDetailRow(label = "Designation:", value = user.designation)
+                EmployeeDetailRow(label = "Department:", value = user.department, isLast = true)
+            } else {
+                Text(
+                    text = "Employee information not available",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Individual employee detail row
+ */
+@Composable
+private fun EmployeeDetailRow(
+    label: String,
+    value: String,
+    isLast: Boolean = false,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = if (isLast) 0.dp else 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            fontFamily = GraphikFontFamily,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            color = Color.Gray,
+            modifier = Modifier.weight(0.4f),
+        )
+        Text(
+            text = value,
+            fontFamily = GraphikFontFamily,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            modifier = Modifier.weight(0.6f),
+        )
+    }
 }

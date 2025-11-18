@@ -544,7 +544,7 @@ class HelpDeskController(
 
         // Use real API endpoint
         val useMockApi = false
-        Log.d("HelpDeskController", "📋 Using Real API (useMockApi: $useMockApi)")
+        Log.d("HelpDeskController", "📋 Using ${if (useMockApi) "MOCK" else "Real"} API (useMockApi: $useMockApi)")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {

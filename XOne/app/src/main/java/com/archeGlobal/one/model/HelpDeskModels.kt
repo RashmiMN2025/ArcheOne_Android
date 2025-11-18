@@ -94,6 +94,7 @@ data class DynamicFormField(
     val minLength: Int? = null,
     val validationRegex: String? = null,
     val errorMessage: String? = null,
+    val displayOrder: Int = 0, // Field to control display order
 )
 
 data class DynamicFormFieldsResponse(
@@ -116,6 +117,13 @@ data class DynamicTicketSubmissionRequest(
     val query: String, // Main description field
     val dynamicFields: List<DynamicFormFieldValue>, // Dynamic field values
     val anonymous: Boolean = false,
+)
+
+// Response model for dynamic form submission
+data class DynamicFormSubmissionResponse(
+    val status: Int,
+    val message: String,
+    val ticketId: String? = null,
 )
 
 // Extension function to convert API FAQ structure to HelpDeskFAQ list
@@ -155,6 +163,7 @@ fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
             question = "Other issue raise concern",
             answer = "For any other issues not covered in the FAQ, please use the 'Raise a Ticket' button to create a support ticket.",
             category = "General",
+            dynamicFields = true, // Enable dynamic fields for other issues
         ),
     )
 

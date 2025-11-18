@@ -13,6 +13,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.graphics.graphicsLayer
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.controller.SOSController
@@ -36,11 +39,13 @@ import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.DynamicFormFieldValue
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.ui.components.DynamicFormFieldComponent
+import com.archeGlobal.one.ui.components.EmployeeDetailsSection
 import com.archeGlobal.one.ui.components.validateDynamicField
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 
 @Composable
 fun RaiseConcernScreen(
@@ -90,6 +95,8 @@ fun RaiseConcernScreen(
     var showAnonymousDialog by remember { mutableStateOf(false) }
     var showTimerDialog by remember { mutableStateOf(false) }
     var timerSeconds by remember { mutableStateOf(20) }
+    var showDynamicFormSuccessDialog by remember { mutableStateOf(false) }
+    var successTicketId by remember { mutableStateOf<String?>(null) }
 
     // Dynamic form fields state
     val dynamicFormFields by localHelpDeskController.dynamicFormFields.collectAsState()
@@ -222,57 +229,231 @@ fun RaiseConcernScreen(
         }
     }
 
-    // Load dynamic form fields when category or subcategory changes (only for help desk tickets)
+    // Load dynamic form fields when BOTH category AND subcategory are selected (only for help desk tickets, NOT for asset tickets)
     LaunchedEffect(selectedCategory, selectedSubcategory, prefilledFaqId) {
-        if (isHelpDeskTicket && selectedCategory != null) {
-            // Check if we should load dynamic fields
-            val shouldLoad = if (prefilledFaqId != null) {
-                // If coming from FAQ, only load if FAQ has dynamicFields = true
-                localHelpDeskController.shouldLoadDynamicFields(prefilledFaqId)
-            } else {
-                // If user manually selected category, always load dynamic fields
-                true
-            }
+        if (source != "asset" && isHelpDeskTicket && selectedCategory != null && selectedSubcategory != null) {
+            // Only load dynamic fields when both category and subcategory are selected
+            Log.d("RaiseConcernScreen", "Loading dynamic fields for category: $selectedCategory, subcategory: $selectedSubcategory")
 
-            if (shouldLoad) {
-                // Clear previous field values and errors
-                dynamicFieldValues = emptyMap()
-                dynamicFieldErrors = emptyMap()
+            // Clear previous field values and errors
+            dynamicFieldValues = emptyMap()
+            dynamicFieldErrors = emptyMap()
 
-                // Load dynamic fields based on category and subcategory
-                localHelpDeskController.loadDynamicFormFields(
-                    category = selectedCategory!!,
-                    subcategory = selectedSubcategory,
-                )
-                Log.d("RaiseConcernScreen", "Loading dynamic fields for category: $selectedCategory, subcategory: $selectedSubcategory")
-            } else {
-                // Clear dynamic fields if FAQ doesn't require them
-                localHelpDeskController.clearDynamicFormFields()
-                dynamicFieldValues = emptyMap()
-                dynamicFieldErrors = emptyMap()
-                Log.d("RaiseConcernScreen", "FAQ does not require dynamic fields, skipping load")
-            }
-        } else if (selectedCategory == null) {
-            // Clear dynamic fields when no category is selected
+            // Load dynamic fields based on category and subcategory
+            localHelpDeskController.loadDynamicFormFields(
+                category = selectedCategory!!,
+                subcategory = selectedSubcategory,
+            )
+        } else if (selectedCategory == null || selectedSubcategory == null) {
+            // Clear dynamic fields when category or subcategory is not selected
             localHelpDeskController.clearDynamicFormFields()
             dynamicFieldValues = emptyMap()
             dynamicFieldErrors = emptyMap()
         }
     }
 
-    // Submit function for help desk tickets (using SOS endpoint, no anonymous option)
-    suspend fun submitHelpDeskTicket() {
-        if (selectedCategory == null || issueDescription.isBlank()) {
+    // Submit function for dynamic form tickets (defined first so it can be called by submitHelpDeskTicket)
+    suspend fun submitDynamicFormTicket(user: com.archeGlobal.one.model.UserData) {
+        Log.d("RaiseConcern", ">>> submitDynamicFormTicket() entered")
+        Log.d("RaiseConcern", "  - User Name: ${user.name}")
+        Log.d("RaiseConcern", "  - User Email: ${user.email}")
+        Log.d("RaiseConcern", "  - Manager Email: ${user.userDetails?.reporting_manager_mail}")
+        Log.d("RaiseConcern", "  - Dynamic Fields to validate: ${dynamicFormFields.size}")
+
+        // Validate dynamic form fields
+        Log.d("RaiseConcern", "Starting field validation...")
+        val fieldValidationErrors = mutableMapOf<String, String>()
+        dynamicFormFields.forEach { field ->
+            val value = dynamicFieldValues[field.fieldId] ?: ""
+            Log.d("RaiseConcern", "Validating field: ${field.fieldName} (${field.fieldId})")
+            Log.d("RaiseConcern", "  - Value: '$value' (length: ${value.length})")
+            Log.d("RaiseConcern", "  - Required: ${field.isRequired}")
+            Log.d("RaiseConcern", "  - Min Length: ${field.minLength}")
+            Log.d("RaiseConcern", "  - Max Length: ${field.maxLength}")
+            Log.d("RaiseConcern", "  - Validation Regex: ${field.validationRegex}")
+
+            val error = validateDynamicField(field, value)
+            if (error != null) {
+                Log.e("RaiseConcern", "  ✗ VALIDATION FAILED: $error")
+                fieldValidationErrors[field.fieldId] = error
+            } else {
+                Log.d("RaiseConcern", "  ✓ Validation passed")
+            }
+        }
+
+        if (fieldValidationErrors.isNotEmpty()) {
+            Log.e("RaiseConcern", "VALIDATION ERRORS FOUND:")
+            fieldValidationErrors.forEach { (fieldId, error) ->
+                val fieldName = dynamicFormFields.find { it.fieldId == fieldId }?.fieldName ?: "Unknown"
+                Log.e("RaiseConcern", "  - $fieldName ($fieldId): $error")
+            }
+            dynamicFieldErrors = fieldValidationErrors
             Toast
                 .makeText(
                     context,
-                    "Please select a category and describe your issue",
+                    "Please fill in all required fields correctly",
+                    Toast.LENGTH_SHORT,
+                ).show()
+            isSubmitting = false
+            return
+        }
+
+        Log.d("RaiseConcern", "✓ All field validations passed")
+
+        // Clear any previous validation errors
+        dynamicFieldErrors = emptyMap()
+
+        try {
+            // Prepare form details as JSON
+            val formDetailsMap = mutableMapOf<String, String>()
+            dynamicFormFields.forEach { field ->
+                val value = dynamicFieldValues[field.fieldId] ?: ""
+                formDetailsMap[field.fieldId] = value
+            }
+            val formDetailsJson = com.google.gson.Gson().toJson(formDetailsMap)
+
+            // Create multipart request body parts
+            val nameBody = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), user.name ?: "")
+            val userEmailBody = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), user.email ?: "")
+            val managerEmailBody = okhttp3.RequestBody.create(
+                "text/plain".toMediaTypeOrNull(),
+                user.userDetails?.reporting_manager_mail ?: "",
+            )
+            val categoryBody = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), selectedCategory ?: "")
+            val subCategoryBody = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), selectedSubcategory ?: "")
+            val queryBody = null // Optional query field
+            val formDetailsBody = okhttp3.RequestBody.create("application/json".toMediaTypeOrNull(), formDetailsJson)
+
+            Log.d("RaiseConcern", "==============================================")
+            Log.d("RaiseConcern", "=== DYNAMIC FORM TICKET SUBMISSION START ===")
+            Log.d("RaiseConcern", "==============================================")
+            Log.d("RaiseConcern", "API Endpoint: POST /helpdsk/v1/raise-req")
+            Log.d("RaiseConcern", "Content-Type: multipart/form-data")
+            Log.d("RaiseConcern", "")
+            Log.d("RaiseConcern", "Request Parameters:")
+            Log.d("RaiseConcern", "  - name: '${user.name}'")
+            Log.d("RaiseConcern", "  - userEmail: '${user.email}'")
+            Log.d("RaiseConcern", "  - managerEmail: '${user.userDetails?.reporting_manager_mail}'")
+            Log.d("RaiseConcern", "  - category: '$selectedCategory'")
+            Log.d("RaiseConcern", "  - subCategory: '$selectedSubcategory'")
+            Log.d("RaiseConcern", "  - query: null (not used for dynamic forms)")
+            Log.d("RaiseConcern", "  - files: null (not implemented)")
+            Log.d("RaiseConcern", "")
+            Log.d("RaiseConcern", "Form Details JSON:")
+            Log.d("RaiseConcern", formDetailsJson)
+            Log.d("RaiseConcern", "")
+            Log.d("RaiseConcern", "Individual Field Values:")
+            dynamicFormFields.forEach { field ->
+                val value = dynamicFieldValues[field.fieldId] ?: ""
+                Log.d("RaiseConcern", "  - ${field.fieldName} (${field.fieldId}): '$value'")
+            }
+            Log.d("RaiseConcern", "")
+            Log.d("RaiseConcern", "Making API call...")
+
+            // Make API call
+            val response = com.archeGlobal.one.network.RetrofitClient.apiService.submitDynamicFormRequest(
+                name = nameBody,
+                userEmail = userEmailBody,
+                managerEmail = managerEmailBody,
+                category = categoryBody,
+                subCategory = subCategoryBody,
+                query = queryBody,
+                formDetails = formDetailsBody,
+                files = null, // TODO: Add file upload support if needed
+            )
+
+            Log.d("RaiseConcern", "API Response received")
+            Log.d("RaiseConcern", "  - HTTP Status Code: ${response.code()}")
+            Log.d("RaiseConcern", "  - Is Successful: ${response.isSuccessful}")
+
+            if (response.isSuccessful && response.body() != null) {
+                val responseBody = response.body()!!
+                Log.d("RaiseConcern", "  - Response Status: ${responseBody.status}")
+                Log.d("RaiseConcern", "  - Response Message: '${responseBody.message}'")
+                Log.d("RaiseConcern", "  - Ticket ID: '${responseBody.ticketId ?: "N/A"}'")
+
+                if (responseBody.status == 200) {
+                    Log.d("RaiseConcern", "✓ SUCCESS: Ticket submitted successfully")
+                    Log.d("RaiseConcern", "==============================================")
+
+                    // Store ticket ID and show success dialog
+                    successTicketId = responseBody.ticketId
+                    showDynamicFormSuccessDialog = true
+
+                    // Reset form on success
+                    selectedCategory = null
+                    selectedSubcategory = null
+                    dynamicFieldValues = emptyMap()
+                    dynamicFieldErrors = emptyMap()
+                    localHelpDeskController.clearDynamicFormFields()
+                } else {
+                    Log.e("RaiseConcern", "✗ FAILED: Status code indicates failure")
+                    Log.e("RaiseConcern", "==============================================")
+
+                    Toast
+                        .makeText(
+                            context,
+                            "Failed to submit request: ${responseBody.message}",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                }
+            } else {
+                Log.e("RaiseConcern", "✗ ERROR: API call unsuccessful")
+                Log.e("RaiseConcern", "  - HTTP Status: ${response.code()}")
+                Log.e("RaiseConcern", "  - Error Message: ${response.message()}")
+                Log.e("RaiseConcern", "  - Response Body: ${response.errorBody()?.string()}")
+                Log.e("RaiseConcern", "==============================================")
+
+                Toast
+                    .makeText(
+                        context,
+                        "Failed to submit request. Please try again.",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+            }
+        } catch (e: Exception) {
+            Log.e("RaiseConcern", "✗ EXCEPTION: Error during dynamic form submission")
+            Log.e("RaiseConcern", "  - Exception Type: ${e.javaClass.simpleName}")
+            Log.e("RaiseConcern", "  - Exception Message: ${e.message}")
+            Log.e("RaiseConcern", "  - Stack Trace:", e)
+            Log.e("RaiseConcern", "==============================================")
+
+            Toast
+                .makeText(
+                    context,
+                    "Unable to submit request. Please check your internet connection.",
+                    Toast.LENGTH_SHORT,
+                ).show()
+        } finally {
+            isSubmitting = false
+        }
+    }
+
+    // Submit function for help desk tickets
+    suspend fun submitHelpDeskTicket() {
+        Log.d("RaiseConcern", "============================================")
+        Log.d("RaiseConcern", "submitHelpDeskTicket() called")
+        Log.d("RaiseConcern", "  - Selected Category: $selectedCategory")
+        Log.d("RaiseConcern", "  - Selected Subcategory: $selectedSubcategory")
+        Log.d("RaiseConcern", "  - Available Subcategories: $availableSubcategories")
+        Log.d("RaiseConcern", "  - Dynamic Fields Count: ${dynamicFormFields.size}")
+        Log.d("RaiseConcern", "  - Is Help Desk Ticket: $isHelpDeskTicket")
+        Log.d("RaiseConcern", "  - Source: $source")
+
+        if (selectedCategory == null) {
+            Log.e("RaiseConcern", "VALIDATION FAILED: Category is null")
+            Toast
+                .makeText(
+                    context,
+                    "Please select a category",
                     Toast.LENGTH_SHORT,
                 ).show()
             return
         }
 
         if (availableSubcategories.isNotEmpty() && selectedSubcategory == null) {
+            Log.e("RaiseConcern", "VALIDATION FAILED: Subcategory required but not selected")
+            Log.e("RaiseConcern", "  - Available subcategories: $availableSubcategories")
             Toast
                 .makeText(
                     context,
@@ -282,146 +463,109 @@ fun RaiseConcernScreen(
             return
         }
 
-        // Validate dynamic form fields
-        val fieldValidationErrors = mutableMapOf<String, String>()
-        dynamicFormFields.forEach { field ->
-            val value = dynamicFieldValues[field.fieldId] ?: ""
-            val error = validateDynamicField(field, value)
-            if (error != null) {
-                fieldValidationErrors[field.fieldId] = error
-            }
-        }
-
-        if (fieldValidationErrors.isNotEmpty()) {
-            dynamicFieldErrors = fieldValidationErrors
-            Toast
-                .makeText(
-                    context,
-                    "Please fill in all required fields correctly",
-                    Toast.LENGTH_SHORT,
-                ).show()
-            return
-        }
-
-        // Clear any previous validation errors
-        dynamicFieldErrors = emptyMap()
-
         val user = userData
         if (user == null) {
+            Log.e("RaiseConcern", "VALIDATION FAILED: User data is null")
             Toast.makeText(context, "User information not available", Toast.LENGTH_SHORT).show()
             return
         }
 
+        Log.d("RaiseConcern", "All validations passed")
         isSubmitting = true
 
         try {
-            // Prepare dynamic field values for submission
-            val dynamicFieldValuesList =
-                dynamicFormFields.map { field ->
-                    DynamicFormFieldValue(
-                        fieldId = field.fieldId,
-                        value = dynamicFieldValues[field.fieldId] ?: "",
-                    )
+            // Check if this is a dynamic form submission
+            if (dynamicFormFields.isNotEmpty()) {
+                Log.d("RaiseConcern", "ROUTING: Dynamic form detected - calling submitDynamicFormTicket()")
+                // Dynamic form submission - use new API
+                submitDynamicFormTicket(user)
+            } else {
+                Log.d("RaiseConcern", "ROUTING: Non-dynamic form - using existing API")
+                // Non-dynamic form submission - use existing API
+                if (issueDescription.isBlank()) {
+                    Log.e("RaiseConcern", "VALIDATION FAILED: Issue description is blank")
+                    Toast
+                        .makeText(
+                            context,
+                            "Please describe your issue",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    isSubmitting = false
+                    return
                 }
 
-            // TODO: When API is ready, replace SOSRequest with DynamicTicketSubmissionRequest
-            // that includes the dynamicFields parameter
-            val request =
-                SOSRequest(
-                    name = user.name ?: "",
-                    email = user.email ?: "",
-                    mobile = user.mobile ?: "",
-                    category = selectedCategory ?: "Other Issue",
-                    subcategory = selectedSubcategory?.takeIf { it.isNotBlank() },
-                    query = issueDescription,
-                    anonymous = false, // Help desk tickets are never anonymous
-                )
+                val request =
+                    SOSRequest(
+                        name = user.name ?: "",
+                        email = user.email ?: "",
+                        mobile = user.mobile ?: "",
+                        category = selectedCategory ?: "Other Issue",
+                        subcategory = selectedSubcategory?.takeIf { it.isNotBlank() },
+                        query = issueDescription,
+                        anonymous = false,
+                    )
 
-            Log.d("RaiseConcern", "=== HELP DESK TICKET SUBMISSION ===")
-            Log.d("RaiseConcern", "Selected Category: '$selectedCategory'")
-            Log.d("RaiseConcern", "Selected Subcategory: '$selectedSubcategory'")
-            Log.d("RaiseConcern", "Available Subcategories: ${availableSubcategories}")
-            Log.d("RaiseConcern", "Issue Description: '$issueDescription'")
-            Log.d("RaiseConcern", "Request subcategory value: '${request.subcategory}'")
-            Log.d("RaiseConcern", "Dynamic Fields Count: ${dynamicFieldValuesList.size}")
-            dynamicFieldValuesList.forEach { fieldValue ->
-                Log.d("RaiseConcern", "  Field ${fieldValue.fieldId}: '${fieldValue.value}'")
-            }
-            Log.d("RaiseConcern", "======================================")
+                Log.d("RaiseConcern", "=== NON-DYNAMIC HELP DESK TICKET SUBMISSION ===")
+                Log.d("RaiseConcern", "API Endpoint: submitEncryptedHelpdeskRequest")
+                Log.d("RaiseConcern", "Category: '$selectedCategory'")
+                Log.d("RaiseConcern", "Subcategory: '$selectedSubcategory'")
+                Log.d("RaiseConcern", "Issue Description: '$issueDescription'")
 
-            val result = sosController.submitEncryptedHelpdeskRequest(request)
+                val result = sosController.submitEncryptedHelpdeskRequest(request)
 
-            result.fold(
-                onSuccess = { response ->
-                    if (response.status) {
-                        val successMessage =
-                            if (source == "asset") {
-                                // For asset concerns, use API response message
-                                response.message
-                            } else {
-                                // For helpdesk concerns, use hardcoded message
-                                "Ticket raised successfully"
-                            }
+                result.fold(
+                    onSuccess = { response ->
+                        if (response.status) {
+                            val successMessage =
+                                if (source == "asset") {
+                                    response.message
+                                } else {
+                                    "Ticket raised successfully"
+                                }
 
-                        Toast
-                            .makeText(
-                                context,
-                                successMessage,
-                                Toast.LENGTH_LONG,
-                            ).show()
+                            Toast.makeText(context, successMessage, Toast.LENGTH_LONG).show()
 
-                        // Reset form on success
-                        selectedCategory = null
-                        selectedSubcategory = null
-                        issueDescription = ""
-                        dynamicFieldValues = emptyMap()
-                        dynamicFieldErrors = emptyMap()
-                        localHelpDeskController.clearDynamicFormFields()
+                            // Reset form on success
+                            selectedCategory = null
+                            selectedSubcategory = null
+                            issueDescription = ""
 
-                        // Show timer dialog for helpdesk tickets only
-                        showTimerDialog = true
-                        timerSeconds = 20
-                    } else {
+                            // Show timer dialog for helpdesk tickets only
+                            showTimerDialog = true
+                            timerSeconds = 20
+                        } else {
+                            val errorMessage =
+                                if (source == "asset") {
+                                    response.message
+                                } else {
+                                    "Failed to submit ticket: ${response.message}"
+                                }
+
+                            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onFailure = { exception ->
                         val errorMessage =
                             if (source == "asset") {
-                                // For asset concerns, use API response message
-                                response.message
+                                "Unable to submit your concern. Please try again."
                             } else {
-                                // For helpdesk concerns, use hardcoded message with API message
-                                "Failed to submit ticket: ${response.message}"
+                                when (exception) {
+                                    is APIError.Unauthorized -> "Authentication error. Please login again."
+                                    is APIError.BadRequest -> "Invalid request. Please check your information."
+                                    is APIError.ServerError -> "Server error. Please try again later."
+                                    is APIError.EncryptionFailed -> "Security error. Please try again."
+                                    is APIError.DecryptionFailed -> "Security error. Please try again."
+                                    is APIError.SSLPinningFailed -> "Network security error. Please try again."
+                                    is APIError.DecodingError -> "Response processing error. Please try again."
+                                    else -> "Unable to submit your ticket. Please try again."
+                                }
                             }
 
-                        Toast
-                            .makeText(
-                                context,
-                                errorMessage,
-                                Toast.LENGTH_SHORT,
-                            ).show()
-                    }
-                },
-                onFailure = { exception ->
-                    val errorMessage =
-                        if (source == "asset") {
-                            // For asset concerns, use generic message since no API response available
-                            "Unable to submit your concern. Please try again."
-                        } else {
-                            // For helpdesk concerns, use detailed hardcoded messages
-                            when (exception) {
-                                is APIError.Unauthorized -> "Authentication error. Please login again."
-                                is APIError.BadRequest -> "Invalid request. Please check your information."
-                                is APIError.ServerError -> "Server error. Please try again later."
-                                is APIError.EncryptionFailed -> "Security error. Please try again."
-                                is APIError.DecryptionFailed -> "Security error. Please try again."
-                                is APIError.SSLPinningFailed -> "Network security error. Please try again."
-                                is APIError.DecodingError -> "Response processing error. Please try again."
-                                else -> "Unable to submit your ticket. Please try again."
-                            }
-                        }
-
-                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-                    Log.e("RaiseConcern", "Error submitting help desk ticket: ${exception.message}")
-                },
-            )
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                        Log.e("RaiseConcern", "Error submitting help desk ticket: ${exception.message}")
+                    },
+                )
+            }
         } catch (e: Exception) {
             val exceptionMessage =
                 if (source == "asset") {
@@ -580,7 +724,11 @@ fun RaiseConcernScreen(
                         )
                     }
                     Text(
-                        text = title,
+                        text = if (dynamicFormFields.isNotEmpty() && selectedSubcategory != null) {
+                            selectedSubcategory!! // Show subcategory for dynamic forms
+                        } else {
+                            title // Show default title for non-dynamic forms
+                        },
                         color = Color.Black,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
@@ -597,13 +745,125 @@ fun RaiseConcernScreen(
                     modifier =
                         Modifier
                             .fillMaxSize()
-                            .verticalScroll(scrollState)
-                            .padding(horizontal = 16.dp),
+                            .verticalScroll(scrollState),
                 ) {
                     Spacer(modifier = Modifier.height(10.dp))
 
-                // Category dropdown (hide when pre-filled from FAQ)
-                if (!isCategoryLocked) {
+                    // Dynamic Form Mode - Wrap everything in beige container
+                    if (source != "asset" && isHelpDeskTicket && dynamicFormFields.isNotEmpty()) {
+                        Card(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)), // Beige background
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        ) {
+                            Column(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                            ) {
+                                // Employee Details Section
+                                Text(
+                                    text = "Employee Details",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 12.dp),
+                                )
+
+                                // Employee details rows
+                                if (userData != null) {
+                                    DynamicEmployeeDetailRow(label = "Name:", value = userData.name)
+                                    DynamicEmployeeDetailRow(label = "Employee ID:", value = userData.employeeId)
+                                    DynamicEmployeeDetailRow(label = "Mobile No:", value = userData.mobile)
+                                    DynamicEmployeeDetailRow(label = "Designation:", value = userData.designation)
+                                    DynamicEmployeeDetailRow(label = "Department:", value = userData.department)
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Form Details Section Header
+                                Text(
+                                    text = "Form Details",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 8.dp),
+                                )
+
+                                // Dynamic form fields
+                                val sortedFields = dynamicFormFields.sortedBy { it.displayOrder }
+                                sortedFields.forEach { field ->
+                                    DynamicFormFieldComponent(
+                                        field = field,
+                                        value = dynamicFieldValues[field.fieldId] ?: "",
+                                        onValueChange = { newValue ->
+                                            dynamicFieldValues = dynamicFieldValues.toMutableMap().apply {
+                                                put(field.fieldId, newValue)
+                                            }
+                                            // Clear error when user starts typing
+                                            if (dynamicFieldErrors.containsKey(field.fieldId)) {
+                                                dynamicFieldErrors = dynamicFieldErrors.toMutableMap().apply {
+                                                    remove(field.fieldId)
+                                                }
+                                            }
+                                        },
+                                        isError = dynamicFieldErrors.containsKey(field.fieldId),
+                                        errorMessage = dynamicFieldErrors[field.fieldId],
+                                        modifier = Modifier.padding(horizontal = 0.dp), // Remove extra padding for alignment
+                                    )
+                                }
+
+                                // Approval Chain Section
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Approval Chain",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 8.dp),
+                                )
+
+                                // Reporting Manager Row
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Text(
+                                        text = "Reporting Manager:",
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color.Gray,
+                                        modifier = Modifier.weight(0.5f),
+                                    )
+                                    Text(
+                                        text = userData?.userDetails?.reporting_manager ?: "N/A",
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Black,
+                                        modifier = Modifier.weight(0.5f),
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                // Category dropdown (hide when in dynamic form mode or pre-filled from FAQ)
+                if (!(source != "asset" && isHelpDeskTicket && dynamicFormFields.isNotEmpty()) && !isCategoryLocked) {
                     Box(
                         modifier =
                             Modifier
@@ -742,8 +1002,8 @@ fun RaiseConcernScreen(
                     }
                 } // End of category dropdown conditional
 
-                // Subcategory dropdown (show when category is selected or pre-filled) - only for helpdesk tickets
-                if (selectedCategory != null && (isHelpDeskTicket || source == "asset")) {
+                // Subcategory dropdown (hide when in dynamic form mode, show when category is selected or pre-filled) - only for helpdesk tickets
+                if (!(source != "asset" && isHelpDeskTicket && dynamicFormFields.isNotEmpty()) && selectedCategory != null && (isHelpDeskTicket || source == "asset")) {
                     Box(
                         modifier =
                             Modifier
@@ -862,33 +1122,8 @@ fun RaiseConcernScreen(
                     }
                 }
 
-                // Dynamic form fields section
-                if (isHelpDeskTicket && dynamicFormFields.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    dynamicFormFields.forEach { field ->
-                        DynamicFormFieldComponent(
-                            field = field,
-                            value = dynamicFieldValues[field.fieldId] ?: "",
-                            onValueChange = { newValue ->
-                                dynamicFieldValues = dynamicFieldValues.toMutableMap().apply {
-                                    put(field.fieldId, newValue)
-                                }
-                                // Clear error when user starts typing
-                                if (dynamicFieldErrors.containsKey(field.fieldId)) {
-                                    dynamicFieldErrors = dynamicFieldErrors.toMutableMap().apply {
-                                        remove(field.fieldId)
-                                    }
-                                }
-                            },
-                            isError = dynamicFieldErrors.containsKey(field.fieldId),
-                            errorMessage = dynamicFieldErrors[field.fieldId],
-                        )
-                    }
-                }
-
-                // Show loading indicator for dynamic fields
-                if (dynamicFieldsLoading) {
+                // Show loading indicator for dynamic fields (only for help desk, NOT for asset)
+                if (source != "asset" && dynamicFieldsLoading) {
                     Box(
                         modifier =
                             Modifier
@@ -903,8 +1138,8 @@ fun RaiseConcernScreen(
                     }
                 }
 
-                // Show error message for dynamic fields loading
-                if (dynamicFieldsError != null) {
+                // Show error message for dynamic fields loading (only for help desk, NOT for asset)
+                if (source != "asset" && dynamicFieldsError != null) {
                     Text(
                         text = dynamicFieldsError ?: "",
                         color = Color(0xFFD32F2F),
@@ -917,18 +1152,19 @@ fun RaiseConcernScreen(
                     )
                 }
 
-                // Issue description
-                OutlinedTextField(
-                    value = issueDescription,
-                    onValueChange = { issueDescription = it },
-                    placeholder = {
-                        Text(
-                            "Please describe your issue",
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily,
-                            fontSize = 16.sp,
-                        )
-                    },
+                // Issue description (hide when in dynamic form mode)
+                if (!(source != "asset" && isHelpDeskTicket && dynamicFormFields.isNotEmpty())) {
+                    OutlinedTextField(
+                        value = issueDescription,
+                        onValueChange = { issueDescription = it },
+                        placeholder = {
+                            Text(
+                                "Please describe your issue",
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 16.sp,
+                            )
+                        },
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -968,7 +1204,8 @@ fun RaiseConcernScreen(
                             }
                         }),
                     shape = RoundedCornerShape(8.dp),
-                )
+                    )
+                }
 
                 // Submit button
                 Button(
@@ -1198,6 +1435,84 @@ fun RaiseConcernScreen(
                 }
             }
 
+            // Dynamic Form Success Dialog
+            if (showDynamicFormSuccessDialog) {
+                Dialog(onDismissRequest = { /* Prevent dismissal by clicking outside */ }) {
+                    Card(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.9f)
+                                .wrapContentHeight(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                    ) {
+                        Column(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            // Green checkmark icon
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .size(64.dp)
+                                        .background(Color(0xFF4CAF50), shape = androidx.compose.foundation.shape.CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Success",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(40.dp),
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Success message
+                            Text(
+                                text = "Your request has been sent to the manager for approval. Your ticket ID is ${successTicketId ?: "TKT-XXXXX"}. You can check the status in 'Track Tickets'",
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 24.sp,
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // OK Button
+                            Button(
+                                onClick = {
+                                    showDynamicFormSuccessDialog = false
+                                    onBackPressed()
+                                },
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFD32F2F),
+                                    ),
+                                shape = RoundedCornerShape(8.dp),
+                            ) {
+                                Text(
+                                    text = "OK",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.White,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Show loading indicator when submitting
             if (isSubmitting) {
                 Box(
@@ -1211,5 +1526,39 @@ fun RaiseConcernScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * Individual employee detail row for dynamic form
+ */
+@Composable
+private fun DynamicEmployeeDetailRow(
+    label: String,
+    value: String,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            fontFamily = GraphikFontFamily,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Gray,
+            modifier = Modifier.weight(0.4f),
+        )
+        Text(
+            text = value,
+            fontFamily = GraphikFontFamily,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            color = Color.Black,
+            modifier = Modifier.weight(0.6f),
+        )
     }
 }
