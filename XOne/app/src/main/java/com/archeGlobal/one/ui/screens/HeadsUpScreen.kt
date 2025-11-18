@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -330,11 +331,10 @@ fun HeadsUpPostCard(
             // Header with profile, name, and priority
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.Top,
                     modifier = Modifier.weight(1f)
                 ) {
                     // Profile picture
@@ -399,12 +399,25 @@ fun HeadsUpPostCard(
                                 color = Color(0xFF666666)
                             )
                         }
+                        // Show actual target details (emails/departments/locations)
+                        val targetDetails = formatTargetDetails(post)
+                        if (targetDetails.isNotEmpty()) {
+                            Text(
+                                text = targetDetails,
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 12.sp,
+                                color = Color(0xFF999999),
+                                modifier = Modifier.padding(start = 16.dp),
+                                softWrap = true,
+                                overflow = TextOverflow.Visible
+                            )
+                        }
                     }
                 }
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 4.dp, start = 8.dp) // Added start padding to move right
+                    modifier = Modifier.padding(start = 16.dp)
                 ) {
                     // Priority badge
                     Box(
@@ -416,27 +429,34 @@ fun HeadsUpPostCard(
                                     "low" -> Color(0xFF66BB6A)
                                     else -> Color.Gray
                                 },
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(10.dp)
                             )
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = post.priority,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.sp,
+                            fontSize = 10.sp,
                             color = Color.White
                         )
                     }
 
+                    Spacer(modifier = Modifier.width(2.dp))
+
                     // Only show dots menu for admin, IT, and HR users
                     if (canManagePost) {
                         Box {
-                            IconButton(onClick = { expanded = true }) {
+                            IconButton(
+                                onClick = { expanded = true },
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .offset(x = (-4).dp)
+                            ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.dots),
                                     contentDescription = "More options",
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
 
@@ -662,13 +682,47 @@ private fun formatActivityTime(isoTime: String): String {
     }
 }
 
-// Helper function to format target audience
+// Helper function to format target audience label
 private fun formatTargetAudience(post: CreatedPost): String {
-    return when (post.target_group) {
-        "Everyone" -> "Everyone@arche.global"
-        "DepartmentBased" -> post.target_department?.joinToString(", ") ?: "Department"
-        "LocationBased" -> post.target_location?.joinToString(", ") ?: "Location"
-        "EmployeeBased" -> post.target_employee?.firstOrNull() ?: "Specific Employee"
+    // Infer target group from which field is populated
+    val inferredGroup = when {
+        post.target_group == "Everyone" -> "Everyone"
+        !post.target_department.isNullOrEmpty() -> "DepartmentBased"
+        !post.target_location.isNullOrEmpty() -> "LocationBased"
+        !post.target_employee.isNullOrEmpty() -> "EmployeeBased"
+        post.target_group == "DepartmentBased" -> "DepartmentBased"
+        post.target_group == "LocationBased" -> "LocationBased"
+        post.target_group == "EmployeeBased" -> "EmployeeBased"
+        post.target_group == "ProjectBased" -> "ProjectBased"
+        else -> "Everyone"
+    }
+
+    val label = when (inferredGroup) {
+        "Everyone" -> "Tagged Employees"
+        "DepartmentBased" -> "Tagged Department"
+        "LocationBased" -> "Tagged Location"
+        "EmployeeBased" -> "Tagged Employees"
+        "ProjectBased" -> "Tagged Project"
+        else -> "Tagged Employees"
+    }
+    android.util.Log.d("HeadsUpScreen", "Original target_group: ${post.target_group}, Inferred: $inferredGroup, Label: $label")
+    return label
+}
+
+// Helper function to format target details (actual emails/departments/locations)
+private fun formatTargetDetails(post: CreatedPost): String {
+    // Infer target group from which field is populated
+    val details = when {
+        post.target_group == "Everyone" -> "Everyone@arche.global"
+        !post.target_department.isNullOrEmpty() -> post.target_department.joinToString("\n")
+        !post.target_location.isNullOrEmpty() -> post.target_location.joinToString("\n")
+        !post.target_employee.isNullOrEmpty() -> post.target_employee.joinToString("\n")
+        post.target_group == "DepartmentBased" -> post.target_department?.joinToString("\n") ?: ""
+        post.target_group == "LocationBased" -> post.target_location?.joinToString("\n") ?: ""
+        post.target_group == "EmployeeBased" -> post.target_employee?.joinToString("\n") ?: ""
         else -> "Everyone@arche.global"
     }
+    android.util.Log.d("HeadsUpScreen", "Target group: ${post.target_group}, Details: $details")
+    android.util.Log.d("HeadsUpScreen", "Department: ${post.target_department}, Location: ${post.target_location}, Employee: ${post.target_employee}")
+    return details
 }

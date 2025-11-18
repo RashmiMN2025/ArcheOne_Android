@@ -11,6 +11,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +27,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -36,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.platform.LocalContext
+import com.archeGlobal.one.R
 import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.network.CreatePostRequest
 import com.archeGlobal.one.network.RetrofitClient
@@ -157,10 +161,12 @@ fun NewPostDialog(
     var postPriority by remember { mutableStateOf(existingPost?.priority ?: "Select Post Priority") }
     var postGroup by remember { mutableStateOf(
         when (existingPost?.target_group) {
-            "DepartmentBased" -> "Department-based"
-            "LocationBased" -> "Location-based"
-            "EmployeeBased" -> "Employee-based"
-            else -> "Employee-based"
+            "DepartmentBased" -> "Department Based"
+            "LocationBased" -> "Location Based"
+            "EmployeeBased" -> "Employee Based"
+            "ProjectBased" -> "Project Based"
+            "Everyone" -> "Everyone@Arche"
+            else -> "Everyone@Arche"
         }
     ) }
     var employeeSearchQuery by remember { mutableStateOf("") }
@@ -169,7 +175,9 @@ fun NewPostDialog(
     } ?: emptyList()) }
     var suggestedEmployees by remember { mutableStateOf<List<com.archeGlobal.one.model.SuggestedUser>>(emptyList()) }
     var isSearchingEmployees by remember { mutableStateOf(false) }
-    var department by remember { mutableStateOf(existingPost?.target_department?.firstOrNull() ?: "Select Department") }
+    var departmentSearchQuery by remember { mutableStateOf("") }
+    var selectedDepartments by remember { mutableStateOf<List<String>>(existingPost?.target_department ?: emptyList()) }
+    var suggestedDepartments by remember { mutableStateOf<List<String>>(emptyList()) }
     var locationSearchQuery by remember { mutableStateOf("") }
     var selectedLocations by remember { mutableStateOf<List<String>>(existingPost?.target_location ?: emptyList()) }
     var suggestedLocations by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -188,9 +196,20 @@ fun NewPostDialog(
                 fetchedDepartments = data?.departments ?: emptyList()
                 fetchedProjects = data?.projects ?: emptyList()
                 announcementCategories = data?.announcementCategories ?: emptyList()
+
+                // Detailed logging for debugging
+                android.util.Log.d("NewPostDialog", "=== API Response Details ===")
                 android.util.Log.d("NewPostDialog", "Fetched announcement categories: ${announcementCategories.size}")
-                android.util.Log.d("NewPostDialog", "Fetched projects: ${fetchedProjects.size}")
                 android.util.Log.d("NewPostDialog", "User access: $userAccess")
+                announcementCategories.forEach { category ->
+                    android.util.Log.d("NewPostDialog", "Category access: ${category.access}")
+                    category.fields.forEach { field ->
+                        android.util.Log.d("NewPostDialog", "  - Category: ${field.category}, Subcategories count: ${field.subcategory.size}")
+                        android.util.Log.d("NewPostDialog", "  - Subcategories: ${field.subcategory}")
+                    }
+                }
+            } else {
+                android.util.Log.e("NewPostDialog", "API call failed: ${response.code()} - ${response.message()}")
             }
         } catch (e: Exception) {
             android.util.Log.e("NewPostDialog", "Error fetching data", e)
@@ -227,6 +246,19 @@ fun NewPostDialog(
                 suggestedEmployees = emptyList()
             }
         })
+    }
+
+    // Search departments function
+    fun searchDepartments(query: String) {
+        departmentSearchQuery = query
+        if (query.isEmpty()) {
+            suggestedDepartments = emptyList()
+            return
+        }
+        // Filter from fetched departments
+        suggestedDepartments = fetchedDepartments.filter {
+            it.contains(query, ignoreCase = true)
+        }.take(5)
     }
 
     // Search locations function
@@ -289,42 +321,6 @@ fun NewPostDialog(
         )
     }
     var showEventPreview by remember { mutableStateOf(false) }
-
-    val postTypes = listOf("Planned", "Unplanned/Emergency")
-
-    val plannedSubjects = listOf(
-        "Housekeeping schedule",
-        "Pest control or deep cleaning activities",
-        "Pantry & cafeteria updates",
-        "Air conditioning or lighting maintenance",
-        "Fire drills or emergency activities",
-        "Lost & found notifications",
-        "Security protocol reminders",
-        "Access restriction or badge issues",
-        "Lift/escalator maintenance",
-        "Parking space updates",
-        "Delivery or courier notifications",
-        "Clean desk policy reminders",
-        "Power outage or generator testing",
-        "Visitor on floor alerts",
-        "Noise level reminders",
-        "Seating arrangement changes"
-    )
-
-    val unplannedSubjects = listOf(
-        "Air conditioning/lighting maintenance",
-        "Pantry & cafeteria update",
-        "Fire drills/emergency",
-        "Lost & found",
-        "Lift/escalator maintenance",
-        "Delivery or courier notification",
-        "Power outage/generator testing",
-        "Noise level reminder"
-    )
-
-    val postSubjects = if (postType == "Planned") plannedSubjects else unplannedSubjects
-    val postPriorities = listOf("High", "Medium", "Low")
-    val postGroups = listOf("Employee-based", "Department-based", "Location-based", "All")
 
     // Helper function to convert URI to MultipartBody.Part
     fun uriToMultipartBodyPart(context: Context, uri: Uri, partName: String): MultipartBody.Part? {
@@ -389,7 +385,13 @@ fun NewPostDialog(
                     val isoFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     isoFormat.parse(dateString.substring(0, 10))
                 }
-                // "dd MMM yyyy" format (e.g., "14 Nov 2025")
+                // "dd MMMM yyyy" format (e.g., "18 November 2025")
+                dateString.matches(Regex("\\d{1,2}\\s+[A-Za-z]{4,}\\s+\\d{4}")) -> {
+                    android.util.Log.d("NewPostDialog", "formatDateToISO: Date in 'dd MMMM yyyy' format")
+                    val fullMonthFormat = SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
+                    fullMonthFormat.parse(dateString)
+                }
+                // "dd MMM yyyy" format (e.g., "18 Nov 2025")
                 dateString.matches(Regex("\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}")) -> {
                     android.util.Log.d("NewPostDialog", "formatDateToISO: Date in 'dd MMM yyyy' format")
                     val shortMonthFormat = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
@@ -465,36 +467,61 @@ fun NewPostDialog(
                     "Everyone"
                 } else {
                     when (postGroup) {
-                        "Employee-based" -> "EmployeeBased"
-                        "Department-based" -> "DepartmentBased"
-                        "Location-based" -> "LocationBased"
+                        "Employee Based" -> "EmployeeBased"
+                        "Department Based" -> "DepartmentBased"
+                        "Location Based" -> "LocationBased"
+                        "Project Based" -> "ProjectBased"
+                        "Everyone@Arche" -> "Everyone"
                         "All" -> "Everyone"
                         else -> "Everyone"
                     }
                 }
                 android.util.Log.d("NewPostDialog", "Target Group: $targetGroup (from postGroup: $postGroup)")
 
-                android.util.Log.d("NewPostDialog", "--- STEP 2: Preparing target arrays ---")
+                android.util.Log.d("NewPostDialog", "--- STEP 2: Preparing target arrays (mutually exclusive) ---")
 
-                // Prepare target arrays based on group (only for Posts)
-                val targetDepartment = if (formType == "Post" && postGroup == "Department-based" && department != "Select Department") {
-                    listOf(department)
-                } else null
+                // Prepare target arrays based on group - only ONE should be non-null
+                val targetDepartment: List<String>?
+                val targetLocation: List<String>?
+                val targetProject: List<String>?
+                val targetEmployee: List<String>?
+
+                when (targetGroup) {
+                    "DepartmentBased" -> {
+                        targetDepartment = if (selectedDepartments.isNotEmpty()) selectedDepartments else null
+                        targetLocation = null
+                        targetProject = null
+                        targetEmployee = null
+                    }
+                    "LocationBased" -> {
+                        targetDepartment = null
+                        targetLocation = if (selectedLocations.isNotEmpty()) selectedLocations else null
+                        targetProject = null
+                        targetEmployee = null
+                    }
+                    "ProjectBased" -> {
+                        targetDepartment = null
+                        targetLocation = null
+                        targetProject = if (selectedProjects.isNotEmpty()) selectedProjects else null
+                        targetEmployee = null
+                    }
+                    "EmployeeBased" -> {
+                        targetDepartment = null
+                        targetLocation = null
+                        targetProject = null
+                        targetEmployee = if (selectedEmployees.isNotEmpty()) selectedEmployees.map { it.mail } else null
+                    }
+                    else -> { // "Everyone"
+                        targetDepartment = null
+                        targetLocation = null
+                        targetProject = null
+                        targetEmployee = null
+                    }
+                }
+
                 android.util.Log.d("NewPostDialog", "Target Department: $targetDepartment")
-
-                val targetLocation = if (formType == "Post" && postGroup == "Location-based" && selectedLocations.isNotEmpty()) {
-                    selectedLocations
-                } else null
                 android.util.Log.d("NewPostDialog", "Target Location: $targetLocation")
-
-                val targetProject = if (formType == "Post" && postGroup == "Project-based" && selectedProjects.isNotEmpty()) {
-                    selectedProjects
-                } else null
                 android.util.Log.d("NewPostDialog", "Target Project: $targetProject")
-
-                val targetEmployee = if (formType == "Post" && postGroup == "Employee-based" && selectedEmployees.isNotEmpty()) {
-                    selectedEmployees.map { it.mail }
-                } else null
                 android.util.Log.d("NewPostDialog", "Target Employee: $targetEmployee")
 
                 android.util.Log.d("NewPostDialog", "--- STEP 3: Creating post request object ---")
@@ -511,38 +538,68 @@ fun NewPostDialog(
                 android.util.Log.d("NewPostDialog", "Activity Start ISO: $activityStartISO")
                 android.util.Log.d("NewPostDialog", "Activity End ISO: $activityEndISO")
 
-                // Create post request
-                val postRequest = CreatePostRequest(
-                    user_email = userData?.email ?: "",
-                    username = userData?.name ?: userName,
-                    emp_id = userData?.employeeId ?: "",
-                    profile_pic = userData?.profilePic,
-                    post_type = if (formType == "Post") "headsUp" else "homeView",
-                    subject = if (formType == "Post") postSubject else eventSubject,
-                    priority = if (formType == "Post") postPriority else "Medium",
-                    target_group = targetGroup,
-                    target_department = targetDepartment,
-                    target_location = targetLocation,
-                    target_employee = targetEmployee,
-                    target_project = targetProject,
-                    description = if (formType == "Post") announcementDescription else eventDescription,
-                    start_date = formatDateToISO(if (formType == "Post") postStartDate else eventStartDate),
-                    end_date = formatDateToISO(if (formType == "Post") postEndDate else eventEndDate),
-                    event_date = if (formType == "Event" && eventDate.isNotEmpty()) formatDateToISO(eventDate) else null,
-                    activity_start = activityStartISO,
-                    activity_end = activityEndISO,
-                    support_channel = if (supportChannelDetails.isNotEmpty()) supportChannelDetails else null
+                // Create post request as a Map to conditionally include fields
+                val postRequestMap = mutableMapOf<String, Any?>(
+                    "user_email" to (userData?.email ?: ""),
+                    "username" to (userData?.name ?: userName),
+                    "emp_id" to (userData?.employeeId ?: ""),
+                    "post_type" to if (formType == "Post") "headsUp" else "homeView",
+                    "subject" to if (formType == "Post") postSubject else eventSubject,
+                    "priority" to if (formType == "Post") postPriority else "Medium",
+                    "description" to if (formType == "Post") announcementDescription else eventDescription,
+                    "start_date" to formatDateToISO(if (formType == "Post") postStartDate else eventStartDate),
+                    "end_date" to formatDateToISO(if (formType == "Post") postEndDate else eventEndDate)
                 )
 
-                android.util.Log.d("NewPostDialog", "Post Type: ${postRequest.post_type}")
-                android.util.Log.d("NewPostDialog", "Subject: ${postRequest.subject}")
-                android.util.Log.d("NewPostDialog", "Priority: ${postRequest.priority}")
-                android.util.Log.d("NewPostDialog", "Description length: ${postRequest.description.length}")
-                android.util.Log.d("NewPostDialog", "Start Date - Display: ${if (formType == "Post") postStartDate else eventStartDate} → ISO: ${postRequest.start_date}")
-                android.util.Log.d("NewPostDialog", "End Date - Display: ${if (formType == "Post") postEndDate else eventEndDate} → ISO: ${postRequest.end_date}")
-                android.util.Log.d("NewPostDialog", "Event Date - Display: $eventDate → ISO: ${postRequest.event_date}")
-                android.util.Log.d("NewPostDialog", "Activity Start - Display: $startDurationDate $startDurationTime → ISO: ${postRequest.activity_start}")
-                android.util.Log.d("NewPostDialog", "Activity End - Display: $endDurationDate $endDurationTime → ISO: ${postRequest.activity_end}")
+                // Add profile_pic if available
+                userData?.profilePic?.let { postRequestMap["profile_pic"] = it }
+
+                // Add target fields based on target group - only include relevant field
+                when (targetGroup) {
+                    "Everyone" -> {
+                        postRequestMap["target_group"] = "Everyone"
+                    }
+                    "DepartmentBased" -> {
+                        targetDepartment?.let { postRequestMap["target_department"] = it }
+                    }
+                    "LocationBased" -> {
+                        targetLocation?.let { postRequestMap["target_location"] = it }
+                    }
+                    "EmployeeBased" -> {
+                        targetEmployee?.let { postRequestMap["target_employee"] = it }
+                    }
+                    "ProjectBased" -> {
+                        targetProject?.let { postRequestMap["target_project"] = it }
+                    }
+                }
+
+                // Add event_date if Event
+                if (formType == "Event" && eventDate.isNotEmpty()) {
+                    postRequestMap["event_date"] = formatDateToISO(eventDate)
+                }
+
+                // Add activity times if available
+                activityStartISO?.let { postRequestMap["activity_start"] = it }
+                activityEndISO?.let { postRequestMap["activity_end"] = it }
+
+                // Add support channel if provided
+                if (supportChannelDetails.isNotEmpty()) {
+                    postRequestMap["support_channel"] = supportChannelDetails
+                }
+
+                android.util.Log.d("NewPostDialog", "Post Type: ${postRequestMap["post_type"]}")
+                android.util.Log.d("NewPostDialog", "Subject: ${postRequestMap["subject"]}")
+                android.util.Log.d("NewPostDialog", "Priority: ${postRequestMap["priority"]}")
+                android.util.Log.d("NewPostDialog", "Description length: ${(postRequestMap["description"] as? String)?.length ?: 0}")
+                android.util.Log.d("NewPostDialog", "Start Date - Display: ${if (formType == "Post") postStartDate else eventStartDate} → ISO: ${postRequestMap["start_date"]}")
+                android.util.Log.d("NewPostDialog", "End Date - Display: ${if (formType == "Post") postEndDate else eventEndDate} → ISO: ${postRequestMap["end_date"]}")
+                android.util.Log.d("NewPostDialog", "Event Date - Display: $eventDate → ISO: ${postRequestMap["event_date"]}")
+                android.util.Log.d("NewPostDialog", "Activity Start - Display: $startDurationDate $startDurationTime → ISO: ${postRequestMap["activity_start"]}")
+                android.util.Log.d("NewPostDialog", "Activity End - Display: $endDurationDate $endDurationTime → ISO: ${postRequestMap["activity_end"]}")
+                android.util.Log.d("NewPostDialog", "Target Group: ${postRequestMap["target_group"]}")
+                android.util.Log.d("NewPostDialog", "Target Department: ${postRequestMap["target_department"]}")
+                android.util.Log.d("NewPostDialog", "Target Location: ${postRequestMap["target_location"]}")
+                android.util.Log.d("NewPostDialog", "Target Employee: ${postRequestMap["target_employee"]}")
 
                 android.util.Log.d("NewPostDialog", "--- STEP 4: Validating ISO dates ---")
 
@@ -551,10 +608,10 @@ fun NewPostDialog(
                 isoDateFormat.timeZone = TimeZone.getTimeZone("UTC")
 
                 val datesToValidate = mapOf(
-                    "start_date" to postRequest.start_date,
-                    "end_date" to postRequest.end_date,
-                    "activity_start" to postRequest.activity_start,
-                    "activity_end" to postRequest.activity_end
+                    "start_date" to postRequestMap["start_date"] as? String,
+                    "end_date" to postRequestMap["end_date"] as? String,
+                    "activity_start" to postRequestMap["activity_start"] as? String,
+                    "activity_end" to postRequestMap["activity_end"] as? String
                 )
 
                 datesToValidate.forEach { (fieldName, dateValue) ->
@@ -578,7 +635,7 @@ fun NewPostDialog(
 
                 // Convert to JSON
                 val gson = Gson()
-                val postJson = gson.toJson(postRequest)
+                val postJson = gson.toJson(postRequestMap)
                 android.util.Log.d("NewPostDialog", "JSON Data: $postJson")
 
                 val postRequestBody = postJson.toRequestBody("application/json".toMediaTypeOrNull())
@@ -849,8 +906,20 @@ fun NewPostDialog(
                             },
                             suggestedEmployees = suggestedEmployees,
                             isSearchingEmployees = isSearchingEmployees,
-                            department = department,
-                            onDepartmentChange = { department = it },
+                            departmentSearchQuery = departmentSearchQuery,
+                            onDepartmentSearchQueryChange = { searchDepartments(it) },
+                            selectedDepartments = selectedDepartments,
+                            onDepartmentAdded = { dept ->
+                                if (!selectedDepartments.contains(dept)) {
+                                    selectedDepartments = selectedDepartments + dept
+                                    departmentSearchQuery = ""
+                                    suggestedDepartments = emptyList()
+                                }
+                            },
+                            onDepartmentRemoved = { dept ->
+                                selectedDepartments = selectedDepartments.filter { it != dept }
+                            },
+                            suggestedDepartments = suggestedDepartments,
                             locationSearchQuery = locationSearchQuery,
                             onLocationSearchQueryChange = { searchLocations(it) },
                             selectedLocations = selectedLocations,
@@ -1069,8 +1138,12 @@ private fun PostFormContent(
     onEmployeeRemoved: (com.archeGlobal.one.model.SuggestedUser) -> Unit,
     suggestedEmployees: List<com.archeGlobal.one.model.SuggestedUser>,
     isSearchingEmployees: Boolean,
-    department: String,
-    onDepartmentChange: (String) -> Unit,
+    departmentSearchQuery: String,
+    onDepartmentSearchQueryChange: (String) -> Unit,
+    selectedDepartments: List<String>,
+    onDepartmentAdded: (String) -> Unit,
+    onDepartmentRemoved: (String) -> Unit,
+    suggestedDepartments: List<String>,
     locationSearchQuery: String,
     onLocationSearchQueryChange: (String) -> Unit,
     selectedLocations: List<String>,
@@ -1116,30 +1189,61 @@ private fun PostFormContent(
         it.access.equals(userAccess, ignoreCase = true)
     }
 
+    android.util.Log.d("PostFormContent", "=== PostFormContent Debug ===")
+    android.util.Log.d("PostFormContent", "User access: $userAccess")
+    android.util.Log.d("PostFormContent", "Total announcement categories: ${announcementCategories.size}")
+    android.util.Log.d("PostFormContent", "User category found: ${userCategory != null}")
+    android.util.Log.d("PostFormContent", "User category fields count: ${userCategory?.fields?.size ?: 0}")
+
     // Get post types and subjects based on user access
     val postTypes = mutableListOf<String>()
     val postSubjectsByType = mutableMapOf<String, List<String>>()
 
     userCategory?.fields?.forEach { field ->
+        android.util.Log.d("PostFormContent", "Processing field category: '${field.category}'")
+        android.util.Log.d("PostFormContent", "Subcategories in this field: ${field.subcategory.size}")
+
         val categoryName = when {
+            // First check for "Planned & Unplanned" - exact match for combined category
             field.category.contains("Planned & Unplanned", ignoreCase = true) -> {
-                // Split into two separate categories
+                android.util.Log.d("PostFormContent", "Matched 'Planned & Unplanned' - splitting into two")
+                // Split into two separate categories with same subjects
                 postTypes.add("Planned Post")
                 postTypes.add("Unplanned Post")
                 postSubjectsByType["Planned Post"] = field.subcategory
                 postSubjectsByType["Unplanned Post"] = field.subcategory
                 null
             }
-            field.category.contains("Planned", ignoreCase = true) -> "Planned Post"
-            field.category.contains("Unplanned", ignoreCase = true) -> "Unplanned Post"
-            else -> field.category
+            // Check for "Unplanned" BEFORE "Planned" to avoid false matches
+            field.category.contains("Unplanned", ignoreCase = true) -> {
+                android.util.Log.d("PostFormContent", "Matched 'Unplanned' category")
+                "Unplanned Post"
+            }
+            // Check for "Planned" (but not "Unplanned")
+            field.category.contains("Planned", ignoreCase = true) -> {
+                android.util.Log.d("PostFormContent", "Matched 'Planned' category")
+                "Planned Post"
+            }
+            else -> {
+                android.util.Log.d("PostFormContent", "Using category name as-is: '${field.category}'")
+                field.category
+            }
         }
 
         categoryName?.let {
+            android.util.Log.d("PostFormContent", "Adding category: '$it' with ${field.subcategory.size} subjects")
             if (!postTypes.contains(it)) {
                 postTypes.add(it)
             }
-            postSubjectsByType[it] = field.subcategory
+            // Merge subjects if category already exists, otherwise set new list
+            val existingSubjects = postSubjectsByType[it] ?: emptyList()
+            if (existingSubjects.isNotEmpty() && existingSubjects != field.subcategory) {
+                // Merge and remove duplicates
+                postSubjectsByType[it] = (existingSubjects + field.subcategory).distinct()
+                android.util.Log.d("PostFormContent", "Merged subjects for '$it': ${postSubjectsByType[it]?.size} total")
+            } else {
+                postSubjectsByType[it] = field.subcategory
+            }
         }
     }
 
@@ -1149,10 +1253,12 @@ private fun PostFormContent(
     // Get subjects for the currently selected post type
     val postSubjects = postSubjectsByType[postType] ?: emptyList()
 
-    android.util.Log.d("PostFormContent", "User access: $userAccess")
+    android.util.Log.d("PostFormContent", "=== Final Results ===")
     android.util.Log.d("PostFormContent", "Available post types: $uniquePostTypes")
-    android.util.Log.d("PostFormContent", "Current post type: $postType")
-    android.util.Log.d("PostFormContent", "Available subjects: $postSubjects")
+    android.util.Log.d("PostFormContent", "Current post type: '$postType'")
+    android.util.Log.d("PostFormContent", "Available subjects for '$postType': ${postSubjects.size} items")
+    android.util.Log.d("PostFormContent", "Subjects: $postSubjects")
+    android.util.Log.d("PostFormContent", "All mapped types: ${postSubjectsByType.keys}")
     val postPriorities = listOf("High", "Medium", "Low")
     val postGroups = listOf("Everyone@Arche", "Department Based", "Location Based", "Project Based", "Employee Based")
 
@@ -1381,9 +1487,9 @@ private fun PostFormContent(
                                     modifier = Modifier.size(20.dp),
                                 ) {
                                     Icon(
-                                        painter = painterResource(id = com.archeGlobal.one.R.drawable.rejected),
+                                        painter = painterResource(id = R.drawable.cross),
                                         contentDescription = "Remove",
-                                        tint = Color(0xFFD32F2F),
+                                        tint = Color.Red,
                                         modifier = Modifier.size(16.dp),
                                     )
                                 }
@@ -1395,13 +1501,152 @@ private fun PostFormContent(
             Spacer(modifier = Modifier.height(24.dp))
         }
         "Department Based" -> {
-            // Department Dropdown
-            PostDropdown(
-                label = "Department",
-                selectedValue = department,
-                options = departments,
-                onValueSelected = onDepartmentChange,
-            )
+            // Department Search Field with suggestions
+            Column {
+                Text(
+                    text = "Department Search",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+
+                // Search field
+                OutlinedTextField(
+                    value = departmentSearchQuery,
+                    onValueChange = { query ->
+                        onDepartmentSearchQueryChange(query)
+                    },
+                    placeholder = {
+                        Text(
+                            text = "Search for Departments to Add",
+                            color = Color.Gray,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                    ),
+                    textStyle = TextStyle(
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                    ),
+                    trailingIcon = {
+                        if (departmentSearchQuery.isNotEmpty()) {
+                            IconButton(onClick = {
+                                onDepartmentSearchQueryChange("")
+                            }) {
+                                Icon(
+                                    painter = androidx.compose.ui.res.painterResource(id = android.R.drawable.ic_menu_close_clear_cancel),
+                                    contentDescription = "Clear",
+                                    tint = Color.Gray,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Suggestions list
+                if (suggestedDepartments.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 150.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        LazyColumn {
+                            items(suggestedDepartments) { dept ->
+                                Text(
+                                    text = dept,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            if (!selectedDepartments.contains(dept)) {
+                                                onDepartmentAdded(dept)
+                                            }
+                                            onDepartmentSearchQueryChange("")
+                                        }
+                                        .padding(12.dp),
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 14.sp,
+                                )
+                                HorizontalDivider()
+                            }
+                        }
+                    }
+                }
+
+                // Display selected departments as chips
+                if (selectedDepartments.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "Selected Departments",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+
+                    // Display chips in a column
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        selectedDepartments.forEach { dept ->
+                            Row(
+                                modifier = Modifier
+                                    .wrapContentWidth()
+                                    .background(Color.White, RoundedCornerShape(20.dp))
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(20.dp))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = dept,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 14.sp,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                IconButton(
+                                    onClick = {
+                                        onDepartmentRemoved(dept)
+                                    },
+                                    modifier = Modifier.size(20.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.cross),
+                                        contentDescription = "Remove Department",
+                                        tint = Color.Red,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(24.dp))
         }
         "Location Based" -> {
@@ -1541,9 +1786,9 @@ private fun PostFormContent(
                                     modifier = Modifier.size(20.dp),
                                 ) {
                                     Icon(
-                                        painter = painterResource(id = com.archeGlobal.one.R.drawable.rejected),
+                                        painter = painterResource(id = R.drawable.cross),
                                         contentDescription = "Remove",
-                                        tint = Color(0xFFD32F2F),
+                                        tint = Color.Red,
                                         modifier = Modifier.size(16.dp),
                                     )
                                 }
@@ -1691,9 +1936,9 @@ private fun PostFormContent(
                                     modifier = Modifier.size(20.dp),
                                 ) {
                                     Icon(
-                                        painter = painterResource(id = com.archeGlobal.one.R.drawable.rejected),
+                                        painter = painterResource(id = R.drawable.cross),
                                         contentDescription = "Remove",
-                                        tint = Color(0xFFD32F2F),
+                                        tint = Color.Red,
                                         modifier = Modifier.size(16.dp),
                                     )
                                 }
@@ -1721,18 +1966,18 @@ private fun PostFormContent(
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    // Select images to attach button (max 3 images)
+    // Select images to attach button (max 4 images)
     val totalImages = existingImageUrls.size + postImageUris.size
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
             .background(
-                color = if (totalImages < 3) Color.White else Color.Gray.copy(alpha = 0.3f),
+                color = if (totalImages < 4) Color.White else Color.Gray.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(12.dp),
             )
-            .clickable(enabled = totalImages < 3) {
-                if (totalImages < 3) {
+            .clickable(enabled = totalImages < 4) {
+                if (totalImages < 4) {
                     imagePickerLauncher.launch("image/*")
                 }
             },
@@ -1745,18 +1990,18 @@ private fun PostFormContent(
             Icon(
                 painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.ic_gallery),
                 contentDescription = "Gallery",
-                tint = if (totalImages < 3) Color.Gray else Color.Gray.copy(alpha = 0.5f),
+                tint = if (totalImages < 4) Color.Gray else Color.Gray.copy(alpha = 0.5f),
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (totalImages < 3)
-                    "Select images to attach ($totalImages/3)"
+                text = if (totalImages < 4)
+                    "Select images to attach"
                 else
                     "Maximum 3 images reached",
                 fontFamily = GraphikFontFamily,
                 fontSize = 16.sp,
-                color = if (totalImages < 3) Color.Gray else Color.Gray.copy(alpha = 0.5f),
+                color = if (totalImages < 4) Color.Gray else Color.Gray.copy(alpha = 0.5f),
             )
         }
     }
@@ -1926,6 +2171,7 @@ private fun PostFormContent(
             value = startDurationDate,
             onValueChange = onStartDurationDateChange,
             compact = true,
+            useShortMonth = true,
             modifier = Modifier.weight(1f)
         )
         PostTimeField(
@@ -1959,6 +2205,7 @@ private fun PostFormContent(
             value = endDurationDate,
             onValueChange = onEndDurationDateChange,
             compact = true,
+            useShortMonth = true,
             modifier = Modifier.weight(1f)
         )
         PostTimeField(
@@ -1974,10 +2221,10 @@ private fun PostFormContent(
 
     // Support Channel Details (optional)
     PostTextField(
-        label = "Support Channel Details (optional)",
+        label = "Support Channel Details",
         value = supportChannelDetails,
         onValueChange = onSupportChannelDetailsChange,
-        placeholder = "Support Channel Details (optional)",
+        placeholder = "Support Channel Details",
         singleLine = true,
     )
 
@@ -2408,9 +2655,9 @@ private fun PostDropdown(
                 readOnly = true,
                 trailingIcon = {
                     Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
+                        painter = painterResource(id = R.drawable.dropdown),
                         contentDescription = "Dropdown",
-                        tint = PrimaryRed,
+                        modifier = Modifier.size(20.dp)
                     )
                 },
                 modifier = Modifier
@@ -2529,6 +2776,7 @@ private fun PostDateField(
     value: String,
     onValueChange: (String) -> Unit,
     compact: Boolean = false,
+    useShortMonth: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -2540,8 +2788,8 @@ private fun PostDateField(
     val datePickerDialog = android.app.DatePickerDialog(
         context,
         { _, selectedYear, selectedMonth, selectedDay ->
-            val formattedDate = String.format("%02d %s %04d", selectedDay,
-                getMonthName(selectedMonth), selectedYear)
+            val monthName = if (useShortMonth) getMonthNameShort(selectedMonth) else getMonthName(selectedMonth)
+            val formattedDate = String.format("%02d %s %04d", selectedDay, monthName, selectedYear)
             onValueChange(formattedDate)
         },
         year,
@@ -2668,6 +2916,24 @@ private fun PostTimeField(
 
 private fun getMonthName(month: Int): String {
     return when (month) {
+        0 -> "January"
+        1 -> "February"
+        2 -> "March"
+        3 -> "April"
+        4 -> "May"
+        5 -> "June"
+        6 -> "July"
+        7 -> "August"
+        8 -> "September"
+        9 -> "October"
+        10 -> "November"
+        11 -> "December"
+        else -> ""
+    }
+}
+
+private fun getMonthNameShort(month: Int): String {
+    return when (month) {
         0 -> "Jan"
         1 -> "Feb"
         2 -> "Mar"
@@ -2682,6 +2948,25 @@ private fun getMonthName(month: Int): String {
         11 -> "Dec"
         else -> ""
     }
+}
+
+// Convert date string with full month to abbreviated month for preview display
+private fun convertToShortMonth(dateString: String): String {
+    if (dateString.isEmpty()) return dateString
+
+    return dateString
+        .replace("January", "Jan")
+        .replace("February", "Feb")
+        .replace("March", "Mar")
+        .replace("April", "Apr")
+        .replace("May", "May")
+        .replace("June", "Jun")
+        .replace("July", "Jul")
+        .replace("August", "Aug")
+        .replace("September", "Sep")
+        .replace("October", "Oct")
+        .replace("November", "Nov")
+        .replace("December", "Dec")
 }
 
 @Composable
@@ -2727,31 +3012,31 @@ private fun PostPreviewDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
+                        .padding(16.dp),
                 ) {
                     // Title
                     Text(
                         text = "HeadsUp Preview",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         color = Color.Black,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // White content card (includes profile header)
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(12.dp)
                         ) {
                             // Header with profile and priority
                             Row(
@@ -2765,7 +3050,7 @@ private fun PostPreviewDialog(
                                 ) {
                                     // Profile picture
                                     Card(
-                                        modifier = Modifier.size(40.dp),
+                                        modifier = Modifier.size(32.dp),
                                         shape = CircleShape,
                                         colors = CardDefaults.cardColors(containerColor = Color.Gray)
                                     ) {
@@ -2787,7 +3072,7 @@ private fun PostPreviewDialog(
                                                     text = userName.take(1).uppercase(),
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Bold,
-                                                    fontSize = 18.sp,
+                                                    fontSize = 14.sp,
                                                     color = Color.White
                                                 )
                                             }
@@ -2799,14 +3084,14 @@ private fun PostPreviewDialog(
                                             text = userName,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 16.sp,
+                                            fontSize = 14.sp,
                                             color = Color.Black,
                                         )
                                         Text(
                                             text = "12 November 2025",
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
-                                            fontSize = 12.sp,
+                                            fontSize = 11.sp,
                                             color = Color.Gray,
                                         )
                                     }
@@ -2823,32 +3108,32 @@ private fun PostPreviewDialog(
                                                     "Low" -> Color(0xFF66BB6A)
                                                     else -> Color.Gray
                                                 },
-                                                shape = RoundedCornerShape(16.dp)
+                                                shape = RoundedCornerShape(12.dp)
                                             )
-                                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                                            .padding(horizontal = 10.dp, vertical = 3.dp)
                                     ) {
                                         Text(
                                             text = postPriority,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 12.sp,
+                                            fontSize = 11.sp,
                                             color = Color.White,
                                         )
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
                             // Post Subject - only show if not default selection
                             if (postSubject != "Select Post Subject") {
                                 Text(
                                     text = postSubject,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 15.sp,
+                                    fontSize = 13.sp,
                                     color = Color.Black,
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
                             }
 
                             // Announcement Description - only show if not empty
@@ -2857,11 +3142,11 @@ private fun PostPreviewDialog(
                                     text = announcementDescription,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    fontSize = 14.sp,
+                                    fontSize = 12.sp,
                                     color = Color.Black,
-                                    lineHeight = 20.sp
+                                    lineHeight = 17.sp
                                 )
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
                             }
 
                             // Support and Duration labels (always show)
@@ -2869,50 +3154,44 @@ private fun PostPreviewDialog(
                                 text = "Support:",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 color = Color.Gray,
                             )
                             Text(
                                 text = "Duration:",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 color = Color.Gray,
                             )
 
                             // Attached Images - display in grid if images exist
                             if (postImageUris.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
 
                                 // Grid layout for images (2 columns)
                                 val rows = (postImageUris.size + 1) / 2
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     for (rowIndex in 0 until rows) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                                         ) {
                                             for (colIndex in 0 until 2) {
                                                 val imageIndex = rowIndex * 2 + colIndex
                                                 if (imageIndex < postImageUris.size) {
-                                                    Card(
+                                                    Image(
+                                                        painter = rememberAsyncImagePainter(postImageUris[imageIndex]),
+                                                        contentDescription = "Attached Image",
                                                         modifier = Modifier
                                                             .weight(1f)
-                                                            .height(140.dp),
-                                                        shape = RoundedCornerShape(12.dp),
-                                                        colors = CardDefaults.cardColors(containerColor = Color.LightGray),
-                                                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                                                    ) {
-                                                        Image(
-                                                            painter = rememberAsyncImagePainter(postImageUris[imageIndex]),
-                                                            contentDescription = "Attached Image",
-                                                            modifier = Modifier.fillMaxSize(),
-                                                            contentScale = ContentScale.Crop
-                                                        )
-                                                    }
+                                                            .height(110.dp)
+                                                            .clip(RoundedCornerShape(10.dp)),
+                                                        contentScale = ContentScale.Fit
+                                                    )
                                                 } else {
                                                     Spacer(modifier = Modifier.weight(1f))
                                                 }
@@ -2924,7 +3203,7 @@ private fun PostPreviewDialog(
 
                             // Start and End dates - only show if at least one is filled
                             if (postStartDate.isNotEmpty() || postEndDate.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -2936,23 +3215,23 @@ private fun PostPreviewDialog(
                                                 text = "Post Start Date",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                fontSize = 11.sp,
+                                                fontSize = 10.sp,
                                                 color = Color.Gray,
                                             )
-                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Spacer(modifier = Modifier.height(3.dp))
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     painter = painterResource(id = com.archeGlobal.one.R.drawable.green),
                                                     contentDescription = "Start Date",
-                                                    modifier = Modifier.size(16.dp),
+                                                    modifier = Modifier.size(14.dp),
                                                     tint = Color(0xFF66BB6A)
                                                 )
-                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Spacer(modifier = Modifier.width(4.dp))
                                                 Text(
-                                                    text = postStartDate,
+                                                    text = convertToShortMonth(postStartDate),
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Medium,
-                                                    fontSize = 12.sp,
+                                                    fontSize = 11.sp,
                                                     color = Color.Black,
                                                 )
                                             }
@@ -2966,23 +3245,23 @@ private fun PostPreviewDialog(
                                                 text = "Post End Date",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                fontSize = 11.sp,
+                                                fontSize = 10.sp,
                                                 color = Color.Gray,
                                             )
-                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Spacer(modifier = Modifier.height(3.dp))
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     painter = painterResource(id = com.archeGlobal.one.R.drawable.red),
                                                     contentDescription = "End Date",
-                                                    modifier = Modifier.size(16.dp),
+                                                    modifier = Modifier.size(14.dp),
                                                     tint = Color(0xFFD32F2F)
                                                 )
-                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Spacer(modifier = Modifier.width(4.dp))
                                                 Text(
-                                                    text = postEndDate,
+                                                    text = convertToShortMonth(postEndDate),
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Medium,
-                                                    fontSize = 12.sp,
+                                                    fontSize = 11.sp,
                                                     color = Color.Black,
                                                 )
                                             }
@@ -3045,7 +3324,7 @@ private fun EventPreviewDialog(
         ) {
             Card(
                 modifier = Modifier
-                    .fillMaxWidth(0.85f)
+                    .fillMaxWidth(0.9f)
                     .wrapContentHeight(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF0EBE3)),
@@ -3054,90 +3333,176 @@ private fun EventPreviewDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(16.dp),
                 ) {
-                    // Event Image
-                    eventImageUri?.let { uri ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Image(
-                                painter = rememberAsyncImagePainter(uri),
-                                contentDescription = "Event Image",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(20.dp))
-                    }
-
-                    // Event Title/Subject
+                    // Title
                     Text(
-                        text = eventSubject.ifEmpty { "Event Title" },
+                        text = "Event Preview",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp,
+                        fontSize = 16.sp,
                         color = Color.Black,
-                        textAlign = TextAlign.Center
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // Event Date
-                    if (eventDate.isNotEmpty()) {
-                        Text(
-                            text = eventDate,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 16.sp,
-                            color = Color.Black.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-
-                    // Start and End Dates
-                    if (eventStartDate.isNotEmpty() && eventEndDate.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                    // White content card
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(16.dp)
                         ) {
-                            Text(
-                                text = "Start: $eventStartDate",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 14.sp,
-                                color = Color.Black.copy(alpha = 0.6f)
-                            )
-                            Text(
-                                text = "End: $eventEndDate",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 14.sp,
-                                color = Color.Black.copy(alpha = 0.6f)
-                            )
+                            // Event Image
+                            eventImageUri?.let { uri ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(uri),
+                                        contentDescription = "Event Image",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .fillMaxHeight(),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+
+                            // Event Title/Subject - Centered and bold
+                            if (eventSubject.isNotEmpty()) {
+                                Text(
+                                    text = eventSubject,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+
+                            // Event Date - Centered and gray
+                            if (eventDate.isNotEmpty()) {
+                                Text(
+                                    text = eventDate,
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+
+                            // Event Description - Centered
+                            if (eventDescription.isNotEmpty()) {
+                                Text(
+                                    text = eventDescription,
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 14.sp,
+                                    color = Color.Black,
+                                    lineHeight = 20.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+
+                            // Start and End Dates
+                            if (eventStartDate.isNotEmpty() || eventEndDate.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    if (eventStartDate.isNotEmpty()) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(
+                                                text = "Post Start Date",
+                                                fontFamily = GraphikFontFamily,
+                                                fontSize = 12.sp,
+                                                color = Color.Gray
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.green),
+                                                    contentDescription = "Start Date",
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = Color(0xFF66BB6A)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = convertToShortMonth(eventStartDate),
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 13.sp,
+                                                    color = Color.Black
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    if (eventEndDate.isNotEmpty()) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(
+                                                text = "Post End Date",
+                                                fontFamily = GraphikFontFamily,
+                                                fontSize = 12.sp,
+                                                color = Color.Gray
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.red),
+                                                    contentDescription = "End Date",
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = Color(0xFFD32F2F)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = convertToShortMonth(eventEndDate),
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 13.sp,
+                                                    color = Color.Black
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
                     }
 
-                    // Event Description
-                    if (eventDescription.isNotEmpty()) {
-                        Text(
-                            text = eventDescription,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 16.sp,
-                            color = Color.Black,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 22.sp
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Close Button
                     Button(
@@ -3149,13 +3514,13 @@ private fun EventPreviewDialog(
                             containerColor = PrimaryRed,
                             contentColor = Color.White
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(10.dp)
                     ) {
                         Text(
                             text = "Close",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 18.sp
+                            fontSize = 16.sp
                         )
                     }
                 }
