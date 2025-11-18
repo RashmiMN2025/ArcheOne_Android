@@ -867,6 +867,7 @@ data class CreatePostRequest(
     val target_department: List<String>? = null,
     val target_location: List<String>? = null,
     val target_employee: List<String>? = null,
+    val target_project: List<String>? = null,
     val description: String,
     val start_date: String,
     val end_date: String,

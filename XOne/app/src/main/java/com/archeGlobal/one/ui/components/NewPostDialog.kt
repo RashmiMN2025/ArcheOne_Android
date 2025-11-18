@@ -135,8 +135,25 @@ fun NewPostDialog(
     }
 
     // Post form states - initialize with existing post data if in edit mode
-    var postType by remember { mutableStateOf(existingPost?.post_type ?: "Planned Post") }
+    var postType by remember { mutableStateOf(existingPost?.post_type ?: "") }
     var postSubject by remember { mutableStateOf(existingPost?.subject ?: "Select Post Subject") }
+
+    // Set default post type based on available categories after they're loaded
+    LaunchedEffect(announcementCategories, userAccess) {
+        if (postType.isEmpty() && announcementCategories.isNotEmpty()) {
+            // Get the first available post type for this user
+            val userCategory = announcementCategories.find {
+                it.access.equals(userAccess, ignoreCase = true)
+            }
+            val firstCategory = userCategory?.fields?.firstOrNull()?.category
+            postType = when {
+                firstCategory?.contains("Planned & Unplanned", ignoreCase = true) == true -> "Planned Post"
+                firstCategory?.contains("Planned", ignoreCase = true) == true -> "Planned Post"
+                firstCategory?.contains("Unplanned", ignoreCase = true) == true -> "Unplanned Post"
+                else -> firstCategory ?: "Planned Post"
+            }
+        }
+    }
     var postPriority by remember { mutableStateOf(existingPost?.priority ?: "Select Post Priority") }
     var postGroup by remember { mutableStateOf(
         when (existingPost?.target_group) {
@@ -147,12 +164,18 @@ fun NewPostDialog(
         }
     ) }
     var employeeSearchQuery by remember { mutableStateOf("") }
-    var selectedEmployee by remember { mutableStateOf<com.archeGlobal.one.model.SuggestedUser?>(null) }
+    var selectedEmployees by remember { mutableStateOf<List<com.archeGlobal.one.model.SuggestedUser>>(existingPost?.target_employee?.mapNotNull { email ->
+        com.archeGlobal.one.model.SuggestedUser(email, email.substringBefore("@"))
+    } ?: emptyList()) }
     var suggestedEmployees by remember { mutableStateOf<List<com.archeGlobal.one.model.SuggestedUser>>(emptyList()) }
     var isSearchingEmployees by remember { mutableStateOf(false) }
     var department by remember { mutableStateOf(existingPost?.target_department?.firstOrNull() ?: "Select Department") }
-    var location by remember { mutableStateOf(existingPost?.target_location?.firstOrNull() ?: "Select Location") }
-    var project by remember { mutableStateOf("Select Project") }
+    var locationSearchQuery by remember { mutableStateOf("") }
+    var selectedLocations by remember { mutableStateOf<List<String>>(existingPost?.target_location ?: emptyList()) }
+    var suggestedLocations by remember { mutableStateOf<List<String>>(emptyList()) }
+    var projectSearchQuery by remember { mutableStateOf("") }
+    var selectedProjects by remember { mutableStateOf<List<String>>(emptyList()) }
+    var suggestedProjects by remember { mutableStateOf<List<String>>(emptyList()) }
     var announcementDescription by remember { mutableStateOf(existingPost?.description ?: "") }
 
     // Fetch locations, departments, projects, and announcement categories from API
@@ -204,6 +227,32 @@ fun NewPostDialog(
                 suggestedEmployees = emptyList()
             }
         })
+    }
+
+    // Search locations function
+    fun searchLocations(query: String) {
+        locationSearchQuery = query
+        if (query.isEmpty()) {
+            suggestedLocations = emptyList()
+            return
+        }
+        // Filter from fetched locations
+        suggestedLocations = fetchedLocations.filter {
+            it.contains(query, ignoreCase = true)
+        }.take(5)
+    }
+
+    // Search projects function
+    fun searchProjects(query: String) {
+        projectSearchQuery = query
+        if (query.isEmpty()) {
+            suggestedProjects = emptyList()
+            return
+        }
+        // Filter from fetched projects
+        suggestedProjects = fetchedProjects.filter {
+            it.contains(query, ignoreCase = true)
+        }.take(5)
     }
     var postStartDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.start_date)) }
     var postEndDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.end_date)) }
@@ -433,13 +482,18 @@ fun NewPostDialog(
                 } else null
                 android.util.Log.d("NewPostDialog", "Target Department: $targetDepartment")
 
-                val targetLocation = if (formType == "Post" && postGroup == "Location-based" && location != "Select Location") {
-                    listOf(location)
+                val targetLocation = if (formType == "Post" && postGroup == "Location-based" && selectedLocations.isNotEmpty()) {
+                    selectedLocations
                 } else null
                 android.util.Log.d("NewPostDialog", "Target Location: $targetLocation")
 
-                val targetEmployee = if (formType == "Post" && postGroup == "Employee-based" && selectedEmployee != null) {
-                    listOf(selectedEmployee!!.mail)
+                val targetProject = if (formType == "Post" && postGroup == "Project-based" && selectedProjects.isNotEmpty()) {
+                    selectedProjects
+                } else null
+                android.util.Log.d("NewPostDialog", "Target Project: $targetProject")
+
+                val targetEmployee = if (formType == "Post" && postGroup == "Employee-based" && selectedEmployees.isNotEmpty()) {
+                    selectedEmployees.map { it.mail }
                 } else null
                 android.util.Log.d("NewPostDialog", "Target Employee: $targetEmployee")
 
@@ -470,6 +524,7 @@ fun NewPostDialog(
                     target_department = targetDepartment,
                     target_location = targetLocation,
                     target_employee = targetEmployee,
+                    target_project = targetProject,
                     description = if (formType == "Post") announcementDescription else eventDescription,
                     start_date = formatDateToISO(if (formType == "Post") postStartDate else eventStartDate),
                     end_date = formatDateToISO(if (formType == "Post") postEndDate else eventEndDate),
@@ -781,16 +836,49 @@ fun NewPostDialog(
                             onPostGroupChange = { postGroup = it },
                             employeeSearchQuery = employeeSearchQuery,
                             onEmployeeSearchQueryChange = { searchEmployees(it) },
-                            selectedEmployee = selectedEmployee,
-                            onEmployeeSelected = { selectedEmployee = it; suggestedEmployees = emptyList() },
+                            selectedEmployees = selectedEmployees,
+                            onEmployeeAdded = { employee ->
+                                if (!selectedEmployees.any { it.mail == employee.mail }) {
+                                    selectedEmployees = selectedEmployees + employee
+                                    employeeSearchQuery = ""
+                                    suggestedEmployees = emptyList()
+                                }
+                            },
+                            onEmployeeRemoved = { employee ->
+                                selectedEmployees = selectedEmployees.filter { it.mail != employee.mail }
+                            },
                             suggestedEmployees = suggestedEmployees,
                             isSearchingEmployees = isSearchingEmployees,
                             department = department,
                             onDepartmentChange = { department = it },
-                            location = location,
-                            onLocationChange = { location = it },
-                            project = project,
-                            onProjectChange = { project = it },
+                            locationSearchQuery = locationSearchQuery,
+                            onLocationSearchQueryChange = { searchLocations(it) },
+                            selectedLocations = selectedLocations,
+                            onLocationAdded = { location ->
+                                if (!selectedLocations.contains(location)) {
+                                    selectedLocations = selectedLocations + location
+                                    locationSearchQuery = ""
+                                    suggestedLocations = emptyList()
+                                }
+                            },
+                            onLocationRemoved = { location ->
+                                selectedLocations = selectedLocations.filter { it != location }
+                            },
+                            suggestedLocations = suggestedLocations,
+                            projectSearchQuery = projectSearchQuery,
+                            onProjectSearchQueryChange = { searchProjects(it) },
+                            selectedProjects = selectedProjects,
+                            onProjectAdded = { project ->
+                                if (!selectedProjects.contains(project)) {
+                                    selectedProjects = selectedProjects + project
+                                    projectSearchQuery = ""
+                                    suggestedProjects = emptyList()
+                                }
+                            },
+                            onProjectRemoved = { project ->
+                                selectedProjects = selectedProjects.filter { it != project }
+                            },
+                            suggestedProjects = suggestedProjects,
                             fetchedDepartments = fetchedDepartments,
                             fetchedLocations = fetchedLocations,
                             fetchedProjects = fetchedProjects,
@@ -860,7 +948,7 @@ fun NewPostDialog(
                 postSubject = postSubject,
                 postPriority = postPriority,
                 postGroup = postGroup,
-                employee = selectedEmployee?.displayName ?: "",
+                employee = selectedEmployees.firstOrNull()?.displayName ?: "",
                 announcementDescription = announcementDescription,
                 postStartDate = postStartDate,
                 postEndDate = postEndDate,
@@ -976,16 +1064,25 @@ private fun PostFormContent(
     onPostGroupChange: (String) -> Unit,
     employeeSearchQuery: String,
     onEmployeeSearchQueryChange: (String) -> Unit,
-    selectedEmployee: com.archeGlobal.one.model.SuggestedUser?,
-    onEmployeeSelected: (com.archeGlobal.one.model.SuggestedUser) -> Unit,
+    selectedEmployees: List<com.archeGlobal.one.model.SuggestedUser>,
+    onEmployeeAdded: (com.archeGlobal.one.model.SuggestedUser) -> Unit,
+    onEmployeeRemoved: (com.archeGlobal.one.model.SuggestedUser) -> Unit,
     suggestedEmployees: List<com.archeGlobal.one.model.SuggestedUser>,
     isSearchingEmployees: Boolean,
     department: String,
     onDepartmentChange: (String) -> Unit,
-    location: String,
-    onLocationChange: (String) -> Unit,
-    project: String,
-    onProjectChange: (String) -> Unit,
+    locationSearchQuery: String,
+    onLocationSearchQueryChange: (String) -> Unit,
+    selectedLocations: List<String>,
+    onLocationAdded: (String) -> Unit,
+    onLocationRemoved: (String) -> Unit,
+    suggestedLocations: List<String>,
+    projectSearchQuery: String,
+    onProjectSearchQueryChange: (String) -> Unit,
+    selectedProjects: List<String>,
+    onProjectAdded: (String) -> Unit,
+    onProjectRemoved: (String) -> Unit,
+    suggestedProjects: List<String>,
     fetchedDepartments: List<String>,
     fetchedLocations: List<String>,
     fetchedProjects: List<String>,
@@ -1213,7 +1310,7 @@ private fun PostFormContent(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            onEmployeeSelected(employee)
+                                            onEmployeeAdded(employee)
                                         }
                                         .padding(8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
@@ -1241,53 +1338,56 @@ private fun PostFormContent(
                     }
                 }
 
-                // Display selected employee
-                if (selectedEmployee != null && selectedEmployee?.mail?.isNotEmpty() == true) {
+                // Display selected employees as chips
+                if (selectedEmployees.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Selected Employee",
+                        text = "Selected Mail ID",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White, RoundedCornerShape(4.dp))
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                    // Display chips in a scrollable row
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = selectedEmployee?.displayName ?: "",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 12.sp,
-                            )
-                            Text(
-                                text = selectedEmployee?.mail ?: "",
-                                fontFamily = GraphikFontFamily,
-                                fontSize = 10.sp,
-                                color = Color.Gray,
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                onEmployeeSelected(com.archeGlobal.one.model.SuggestedUser("", ""))
-                            },
-                            modifier = Modifier.size(20.dp),
-                        ) {
-                            Icon(
-                                painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.bin),
-                                contentDescription = "Remove",
-                                tint = Color(0xFFD32F2F),
-                                modifier = Modifier.size(16.dp),
-                            )
+                        selectedEmployees.forEach { employee ->
+                            Row(
+                                modifier = Modifier
+                                    .wrapContentWidth()
+                                    .background(Color.White, RoundedCornerShape(20.dp))
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(20.dp))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = employee.mail,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 14.sp,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                IconButton(
+                                    onClick = {
+                                        onEmployeeRemoved(employee)
+                                    },
+                                    modifier = Modifier.size(20.dp),
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = com.archeGlobal.one.R.drawable.rejected),
+                                        contentDescription = "Remove",
+                                        tint = Color(0xFFD32F2F),
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -1305,23 +1405,303 @@ private fun PostFormContent(
             Spacer(modifier = Modifier.height(24.dp))
         }
         "Location Based" -> {
-            // Location Dropdown
-            PostDropdown(
-                label = "Location",
-                selectedValue = location,
-                options = locations,
-                onValueSelected = onLocationChange,
-            )
+            // Location Search Field with suggestions
+            Column {
+                Text(
+                    text = "Location Search",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+
+                // Search field
+                OutlinedTextField(
+                    value = locationSearchQuery,
+                    onValueChange = { query ->
+                        onLocationSearchQueryChange(query)
+                    },
+                    placeholder = {
+                        Text(
+                            text = "Search for Locations to Add",
+                            color = Color.Gray,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                    ),
+                    textStyle = TextStyle(
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = com.archeGlobal.one.R.drawable.search11),
+                            contentDescription = "Search",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    singleLine = true,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Suggestions list
+                if (suggestedLocations.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            suggestedLocations.forEach { location ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onLocationAdded(location)
+                                        }
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = location,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.sp,
+                                    )
+                                }
+                                if (location != suggestedLocations.last()) {
+                                    HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Display selected locations as chips
+                if (selectedLocations.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "Selected Locations",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+
+                    // Display chips in a column
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        selectedLocations.forEach { location ->
+                            Row(
+                                modifier = Modifier
+                                    .wrapContentWidth()
+                                    .background(Color.White, RoundedCornerShape(20.dp))
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(20.dp))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = location,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 14.sp,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                IconButton(
+                                    onClick = {
+                                        onLocationRemoved(location)
+                                    },
+                                    modifier = Modifier.size(20.dp),
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = com.archeGlobal.one.R.drawable.rejected),
+                                        contentDescription = "Remove",
+                                        tint = Color(0xFFD32F2F),
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(24.dp))
         }
         "Project Based" -> {
-            // Project Dropdown
-            PostDropdown(
-                label = "Project",
-                selectedValue = project,
-                options = projects,
-                onValueSelected = onProjectChange,
-            )
+            // Project Search Field with suggestions
+            Column {
+                Text(
+                    text = "Project Search",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+
+                // Search field
+                OutlinedTextField(
+                    value = projectSearchQuery,
+                    onValueChange = { query ->
+                        onProjectSearchQueryChange(query)
+                    },
+                    placeholder = {
+                        Text(
+                            text = "Search for Projects to Add",
+                            color = Color.Gray,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                    ),
+                    textStyle = TextStyle(
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = com.archeGlobal.one.R.drawable.search11),
+                            contentDescription = "Search",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    singleLine = true,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Suggestions list
+                if (suggestedProjects.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            suggestedProjects.forEach { project ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onProjectAdded(project)
+                                        }
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = project,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.sp,
+                                    )
+                                }
+                                if (project != suggestedProjects.last()) {
+                                    HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Display selected projects as chips
+                if (selectedProjects.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "Selected Projects",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+
+                    // Display chips in a column
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        selectedProjects.forEach { project ->
+                            Row(
+                                modifier = Modifier
+                                    .wrapContentWidth()
+                                    .background(Color.White, RoundedCornerShape(20.dp))
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(20.dp))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = project,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 14.sp,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                IconButton(
+                                    onClick = {
+                                        onProjectRemoved(project)
+                                    },
+                                    modifier = Modifier.size(20.dp),
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = com.archeGlobal.one.R.drawable.rejected),
+                                        contentDescription = "Remove",
+                                        tint = Color(0xFFD32F2F),
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(24.dp))
         }
         "Everyone@Arche" -> {
@@ -2196,14 +2576,21 @@ private fun PostDateField(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.Start,  // Changed from Center to Start
             ) {
                 Text(
-                    text = if (value.isNotEmpty()) value else if (compact) "31 Oct 2025" else "Select date",
+                    text = if (value.isNotEmpty()) value else if (compact) "31 Oct 2025" else "18 November 2025",
                     fontFamily = GraphikFontFamily,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = if (value.isNotEmpty()) Color.Black else Color.Gray,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    painter = painterResource(id = com.archeGlobal.one.R.drawable.created),
+                    contentDescription = "Calendar",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
