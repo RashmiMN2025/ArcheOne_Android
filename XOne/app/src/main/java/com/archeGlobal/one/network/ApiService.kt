@@ -315,6 +315,9 @@ interface ApiService {
     @POST("announcements/v1/posts/headsUp")
     suspend fun getHeadsUpPosts(@Body request: HeadsUpPostsRequest): Response<CreatedPostsResponse>
 
+    @POST("announcements/v1/post/notify")
+    suspend fun reportSpam(@Body request: ReportSpamRequest): Response<ReportSpamResponse>
+
     @DELETE("announcements/v1/post/{post_id}")
     suspend fun deletePost(@Path("post_id") postId: String): Response<DeletePostResponse>
 
@@ -514,6 +517,7 @@ data class UserDetails(
     val emergency_contact_relation: String = "",
     val emergency_contact: String = "",
     val documents: List<UserDocument> = emptyList(),
+    val access: String = "",
 )
 
 data class UserDocument(
@@ -621,6 +625,7 @@ data class FAQCategory(
 data class FAQItem(
     val question: String,
     val answer: List<FAQAnswer>,
+    @SerializedName("dynamicForm", alternate = ["dynamicFields"])
     val dynamicFields: Boolean = false,
 )
 
@@ -774,6 +779,7 @@ data class LocationsAndDepartmentsCounts(
 data class LocationsAndDepartmentsData(
     val departments: List<String>,
     val cities: List<String>,
+    val projects: List<String>,
     val announcementCategories: List<AnnouncementCategory>
 )
 
@@ -806,6 +812,16 @@ data class DeletePostResponse(
     val status: Int,
     val message: String,
     val post_id: String
+)
+
+data class ReportSpamRequest(
+    val email: String,
+    val post_id: String
+)
+
+data class ReportSpamResponse(
+    val status: Int,
+    val message: String
 )
 
 data class UpdatePostResponse(

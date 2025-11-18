@@ -258,6 +258,33 @@ class HelpDeskController(
         navigate("faq_detail/$faqId")
     }
 
+    /**
+     * Smart navigation that checks if FAQ has dynamic fields
+     * If dynamic fields exist, skip FAQ detail and go directly to raise ticket form
+     * If not, show FAQ detail screen first
+     */
+    fun navigateToFAQOrRaiseTicket(faqId: String) {
+        Log.d("HelpDeskController", "🔀 navigateToFAQOrRaiseTicket called with faqId: $faqId")
+        val faq = getFAQById(faqId)
+
+        if (faq == null) {
+            Log.e("HelpDeskController", "🔀 FAQ not found for id: $faqId, navigating to FAQ detail as fallback")
+            navigateToFAQDetail(faqId)
+            return
+        }
+
+        if (faq.dynamicFields == true) {
+            // Skip FAQ detail screen and go directly to raise ticket form for dynamic categories
+            Log.d("HelpDeskController", "🔀 FAQ has dynamic fields - skipping FAQ detail, navigating directly to raise ticket form")
+            Log.d("HelpDeskController", "🔀 Category: ${faq.category}, Question: ${faq.question}")
+            raiseTicket(faq.question, faq.answer)
+        } else {
+            // Show FAQ detail screen for non-dynamic categories
+            Log.d("HelpDeskController", "🔀 FAQ has no dynamic fields - navigating to FAQ detail screen")
+            navigateToFAQDetail(faqId)
+        }
+    }
+
     fun navigateBack() {
         // Navigate back to the source screen if available, otherwise go to helpdesk
         when (navigationSource) {

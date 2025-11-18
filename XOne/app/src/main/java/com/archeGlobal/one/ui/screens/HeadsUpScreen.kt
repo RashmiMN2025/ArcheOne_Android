@@ -1,6 +1,7 @@
 package com.archeGlobal.one.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.FooterNavigationModel
@@ -57,6 +61,8 @@ fun HeadsUpScreen(
     val profilePicUrl = userData?.profilePic
     val userName = userData?.name ?: "User"
     val userEmail = userData?.email ?: ""
+    val userAccess = userData?.userDetails?.access ?: ""
+    val canCreatePost = userAccess.lowercase() in listOf("admin", "it", "hr")
 
     var showNewPostDialog by remember { mutableStateOf(false) }
     var posts by remember { mutableStateOf<List<CreatedPost>>(emptyList()) }
@@ -234,40 +240,46 @@ fun HeadsUpScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items(posts) { post ->
-                                HeadsUpPostCard(post = post)
+                                HeadsUpPostCard(
+                                    post = post,
+                                    canManagePost = canCreatePost,
+                                    userEmail = userEmail
+                                )
                             }
                         }
                     }
                 }
             }
 
-            // Floating Action Button at bottom right
-            FloatingActionButton(
-                onClick = { showNewPostDialog = true },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 40.dp, end = 24.dp),
-                containerColor = Color(0xFFDD3825),
-                contentColor = Color.White,
-                shape = RoundedCornerShape(50)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+            // Floating Action Button at bottom right - For admin, IT, and HR users
+            if (canCreatePost) {
+                FloatingActionButton(
+                    onClick = { showNewPostDialog = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 40.dp, end = 24.dp),
+                    containerColor = Color(0xFFDD3825),
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(50)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Send,
-                        contentDescription = "New Post",
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "New Post",
-                        fontSize = 16.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = "New Post",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "New Post",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
@@ -277,6 +289,7 @@ fun HeadsUpScreen(
             NewPostDialog(
                 profilePicUrl = profilePicUrl,
                 userName = userName,
+                userAccess = userAccess,
                 onDismiss = { showNewPostDialog = false },
                 onSubmit = { _, _, _ ->
                     showNewPostDialog = false
@@ -290,7 +303,17 @@ fun HeadsUpScreen(
 }
 
 @Composable
-fun HeadsUpPostCard(post: CreatedPost) {
+fun HeadsUpPostCard(
+    post: CreatedPost,
+    canManagePost: Boolean,
+    userEmail: String
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var showImageZoom by remember { mutableStateOf(false) }
+    var zoomedImageUrl by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -379,28 +402,91 @@ fun HeadsUpPostCard(post: CreatedPost) {
                     }
                 }
 
-                // Priority badge
-                Box(
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                        .background(
-                            color = when (post.priority.lowercase()) {
-                                "high" -> Color(0xFFD32F2F)
-                                "medium" -> Color(0xFFFFA726)
-                                "low" -> Color(0xFF66BB6A)
-                                else -> Color.Gray
-                            },
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 4.dp, start = 8.dp) // Added start padding to move right
                 ) {
-                    Text(
-                        text = post.priority,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp,
-                        color = Color.White
-                    )
+                    // Priority badge
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = when (post.priority.lowercase()) {
+                                    "high" -> Color(0xFFD32F2F)
+                                    "medium" -> Color(0xFFFFA726)
+                                    "low" -> Color(0xFF66BB6A)
+                                    else -> Color.Gray
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = post.priority,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                            color = Color.White
+                        )
+                    }
+
+                    // Only show dots menu for admin, IT, and HR users
+                    if (canManagePost) {
+                        Box {
+                            IconButton(onClick = { expanded = true }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.dots),
+                                    contentDescription = "More options",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Report Spam") },
+                                    onClick = {
+                                        expanded = false
+                                        // Call report spam API
+                                        scope.launch {
+                                            try {
+                                                val response = RetrofitClient.apiService.reportSpam(
+                                                    com.archeGlobal.one.network.ReportSpamRequest(
+                                                        email = userEmail,
+                                                        post_id = post.post_id
+                                                    )
+                                                )
+                                                if (response.isSuccessful && response.body()?.status == 200) {
+                                                    android.util.Log.d("HeadsUpScreen", "Report spam successful")
+                                                    // Show success message
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        response.body()?.message ?: "Report sent successfully",
+                                                        android.widget.Toast.LENGTH_SHORT
+                                                    ).show()
+                                                } else {
+                                                    android.util.Log.e("HeadsUpScreen", "Report spam failed: ${response.code()}")
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "Failed to report spam",
+                                                        android.widget.Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            } catch (e: Exception) {
+                                                android.util.Log.e("HeadsUpScreen", "Error reporting spam", e)
+                                                android.widget.Toast.makeText(
+                                                    context,
+                                                    "Error: ${e.message}",
+                                                    android.widget.Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -426,7 +512,7 @@ fun HeadsUpPostCard(post: CreatedPost) {
                 lineHeight = 20.sp
             )
 
-            // Images if available
+            // Images if available with zoom functionality
             if (!post.image_urls.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
@@ -442,7 +528,11 @@ fun HeadsUpPostCard(post: CreatedPost) {
                         modifier = Modifier
                             .width(130.dp)
                             .height(130.dp)
-                            .clip(RoundedCornerShape(4.dp)),
+                            .clip(RoundedCornerShape(4.dp))
+                            .clickable {
+                                zoomedImageUrl = post.image_urls[0]
+                                showImageZoom = true
+                            },
                         contentScale = ContentScale.Fit
                     )
                 }
@@ -482,6 +572,44 @@ fun HeadsUpPostCard(post: CreatedPost) {
                     fontSize = 14.sp,
                     color = Color(0xFF666666)
                 )
+            }
+        }
+    }
+
+    // Image zoom dialog
+    if (showImageZoom) {
+        Dialog(
+            onDismissRequest = { showImageZoom = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.9f))
+                    .clickable { showImageZoom = false }
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(zoomedImageUrl),
+                    contentDescription = "Zoomed Image",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentScale = ContentScale.Fit
+                )
+
+                IconButton(
+                    onClick = { showImageZoom = false },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         }
     }

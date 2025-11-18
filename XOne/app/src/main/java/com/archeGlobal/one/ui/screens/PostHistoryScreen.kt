@@ -47,6 +47,7 @@ fun PostHistoryScreen(
     val userDataManager = UserDataManager.getInstance(context)
     val userData = userDataManager.getUserData()
     val userEmail = userData?.email ?: ""
+    val userAccess = userData?.userDetails?.access ?: ""
 
     var selectedTab by remember { mutableStateOf(0) }
     var posts by remember { mutableStateOf<List<CreatedPost>>(emptyList()) }
@@ -267,6 +268,7 @@ fun PostHistoryScreen(
         NewPostDialog(
             profilePicUrl = postToEdit?.profile_pic,
             userName = postToEdit?.username ?: "",
+            userAccess = userAccess,
             onDismiss = {
                 showEditDialog = false
                 postToEdit = null
@@ -561,10 +563,11 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .background(Color(0xFF66BB6A), CircleShape)
+                                Icon(
+                                    painter = painterResource(id = R.drawable.green),
+                                    contentDescription = "Start Date",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFF66BB6A)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
@@ -588,10 +591,11 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .background(Color(0xFFD32F2F), CircleShape)
+                                Icon(
+                                    painter = painterResource(id = R.drawable.red),
+                                    contentDescription = "End Date",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFFD32F2F)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
@@ -873,10 +877,11 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(12.dp)
-                                        .background(Color(0xFF66BB6A), CircleShape)
+                                Icon(
+                                    painter = painterResource(id = R.drawable.green),
+                                    contentDescription = "Start Date",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFF66BB6A)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
@@ -906,10 +911,11 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(12.dp)
-                                        .background(Color(0xFFD32F2F), CircleShape)
+                                Icon(
+                                    painter = painterResource(id = R.drawable.red),
+                                    contentDescription = "End Date",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFFD32F2F)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(

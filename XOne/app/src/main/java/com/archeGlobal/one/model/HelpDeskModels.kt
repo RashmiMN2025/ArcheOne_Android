@@ -142,6 +142,16 @@ fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
                     }
                 }
 
+            // Use ONLY the API flag to determine if FAQ has dynamic fields
+            // No client-side pattern matching - backend is the single source of truth
+            val hasDynamicFields = item.dynamicFields
+
+            // Log FAQ processing for debugging
+            android.util.Log.d(
+                "HelpDeskFAQ",
+                "FAQ: '${item.question}' | isDynamic: ${item.dynamicFields}",
+            )
+
             faqs.add(
                 HelpDeskFAQ(
                     id = "${categoryIndex}_$itemIndex",
@@ -149,7 +159,7 @@ fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
                     question = item.question,
                     answer = combinedAnswer,
                     category = category.title,
-                    dynamicFields = item.dynamicFields,
+                    dynamicFields = hasDynamicFields,
                 ),
             )
         }

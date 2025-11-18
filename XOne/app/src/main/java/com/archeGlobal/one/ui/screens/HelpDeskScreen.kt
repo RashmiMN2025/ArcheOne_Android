@@ -223,7 +223,7 @@ fun HelpDeskScreen(controller: HelpDeskController) {
                                                 CategorySection(
                                                     title = categoryTitle,
                                                     items = faqs.map { faq -> faq.question to faq.id },
-                                                    onItemClick = { itemId -> controller.navigateToFAQDetail(itemId) },
+                                                    onItemClick = { itemId -> controller.navigateToFAQOrRaiseTicket(itemId) },
                                                 )
                                             }
                                         }

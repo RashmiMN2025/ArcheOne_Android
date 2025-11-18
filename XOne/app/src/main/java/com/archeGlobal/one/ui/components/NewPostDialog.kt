@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,6 +60,7 @@ import java.util.*
 fun NewPostDialog(
     profilePicUrl: String? = null,
     userName: String = "User",
+    userAccess: String = "",
     onDismiss: () -> Unit,
     onSubmit: (title: String, description: String, category: String) -> Unit,
     onHistoryClick: () -> Unit = {},
@@ -83,9 +85,11 @@ fun NewPostDialog(
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Fetched locations and departments
+    // Fetched locations, departments, projects, and announcement categories
     var fetchedLocations by remember { mutableStateOf<List<String>>(emptyList()) }
     var fetchedDepartments by remember { mutableStateOf<List<String>>(emptyList()) }
+    var fetchedProjects by remember { mutableStateOf<List<String>>(emptyList()) }
+    var announcementCategories by remember { mutableStateOf<List<com.archeGlobal.one.network.AnnouncementCategory>>(emptyList()) }
 
     // Determine if we're in edit mode
     val isEditMode = existingPost != null
@@ -131,7 +135,7 @@ fun NewPostDialog(
     }
 
     // Post form states - initialize with existing post data if in edit mode
-    var postType by remember { mutableStateOf(existingPost?.post_type ?: "Planned") }
+    var postType by remember { mutableStateOf(existingPost?.post_type ?: "Planned Post") }
     var postSubject by remember { mutableStateOf(existingPost?.subject ?: "Select Post Subject") }
     var postPriority by remember { mutableStateOf(existingPost?.priority ?: "Select Post Priority") }
     var postGroup by remember { mutableStateOf(
@@ -148,9 +152,10 @@ fun NewPostDialog(
     var isSearchingEmployees by remember { mutableStateOf(false) }
     var department by remember { mutableStateOf(existingPost?.target_department?.firstOrNull() ?: "Select Department") }
     var location by remember { mutableStateOf(existingPost?.target_location?.firstOrNull() ?: "Select Location") }
+    var project by remember { mutableStateOf("Select Project") }
     var announcementDescription by remember { mutableStateOf(existingPost?.description ?: "") }
 
-    // Fetch locations and departments from API
+    // Fetch locations, departments, projects, and announcement categories from API
     LaunchedEffect(Unit) {
         try {
             val response = RetrofitClient.apiService.getLocationsAndDepartments()
@@ -158,8 +163,14 @@ fun NewPostDialog(
                 val data = response.body()?.data
                 fetchedLocations = data?.cities ?: emptyList()
                 fetchedDepartments = data?.departments ?: emptyList()
+                fetchedProjects = data?.projects ?: emptyList()
+                announcementCategories = data?.announcementCategories ?: emptyList()
+                android.util.Log.d("NewPostDialog", "Fetched announcement categories: ${announcementCategories.size}")
+                android.util.Log.d("NewPostDialog", "Fetched projects: ${fetchedProjects.size}")
+                android.util.Log.d("NewPostDialog", "User access: $userAccess")
             }
         } catch (e: Exception) {
+            android.util.Log.e("NewPostDialog", "Error fetching data", e)
             // Handle error silently, keep empty lists
         }
     }
@@ -706,10 +717,8 @@ fun NewPostDialog(
 
                 // Form Type Switcher
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
                         onClick = { formType = "Post" },
@@ -718,13 +727,13 @@ fun NewPostDialog(
                             containerColor = if (formType == "Post") PrimaryRed else Color.White,
                             contentColor = if (formType == "Post") Color.White else Color.Black,
                         ),
-                        shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp, topEnd = 0.dp, bottomEnd = 0.dp),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
                             text = "HeadsUp",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
+                            fontSize = 16.sp
                         )
                     }
 
@@ -735,13 +744,13 @@ fun NewPostDialog(
                             containerColor = if (formType == "Event") PrimaryRed else Color.White,
                             contentColor = if (formType == "Event") Color.White else Color.Black,
                         ),
-                        shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
                             text = "Home Page",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
+                            fontSize = 16.sp
                         )
                     }
                 }
@@ -760,6 +769,8 @@ fun NewPostDialog(
                     if (formType == "Post") {
                         // POST FORM CONTENT
                         PostFormContent(
+                            userAccess = userAccess,
+                            announcementCategories = announcementCategories,
                             postType = postType,
                             onPostTypeChange = { postType = it },
                             postSubject = postSubject,
@@ -778,8 +789,11 @@ fun NewPostDialog(
                             onDepartmentChange = { department = it },
                             location = location,
                             onLocationChange = { location = it },
+                            project = project,
+                            onProjectChange = { project = it },
                             fetchedDepartments = fetchedDepartments,
                             fetchedLocations = fetchedLocations,
+                            fetchedProjects = fetchedProjects,
                             announcementDescription = announcementDescription,
                             onAnnouncementDescriptionChange = { announcementDescription = it },
                             postStartDate = postStartDate,
@@ -950,6 +964,8 @@ fun NewPostDialog(
 
 @Composable
 private fun PostFormContent(
+    userAccess: String,
+    announcementCategories: List<com.archeGlobal.one.network.AnnouncementCategory>,
     postType: String,
     onPostTypeChange: (String) -> Unit,
     postSubject: String,
@@ -968,8 +984,11 @@ private fun PostFormContent(
     onDepartmentChange: (String) -> Unit,
     location: String,
     onLocationChange: (String) -> Unit,
+    project: String,
+    onProjectChange: (String) -> Unit,
     fetchedDepartments: List<String>,
     fetchedLocations: List<String>,
+    fetchedProjects: List<String>,
     announcementDescription: String,
     onAnnouncementDescriptionChange: (String) -> Unit,
     postStartDate: String,
@@ -995,45 +1014,55 @@ private fun PostFormContent(
     onSubmit: () -> Unit,
     isSubmitting: Boolean = false,
 ) {
-    val postTypes = listOf("Planned", "Unplanned/Emergency")
+    // Find the announcement category for the current user's access level
+    val userCategory = announcementCategories.find {
+        it.access.equals(userAccess, ignoreCase = true)
+    }
 
-    val plannedSubjects = listOf(
-        "Housekeeping schedule",
-        "Pest control or deep cleaning activities",
-        "Pantry & cafeteria updates",
-        "Air conditioning or lighting maintenance",
-        "Fire drills or emergency activities",
-        "Lost & found notifications",
-        "Security protocol reminders",
-        "Access restriction or badge issues",
-        "Lift/escalator maintenance",
-        "Parking space updates",
-        "Delivery or courier notifications",
-        "Clean desk policy reminders",
-        "Power outage or generator testing",
-        "Visitor on floor alerts",
-        "Noise level reminders",
-        "Seating arrangement changes"
-    )
+    // Get post types and subjects based on user access
+    val postTypes = mutableListOf<String>()
+    val postSubjectsByType = mutableMapOf<String, List<String>>()
 
-    val unplannedSubjects = listOf(
-        "Air conditioning/lighting maintenance",
-        "Pantry & cafeteria update",
-        "Fire drills/emergency",
-        "Lost & found",
-        "Lift/escalator maintenance",
-        "Delivery or courier notification",
-        "Power outage/generator testing",
-        "Noise level reminder"
-    )
+    userCategory?.fields?.forEach { field ->
+        val categoryName = when {
+            field.category.contains("Planned & Unplanned", ignoreCase = true) -> {
+                // Split into two separate categories
+                postTypes.add("Planned Post")
+                postTypes.add("Unplanned Post")
+                postSubjectsByType["Planned Post"] = field.subcategory
+                postSubjectsByType["Unplanned Post"] = field.subcategory
+                null
+            }
+            field.category.contains("Planned", ignoreCase = true) -> "Planned Post"
+            field.category.contains("Unplanned", ignoreCase = true) -> "Unplanned Post"
+            else -> field.category
+        }
 
-    val postSubjects = if (postType == "Planned") plannedSubjects else unplannedSubjects
+        categoryName?.let {
+            if (!postTypes.contains(it)) {
+                postTypes.add(it)
+            }
+            postSubjectsByType[it] = field.subcategory
+        }
+    }
+
+    // Remove duplicates
+    val uniquePostTypes = postTypes.distinct()
+
+    // Get subjects for the currently selected post type
+    val postSubjects = postSubjectsByType[postType] ?: emptyList()
+
+    android.util.Log.d("PostFormContent", "User access: $userAccess")
+    android.util.Log.d("PostFormContent", "Available post types: $uniquePostTypes")
+    android.util.Log.d("PostFormContent", "Current post type: $postType")
+    android.util.Log.d("PostFormContent", "Available subjects: $postSubjects")
     val postPriorities = listOf("High", "Medium", "Low")
-    val postGroups = listOf("Employee-based", "Department-based", "Location-based", "Everyone.global")
+    val postGroups = listOf("Everyone@Arche", "Department Based", "Location Based", "Project Based", "Employee Based")
 
     // Use fetched data, fallback to empty if not loaded yet
     val departments = fetchedDepartments
     val locations = fetchedLocations
+    val projects = fetchedProjects
 
     // Image picker launcher for multiple images (max 3)
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -1051,7 +1080,7 @@ private fun PostFormContent(
     PostDropdown(
         label = "Post Type",
         selectedValue = postType,
-        options = postTypes,
+        options = uniquePostTypes,
         onValueSelected = onPostTypeChange,
     )
 
@@ -1089,7 +1118,7 @@ private fun PostFormContent(
 
     // Conditional field based on Post Group selection
     when (postGroup) {
-        "Employee-based" -> {
+        "Employee Based" -> {
             // Employee Search Field with suggestions
             Column {
                 // Search field
@@ -1265,7 +1294,7 @@ private fun PostFormContent(
             }
             Spacer(modifier = Modifier.height(24.dp))
         }
-        "Department-based" -> {
+        "Department Based" -> {
             // Department Dropdown
             PostDropdown(
                 label = "Department",
@@ -1275,7 +1304,7 @@ private fun PostFormContent(
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
-        "Location-based" -> {
+        "Location Based" -> {
             // Location Dropdown
             PostDropdown(
                 label = "Location",
@@ -1285,8 +1314,18 @@ private fun PostFormContent(
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
-        "Everyone.global" -> {
-            // No field for Everyone.global
+        "Project Based" -> {
+            // Project Dropdown
+            PostDropdown(
+                label = "Project",
+                selectedValue = project,
+                options = projects,
+                onValueSelected = onProjectChange,
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+        "Everyone@Arche" -> {
+            // No field for Everyone@Arche
         }
     }
 
@@ -2495,71 +2534,72 @@ private fun PostPreviewDialog(
                                     }
                                 }
                             }
-                        }
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Start and End dates - only show if at least one is filled
-                    if (postStartDate.isNotEmpty() || postEndDate.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            // Post Start Date - only if filled
-                            if (postStartDate.isNotEmpty()) {
-                                Column(horizontalAlignment = Alignment.Start) {
-                                    Text(
-                                        text = "Post Start Date",
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        fontSize = 11.sp,
-                                        color = Color.Gray,
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(10.dp)
-                                                .background(Color(0xFF66BB6A), CircleShape)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = postStartDate,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 12.sp,
-                                            color = Color.Black,
-                                        )
+                            // Start and End dates - only show if at least one is filled
+                            if (postStartDate.isNotEmpty() || postEndDate.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    // Post Start Date - only if filled
+                                    if (postStartDate.isNotEmpty()) {
+                                        Column(horizontalAlignment = Alignment.Start) {
+                                            Text(
+                                                text = "Post Start Date",
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Normal,
+                                                fontSize = 11.sp,
+                                                color = Color.Gray,
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    painter = painterResource(id = com.archeGlobal.one.R.drawable.green),
+                                                    contentDescription = "Start Date",
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = Color(0xFF66BB6A)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = postStartDate,
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 12.sp,
+                                                    color = Color.Black,
+                                                )
+                                            }
+                                        }
                                     }
-                                }
-                            }
 
-                            // Post End Date - only if filled
-                            if (postEndDate.isNotEmpty()) {
-                                Column(horizontalAlignment = Alignment.Start) {
-                                    Text(
-                                        text = "Post End Date",
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        fontSize = 11.sp,
-                                        color = Color.Gray,
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(10.dp)
-                                                .background(Color(0xFFD32F2F), CircleShape)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = postEndDate,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 12.sp,
-                                            color = Color.Black,
-                                        )
+                                    // Post End Date - only if filled
+                                    if (postEndDate.isNotEmpty()) {
+                                        Column(horizontalAlignment = Alignment.Start) {
+                                            Text(
+                                                text = "Post End Date",
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Normal,
+                                                fontSize = 11.sp,
+                                                color = Color.Gray,
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    painter = painterResource(id = com.archeGlobal.one.R.drawable.red),
+                                                    contentDescription = "End Date",
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = Color(0xFFD32F2F)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = postEndDate,
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 12.sp,
+                                                    color = Color.Black,
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
