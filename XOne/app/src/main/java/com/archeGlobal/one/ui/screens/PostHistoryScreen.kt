@@ -509,16 +509,6 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Support channel
-            if (!post.support_channel.isNullOrEmpty()) {
-                Text(
-                    text = "Support: ${post.support_channel}",
-                    fontFamily = GraphikFontFamily,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-
             // Images if available (displayed side-by-side)
             if (!post.image_urls.isNullOrEmpty() && post.image_urls.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
@@ -543,6 +533,44 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Support Details
+            if (!post.support_channel.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Support Details :",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = post.support_channel,
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+
+            // Activity Duration
+            if (!post.activity_start.isNullOrEmpty() && !post.activity_end.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Activity Duration :",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${formatActivityDateTime(post.activity_start)} - ${formatActivityDateTime(post.activity_end)}",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
             }
 
             // Dates
@@ -629,6 +657,17 @@ fun formatPostDateShort(dateString: String): String {
     return try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
         val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val date = inputFormat.parse(dateString)
+        outputFormat.format(date ?: Date())
+    } catch (e: Exception) {
+        dateString
+    }
+}
+
+fun formatActivityDateTime(dateString: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
         val date = inputFormat.parse(dateString)
         outputFormat.format(date ?: Date())
     } catch (e: Exception) {

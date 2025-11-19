@@ -56,6 +56,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -98,7 +99,7 @@ fun NewPostDialog(
     // Determine if we're in edit mode
     val isEditMode = existingPost != null
 
-    // Helper function to convert ISO date to display format (dd-MM-yyyy)
+    // Helper function to convert ISO date to display format (dd MMMM yyyy)
     fun formatISOToDisplayDate(isoDateString: String?): String {
         if (isoDateString.isNullOrEmpty()) return ""
         return try {
@@ -107,13 +108,33 @@ fun NewPostDialog(
             val date = isoFormat.parse(isoDateString)
 
             if (date != null) {
-                val displayFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+                val displayFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
                 displayFormat.format(date)
             } else {
                 ""
             }
         } catch (e: Exception) {
             android.util.Log.e("NewPostDialog", "Error converting ISO to display date: $isoDateString", e)
+            ""
+        }
+    }
+
+    // Helper function to convert ISO date to display format with short month (dd MMM yyyy)
+    fun formatISOToDisplayDateShort(isoDateString: String?): String {
+        if (isoDateString.isNullOrEmpty()) return ""
+        return try {
+            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = isoFormat.parse(isoDateString)
+
+            if (date != null) {
+                val displayFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                displayFormat.format(date)
+            } else {
+                ""
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("NewPostDialog", "Error converting ISO to display date short: $isoDateString", e)
             ""
         }
     }
@@ -139,36 +160,82 @@ fun NewPostDialog(
     }
 
     // Post form states - initialize with existing post data if in edit mode
-    var postType by remember { mutableStateOf(existingPost?.post_type ?: "") }
-    var postSubject by remember { mutableStateOf(existingPost?.subject ?: "Select Post Subject") }
+    // Note: Don't pre-fill postType from existingPost as we'll infer it from subject
+    var postType by remember { mutableStateOf("") }
+    var postSubject by remember { mutableStateOf(existingPost?.subject ?: "") }
 
-    // Set default post type based on available categories after they're loaded
-    LaunchedEffect(announcementCategories, userAccess) {
-        if (postType.isEmpty() && announcementCategories.isNotEmpty()) {
-            // Get the first available post type for this user
+    // Infer post type from post subject in edit mode
+    LaunchedEffect(announcementCategories, userAccess, isEditMode, postSubject) {
+        // Only infer post type in edit mode when we have a subject but no post type
+        if (isEditMode && postType.isEmpty() && postSubject.isNotEmpty() && announcementCategories.isNotEmpty()) {
+            android.util.Log.d("NewPostDialog", "Attempting to infer post type from subject: '$postSubject'")
+
+            // Get user's category
             val userCategory = announcementCategories.find {
                 it.access.equals(userAccess, ignoreCase = true)
             }
-            val firstCategory = userCategory?.fields?.firstOrNull()?.category
-            postType = when {
-                firstCategory?.contains("Planned & Unplanned", ignoreCase = true) == true -> "Planned Post"
-                firstCategory?.contains("Planned", ignoreCase = true) == true -> "Planned Post"
-                firstCategory?.contains("Unplanned", ignoreCase = true) == true -> "Unplanned Post"
-                else -> firstCategory ?: "Planned Post"
+
+            // Build subject-to-type mapping
+            userCategory?.fields?.forEach { field ->
+                val categoryName = when {
+                    field.category.contains("Planned & Unplanned", ignoreCase = true) -> {
+                        // Check if subject exists in this category
+                        if (field.subcategory.any { it.equals(postSubject, ignoreCase = true) }) {
+                            // Default to "Planned Post" for combined categories
+                            postType = "Planned Post"
+                            android.util.Log.d("NewPostDialog", "Inferred postType: 'Planned Post' from 'Planned & Unplanned' category")
+                        }
+                        return@forEach
+                    }
+                    field.category.contains("Unplanned", ignoreCase = true) -> "Unplanned Post"
+                    field.category.contains("Planned", ignoreCase = true) -> "Planned Post"
+                    else -> field.category
+                }
+
+                // Check if the subject exists in this category's subcategories
+                if (field.subcategory.any { it.equals(postSubject, ignoreCase = true) }) {
+                    postType = categoryName
+                    android.util.Log.d("NewPostDialog", "Inferred postType: '$categoryName' from subject: '$postSubject'")
+                }
+            }
+
+            if (postType.isEmpty()) {
+                android.util.Log.w("NewPostDialog", "Could not infer post type from subject: '$postSubject'")
             }
         }
     }
-    var postPriority by remember { mutableStateOf(existingPost?.priority ?: "Select Post Priority") }
-    var postGroup by remember { mutableStateOf(
-        when (existingPost?.target_group) {
-            "DepartmentBased" -> "Department Based"
-            "LocationBased" -> "Location Based"
-            "EmployeeBased" -> "Employee Based"
-            "ProjectBased" -> "Project Based"
-            "Everyone" -> "Everyone@Arche"
-            else -> "Everyone@Arche"
-        }
-    ) }
+    var postPriority by remember { mutableStateOf(existingPost?.priority ?: "") }
+    var postGroup by remember {
+        // Infer the post group based on which target field is filled (only in edit mode)
+        val inferredGroup = existingPost?.let { post ->
+            android.util.Log.d("NewPostDialog", "Inferring postGroup from target fields:")
+            android.util.Log.d("NewPostDialog", "  target_employee: ${post.target_employee?.size ?: 0} items")
+            android.util.Log.d("NewPostDialog", "  target_department: ${post.target_department?.size ?: 0} items")
+            android.util.Log.d("NewPostDialog", "  target_location: ${post.target_location?.size ?: 0} items")
+
+            when {
+                !post.target_employee.isNullOrEmpty() -> {
+                    android.util.Log.d("NewPostDialog", "Inferred: Employee Based")
+                    "Employee Based"
+                }
+                !post.target_department.isNullOrEmpty() -> {
+                    android.util.Log.d("NewPostDialog", "Inferred: Department Based")
+                    "Department Based"
+                }
+                !post.target_location.isNullOrEmpty() -> {
+                    android.util.Log.d("NewPostDialog", "Inferred: Location Based")
+                    "Location Based"
+                }
+                else -> {
+                    android.util.Log.d("NewPostDialog", "Inferred: Everyone@Arche (no specific targets)")
+                    "Everyone@Arche"
+                }
+            }
+        } ?: "" // Empty for new posts - user must select
+
+        android.util.Log.d("NewPostDialog", "Final postGroup: '$inferredGroup'")
+        mutableStateOf(inferredGroup)
+    }
     var employeeSearchQuery by remember { mutableStateOf("") }
     var selectedEmployees by remember { mutableStateOf<List<com.archeGlobal.one.model.SuggestedUser>>(existingPost?.target_employee?.mapNotNull { email ->
         com.archeGlobal.one.model.SuggestedUser(email, email.substringBefore("@"))
@@ -185,6 +252,21 @@ fun NewPostDialog(
     var selectedProjects by remember { mutableStateOf<List<String>>(emptyList()) }
     var suggestedProjects by remember { mutableStateOf<List<String>>(emptyList()) }
     var announcementDescription by remember { mutableStateOf(existingPost?.description ?: "") }
+
+    // Debug logging for existingPost - runs once
+    LaunchedEffect(existingPost) {
+        android.util.Log.d("NewPostDialog", "=== NewPostDialog LaunchedEffect (Edit Mode Check) ===")
+        android.util.Log.d("NewPostDialog", "existingPost is null: ${existingPost == null}")
+        android.util.Log.d("NewPostDialog", "IsEditMode: $isEditMode")
+        existingPost?.let { post ->
+            android.util.Log.d("NewPostDialog", "Post ID: ${post.post_id}")
+            android.util.Log.d("NewPostDialog", "Subject: ${post.subject}")
+            android.util.Log.d("NewPostDialog", "Inferred postGroup: '$postGroup'")
+            android.util.Log.d("NewPostDialog", "Selected employees count: ${selectedEmployees.size}")
+            android.util.Log.d("NewPostDialog", "Selected departments count: ${selectedDepartments.size}")
+            android.util.Log.d("NewPostDialog", "Selected locations count: ${selectedLocations.size}")
+        }
+    }
 
     // Fetch locations, departments, projects, and announcement categories from API
     LaunchedEffect(Unit) {
@@ -288,9 +370,9 @@ fun NewPostDialog(
     }
     var postStartDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.start_date)) }
     var postEndDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.end_date)) }
-    var startDurationDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.activity_start)) }
+    var startDurationDate by remember { mutableStateOf<String>(formatISOToDisplayDateShort(existingPost?.activity_start)) }
     var startDurationTime by remember { mutableStateOf<String>(formatISOToDisplayTime(existingPost?.activity_start)) }
-    var endDurationDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.activity_end)) }
+    var endDurationDate by remember { mutableStateOf<String>(formatISOToDisplayDateShort(existingPost?.activity_end)) }
     var endDurationTime by remember { mutableStateOf<String>(formatISOToDisplayTime(existingPost?.activity_end)) }
     var supportChannelDetails by remember { mutableStateOf(existingPost?.support_channel ?: "") }
     var postImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -321,6 +403,41 @@ fun NewPostDialog(
         )
     }
     var showEventPreview by remember { mutableStateOf(false) }
+
+    // Helper function to download image from URL and convert to MultipartBody.Part
+    suspend fun urlToMultipartBodyPart(imageUrl: String, partName: String, index: Int): MultipartBody.Part? {
+        return withContext(Dispatchers.IO) {
+            try {
+                android.util.Log.d("NewPostDialog", "Downloading image from URL: $imageUrl")
+                val url = URL(imageUrl)
+                val connection = url.openConnection()
+                connection.connect()
+                val inputStream = connection.getInputStream()
+
+                // Create temp file
+                val filename = "existing_image_$index.png"
+                val tempFile = File(context.cacheDir, filename)
+                android.util.Log.d("NewPostDialog", "Creating temp file for existing image: ${tempFile.absolutePath}")
+
+                // Copy to temp file
+                val outputStream = FileOutputStream(tempFile)
+                inputStream.copyTo(outputStream)
+                outputStream.close()
+                inputStream.close()
+
+                android.util.Log.d("NewPostDialog", "Downloaded image size: ${tempFile.length()} bytes")
+
+                // Create multipart body part
+                val requestBody = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
+                val part = MultipartBody.Part.createFormData(partName, tempFile.name, requestBody)
+                android.util.Log.d("NewPostDialog", "Multipart body part created for existing image")
+                part
+            } catch (e: Exception) {
+                android.util.Log.e("NewPostDialog", "Error downloading image from URL: $imageUrl", e)
+                null
+            }
+        }
+    }
 
     // Helper function to convert URI to MultipartBody.Part
     fun uriToMultipartBodyPart(context: Context, uri: Uri, partName: String): MultipartBody.Part? {
@@ -587,10 +704,19 @@ fun NewPostDialog(
                     postRequestMap["support_channel"] = supportChannelDetails
                 }
 
+                // Add existing image URLs in edit mode (images that weren't removed)
+                // IMPORTANT: Always include existing images, even if empty array
+                if (isEditMode) {
+                    postRequestMap["existing_images"] = existingImageUrls
+                    android.util.Log.d("NewPostDialog", "Including ${existingImageUrls.size} existing image URLs in edit mode")
+                    android.util.Log.d("NewPostDialog", "Existing image URLs: $existingImageUrls")
+                }
+
                 android.util.Log.d("NewPostDialog", "Post Type: ${postRequestMap["post_type"]}")
                 android.util.Log.d("NewPostDialog", "Subject: ${postRequestMap["subject"]}")
                 android.util.Log.d("NewPostDialog", "Priority: ${postRequestMap["priority"]}")
                 android.util.Log.d("NewPostDialog", "Description length: ${(postRequestMap["description"] as? String)?.length ?: 0}")
+                android.util.Log.d("NewPostDialog", "Existing images in request: ${postRequestMap["existing_images"]}")
                 android.util.Log.d("NewPostDialog", "Start Date - Display: ${if (formType == "Post") postStartDate else eventStartDate} → ISO: ${postRequestMap["start_date"]}")
                 android.util.Log.d("NewPostDialog", "End Date - Display: ${if (formType == "Post") postEndDate else eventEndDate} → ISO: ${postRequestMap["end_date"]}")
                 android.util.Log.d("NewPostDialog", "Event Date - Display: $eventDate → ISO: ${postRequestMap["event_date"]}")
@@ -744,11 +870,12 @@ fun NewPostDialog(
         }
     }
 
-    // Reset post subject when post type changes (but not during initial load in edit mode)
+    // Reset post subject when post type changes (but not during initial load or in edit mode)
     var isInitialLoad by remember { mutableStateOf(true) }
     LaunchedEffect(postType) {
-        if (!isInitialLoad) {
-            postSubject = "Select Post Subject"
+        if (!isInitialLoad && !isEditMode) {
+            // Only reset subject in create mode when user manually changes post type
+            postSubject = ""
         } else {
             isInitialLoad = false
         }
@@ -1027,6 +1154,7 @@ fun NewPostDialog(
                 endDurationTime = endDurationTime,
                 supportChannelDetails = supportChannelDetails,
                 postImageUris = postImageUris,
+                existingImageUrls = existingImageUrls,
                 onDismiss = { showPostPreview = false }
             )
         }
@@ -1285,6 +1413,7 @@ private fun PostFormContent(
         selectedValue = postType,
         options = uniquePostTypes,
         onValueSelected = onPostTypeChange,
+        placeholder = "Select Post Type",
     )
 
     Spacer(modifier = Modifier.height(24.dp))
@@ -1295,6 +1424,7 @@ private fun PostFormContent(
         selectedValue = postSubject,
         options = postSubjects,
         onValueSelected = onPostSubjectChange,
+        placeholder = "Select Post Subject",
     )
 
     Spacer(modifier = Modifier.height(24.dp))
@@ -1305,6 +1435,7 @@ private fun PostFormContent(
         selectedValue = postPriority,
         options = postPriorities,
         onValueSelected = onPostPriorityChange,
+        placeholder = "Select Post Priority",
     )
 
     Spacer(modifier = Modifier.height(24.dp))
@@ -1315,6 +1446,7 @@ private fun PostFormContent(
         selectedValue = postGroup,
         options = postGroups,
         onValueSelected = onPostGroupChange,
+        placeholder = "Select Group To Tag",
     )
 
     Spacer(modifier = Modifier.height(24.dp))
@@ -2225,7 +2357,8 @@ private fun PostFormContent(
         value = supportChannelDetails,
         onValueChange = onSupportChannelDetailsChange,
         placeholder = "Support Channel Details",
-        singleLine = true,
+        singleLine = false,
+        minLines = 2,
     )
 
     Spacer(modifier = Modifier.height(24.dp))
@@ -2275,7 +2408,7 @@ private fun PostFormContent(
                 disabledContentColor = Color.White,
             ),
             shape = RoundedCornerShape(12.dp),
-            enabled = !isSubmitting && announcementDescription.isNotBlank() && postSubject != "Select Post Subject" && postPriority != "Select Post Priority",
+            enabled = !isSubmitting && announcementDescription.isNotBlank() && postSubject.isNotBlank() && postPriority.isNotBlank(),
         ) {
             if (isSubmitting) {
                 CircularProgressIndicator(
@@ -2632,6 +2765,7 @@ private fun PostDropdown(
     selectedValue: String,
     options: List<String>,
     onValueSelected: (String) -> Unit,
+    placeholder: String = "",
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -2653,17 +2787,30 @@ private fun PostDropdown(
                 value = selectedValue,
                 onValueChange = {},
                 readOnly = true,
+                placeholder = if (selectedValue.isEmpty() && placeholder.isNotEmpty()) {
+                    {
+                        Text(
+                            text = placeholder,
+                            color = Color.Gray,
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal,
+                        )
+                    }
+                } else {
+                    null
+                },
                 trailingIcon = {
                     Icon(
                         painter = painterResource(id = R.drawable.dropdown),
                         contentDescription = "Dropdown",
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 },
                 modifier = Modifier
                     .menuAnchor()
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .heightIn(min = 56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Transparent,
@@ -2678,6 +2825,7 @@ private fun PostDropdown(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                 ),
+                maxLines = 3,
             )
 
             ExposedDropdownMenu(
@@ -2987,6 +3135,7 @@ private fun PostPreviewDialog(
     endDurationTime: String,
     supportChannelDetails: String,
     postImageUris: List<Uri>,
+    existingImageUrls: List<String> = emptyList(),
     onDismiss: () -> Unit,
 ) {
     Dialog(
@@ -3098,7 +3247,7 @@ private fun PostPreviewDialog(
                                 }
 
                                 // Priority badge - only show if selected
-                                if (postPriority != "Select Post Priority") {
+                                if (postPriority.isNotBlank()) {
                                     Box(
                                         modifier = Modifier
                                             .background(
@@ -3108,15 +3257,15 @@ private fun PostPreviewDialog(
                                                     "Low" -> Color(0xFF66BB6A)
                                                     else -> Color.Gray
                                                 },
-                                                shape = RoundedCornerShape(12.dp)
+                                                shape = RoundedCornerShape(16.dp)
                                             )
-                                            .padding(horizontal = 10.dp, vertical = 3.dp)
+                                            .padding(horizontal = 8.dp, vertical = 2.dp)
                                     ) {
                                         Text(
                                             text = postPriority,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 11.sp,
+                                            fontSize = 10.sp,
                                             color = Color.White,
                                         )
                                     }
@@ -3125,7 +3274,7 @@ private fun PostPreviewDialog(
 
                             Spacer(modifier = Modifier.height(10.dp))
                             // Post Subject - only show if not default selection
-                            if (postSubject != "Select Post Subject") {
+                            if (postSubject.isNotBlank()) {
                                 Text(
                                     text = postSubject,
                                     fontFamily = GraphikFontFamily,
@@ -3149,56 +3298,106 @@ private fun PostPreviewDialog(
                                 Spacer(modifier = Modifier.height(10.dp))
                             }
 
-                            // Support and Duration labels (always show)
-                            Text(
-                                text = "Support:",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 11.sp,
-                                color = Color.Gray,
-                            )
-                            Text(
-                                text = "Duration:",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 11.sp,
-                                color = Color.Gray,
-                            )
-
-                            // Attached Images - display in grid if images exist
-                            if (postImageUris.isNotEmpty()) {
+                            // Attached Images - display horizontally scrollable like in HeadsUpScreen
+                            val totalImages = existingImageUrls.size + postImageUris.size
+                            if (totalImages > 0) {
                                 Spacer(modifier = Modifier.height(10.dp))
-
-                                // Grid layout for images (2 columns)
-                                val rows = (postImageUris.size + 1) / 2
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(140.dp)
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy((-40).dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    for (rowIndex in 0 until rows) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            for (colIndex in 0 until 2) {
-                                                val imageIndex = rowIndex * 2 + colIndex
-                                                if (imageIndex < postImageUris.size) {
-                                                    Image(
-                                                        painter = rememberAsyncImagePainter(postImageUris[imageIndex]),
-                                                        contentDescription = "Attached Image",
-                                                        modifier = Modifier
-                                                            .weight(1f)
-                                                            .height(110.dp)
-                                                            .clip(RoundedCornerShape(10.dp)),
-                                                        contentScale = ContentScale.Fit
-                                                    )
-                                                } else {
-                                                    Spacer(modifier = Modifier.weight(1f))
-                                                }
-                                            }
-                                        }
+                                    // Show existing images first, then new images
+                                    existingImageUrls.forEach { imageUrl ->
+                                        Image(
+                                            painter = rememberAsyncImagePainter(imageUrl),
+                                            contentDescription = "Post image",
+                                            modifier = Modifier
+                                                .width(130.dp)
+                                                .height(130.dp)
+                                                .clip(RoundedCornerShape(4.dp)),
+                                            contentScale = ContentScale.Fit
+                                        )
+                                    }
+                                    postImageUris.forEach { imageUri ->
+                                        Image(
+                                            painter = rememberAsyncImagePainter(imageUri),
+                                            contentDescription = "Post image",
+                                            modifier = Modifier
+                                                .width(130.dp)
+                                                .height(130.dp)
+                                                .clip(RoundedCornerShape(4.dp)),
+                                            contentScale = ContentScale.Fit
+                                        )
                                     }
                                 }
+                            }
+
+                            // Support Details if available
+                            if (supportChannelDetails.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = "Support Details :",
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.sp,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = supportChannelDetails,
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
+
+                            // Activity Duration if available
+                            if (startDurationDate.isNotEmpty() && startDurationTime.isNotEmpty() &&
+                                endDurationDate.isNotEmpty() && endDurationTime.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = "Activity Duration :",
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.sp,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                // Convert short month format to full month format for preview
+                                val startDateFull = startDurationDate.replace(" Nov ", " November ")
+                                    .replace(" Jan ", " January ")
+                                    .replace(" Feb ", " February ")
+                                    .replace(" Mar ", " March ")
+                                    .replace(" Apr ", " April ")
+                                    .replace(" May ", " May ")
+                                    .replace(" Jun ", " June ")
+                                    .replace(" Jul ", " July ")
+                                    .replace(" Aug ", " August ")
+                                    .replace(" Sep ", " September ")
+                                    .replace(" Oct ", " October ")
+                                    .replace(" Dec ", " December ")
+                                val endDateFull = endDurationDate.replace(" Nov ", " November ")
+                                    .replace(" Jan ", " January ")
+                                    .replace(" Feb ", " February ")
+                                    .replace(" Mar ", " March ")
+                                    .replace(" Apr ", " April ")
+                                    .replace(" May ", " May ")
+                                    .replace(" Jun ", " June ")
+                                    .replace(" Jul ", " July ")
+                                    .replace(" Aug ", " August ")
+                                    .replace(" Sep ", " September ")
+                                    .replace(" Oct ", " October ")
+                                    .replace(" Dec ", " December ")
+                                Text(
+                                    text = "$startDateFull, $startDurationTime - $endDateFull, $endDurationTime",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
                             }
 
                             // Start and End dates - only show if at least one is filled

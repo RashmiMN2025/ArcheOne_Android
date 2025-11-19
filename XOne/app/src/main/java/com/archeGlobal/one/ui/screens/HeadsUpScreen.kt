@@ -2,9 +2,11 @@ package com.archeGlobal.one.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -62,6 +64,8 @@ fun HeadsUpScreen(
     val profilePicUrl = userData?.profilePic
     val userName = userData?.name ?: "User"
     val userEmail = userData?.email ?: ""
+    val userDepartment = userData?.department ?: ""
+    val userLocation = userData?.location ?: ""
     val userAccess = userData?.userDetails?.access ?: ""
     val canCreatePost = userAccess.lowercase() in listOf("admin", "it", "hr")
 
@@ -76,10 +80,12 @@ fun HeadsUpScreen(
         isLoading = true
         try {
             android.util.Log.d("HeadsUpScreen", "Loading HeadsUp posts for email: $userEmail")
+            android.util.Log.d("HeadsUpScreen", "User department: $userDepartment")
+            android.util.Log.d("HeadsUpScreen", "User location: $userLocation")
 
             val request = HeadsUpPostsRequest(
-                department = "",
-                location = "",
+                department = userDepartment,
+                location = userLocation,
                 email = userEmail
             )
             val response = RetrofitClient.apiService.getHeadsUpPosts(request)
@@ -429,9 +435,9 @@ fun HeadsUpPostCard(
                                     "low" -> Color(0xFF66BB6A)
                                     else -> Color.Gray
                                 },
-                                shape = RoundedCornerShape(10.dp)
+                                shape = RoundedCornerShape(16.dp)
                             )
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = post.priority,
@@ -456,7 +462,8 @@ fun HeadsUpPostCard(
                                 Icon(
                                     painter = painterResource(id = R.drawable.dots),
                                     contentDescription = "More options",
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFF666666)
                                 )
                             }
 
@@ -532,29 +539,32 @@ fun HeadsUpPostCard(
                 lineHeight = 20.sp
             )
 
-            // Images if available with zoom functionality
-            if (!post.image_urls.isNullOrEmpty()) {
+            // Images if available with zoom functionality (displayed side-by-side)
+            if (!post.image_urls.isNullOrEmpty() && post.image_urls.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(140.dp),
-                    horizontalArrangement = Arrangement.Start,
+                        .height(140.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy((-40).dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(post.image_urls[0]),
-                        contentDescription = "Post Image",
-                        modifier = Modifier
-                            .width(130.dp)
-                            .height(130.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .clickable {
-                                zoomedImageUrl = post.image_urls[0]
-                                showImageZoom = true
-                            },
-                        contentScale = ContentScale.Fit
-                    )
+                    post.image_urls.forEach { imageUrl ->
+                        Image(
+                            painter = rememberAsyncImagePainter(imageUrl),
+                            contentDescription = "Post image",
+                            modifier = Modifier
+                                .width(130.dp)
+                                .height(130.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .clickable {
+                                    zoomedImageUrl = imageUrl
+                                    showImageZoom = true
+                                },
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
             }
 
