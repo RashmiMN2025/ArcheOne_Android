@@ -3,6 +3,7 @@ package com.archeGlobal.one.ui.components
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -86,8 +87,6 @@ fun NewPostDialog(
 
     // Submission state
     var isSubmitting by remember { mutableStateOf(false) }
-    var showSuccessDialog by remember { mutableStateOf(false) }
-    var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
     // Fetched locations, departments, projects, and announcement categories
@@ -656,6 +655,11 @@ fun NewPostDialog(
                 android.util.Log.d("NewPostDialog", "Activity End ISO: $activityEndISO")
 
                 // Create post request as a Map to conditionally include fields
+                android.util.Log.d("NewPostDialog", "=== FORM TYPE DETECTION ===")
+                android.util.Log.d("NewPostDialog", "formType value: '$formType'")
+                android.util.Log.d("NewPostDialog", "Will send post_type as: ${if (formType == "Post") "headsUp" else "homeView"}")
+                android.util.Log.d("NewPostDialog", "===========================")
+
                 val postRequestMap = mutableMapOf<String, Any?>(
                     "user_email" to (userData?.email ?: ""),
                     "username" to (userData?.name ?: userName),
@@ -707,6 +711,7 @@ fun NewPostDialog(
                 // Remove existing_images from the map as they are now sent as multipart files
                 postRequestMap.remove("existing_images")
 
+                android.util.Log.d("NewPostDialog", "=== FINAL API REQUEST DATA ===")
                 android.util.Log.d("NewPostDialog", "Post Type: ${postRequestMap["post_type"]}")
                 android.util.Log.d("NewPostDialog", "Subject: ${postRequestMap["subject"]}")
                 android.util.Log.d("NewPostDialog", "Priority: ${postRequestMap["priority"]}")
@@ -721,6 +726,13 @@ fun NewPostDialog(
                 android.util.Log.d("NewPostDialog", "Target Department: ${postRequestMap["target_department"]}")
                 android.util.Log.d("NewPostDialog", "Target Location: ${postRequestMap["target_location"]}")
                 android.util.Log.d("NewPostDialog", "Target Employee: ${postRequestMap["target_employee"]}")
+                android.util.Log.d("NewPostDialog", "Target Project: ${postRequestMap["target_project"]}")
+                android.util.Log.d("NewPostDialog", "Support Channel: ${postRequestMap["support_channel"]}")
+                android.util.Log.d("NewPostDialog", "User Email: ${postRequestMap["user_email"]}")
+                android.util.Log.d("NewPostDialog", "Username: ${postRequestMap["username"]}")
+                android.util.Log.d("NewPostDialog", "Employee ID: ${postRequestMap["emp_id"]}")
+                android.util.Log.d("NewPostDialog", "Profile Pic: ${postRequestMap["profile_pic"]}")
+                android.util.Log.d("NewPostDialog", "===============================")
 
                 android.util.Log.d("NewPostDialog", "--- STEP 4: Validating ISO dates ---")
 
@@ -852,7 +864,17 @@ fun NewPostDialog(
 
                     if (responseStatus == 200) {
                         android.util.Log.d("NewPostDialog", "✓ SUCCESS: Post ${if (isEditMode) "updated" else "created"}!")
-                        showSuccessDialog = true
+                        // Show success toast
+                        val successMessage = if (formType == "Post") {
+                            "HeadsUp post ${if (isEditMode) "updated" else "created"} successfully"
+                        } else {
+                            "Home Page post ${if (isEditMode) "updated" else "created"} successfully"
+                        }
+                        Toast.makeText(context, successMessage, Toast.LENGTH_SHORT).show()
+                        // Navigate to history
+                        val title = if (formType == "Post") postSubject else eventSubject
+                        val description = if (formType == "Post") announcementDescription else eventDescription
+                        onSubmit(title, description, formType)
                     } else {
                         val errorMsg = if (isEditMode) {
                             (responseBody as? com.archeGlobal.one.network.UpdatePostResponse)?.message ?: "Failed to update post"
@@ -861,12 +883,14 @@ fun NewPostDialog(
                         }
                         errorMessage = errorMsg
                         android.util.Log.e("NewPostDialog", "✗ FAILED: $errorMessage")
-                        showErrorDialog = true
+                        // Show error toast
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                     }
                 } else {
                     errorMessage = response.errorBody()?.string() ?: "Failed to ${if (isEditMode) "update" else "create"} post (Code: ${response.code()})"
                     android.util.Log.e("NewPostDialog", "✗ FAILED: $errorMessage")
-                    showErrorDialog = true
+                    // Show error toast
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                 }
                 android.util.Log.d("NewPostDialog", "=== POST CREATION COMPLETED ===")
             } catch (e: Exception) {
@@ -876,7 +900,8 @@ fun NewPostDialog(
                 android.util.Log.e("NewPostDialog", "Stack Trace:", e)
                 isSubmitting = false
                 errorMessage = e.message ?: "An error occurred"
-                showErrorDialog = true
+                // Show error toast
+                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -1123,7 +1148,7 @@ fun NewPostDialog(
                             eventSubject = eventSubject,
                             onEventSubjectChange = { eventSubject = it },
                             eventDescription = eventDescription,
-                            onEventDescriptionChange = { eventDescription = it },
+                            onEventDescriptionChange = { if (it.length <= 100) eventDescription = it },
                             eventImageUri = eventImageUri,
                             onEventImageUriChange = { eventImageUri = it },
                             existingImageUrls = existingImageUrls,
@@ -1183,78 +1208,6 @@ fun NewPostDialog(
             )
         }
 
-        // Success Dialog
-        if (showSuccessDialog) {
-            AlertDialog(
-                onDismissRequest = {
-                    android.util.Log.d("NewPostDialog", "Success dialog dismissed - calling onSubmit callback")
-                    showSuccessDialog = false
-                    val title = if (formType == "Post") postSubject else eventSubject
-                    val description = if (formType == "Post") announcementDescription else eventDescription
-                    onSubmit(title, description, formType)
-                },
-                title = {
-                    Text(
-                        text = "Success!",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
-                text = {
-                    Text(
-                        text = "Your ${if (formType == "Post") "post" else "event"} has been ${if (isEditMode) "updated" else "created"} successfully.",
-                        fontFamily = GraphikFontFamily,
-                        fontSize = 16.sp
-                    )
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            android.util.Log.d("NewPostDialog", "Success dialog OK clicked - calling onSubmit callback")
-                            showSuccessDialog = false
-                            val title = if (formType == "Post") postSubject else eventSubject
-                            val description = if (formType == "Post") announcementDescription else eventDescription
-                            onSubmit(title, description, formType)
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
-                    ) {
-                        Text("OK", fontFamily = GraphikFontFamily)
-                    }
-                }
-            )
-        }
-
-        // Error Dialog
-        if (showErrorDialog) {
-            AlertDialog(
-                onDismissRequest = { showErrorDialog = false },
-                title = {
-                    Text(
-                        text = "Error",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Color.Red
-                    )
-                },
-                text = {
-                    Text(
-                        text = errorMessage,
-                        fontFamily = GraphikFontFamily,
-                        fontSize = 16.sp
-                    )
-                },
-                confirmButton = {
-                    Button(
-                        onClick = { showErrorDialog = false },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
-                    ) {
-                        Text("OK", fontFamily = GraphikFontFamily)
-                    }
-                }
-            )
-        }
     }
 }
 
@@ -2145,6 +2098,11 @@ private fun PostFormContent(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
+            .border(
+                width = 1.dp,
+                color = Color.LightGray,
+                shape = RoundedCornerShape(12.dp)
+            )
             .background(
                 color = if (totalImages < 4) Color.White else Color.Gray.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(12.dp),
@@ -2505,6 +2463,46 @@ private fun EventFormContent(
             onEventImageUriChange(it)
         }
     }
+
+    // Info message about home screen display
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = Color(0x1ADD3825),
+                shape = RoundedCornerShape(8.dp),
+            )
+            .padding(vertical = 8.dp, horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(
+            onClick = { /* Info message */ },
+            modifier = Modifier.size(28.dp),
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.info),
+                contentDescription = "Info",
+                tint = Color(0xFFDD3825),
+                modifier = Modifier.size(22.dp),
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = "This will be displayed on the home screen",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Normal,
+            fontFamily = GraphikFontFamily,
+            textAlign = TextAlign.Left,
+            color = Color.Black,
+            lineHeight = 17.sp,
+            modifier = Modifier.weight(1f),
+        )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
     // Post Subject (Event Subject)
     PostTextField(
         label = "Post Subject",
@@ -2513,31 +2511,6 @@ private fun EventFormContent(
         placeholder = "Enter Subject",
         singleLine = true,
     )
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    // Note about home screen display
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "*",
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 14.sp,
-            color = Color.Red,
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = "This will be displayed on the home screen",
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 14.sp,
-            color = Color.Gray,
-            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-        )
-    }
 
     Spacer(modifier = Modifier.height(12.dp))
 
@@ -2548,44 +2521,51 @@ private fun EventFormContent(
         onValueChange = onEventDescriptionChange,
         placeholder = "Enter post description...",
         singleLine = false,
-        minLines = 5,
+        minLines = 3,
     )
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    // Select image to attach button
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .background(
-                color = Color.White,
-                shape = RoundedCornerShape(12.dp),
-            )
-            .clickable { imagePickerLauncher.launch("image/*") },
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+    // Select image to attach button - only show if no image is attached
+    if (existingImageUrls.isEmpty() && eventImageUri == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .border(
+                    width = 1.dp,
+                    color = Color.LightGray,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .background(
+                    color = Color.White,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .clickable { imagePickerLauncher.launch("image/*") },
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.ic_gallery),
-                contentDescription = "Gallery",
-                tint = Color.Gray,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Select image to attach",
-                fontFamily = GraphikFontFamily,
-                fontSize = 16.sp,
-                color = Color.Gray,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    painter = androidx.compose.ui.res.painterResource(id = com.archeGlobal.one.R.drawable.ic_gallery),
+                    contentDescription = "Gallery",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Select image to attach",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                )
+            }
         }
-    }
 
-    Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+    }
 
     // Attached Photo Section (show if there are existing images OR new image)
     if (existingImageUrls.isNotEmpty() || eventImageUri != null) {
@@ -2854,8 +2834,8 @@ private fun PostDropdown(
                     .heightIn(min = 56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Color.LightGray,
+                    unfocusedBorderColor = Color.LightGray,
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     focusedTextColor = Color.Black,
@@ -2940,8 +2920,8 @@ private fun PostTextField(
                 ),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color.LightGray,
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
                 focusedTextColor = Color.Black,
@@ -3002,6 +2982,11 @@ private fun PostDateField(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
+                .border(
+                    width = 1.dp,
+                    color = Color.LightGray,
+                    shape = RoundedCornerShape(12.dp)
+                )
                 .background(
                     color = if (compact) Color(0xFFE8E8E8) else Color.White,
                     shape = RoundedCornerShape(12.dp),
@@ -3081,6 +3066,11 @@ private fun PostTimeField(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
+                .border(
+                    width = 1.dp,
+                    color = Color.LightGray,
+                    shape = RoundedCornerShape(12.dp)
+                )
                 .background(
                     color = if (compact) Color(0xFFE8E8E8) else Color.White,
                     shape = RoundedCornerShape(12.dp),
