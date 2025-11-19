@@ -7,12 +7,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +36,7 @@ import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaggedAssetsByEmployeeScreen(
@@ -50,10 +53,33 @@ fun TaggedAssetsByEmployeeScreen(
             }
         }
     }
-    val controller: EmployeeAssetsController = viewModel(factory = viewModelFactory)
+    val controller: EmployeeAssetsController = viewModel(factory = EmployeeAssetsControllerFactory(tagName))
     val model = controller.model
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
+    // Track which asset is being deleted (for immediate UI feedback)
+    var deletingSerial by remember { mutableStateOf<String?>(null) }
+    var deleteSuccessMessage by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+
+    // Build full employee data for the bottom sheet (works even when assets.isEmpty())
+    fun buildPreSelectedUser(): SuggestedAssetUser {
+        val emp = model.employee!!   // always exists after load
+        val anyAsset = emp.assets.firstOrNull()
+
+        return SuggestedAssetUser(
+            employeeCode = emp.employeeCode,
+            username = emp.username,
+            location = emp.location ?: anyAsset?.location ?: "",
+            designation = emp.designation ?: "",
+            division = emp.division ?: anyAsset?.division ?: "",
+            department = emp.department ?: "",
+            mobileNumber = emp.mobileNumber ?: "",
+            emailId = emp.mailId ?: "",
+            divisionalHead = anyAsset?.divisionalHead ?: "",
+            reportingManager = anyAsset?.reportingTo ?: ""
+        )
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -136,121 +162,143 @@ fun TaggedAssetsByEmployeeScreen(
                 modifier = Modifier
                     .padding(horizontal = 15.dp)
             ) {
-                if (model.isLoading) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        UniversalLoader(isLoading = true)
-                    }
-                } else if (model.error != null) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = model.error ?: "Unknown error",
-                            color = Color.Red,
-                            fontSize = 18.sp
-                        )
-                    }
-                } else {
-                    val employee = model.employee!!
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
-                    ) {
-                        // Employee Header Card
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE))
+                when {
+                    model.isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                            ) {
-                                Text(
-                                    text = employee.username,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    color = Color.Black
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                InfoRowUniform("Emp ID:", employee.employeeCode)
-                                InfoRowUniform("Location:", employee.location)
-                                InfoRowUniform(
-                                    "Reporting To:",
-                                    employee.assets.firstOrNull()?.reportingTo ?: "N/A"
-                                )
-                            }
+                            UniversalLoader(isLoading = true)
                         }
+                    }
 
+                    model.error != null -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(model.error!!, color = Color.Red, fontSize = 18.sp)
+                        }
+                    }
 
-                        if (employee.assets.isEmpty()) {
+                    else -> {
+                        val employee = model.employee!!
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
+                        ) {
+                            // Employee Header Card
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(16.dp),
                                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE))
                             ) {
-                                Box(
+                                Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(32.dp),
-                                    contentAlignment = Alignment.Center
+                                        .padding(16.dp)
                                 ) {
                                     Text(
-                                        text = "No assets tagged as \"$tagName\" found for this employee.",
+                                        text = employee.username,
                                         fontFamily = GraphikFontFamily,
-                                        fontSize = 16.sp,
-                                        color = Color.Gray,
-                                        textAlign = TextAlign.Center
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = Color.Black
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    InfoRowUniform("Emp ID:", employee.employeeCode)
+                                    InfoRowUniform("Location:", employee.location)
+                                    InfoRowUniform(
+                                        "Reporting To:",
+                                        employee.assets.firstOrNull()?.reportingTo ?: "N/A"
                                     )
                                 }
                             }
-                        } else {
-                            employee.assets.forEach { asset ->
-                                EmployeeAssetCard(
-                                    asset = asset,
-                                    onDelete = { serialNumber ->
-                                        controller.deleteAsset(serialNumber) { message ->
-                                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                        }
+
+
+                            if (employee.assets.isEmpty()) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(
+                                            0xFFF6F4EE
+                                        )
+                                    )
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(32.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "No assets tagged yet",
+                                            fontFamily = GraphikFontFamily,
+                                            fontSize = 16.sp,
+                                            color = Color.Gray,
+                                            textAlign = TextAlign.Center
+                                        )
                                     }
-                                )
+                                }
+                            } else {
+                                employee.assets.forEach { asset ->
+                                    val isDeleting = deletingSerial == asset.serialNumber
+
+                                    EmployeeAssetCard(
+                                        asset = asset,
+                                        isDeleting = isDeleting,
+                                        deleteMessage = deleteSuccessMessage[asset.serialNumber],
+                                        onDelete = { serialNumber ->
+                                            deletingSerial = serialNumber
+
+                                            controller.deleteAsset(serialNumber) { message ->
+                                                // We are already on Main thread here (because deleteAsset switches to Main before calling onResult)
+                                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+
+                                                deleteSuccessMessage = deleteSuccessMessage + (serialNumber to message)
+                                            }
+                                        }
+                                    )
+                                }
                             }
+
+                            Spacer(modifier = Modifier.height(32.dp))
                         }
-                    }
-
-
-                    if (showAddAssetSheet) {
-                        val employee = model.employee!!
-                        val preSelected = SuggestedAssetUser(
-                            employeeCode = employee.employeeCode,
-                            username = employee.username,
-                            location = employee.location,
-                            designation = employee.designation,
-                            division = employee.division,
-                            department = employee.department,
-                            mobileNumber = employee.mobileNumber,
-                            emailId = employee.mailId,  // Map mailId to emailId
-                            divisionalHead = employee.assets.firstOrNull()?.divisionalHead ?: "",
-                            reportingManager = employee.assets.firstOrNull()?.reportingTo ?: ""
-                        )
-
-                        AddTaggedAssetBottomSheet(
-                            tagName = tagName,
-                            employeeName = employeeName,
-                            onDismiss = { showAddAssetSheet = false },
-                            preSelectedUser = preSelected,
-                        )
                     }
                 }
             }
         }
+
+        if (showAddAssetSheet) {
+            AddTaggedAssetBottomSheet(
+                tagName = tagName,
+                employeeName = employeeName,
+                preSelectedUser = buildPreSelectedUser(),
+                onDismiss = { showAddAssetSheet = false },
+                onSave = {
+                    controller.refresh()          // reload after successful tagging
+                    showAddAssetSheet = false
+                }
+            )
+        }
+    }
+}
+
+class EmployeeAssetsControllerFactory(private val employeeCode: String) :
+    androidx.lifecycle.ViewModelProvider.Factory {
+    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return EmployeeAssetsController(employeeCode) as T
     }
 }
 
 @Composable
 fun EmployeeAssetCard(
     asset: ApiAssetDetail,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit,
+    isDeleting: Boolean = false,           // New state
+    deleteMessage: String? = null
 ) {
     val iconRes = when {
         asset.assetType.lowercase().contains("laptop") -> R.drawable.laptop
@@ -258,10 +306,13 @@ fun EmployeeAssetCard(
         else -> R.drawable.profile // Default
     }
 
+    val backgroundColor = if (isDeleting) Color(0xFFF0F0F0).copy(alpha = 0.7f) else Color(0xFFF6F4EE)
+    val textAlpha = if (isDeleting) 0.5f else 1f
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE))
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
         Column(
             modifier = Modifier
@@ -298,7 +349,7 @@ fun EmployeeAssetCard(
                     )
                 }
 
-                if (asset.isTagged == 0) {
+                if (asset.isTagged == 0 && !isDeleting) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -323,34 +374,67 @@ fun EmployeeAssetCard(
                             color = Color(0xFFFFA500)
                         )
                     }
-                } else {
-                    IconButton(
-                        onClick = { onDelete(asset.serialNumber) }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.delete),
-                            contentDescription = "Untag Asset",
-                            tint = Color.Red,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
+                }  else if (isDeleting) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.background(
+                        Color(0xFF4CAF50).copy(alpha = 0.2f),
+                        RoundedCornerShape(12.dp)
+                    ).padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        tint = Color(0xFF2E7D32),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        "Deleted",
+                        color = Color(0xFF2E7D32),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
+            } else if (asset.isTagged == 1) {
+                IconButton(onClick = { onDelete(asset.serialNumber) }, enabled = !isDeleting) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.delete),
+                        contentDescription = "Untag",
+                        tint = Color.Red,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            deleteMessage?.let {
+                Text(
+                    text = it,
+                    color = Color(0xFF2E7D32),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
             // Asset Details
-            InfoRowCompact("Asset Type:", asset.assetType)
-            InfoRowCompact("Serial No:", asset.serialNumber)
-            InfoRowCompact("Old asset ID:", asset.oldAssetId ?: "")
-            InfoRowCompact("New Asset ID:", asset.newAssetId ?: "")
-            InfoRowCompact("Purchase Date:", asset.purchaseDate)
-            InfoRowCompact("Configuration:", asset.configuration)
-            InfoRowCompact("Warranty Start:", asset.warrantyStart ?: "")
-            InfoRowCompact("Warranty End:", asset.warrantyEnd ?: "")
-            InfoRowCompact("Date Of Issue:", asset.dateOfIssue)
+            val textColor = if (isDeleting) Color.Gray else Color(0xFF8D8D8D)
+            val valueColor = if (isDeleting) Color.Gray else Color.Black
+
+            InfoRowCompact("Asset Type:", asset.assetType, textColor, valueColor)
+            InfoRowCompact("Serial No:", asset.serialNumber, textColor, valueColor)
+            InfoRowCompact("Old asset ID:", asset.oldAssetId ?: "N/A", textColor, valueColor)
+            InfoRowCompact("New Asset ID:", asset.newAssetId ?: "N/A", textColor, valueColor)
+            InfoRowCompact("Purchase Date:", asset.purchaseDate, textColor, valueColor)
+            InfoRowCompact("Configuration:", asset.configuration, textColor, valueColor)
+            InfoRowCompact("Warranty Start:", asset.warrantyStart ?: "N/A", textColor, valueColor)
+            InfoRowCompact("Warranty End:", asset.warrantyEnd ?: "N/A", textColor, valueColor)
+            InfoRowCompact("Date Of Issue:", asset.dateOfIssue, textColor, valueColor)
             if (asset.isTagged == 0) {
-                InfoRowCompact("Tagging status", "Pending from IT Team")
+                InfoRowCompact("Tagging status", "Pending from IT Team",textColor, valueColor)
             }
         }
     }
@@ -360,7 +444,9 @@ fun EmployeeAssetCard(
 @Composable
 private fun InfoRowCompact(
     label: String,
-    value: String
+    value: String,
+    labelColor: Color = Color(0xFF8D8D8D),
+    valueColor: Color = Color.Black
 ) {
     Row(
         modifier = Modifier
@@ -373,14 +459,14 @@ private fun InfoRowCompact(
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 15.sp,
-            color = Color(0xFF8D8D8D)
+            color = labelColor
         )
         Text(
             text = value.ifEmpty { "N/A" },
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 15.sp,
-            color = Color.Black,
+            color = valueColor,
             textAlign = TextAlign.End
         )
     }

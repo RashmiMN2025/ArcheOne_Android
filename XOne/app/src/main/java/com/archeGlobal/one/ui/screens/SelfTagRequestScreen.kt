@@ -255,11 +255,6 @@ fun SelfTagRequestCard(
                 value = item.configuration
             )
             AssetDetailRow(
-                icon = if (item.isTagged == 1) R.drawable.closed_tickets else R.drawable.pending,
-                label = "Tagged",
-                value = if (item.isTagged == 1) "Yes" else "No"
-            )
-            AssetDetailRow(
                 icon = R.drawable.envelope_3x,
                 label = "Email",
                 value = item.mailId

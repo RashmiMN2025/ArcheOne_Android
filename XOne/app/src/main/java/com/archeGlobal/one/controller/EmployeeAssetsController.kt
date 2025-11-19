@@ -47,6 +47,11 @@ class EmployeeAssetsController(private val employeeCode: String) : ViewModel() {
         }
     }
 
+    fun refresh() {
+        model = model.copy(isLoading = true)
+        loadData()
+    }
+
     fun fetchAssets() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -74,16 +79,20 @@ class EmployeeAssetsController(private val employeeCode: String) : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = RetrofitClient.apiService.deleteTagAsset(
-                    DeleteTagAssetRequest(
-                        serialNumber
-                    )
+                    DeleteTagAssetRequest(serialNumber)
                 )
                 withContext(Dispatchers.Main) {
                     if (response.success) {
-                        fetchAssets()
-                        onResult(response.message)
+                        // Keep the employee object, just clear its assets list
+                        val currentEmployee = model.employee
+                        if (currentEmployee != null) {
+                            val updated = currentEmployee.copy(assets = emptyList())
+                            model = model.copy(employee = updated, isLoading = false)
+                        }
+                        refresh()                 // reload fresh data from server
+                        onResult(response.message ?: "Deleted")
                     } else {
-                        onResult(response.message)
+                        onResult(response.message ?: "Delete failed")
                     }
                 }
             } catch (e: Exception) {

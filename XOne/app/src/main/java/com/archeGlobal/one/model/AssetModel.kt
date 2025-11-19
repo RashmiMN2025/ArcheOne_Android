@@ -18,11 +18,11 @@ data class EmployeeAssetGroup(
     val employeeCode: String,
     val username: String,
     val location: String,
-    val designation: String,
-    val division: String,
-    val department: String,
-    val mobileNumber: String,
-    val mailId: String,
+    val designation: String?,
+    val division: String?,
+    val department: String?,
+    val mobileNumber: String?,
+    val mailId: String?,
     val assets: List<ApiAssetDetail>
 )
 
@@ -341,14 +341,14 @@ data class SuggestAssetUsersResponse(
 data class SuggestedAssetUser(
     val employeeCode: String,
     val username: String,
-    val location: String,
-    val designation: String,
-    val division: String,
-    val department: String,
-    val mobileNumber: String,
-    val emailId: String,
-    val divisionalHead: String,
-    val reportingManager: String
+    val location: String? = "",
+    val designation: String? = "",
+    val division: String? = "",
+    val department: String? = "",
+    val mobileNumber: String? = "",
+    val emailId: String? = "",
+    val divisionalHead: String? = "",
+    val reportingManager: String? = ""
 )
 
 data class TagAssetCreateRequest(
@@ -356,8 +356,8 @@ data class TagAssetCreateRequest(
     val employeeCode: String,
     val username: String,
     val dateOfIssue: String,
-    val location: String,
-    val designation: String,
+    val location: String?,
+    val designation: String?,
     val assetType: String
 )
 

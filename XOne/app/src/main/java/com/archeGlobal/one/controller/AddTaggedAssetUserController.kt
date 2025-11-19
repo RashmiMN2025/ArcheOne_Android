@@ -38,7 +38,7 @@ class TagUserController(private val context: Context) {
                 if (response.success) {
                     // Filter out null or empty emailId values
                     _suggestedUsers.value = response.data
-                        .filter { it.emailId.isNotBlank() }
+                        .filter { it.emailId!!.isNotBlank() }
                     Log.d("TagUserController", "Fetched users: ${_suggestedUsers.value}")
                     if (_suggestedUsers.value.isEmpty()) {
                         _errorMessage.value = "No valid users found"

@@ -275,14 +275,15 @@ fun AssetInventoryDetailScreen(
                                 items(filteredDecommissioned) { item ->
                                     AssetInventoryDetailCard(
                                         item = item,
-                                        onClick = {  }
+                                        onClick = { showActionDialog = item }
                                     )
                                 }
                             }
+
+
                         }
                     }
                 }
-
             }
 
             // Floating Add Button
@@ -330,9 +331,12 @@ fun AssetInventoryDetailScreen(
             AssetActionDialog(
                 item = item,
                 onDismiss = { showActionDialog = null },
-                onEdit = { /* TODO */ },
-                onDecommission = {
-                    controller.updateCommissionStatus(item.serialNo, false, context)
+                onToggleCommission = {
+                    controller.updateCommissionStatus(
+                        serialNumber = item.serialNo,
+                        isCommissioned = item.isDecommissioned,  // ← This single line fixes everything
+                        context = context
+                    )
                     showActionDialog = null
                 },
                 onDelete = {
@@ -424,100 +428,59 @@ fun AssetInventoryDetailCard(
 fun AssetActionDialog(
     item: AssetInventoryDetailItem,
     onDismiss: () -> Unit,
-    onEdit: () -> Unit,
-    onDecommission: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onToggleCommission: () -> Unit
 ) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Card(
-            modifier = Modifier
-                .widthIn(420.dp)
-                .wrapContentHeight()
-                .padding(20.dp),
+            modifier = Modifier.widthIn(max = 420.dp).wrapContentHeight().padding(20.dp),
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE))
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(Modifier.height(14.dp))
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                    ) {
-                    Icon(
-                        painter = painterResource(R.drawable.about_us),
-                        contentDescription = "Asset",
-                        tint = PrimaryRed,
-                        modifier = Modifier.size(30.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        "Asset Actions",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 22.sp,
-                        color = Color.Black
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                    Icon(painterResource(R.drawable.about_us), null, tint = PrimaryRed, modifier = Modifier.size(30.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Asset Actions", fontFamily = GraphikFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 22.sp)
                 }
 
                 Spacer(Modifier.height(24.dp))
 
-                InfoRow(icon = painterResource(R.drawable.item_name),"Model", item.model, true)
-                InfoRow(icon = painterResource(R.drawable.item_no),"Serial No", item.serialNo)
-                InfoRow(icon = painterResource(R.drawable.meetroomlocation),"Location", item.location)
-                InfoRow(icon = painterResource(R.drawable.configuration),"Configuration", item.configuration)
-                InfoRow(icon = painterResource(R.drawable.supplied_date),"Purchase Date", item.purchaseDate)
-                InfoRow(icon = painterResource(R.drawable.warranty),"Warranty Start", item.warrantyStart)
-                InfoRow(icon = painterResource(R.drawable.warranty),"Warranty End", item.warrantyEnd)
-                InfoRow(icon = painterResource(R.drawable.warranty),"Warranty End", item.warrantyEnd)
+                InfoRow(painterResource(R.drawable.item_name), "Model", item.model, true)
+                InfoRow(painterResource(R.drawable.item_no), "Serial No", item.serialNo)
+                InfoRow(painterResource(R.drawable.meetroomlocation), "Location", item.location)
+                InfoRow(painterResource(R.drawable.configuration), "Configuration", item.configuration)
+                InfoRow(painterResource(R.drawable.supplied_date), "Purchase Date", item.purchaseDate)
+                InfoRow(painterResource(R.drawable.warranty), "Warranty Start", item.warrantyStart)
+                InfoRow(painterResource(R.drawable.warranty), "Warranty End", item.warrantyEnd)
 
                 Spacer(Modifier.height(32.dp))
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         onClick = onDelete,
                         modifier = Modifier.weight(1f).height(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
                         shape = RoundedCornerShape(18.dp)
                     ) {
-                        Text(
-                            "Delete",
-                            color = Color.White,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp
-                        )
+                        Text("Delete", color = Color.White, fontSize = 14.sp, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Medium)
                     }
+
+                    val buttonText = if (item.isDecommissioned) "Commission" else "Decommission"
+
                     Button(
-                        onClick = onDecommission,
+                        onClick = onToggleCommission,
                         modifier = Modifier.weight(1f).height(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF949494)),
                         shape = RoundedCornerShape(18.dp)
                     ) {
-                        Text(
-                            "Decommission",
-                            color = Color.White,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp
-                        )
+                        Text(buttonText, color = Color.White, fontSize = 14.sp, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Medium)
                     }
                 }
-                Spacer(Modifier.height(12.dp))
+
+                Spacer(Modifier.height(16.dp))
             }
         }
     }

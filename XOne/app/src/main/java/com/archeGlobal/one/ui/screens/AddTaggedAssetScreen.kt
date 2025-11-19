@@ -39,8 +39,6 @@ import java.util.*
 import com.archeGlobal.one.model.TagAssetCreateRequest
 import com.archeGlobal.one.network.RetrofitClient
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -256,14 +254,16 @@ fun AddTaggedAssetBottomSheet(
                                                     color = Color.Black,
                                                     modifier = Modifier.weight(1f)
                                                 )
-                                                Text(
-                                                    text = user.emailId,
-                                                    fontFamily = GraphikFontFamily,
-                                                    fontWeight = FontWeight.Normal,
-                                                    fontSize = 8.sp,
-                                                    color = Color.Gray,
-                                                    modifier = Modifier.padding(start = 8.dp)
-                                                )
+                                                user.emailId?.let {
+                                                    Text(
+                                                        text = it,
+                                                        fontFamily = GraphikFontFamily,
+                                                        fontWeight = FontWeight.Normal,
+                                                        fontSize = 8.sp,
+                                                        color = Color.Gray,
+                                                        modifier = Modifier.padding(start = 8.dp)
+                                                    )
+                                                }
                                             }
                                         },
                                         onClick = {
@@ -665,7 +665,7 @@ fun AddTaggedAssetBottomSheet(
 @Composable
 private fun InfoRow(
     label: String,
-    value: String
+    value: String?
 ) {
     Row(
         modifier = Modifier
@@ -679,13 +679,15 @@ private fun InfoRow(
             fontSize = 12.sp,
             color = Color.Gray
         )
-        Text(
-            text = value,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 12.sp,
-            color = Color.Black
-        )
+        if (value != null) {
+            Text(
+                text = value,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 12.sp,
+                color = Color.Black
+            )
+        }
     }
 }
 

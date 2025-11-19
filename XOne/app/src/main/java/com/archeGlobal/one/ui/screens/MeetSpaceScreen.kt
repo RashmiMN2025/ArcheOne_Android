@@ -571,7 +571,8 @@ fun MeetSpaceScreen(
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.Black
+                                color = Color.Black,
+                                lineHeight = 2.sp
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             // Show button only if userRoles has exactly one role
@@ -601,6 +602,7 @@ fun MeetSpaceScreen(
                                     shape = RoundedCornerShape(18.dp),
                                     modifier = Modifier
                                         .height(35.dp)
+                                        .width(50.dp)
                                 ) {
                                     Text(
                                         text = when {
