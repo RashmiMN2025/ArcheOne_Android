@@ -130,7 +130,15 @@ fun PostHistoryScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF6F4EE))
+            .background(
+                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFE0DCD1), // Light grey at top
+                        Color(0xFFC8C8CA), // Medium grey in middle
+                        Color(0xFF474749), // Dark grey at bottom
+                    )
+                )
+            )
             .systemBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -555,7 +563,7 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
             }
 
             // Activity Duration
-            if (!post.activity_start.isNullOrEmpty() && !post.activity_end.isNullOrEmpty()) {
+            if (post.activity_start != null && post.activity_end != null) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "Activity Duration :",
@@ -566,7 +574,7 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${formatActivityDateTime(post.activity_start)} - ${formatActivityDateTime(post.activity_end)}",
+                    text = "${formatActivityDateTime(post.activity_start ?: "")} - ${formatActivityDateTime(post.activity_end ?: "")}",
                     fontFamily = GraphikFontFamily,
                     fontSize = 12.sp,
                     color = Color.Gray
@@ -644,9 +652,16 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
 
 fun formatPostDate(dateString: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        val date = try {
+            // Try parsing ISO format first (yyyy-MM-dd'T'HH:mm:ss.SSS'Z')
+            val inputFormatISO = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            inputFormatISO.parse(dateString)
+        } catch (e: Exception) {
+            // If ISO format fails, try parsing the API format (yyyy-MM-dd HH:mm:ss)
+            val inputFormatAPI = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            inputFormatAPI.parse(dateString)
+        }
         val outputFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
-        val date = inputFormat.parse(dateString)
         outputFormat.format(date ?: Date())
     } catch (e: Exception) {
         dateString
@@ -655,9 +670,16 @@ fun formatPostDate(dateString: String): String {
 
 fun formatPostDateShort(dateString: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-        val date = inputFormat.parse(dateString)
+        val date = try {
+            // Try parsing ISO format first (yyyy-MM-dd'T'HH:mm:ss.SSS'Z')
+            val inputFormatISO = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            inputFormatISO.parse(dateString)
+        } catch (e: Exception) {
+            // If ISO format fails, try parsing the API format (yyyy-MM-dd HH:mm:ss)
+            val inputFormatAPI = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            inputFormatAPI.parse(dateString)
+        }
+        val outputFormat = SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault())
         outputFormat.format(date ?: Date())
     } catch (e: Exception) {
         dateString
@@ -666,9 +688,25 @@ fun formatPostDateShort(dateString: String): String {
 
 fun formatActivityDateTime(dateString: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
-        val date = inputFormat.parse(dateString)
+        // If dateString is empty, use current date
+        if (dateString.isEmpty()) {
+            val outputFormat = SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault())
+            return outputFormat.format(Date())
+        }
+
+        val date = try {
+            // Try parsing ISO format first (yyyy-MM-dd'T'HH:mm:ss.SSS'Z')
+            val inputFormatISO = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            inputFormatISO.timeZone = java.util.TimeZone.getTimeZone("UTC")
+            inputFormatISO.parse(dateString)
+        } catch (e: Exception) {
+            // If ISO format fails, try parsing the API format (yyyy-MM-dd HH:mm:ss)
+            val inputFormatAPI = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            inputFormatAPI.parse(dateString)
+        }
+
+        // Output format: "dd-MMM-yyyy hh:mm a"
+        val outputFormat = SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault())
         outputFormat.format(date ?: Date())
     } catch (e: Exception) {
         dateString

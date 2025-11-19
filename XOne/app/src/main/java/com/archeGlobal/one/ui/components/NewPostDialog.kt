@@ -61,6 +61,96 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Helper function to convert API date format to display format (dd-MMM-yyyy)
+fun formatApiDateToDisplayDate(apiDateString: String?): String {
+    if (apiDateString.isNullOrEmpty()) return ""
+    return try {
+        val apiFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val date = apiFormat.parse(apiDateString)
+        if (date != null) {
+            val displayFormat = SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault())
+            displayFormat.format(date)
+        } else {
+            ""
+        }
+    } catch (e: Exception) {
+        // Fallback for ISO format
+        try {
+            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = isoFormat.parse(apiDateString)
+            if (date != null) {
+                val displayFormat = SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault())
+                displayFormat.format(date)
+            } else {
+                ""
+            }
+        } catch (e: Exception) {
+            ""
+        }
+    }
+}
+
+// Helper function to convert API date format to full month display format (dd MMMM yyyy)
+fun formatApiDateToFullMonthDisplayDate(apiDateString: String?): String {
+    if (apiDateString.isNullOrEmpty()) return ""
+    return try {
+        val apiFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val date = apiFormat.parse(apiDateString)
+        if (date != null) {
+            val displayFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
+            displayFormat.format(date)
+        } else {
+            ""
+        }
+    } catch (e: Exception) {
+        // Fallback for ISO format
+        try {
+            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = isoFormat.parse(apiDateString)
+            if (date != null) {
+                val displayFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
+                displayFormat.format(date)
+            } else {
+                ""
+            }
+        } catch (e: Exception) {
+            ""
+        }
+    }
+}
+
+// Helper function to convert API date format to display time (h:mm a)
+fun formatApiTimeToDisplayTime(apiDateString: String?): String {
+    if (apiDateString.isNullOrEmpty()) return ""
+    return try {
+        val apiFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val date = apiFormat.parse(apiDateString)
+        if (date != null) {
+            val displayFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+            displayFormat.format(date)
+        } else {
+            ""
+        }
+    } catch (e: Exception) {
+        // Fallback for ISO format
+        try {
+            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = isoFormat.parse(apiDateString)
+            if (date != null) {
+                val displayFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+                displayFormat.format(date)
+            } else {
+                ""
+            }
+        } catch (e: Exception) {
+            ""
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewPostDialog(
@@ -97,66 +187,6 @@ fun NewPostDialog(
 
     // Determine if we're in edit mode
     val isEditMode = existingPost != null
-
-    // Helper function to convert ISO date to display format (dd MMMM yyyy)
-    fun formatISOToDisplayDate(isoDateString: String?): String {
-        if (isoDateString.isNullOrEmpty()) return ""
-        return try {
-            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
-            val date = isoFormat.parse(isoDateString)
-
-            if (date != null) {
-                val displayFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
-                displayFormat.format(date)
-            } else {
-                ""
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("NewPostDialog", "Error converting ISO to display date: $isoDateString", e)
-            ""
-        }
-    }
-
-    // Helper function to convert ISO date to display format with short month (dd MMM yyyy)
-    fun formatISOToDisplayDateShort(isoDateString: String?): String {
-        if (isoDateString.isNullOrEmpty()) return ""
-        return try {
-            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
-            val date = isoFormat.parse(isoDateString)
-
-            if (date != null) {
-                val displayFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-                displayFormat.format(date)
-            } else {
-                ""
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("NewPostDialog", "Error converting ISO to display date short: $isoDateString", e)
-            ""
-        }
-    }
-
-    // Helper function to extract time from ISO date (HH:mm)
-    fun formatISOToDisplayTime(isoDateString: String?): String {
-        if (isoDateString.isNullOrEmpty()) return ""
-        return try {
-            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
-            val date = isoFormat.parse(isoDateString)
-
-            if (date != null) {
-                val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-                timeFormat.format(date)
-            } else {
-                ""
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("NewPostDialog", "Error converting ISO to display time: $isoDateString", e)
-            ""
-        }
-    }
 
     // Post form states - initialize with existing post data if in edit mode
     // Note: Don't pre-fill postType from existingPost as we'll infer it from subject
@@ -367,12 +397,12 @@ fun NewPostDialog(
             it.contains(query, ignoreCase = true)
         }.take(5)
     }
-    var postStartDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.start_date)) }
-    var postEndDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.end_date)) }
-    var startDurationDate by remember { mutableStateOf<String>(formatISOToDisplayDateShort(existingPost?.activity_start)) }
-    var startDurationTime by remember { mutableStateOf<String>(formatISOToDisplayTime(existingPost?.activity_start)) }
-    var endDurationDate by remember { mutableStateOf<String>(formatISOToDisplayDateShort(existingPost?.activity_end)) }
-    var endDurationTime by remember { mutableStateOf<String>(formatISOToDisplayTime(existingPost?.activity_end)) }
+    var postStartDate by remember { mutableStateOf<String>(formatApiDateToFullMonthDisplayDate(existingPost?.start_date)) }
+    var postEndDate by remember { mutableStateOf<String>(formatApiDateToFullMonthDisplayDate(existingPost?.end_date)) }
+    var startDurationDate by remember { mutableStateOf<String>(formatApiDateToDisplayDate(existingPost?.activity_start)) }
+    var startDurationTime by remember { mutableStateOf<String>(formatApiTimeToDisplayTime(existingPost?.activity_start)) }
+    var endDurationDate by remember { mutableStateOf<String>(formatApiDateToDisplayDate(existingPost?.activity_end)) }
+    var endDurationTime by remember { mutableStateOf<String>(formatApiTimeToDisplayTime(existingPost?.activity_end)) }
     var supportChannelDetails by remember { mutableStateOf(existingPost?.support_channel ?: "") }
     var postImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var existingImageUrls by remember { mutableStateOf(existingPost?.image_urls ?: emptyList()) }
@@ -390,15 +420,15 @@ fun NewPostDialog(
         )
     }
     var eventImageUri by remember { mutableStateOf<Uri?>(null) }
-    var eventDate by remember { mutableStateOf<String>(formatISOToDisplayDate(existingPost?.event_date)) }
+    var eventDate by remember { mutableStateOf<String>(formatApiDateToDisplayDate(existingPost?.event_date)) }
     var eventStartDate by remember {
         mutableStateOf<String>(
-            if (existingPost?.post_type == "homeView") formatISOToDisplayDate(existingPost.start_date) else ""
+            if (existingPost?.post_type == "homeView") formatApiDateToDisplayDate(existingPost.start_date) else ""
         )
     }
     var eventEndDate by remember {
         mutableStateOf<String>(
-            if (existingPost?.post_type == "homeView") formatISOToDisplayDate(existingPost.end_date) else ""
+            if (existingPost?.post_type == "homeView") formatApiDateToDisplayDate(existingPost.end_date) else ""
         )
     }
     var showEventPreview by remember { mutableStateOf(false) }
@@ -487,82 +517,31 @@ fun NewPostDialog(
     fun formatDateToISO(dateString: String, timeString: String = "00:00"): String {
         return try {
             if (dateString.isEmpty()) {
-                android.util.Log.d("NewPostDialog", "formatDateToISO: Empty date string, returning empty")
                 return ""
             }
-
-            android.util.Log.d("NewPostDialog", "formatDateToISO: Input date='$dateString', time='$timeString'")
-
-            // Try to parse date with multiple formats
-            val date = when {
-                // ISO format (yyyy-MM-dd)
-                dateString.matches(Regex("\\d{4}-\\d{2}-\\d{2}.*")) -> {
-                    android.util.Log.d("NewPostDialog", "formatDateToISO: Date in ISO format")
-                    val isoFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    isoFormat.parse(dateString.substring(0, 10))
-                }
-                // "dd MMMM yyyy" format (e.g., "18 November 2025")
-                dateString.matches(Regex("\\d{1,2}\\s+[A-Za-z]{4,}\\s+\\d{4}")) -> {
-                    android.util.Log.d("NewPostDialog", "formatDateToISO: Date in 'dd MMMM yyyy' format")
-                    val fullMonthFormat = SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
-                    fullMonthFormat.parse(dateString)
-                }
-                // "dd MMM yyyy" format (e.g., "18 Nov 2025")
-                dateString.matches(Regex("\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}")) -> {
-                    android.util.Log.d("NewPostDialog", "formatDateToISO: Date in 'dd MMM yyyy' format")
-                    val shortMonthFormat = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
-                    shortMonthFormat.parse(dateString)
-                }
-                // dd-MM-yyyy format
-                else -> {
-                    android.util.Log.d("NewPostDialog", "formatDateToISO: Trying dd-MM-yyyy format")
-                    val inputFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-                    inputFormat.parse(dateString)
-                }
+    
+            val dateTimeString = if (timeString.contains("AM") || timeString.contains("PM")) {
+                "$dateString $timeString"
+            } else {
+                "$dateString $timeString"
             }
-
-            if (date == null) {
-                android.util.Log.e("NewPostDialog", "formatDateToISO: Failed to parse date '$dateString'")
-                return ""
-            }
-
-            // Use UTC timezone for calendar to avoid timezone conversion issues
-            val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
-                time = date
-                // Parse time if provided
-                if (timeString.isNotEmpty()) {
-                    val timeParts = timeString.split(":")
-                    if (timeParts.size == 2) {
-                        val hour = timeParts[0].toIntOrNull() ?: 0
-                        val minute = timeParts[1].toIntOrNull() ?: 0
-                        set(Calendar.HOUR_OF_DAY, hour)
-                        set(Calendar.MINUTE, minute)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
-                        android.util.Log.d("NewPostDialog", "formatDateToISO: Time set to $hour:$minute in UTC")
-                    }
-                } else {
-                    // Set time to 00:00:00 if not provided
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }
-            }
-
+    
+                    val inputFormat = if (timeString.contains("AM") || timeString.contains("PM")) {
+                        SimpleDateFormat("dd-MMM-yyyy h:mm a", Locale.ENGLISH)
+                    } else if (dateString.matches(Regex("\\d{1,2}\\s+[A-Za-z]{4,}\\s+\\d{4}"))) { // "dd MMMM yyyy"
+                        SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
+                    } else { // "dd-MMM-yyyy"
+                        SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH)
+                    }    
+            val date = inputFormat.parse(dateTimeString)
+    
             val outputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
             outputFormat.timeZone = TimeZone.getTimeZone("UTC")
-            val result = outputFormat.format(calendar.time)
-
-            android.util.Log.d("NewPostDialog", "formatDateToISO: Output='$result'")
-            result
+            outputFormat.format(date)
         } catch (e: Exception) {
-            android.util.Log.e("NewPostDialog", "formatDateToISO: Exception occurred", e)
-            e.printStackTrace()
             ""
         }
     }
-
     // Submit post function
     fun submitPost() {
         android.util.Log.d("NewPostDialog", "=== POST CREATION STARTED ===")

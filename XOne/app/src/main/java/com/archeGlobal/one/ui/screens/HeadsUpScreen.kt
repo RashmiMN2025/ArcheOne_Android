@@ -591,7 +591,7 @@ fun HeadsUpPostCard(
             }
 
             // Activity Duration if available
-            if (!post.activity_start.isNullOrEmpty() && !post.activity_end.isNullOrEmpty()) {
+            if (post.activity_start != null && post.activity_end != null) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "Acitivity Duration :",
@@ -601,7 +601,7 @@ fun HeadsUpPostCard(
                     color = Color.Black
                 )
                 Text(
-                    text = "${formatActivityTime(post.activity_start)} - ${formatActivityTime(post.activity_end)}",
+                    text = "${formatActivityTime(post.activity_start ?: "")} - ${formatActivityTime(post.activity_end ?: "")}",
                     fontFamily = GraphikFontFamily,
                     fontSize = 14.sp,
                     color = Color(0xFF666666)
@@ -681,12 +681,17 @@ private fun formatPostTime(createdAt: String): String {
 // Helper function to format activity time
 private fun formatActivityTime(isoTime: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+        // If isoTime is empty, use current date
+        if (isoTime.isEmpty()) {
+            val outputFormat = SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault())
+            return outputFormat.format(Date())
+        }
+
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val date = inputFormat.parse(isoTime)
 
         if (date != null) {
-            val outputFormat = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+            val outputFormat = SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault())
             outputFormat.format(date)
         } else {
             isoTime
