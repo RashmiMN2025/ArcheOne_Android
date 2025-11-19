@@ -704,19 +704,14 @@ fun NewPostDialog(
                     postRequestMap["support_channel"] = supportChannelDetails
                 }
 
-                // Add existing image URLs in edit mode (images that weren't removed)
-                // IMPORTANT: Always include existing images, even if empty array
-                if (isEditMode) {
-                    postRequestMap["existing_images"] = existingImageUrls
-                    android.util.Log.d("NewPostDialog", "Including ${existingImageUrls.size} existing image URLs in edit mode")
-                    android.util.Log.d("NewPostDialog", "Existing image URLs: $existingImageUrls")
-                }
+                // Remove existing_images from the map as they are now sent as multipart files
+                postRequestMap.remove("existing_images")
 
                 android.util.Log.d("NewPostDialog", "Post Type: ${postRequestMap["post_type"]}")
                 android.util.Log.d("NewPostDialog", "Subject: ${postRequestMap["subject"]}")
                 android.util.Log.d("NewPostDialog", "Priority: ${postRequestMap["priority"]}")
                 android.util.Log.d("NewPostDialog", "Description length: ${(postRequestMap["description"] as? String)?.length ?: 0}")
-                android.util.Log.d("NewPostDialog", "Existing images in request: ${postRequestMap["existing_images"]}")
+                // android.util.Log.d("NewPostDialog", "Existing images in request: ${postRequestMap["existing_images"]}") // Removed as existing images are now multipart
                 android.util.Log.d("NewPostDialog", "Start Date - Display: ${if (formType == "Post") postStartDate else eventStartDate} → ISO: ${postRequestMap["start_date"]}")
                 android.util.Log.d("NewPostDialog", "End Date - Display: ${if (formType == "Post") postEndDate else eventEndDate} → ISO: ${postRequestMap["end_date"]}")
                 android.util.Log.d("NewPostDialog", "Event Date - Display: $eventDate → ISO: ${postRequestMap["event_date"]}")
@@ -769,50 +764,66 @@ fun NewPostDialog(
 
                 android.util.Log.d("NewPostDialog", "--- STEP 6: Processing images ---")
 
-                // Convert image URIs to multipart
-                val imageParts = if (formType == "Post") {
-                    android.util.Log.d("NewPostDialog", "Processing ${postImageUris.size} post images")
-                    postImageUris.mapIndexedNotNull { index, uri ->
-                        android.util.Log.d("NewPostDialog", "Converting image $index: $uri")
+                val allImageParts = mutableListOf<MultipartBody.Part>()
+
+                // Process new images (from URIs)
+                if (formType == "Post") {
+                    android.util.Log.d("NewPostDialog", "Processing ${postImageUris.size} new post images (from URIs)")
+                    postImageUris.mapIndexedNotNullTo(allImageParts) { index, uri ->
+                        android.util.Log.d("NewPostDialog", "Converting new image $index: $uri")
                         val part = uriToMultipartBodyPart(context, uri, "files")
                         if (part != null) {
-                            android.util.Log.d("NewPostDialog", "Image $index converted successfully")
+                            android.util.Log.d("NewPostDialog", "New image $index converted successfully")
                         } else {
-                            android.util.Log.e("NewPostDialog", "Failed to convert image $index")
+                            android.util.Log.e("NewPostDialog", "Failed to convert new image $index")
                         }
                         part
                     }
-                } else {
+                } else { // Event form
                     if (eventImageUri != null) {
-                        android.util.Log.d("NewPostDialog", "Processing 1 event image: $eventImageUri")
+                        android.util.Log.d("NewPostDialog", "Processing 1 new event image (from URI): $eventImageUri")
                         val part = uriToMultipartBodyPart(context, eventImageUri!!, "files")
                         if (part != null) {
-                            android.util.Log.d("NewPostDialog", "Event image converted successfully")
-                            listOf(part)
+                            android.util.Log.d("NewPostDialog", "New event image converted successfully")
+                            allImageParts.add(part)
                         } else {
-                            android.util.Log.e("NewPostDialog", "Failed to convert event image")
-                            emptyList()
+                            android.util.Log.e("NewPostDialog", "Failed to convert new event image")
                         }
                     } else {
-                        android.util.Log.d("NewPostDialog", "No event image to process")
-                        emptyList()
+                        android.util.Log.d("NewPostDialog", "No new event image to process")
                     }
                 }
-                android.util.Log.d("NewPostDialog", "Total images ready for upload: ${imageParts?.size ?: 0}")
+
+                // Process existing images (from URLs) if in edit mode
+                if (isEditMode && existingImageUrls.isNotEmpty()) {
+                    android.util.Log.d("NewPostDialog", "Processing ${existingImageUrls.size} existing images (from URLs)")
+                    existingImageUrls.mapIndexedNotNullTo(allImageParts) { index, imageUrl ->
+                        android.util.Log.d("NewPostDialog", "Converting existing image $index: $imageUrl")
+                        val part = urlToMultipartBodyPart(imageUrl, "files", index)
+                        if (part != null) {
+                            android.util.Log.d("NewPostDialog", "Existing image $index converted successfully")
+                        } else {
+                            android.util.Log.e("NewPostDialog", "Failed to convert existing image $index")
+                        }
+                        part
+                    }
+                }
+
+                android.util.Log.d("NewPostDialog", "Total images ready for upload: ${allImageParts.size}")
 
                 android.util.Log.d("NewPostDialog", "--- STEP 7: Making API call ---")
                 android.util.Log.d("NewPostDialog", "API Endpoint: POST /announcements/v1/post")
-                android.util.Log.d("NewPostDialog", "Number of file parts: ${imageParts?.size ?: 0}")
+                android.util.Log.d("NewPostDialog", "Number of file parts: ${allImageParts.size}")
 
                 val response = withContext(Dispatchers.IO) {
                     android.util.Log.d("NewPostDialog", "Executing API request...")
                     try {
                         val result = if (isEditMode && existingPost != null) {
                             android.util.Log.d("NewPostDialog", "Updating existing post: ${existingPost.post_id}")
-                            RetrofitClient.apiService.updatePost(existingPost.post_id, postRequestBody, imageParts)
+                            RetrofitClient.apiService.updatePost(existingPost.post_id, postRequestBody, allImageParts)
                         } else {
                             android.util.Log.d("NewPostDialog", "Creating new post")
-                            RetrofitClient.apiService.createPost(postRequestBody, imageParts)
+                            RetrofitClient.apiService.createPost(postRequestBody, allImageParts)
                         }
                         android.util.Log.d("NewPostDialog", "API request completed")
                         result
@@ -900,7 +911,7 @@ fun NewPostDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (formType == "Post") "Create Post" else "Create Event",
+                            text = "Create Post",
                             color = Color.Black,
                             fontSize = 20.sp,
                             fontFamily = GraphikFontFamily,
@@ -1378,8 +1389,8 @@ private fun PostFormContent(
     // Remove duplicates
     val uniquePostTypes = postTypes.distinct()
 
-    // Get subjects for the currently selected post type
-    val postSubjects = postSubjectsByType[postType] ?: emptyList()
+    // Get subjects for the currently selected post type and add "Other" at the bottom
+    val postSubjects = (postSubjectsByType[postType] ?: emptyList()) + "Other"
 
     android.util.Log.d("PostFormContent", "=== Final Results ===")
     android.util.Log.d("PostFormContent", "Available post types: $uniquePostTypes")
@@ -2082,7 +2093,37 @@ private fun PostFormContent(
             Spacer(modifier = Modifier.height(24.dp))
         }
         "Everyone@Arche" -> {
-            // No field for Everyone@Arche
+            // Display everyone@arche.global as a chip
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "Selected Group",
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+
+            // Display chip
+            Row(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .background(Color.White, RoundedCornerShape(20.dp))
+                    .border(1.dp, Color.LightGray, RoundedCornerShape(20.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "everyone@arche.global",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = Color.Black
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 
@@ -2404,7 +2445,7 @@ private fun PostFormContent(
             colors = ButtonDefaults.buttonColors(
                 containerColor = PrimaryRed,
                 contentColor = Color.White,
-                disabledContainerColor = Color.Gray,
+                disabledContainerColor = PrimaryRed,
                 disabledContentColor = Color.White,
             ),
             shape = RoundedCornerShape(12.dp),
@@ -2726,7 +2767,7 @@ private fun EventFormContent(
             colors = ButtonDefaults.buttonColors(
                 containerColor = PrimaryRed,
                 contentColor = Color.White,
-                disabledContainerColor = Color.Gray,
+                disabledContainerColor = PrimaryRed,
                 disabledContentColor = Color.White,
             ),
             shape = RoundedCornerShape(12.dp),
@@ -2742,12 +2783,12 @@ private fun EventFormContent(
             }
             Icon(
                 imageVector = Icons.Default.Send,
-                contentDescription = "Create Event",
+                contentDescription = "Create Post",
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Create Event",
+                text = "Create Post",
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
@@ -2975,7 +3016,10 @@ private fun PostDateField(
                 horizontalArrangement = Arrangement.Start,  // Changed from Center to Start
             ) {
                 Text(
-                    text = if (value.isNotEmpty()) value else if (compact) "31 Oct 2025" else "18 November 2025",
+                    text = if (value.isNotEmpty()) value else {
+                        val monthName = if (useShortMonth) getMonthNameShort(month) else getMonthName(month)
+                        String.format("%02d %s %04d", day, monthName, year)
+                    },
                     fontFamily = GraphikFontFamily,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
@@ -3051,7 +3095,13 @@ private fun PostTimeField(
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = if (value.isNotEmpty()) value else "5:08 PM",
+                    text = if (value.isNotEmpty()) value else {
+                        String.format("%02d:%02d %s",
+                            if (hour > 12) hour - 12 else if (hour == 0) 12 else hour,
+                            minute,
+                            if (hour >= 12) "PM" else "AM"
+                        )
+                    },
                     fontFamily = GraphikFontFamily,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,

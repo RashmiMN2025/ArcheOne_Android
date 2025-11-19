@@ -97,6 +97,7 @@ fun RaiseConcernScreen(
     var timerSeconds by remember { mutableStateOf(20) }
     var showDynamicFormSuccessDialog by remember { mutableStateOf(false) }
     var successTicketId by remember { mutableStateOf<String?>(null) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
 
     // Dynamic form fields state
     val dynamicFormFields by localHelpDeskController.dynamicFormFields.collectAsState()
@@ -308,7 +309,7 @@ fun RaiseConcernScreen(
             val formDetailsMap = mutableMapOf<String, String>()
             dynamicFormFields.forEach { field ->
                 val value = dynamicFieldValues[field.fieldId] ?: ""
-                formDetailsMap[field.fieldId] = value
+                formDetailsMap[field.fieldName] = value
             }
             val formDetailsJson = com.google.gson.Gson().toJson(formDetailsMap)
 
@@ -376,16 +377,13 @@ fun RaiseConcernScreen(
                     Log.d("RaiseConcern", "✓ SUCCESS: Ticket submitted successfully")
                     Log.d("RaiseConcern", "==============================================")
 
-                    // Store ticket ID and show success dialog
+                    // Store ticket ID, message and show success dialog
                     successTicketId = responseBody.ticketId
+                    successMessage = responseBody.message
+                    isSubmitting = false // Stop loading overlay before showing dialog
                     showDynamicFormSuccessDialog = true
 
-                    // Reset form on success
-                    selectedCategory = null
-                    selectedSubcategory = null
-                    dynamicFieldValues = emptyMap()
-                    dynamicFieldErrors = emptyMap()
-                    localHelpDeskController.clearDynamicFormFields()
+                    // Note: Form will be reset when OK button is clicked
                 } else {
                     Log.e("RaiseConcern", "✗ FAILED: Status code indicates failure")
                     Log.e("RaiseConcern", "==============================================")
@@ -1471,9 +1469,9 @@ fun RaiseConcernScreen(
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            // Success message
+                            // Success message - use API response message
                             Text(
-                                text = "Your request has been sent to the manager for approval. Your ticket ID is ${successTicketId ?: "TKT-XXXXX"}. You can check the status in 'Track Tickets'",
+                                text = successMessage ?: "Your request has been submitted successfully. Your ticket ID is ${successTicketId ?: "TKT-XXXXX"}. You can check the status in 'Track Tickets'",
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -1488,6 +1486,12 @@ fun RaiseConcernScreen(
                             Button(
                                 onClick = {
                                     showDynamicFormSuccessDialog = false
+                                    // Reset form after OK is clicked
+                                    selectedCategory = null
+                                    selectedSubcategory = null
+                                    dynamicFieldValues = emptyMap()
+                                    dynamicFieldErrors = emptyMap()
+                                    localHelpDeskController.clearDynamicFormFields()
                                     onBackPressed()
                                 },
                                 modifier =
@@ -1513,8 +1517,8 @@ fun RaiseConcernScreen(
                 }
             }
 
-            // Show loading indicator when submitting
-            if (isSubmitting) {
+            // Show loading indicator when submitting (but not when success dialog is shown)
+            if (isSubmitting && !showDynamicFormSuccessDialog) {
                 Box(
                     modifier =
                         Modifier

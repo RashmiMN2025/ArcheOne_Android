@@ -46,6 +46,7 @@ class ChatActivity : ComponentActivity() {
                     bottomBar = {
                         val sharedPref = getSharedPreferences("event_preferences", android.content.Context.MODE_PRIVATE)
                         val isUsingPrideIcon = sharedPref.getBoolean("using_pride_icon", false)
+                        val userDataManager = com.archeGlobal.one.utils.UserDataManager.getInstance(this@ChatActivity)
 
                         ChatBottomNavigationBar(
                             onHomeClick = { navigator.navigateToHome() },
@@ -54,6 +55,7 @@ class ChatActivity : ComponentActivity() {
                             onSOSClick = { navigator.navigateToSOS(true) },
                             onProfileClick = { navigator.navigateToProfile() },
                             isUsingPrideIcon = isUsingPrideIcon,
+                            headsUpCount = userDataManager.getHeadsUpCount(),
                         )
                     },
                 ) { paddingValues ->

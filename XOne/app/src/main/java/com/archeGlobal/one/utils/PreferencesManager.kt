@@ -373,6 +373,18 @@ class PreferencesManager(
         default: String,
     ): String? = sharedPreferences.getString(key, default)
 
+    fun setInt(
+        key: String,
+        value: Int,
+    ) {
+        sharedPreferences.edit().putInt(key, value).apply()
+    }
+
+    fun getInt(
+        key: String,
+        default: Int,
+    ): Int = sharedPreferences.getInt(key, default)
+
     // Mark that the app has been launched before
     fun setFirstLaunchComplete() {
         sharedPreferences.edit().putBoolean(KEY_IS_FIRST_LAUNCH, false).apply()

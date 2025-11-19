@@ -276,6 +276,7 @@ fun ChatScreen(
                         val sharedPref =
                             context.getSharedPreferences("event_preferences", Context.MODE_PRIVATE)
                         val isUsingPrideIcon = sharedPref.getBoolean("using_pride_icon", false)
+                        val userDataManager = com.archeGlobal.one.utils.UserDataManager.getInstance(context)
 
                         ChatBottomNavigationBar(
                             onHomeClick = { navController.navigate("home") },
@@ -284,6 +285,7 @@ fun ChatScreen(
                             onSOSClick = { navController.navigate("sos") },
                             onProfileClick = { navController.navigate("profile") },
                             isUsingPrideIcon = isUsingPrideIcon,
+                            headsUpCount = userDataManager.getHeadsUpCount(),
                         )
                     }
                 }

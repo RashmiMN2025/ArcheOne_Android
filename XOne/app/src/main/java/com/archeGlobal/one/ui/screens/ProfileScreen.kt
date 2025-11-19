@@ -65,6 +65,7 @@ fun ProfileScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showUploadDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val userDataManager = com.archeGlobal.one.utils.UserDataManager.getInstance(context)
 
     // Ensure profile data is loaded when screen is displayed
     LaunchedEffect(Unit) {
@@ -136,6 +137,7 @@ fun ProfileScreen(
             onFooterHeadsUpClick = onFooterHeadsUpClick,
             onFooterSOSClick = onFooterSOSClick,
             onFooterProfileClick = onFooterProfileClick,
+            headsUpCount = userDataManager.getHeadsUpCount(),
         ) {
             Box(
                 modifier =

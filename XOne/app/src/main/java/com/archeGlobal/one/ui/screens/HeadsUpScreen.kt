@@ -96,9 +96,12 @@ fun HeadsUpScreen(
             if (response.isSuccessful && response.body()?.status == 200) {
                 posts = response.body()?.posts ?: emptyList()
                 android.util.Log.d("HeadsUpScreen", "Loaded ${posts.size} HeadsUp posts")
+                // Save HeadsUp count to UserDataManager
+                userDataManager.saveHeadsUpCount(posts.size)
             } else {
                 android.util.Log.e("HeadsUpScreen", "Failed to load posts: ${response.code()}")
                 posts = emptyList()
+                userDataManager.saveHeadsUpCount(0)
             }
         } catch (e: Exception) {
             android.util.Log.e("HeadsUpScreen", "Error loading posts", e)
@@ -134,6 +137,7 @@ fun HeadsUpScreen(
             onFooterHeadsUpClick = onFooterHeadsUpClick,
             onFooterSOSClick = onFooterSOSClick,
             onFooterProfileClick = onFooterProfileClick,
+            headsUpCount = posts.size,
         ) {
             Column(
                 modifier = Modifier
@@ -202,7 +206,7 @@ fun HeadsUpScreen(
                                         modifier = Modifier.fillMaxSize()
                                     ) {
                                         Icon(
-                                            painter = painterResource(id = R.drawable.headsup),
+                                            painter = painterResource(id = R.drawable.newpost),
                                             contentDescription = "No Posts",
                                             modifier = Modifier.size(64.dp),
                                             tint = Color(0xFF999999)
@@ -275,7 +279,7 @@ fun HeadsUpScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Send,
+                            painter = painterResource(id = R.drawable.newpost),
                             contentDescription = "New Post",
                             modifier = Modifier.size(20.dp)
                         )
@@ -300,8 +304,8 @@ fun HeadsUpScreen(
                 onDismiss = { showNewPostDialog = false },
                 onSubmit = { _, _, _ ->
                     showNewPostDialog = false
-                    // Refresh posts after creating new post
-                    refreshTrigger++
+                    // Navigate to post history screen after successful post creation
+                    onHistoryClick()
                 },
                 onHistoryClick = onHistoryClick
             )

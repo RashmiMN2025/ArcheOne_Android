@@ -517,7 +517,7 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                         .fillMaxWidth()
                         .height(140.dp)
                         .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(0.dp),
+                    horizontalArrangement = Arrangement.spacedBy((-40).dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     post.image_urls.forEach { imageUrl ->

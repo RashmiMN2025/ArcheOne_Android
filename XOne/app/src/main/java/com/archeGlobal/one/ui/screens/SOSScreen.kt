@@ -48,6 +48,8 @@ fun SOSScreen(
     onFooterProfileClick: () -> Unit = {},
     showHeader: Boolean = false, // Default to true
 ) {
+    val context = LocalContext.current
+    val userDataManager = com.archeGlobal.one.utils.UserDataManager.getInstance(context)
     val sosBlogs by controller.sosBlogs.collectAsState()
     val pagerState = rememberPagerState()
     val coroutineScope = rememberCoroutineScope()
@@ -83,6 +85,7 @@ fun SOSScreen(
                 onFooterHeadsUpClick = onFooterHeadsUpClick,
                 onFooterSOSClick = onFooterSOSClick,
                 onFooterProfileClick = onFooterProfileClick,
+                headsUpCount = userDataManager.getHeadsUpCount(),
             ) {
                 Box(
                     modifier =

@@ -18,6 +18,7 @@ fun FooterScaffold(
     onFooterHeadsUpClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
+    headsUpCount: Int = 0,
     content: @Composable () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -35,6 +36,7 @@ fun FooterScaffold(
                 onHeadsUpClick = onFooterHeadsUpClick,
                 onSOSClick = onFooterSOSClick,
                 onProfileClick = onFooterProfileClick,
+                headsUpCount = headsUpCount,
                 modifier = Modifier.zIndex(1f), // Ensure navigation bar is always on top
             )
         },

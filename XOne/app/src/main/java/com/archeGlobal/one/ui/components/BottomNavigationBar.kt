@@ -2,12 +2,15 @@ package com.archeGlobal.one.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.NavigationBar
@@ -37,6 +40,7 @@ fun BottomNavigationBar(
     onSOSClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
+    headsUpCount: Int = 0,
 ) {
     val homeSelectedColor = Color(0xFF000000) // Black for home
     val selectedColor = Color(0xFFDD3825) // Red for other items
@@ -150,15 +154,38 @@ fun BottomNavigationBar(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(top = 4.dp),
                     ) {
-                        Icon(
-                            painterResource(id = R.drawable.headsup),
-                            contentDescription = "Heads Up",
-                            modifier = Modifier.size(24.dp),
-                            tint = if (model.showHeadsUp) selectedColor else unselectedColor,
-                        )
+                        Box {
+                            Icon(
+                                painterResource(id = R.drawable.headsup),
+                                contentDescription = "Heads Up",
+                                modifier = Modifier.size(24.dp),
+                                tint = if (model.showHeadsUp) selectedColor else unselectedColor,
+                            )
+                            // Badge for HeadsUp count
+                            if (headsUpCount > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = 6.dp, y = (-2).dp)
+                                        .size(16.dp)
+                                        .background(selectedColor, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (headsUpCount > 99) "99+" else headsUpCount.toString(),
+                                        color = Color.White,
+                                        fontSize = 8.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = GraphikFontFamily,
+                                        lineHeight = 8.sp,
+                                        modifier = Modifier.offset(y = (-0.5).dp)
+                                    )
+                                }
+                            }
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Heads Up",
+                            text = "HeadsUp",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,

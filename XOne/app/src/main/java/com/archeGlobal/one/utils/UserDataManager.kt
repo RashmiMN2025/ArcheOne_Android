@@ -43,6 +43,9 @@ class UserDataManager private constructor(
     // Private var isLoggedIn: Boolean = false
     // private var hasLoggedIn: Boolean = false
 
+    // HeadsUp count management
+    private var headsUpCount: Int = 0
+
     // Callback for when user data becomes ready
     private var onUserDataReadyCallbacks: MutableList<() -> Unit> = mutableListOf()
 
@@ -66,6 +69,20 @@ class UserDataManager private constructor(
 //    }
 
     fun getSmartCollateralData(): List<SmartCollateralCategory>? = smartCollateralData
+
+    // HeadsUp count management
+    fun saveHeadsUpCount(count: Int) {
+        headsUpCount = count
+        preferencesManager.setInt("headsup_count", count)
+        Log.d(TAG, "HeadsUp count saved: $count")
+    }
+
+    fun getHeadsUpCount(): Int {
+        if (headsUpCount == 0) {
+            headsUpCount = preferencesManager.getInt("headsup_count", 0)
+        }
+        return headsUpCount
+    }
 
     private val PREF_LAST_LOGIN_TIME = "last_login_time"
 

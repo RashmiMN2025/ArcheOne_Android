@@ -807,6 +807,7 @@ fun HomeScreenContent(
             onFooterHeadsUpClick = onFooterHeadsUpClick,
             onFooterSOSClick = onFooterSOSClick,
             onFooterProfileClick = onFooterProfileClick,
+            headsUpCount = userDataManager.getHeadsUpCount(),
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 // Main content with conditional blur and pull-to-refresh
