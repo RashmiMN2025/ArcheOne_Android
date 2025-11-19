@@ -479,6 +479,7 @@ fun AssetActionDialog(
                 InfoRow(icon = painterResource(R.drawable.supplied_date),"Purchase Date", item.purchaseDate)
                 InfoRow(icon = painterResource(R.drawable.warranty),"Warranty Start", item.warrantyStart)
                 InfoRow(icon = painterResource(R.drawable.warranty),"Warranty End", item.warrantyEnd)
+                InfoRow(icon = painterResource(R.drawable.warranty),"Warranty End", item.warrantyEnd)
 
                 Spacer(Modifier.height(32.dp))
 

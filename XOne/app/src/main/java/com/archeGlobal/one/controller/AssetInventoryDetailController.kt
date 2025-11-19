@@ -149,9 +149,13 @@ class AssetInventoryDetailController(private val assetType: String) : ViewModel(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val capitalizedAssetType = assetType.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase() else it.toString()
+                }
+
                 val request = listOf(
                     AddInventoryAssetItemRequest(
-                        assetType = assetType,
+                        assetType = capitalizedAssetType,
                         makeModel = formData.makeModel,
                         serialNumber = formData.serialNo,
                         configuration = formData.configuration,
