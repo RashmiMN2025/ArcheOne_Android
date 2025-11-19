@@ -601,17 +601,16 @@ fun MeetSpaceScreen(
                                     ),
                                     shape = RoundedCornerShape(18.dp),
                                     modifier = Modifier
-                                        .height(35.dp)
-                                        .width(50.dp)
+                                        .height(40.dp)
                                 ) {
                                     Text(
                                         text = when {
                                             userRoles.contains("admin") -> "Admin Dashboard"
-                                            userRoles.contains("linemanager") -> "Manager Approval"
+                                            userRoles.contains("linemanager") -> "Manager\nApproval"
                                             userRoles.contains("ceo") -> "CEO Office Approval"
                                             else -> "" // Fallback, though not expected
                                         },
-                                        fontSize = 10.5.sp,
+                                        fontSize = 12.sp,
                                         color = Color.White,
                                         textAlign = TextAlign.Center,
                                         fontFamily = GraphikFontFamily,

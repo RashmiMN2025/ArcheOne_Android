@@ -458,14 +458,14 @@ fun AssetActionDialog(
 
                 Spacer(Modifier.height(32.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = onDelete,
                         modifier = Modifier.weight(1f).height(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
                         shape = RoundedCornerShape(18.dp)
                     ) {
-                        Text("Delete", color = Color.White, fontSize = 14.sp, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Medium)
+                        Text("Delete", color = Color.White, fontSize = 12.sp, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Medium)
                     }
 
                     val buttonText = if (item.isDecommissioned) "Commission" else "Decommission"
@@ -476,7 +476,7 @@ fun AssetActionDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF949494)),
                         shape = RoundedCornerShape(18.dp)
                     ) {
-                        Text(buttonText, color = Color.White, fontSize = 14.sp, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Medium)
+                        Text(buttonText, color = Color.White, fontSize = 12.sp, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Medium)
                     }
                 }
 
