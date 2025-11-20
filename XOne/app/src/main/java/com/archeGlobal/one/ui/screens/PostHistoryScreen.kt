@@ -313,14 +313,13 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                 .wrapContentHeight()
                 .padding(16.dp)
         ) {
-            // Header with profile, name, and priority
+            // Header with profile, name, priority and edit button in same line
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.Top,
                     modifier = Modifier.weight(1f)
                 ) {
                     // Profile picture
@@ -351,7 +350,7 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
                     Column {
                         Text(
@@ -383,14 +382,15 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                                     text = "Target Departments",
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 12.sp,
-                                    color = Color.Gray
+                                    color = Color(0xFF666666)
                                 )
                             }
                             Text(
                                 text = post.target_department.joinToString(", "),
                                 fontFamily = GraphikFontFamily,
-                                fontSize = 12.sp,
-                                color = Color.Gray
+                                fontSize = 10.sp,
+                                color = Color(0xFF999999),
+                                modifier = Modifier.padding(start = 16.dp)
                             )
                         } else if (!post.target_employee.isNullOrEmpty()) {
                             Row(
@@ -407,23 +407,24 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                                     text = "Tagged Employees",
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 12.sp,
-                                    color = Color.Gray
+                                    color = Color(0xFF666666)
                                 )
                             }
                             Text(
                                 text = post.target_employee.joinToString(", "),
                                 fontFamily = GraphikFontFamily,
-                                fontSize = 12.sp,
-                                color = Color.Gray
+                                fontSize = 10.sp,
+                                color = Color(0xFF999999),
+                                modifier = Modifier.padding(start = 16.dp)
                             )
                         }
                     }
                 }
 
-                // Priority badge and delete button
+                // Priority badge and edit button in same line
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(start = 16.dp)
                 ) {
                     // Priority badge
                     Box(
@@ -435,36 +436,38 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                                     "Low" -> Color(0xFF66BB6A)
                                     else -> Color.Gray
                                 },
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(16.dp)
                             )
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                            .padding(horizontal = 7.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = post.priority,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.sp,
+                            fontSize = 9.sp,
                             color = Color.White
                         )
                     }
 
-                    // Menu button
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Edit button
                     Box {
                         IconButton(
                             onClick = { showMenu = true },
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(24.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
+                                    .size(24.dp)
                                     .background(Color(0xFFDD3825), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "Menu",
+                                    contentDescription = "Edit",
                                     tint = Color.White,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
                             }
                         }

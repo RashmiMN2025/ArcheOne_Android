@@ -35,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -397,12 +398,66 @@ fun NewPostDialog(
             it.contains(query, ignoreCase = true)
         }.take(5)
     }
-    var postStartDate by remember { mutableStateOf<String>(formatApiDateToFullMonthDisplayDate(existingPost?.start_date)) }
-    var postEndDate by remember { mutableStateOf<String>(formatApiDateToFullMonthDisplayDate(existingPost?.end_date)) }
-    var startDurationDate by remember { mutableStateOf<String>(formatApiDateToDisplayDate(existingPost?.activity_start)) }
-    var startDurationTime by remember { mutableStateOf<String>(formatApiTimeToDisplayTime(existingPost?.activity_start)) }
-    var endDurationDate by remember { mutableStateOf<String>(formatApiDateToDisplayDate(existingPost?.activity_end)) }
-    var endDurationTime by remember { mutableStateOf<String>(formatApiTimeToDisplayTime(existingPost?.activity_end)) }
+    var postStartDate by remember {
+        mutableStateOf<String>(
+            if (existingPost != null) {
+                formatApiDateToFullMonthDisplayDate(existingPost.start_date)
+            } else {
+                // Default to current date for new posts
+                SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
+            }
+        )
+    }
+    var postEndDate by remember {
+        mutableStateOf<String>(
+            if (existingPost != null) {
+                formatApiDateToFullMonthDisplayDate(existingPost.end_date)
+            } else {
+                // Default to current date for new posts
+                SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
+            }
+        )
+    }
+    var startDurationDate by remember {
+        mutableStateOf<String>(
+            if (existingPost != null) {
+                formatApiDateToDisplayDate(existingPost.activity_start)
+            } else {
+                // Default to current date for new posts
+                SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(Date())
+            }
+        )
+    }
+    var startDurationTime by remember {
+        mutableStateOf<String>(
+            if (existingPost != null) {
+                formatApiTimeToDisplayTime(existingPost.activity_start)
+            } else {
+                // Default to current time for new posts
+                SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date())
+            }
+        )
+    }
+    var endDurationDate by remember {
+        mutableStateOf<String>(
+            if (existingPost != null) {
+                formatApiDateToDisplayDate(existingPost.activity_end)
+            } else {
+                // Default to current date for new posts
+                SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(Date())
+            }
+        )
+    }
+    var endDurationTime by remember {
+        mutableStateOf<String>(
+            if (existingPost != null) {
+                formatApiTimeToDisplayTime(existingPost.activity_end)
+            } else {
+                // Default to current time for new posts
+                SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date())
+            }
+        )
+    }
     var supportChannelDetails by remember { mutableStateOf(existingPost?.support_channel ?: "") }
     var postImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var existingImageUrls by remember { mutableStateOf(existingPost?.image_urls ?: emptyList()) }
@@ -423,12 +478,22 @@ fun NewPostDialog(
     var eventDate by remember { mutableStateOf<String>(formatApiDateToDisplayDate(existingPost?.event_date)) }
     var eventStartDate by remember {
         mutableStateOf<String>(
-            if (existingPost?.post_type == "homeView") formatApiDateToDisplayDate(existingPost.start_date) else ""
+            if (existingPost?.post_type == "homeView") {
+                formatApiDateToDisplayDate(existingPost.start_date)
+            } else {
+                // Default to current date for new posts
+                SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(Date())
+            }
         )
     }
     var eventEndDate by remember {
         mutableStateOf<String>(
-            if (existingPost?.post_type == "homeView") formatApiDateToDisplayDate(existingPost.end_date) else ""
+            if (existingPost?.post_type == "homeView") {
+                formatApiDateToDisplayDate(existingPost.end_date)
+            } else {
+                // Default to current date for new posts
+                SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(Date())
+            }
         )
     }
     var showEventPreview by remember { mutableStateOf(false) }
@@ -937,7 +1002,10 @@ fun NewPostDialog(
                 actions = {
                     Row(
                         modifier = Modifier
-                            .clickable { onHistoryClick() }
+                            .clickable {
+                                onDismiss()
+                                onHistoryClick()
+                            }
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -1170,6 +1238,10 @@ fun NewPostDialog(
                 supportChannelDetails = supportChannelDetails,
                 postImageUris = postImageUris,
                 existingImageUrls = existingImageUrls,
+                selectedEmployees = selectedEmployees,
+                selectedDepartments = selectedDepartments,
+                selectedLocations = selectedLocations,
+                selectedProjects = selectedProjects,
                 onDismiss = { showPostPreview = false }
             )
         }
@@ -3155,6 +3227,10 @@ private fun PostPreviewDialog(
     supportChannelDetails: String,
     postImageUris: List<Uri>,
     existingImageUrls: List<String> = emptyList(),
+    selectedEmployees: List<com.archeGlobal.one.model.SuggestedUser> = emptyList(),
+    selectedDepartments: List<String> = emptyList(),
+    selectedLocations: List<String> = emptyList(),
+    selectedProjects: List<String> = emptyList(),
     onDismiss: () -> Unit,
 ) {
     Dialog(
@@ -3187,7 +3263,7 @@ private fun PostPreviewDialog(
                         text = "HeadsUp Preview",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         color = Color.Black,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
@@ -3206,14 +3282,13 @@ private fun PostPreviewDialog(
                                 .fillMaxWidth()
                                 .padding(12.dp)
                         ) {
-                            // Header with profile and priority
+                            // Header with profile, name, and priority in same line
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.Top
                             ) {
                                 Row(
-                                    verticalAlignment = Alignment.CenterVertically,
+                                    verticalAlignment = Alignment.Top,
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     // Profile picture
@@ -3240,28 +3315,79 @@ private fun PostPreviewDialog(
                                                     text = userName.take(1).uppercase(),
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Bold,
-                                                    fontSize = 14.sp,
+                                                    fontSize = 12.sp,
                                                     color = Color.White
                                                 )
                                             }
                                         }
                                     }
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
                                     Column {
                                         Text(
                                             text = userName,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 14.sp,
+                                            fontSize = 12.sp,
                                             color = Color.Black,
                                         )
                                         Text(
                                             text = "12 November 2025",
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
-                                            fontSize = 11.sp,
+                                            fontSize = 10.sp,
                                             color = Color.Gray,
                                         )
+                                        // Target audience with icon
+                                        val targetLabel = when {
+                                            postGroup == "Everyone" -> "Tagged Employees"
+                                            selectedDepartments.isNotEmpty() -> "Tagged Department"
+                                            selectedLocations.isNotEmpty() -> "Tagged Location"
+                                            selectedEmployees.isNotEmpty() -> "Tagged Employees"
+                                            selectedProjects.isNotEmpty() -> "Tagged Project"
+                                            else -> null
+                                        }
+
+                                        if (targetLabel != null) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.item_name),
+                                                    contentDescription = "Target Audience",
+                                                    modifier = Modifier.size(10.dp),
+                                                    tint = Color.Gray
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = targetLabel,
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontSize = 10.sp,
+                                                    color = Color(0xFF666666)
+                                                )
+                                            }
+                                        }
+
+                                        // Show actual target details
+                                        val targetDetails = when {
+                                            postGroup == "Everyone" -> "Everyone@arche.global"
+                                            selectedDepartments.isNotEmpty() -> selectedDepartments.joinToString("\n")
+                                            selectedLocations.isNotEmpty() -> selectedLocations.joinToString("\n")
+                                            selectedEmployees.isNotEmpty() -> selectedEmployees.map { it.mail }.joinToString("\n")
+                                            selectedProjects.isNotEmpty() -> selectedProjects.joinToString("\n")
+                                            else -> null
+                                        }
+
+                                        if (targetDetails != null) {
+                                            Text(
+                                                text = targetDetails,
+                                                fontFamily = GraphikFontFamily,
+                                                fontSize = 10.sp,
+                                                color = Color(0xFF999999),
+                                                modifier = Modifier.padding(start = 14.dp),
+                                                softWrap = true,
+                                                overflow = TextOverflow.Visible
+                                            )
+                                        }
                                     }
                                 }
 
@@ -3284,7 +3410,7 @@ private fun PostPreviewDialog(
                                             text = postPriority,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 10.sp,
+                                            fontSize = 9.sp,
                                             color = Color.White,
                                         )
                                     }
@@ -3298,7 +3424,7 @@ private fun PostPreviewDialog(
                                     text = postSubject,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp,
+                                    fontSize = 12.sp,
                                     color = Color.Black,
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
@@ -3310,9 +3436,9 @@ private fun PostPreviewDialog(
                                     text = announcementDescription,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     color = Color.Black,
-                                    lineHeight = 17.sp
+                                    lineHeight = 16.sp
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
                             }
@@ -3326,7 +3452,7 @@ private fun PostPreviewDialog(
                                         .fillMaxWidth()
                                         .height(140.dp)
                                         .horizontalScroll(rememberScrollState()),
-                                    horizontalArrangement = Arrangement.spacedBy((-40).dp),
+                                    horizontalArrangement = Arrangement.spacedBy((-20).dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     // Show existing images first, then new images
@@ -3362,14 +3488,14 @@ private fun PostPreviewDialog(
                                     text = "Support Details :",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     color = Color.Black
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = supportChannelDetails,
                                     fontFamily = GraphikFontFamily,
-                                    fontSize = 12.sp,
+                                    fontSize = 10.sp,
                                     color = Color.Gray
                                 )
                             }
@@ -3382,7 +3508,7 @@ private fun PostPreviewDialog(
                                     text = "Activity Duration :",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     color = Color.Black
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -3414,8 +3540,10 @@ private fun PostPreviewDialog(
                                 Text(
                                     text = "$startDateFull, $startDurationTime - $endDateFull, $endDurationTime",
                                     fontFamily = GraphikFontFamily,
-                                    fontSize = 12.sp,
-                                    color = Color.Gray
+                                    fontSize = 8.sp,
+                                    color = Color.Gray,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
@@ -3433,7 +3561,7 @@ private fun PostPreviewDialog(
                                                 text = "Post Start Date",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                fontSize = 10.sp,
+                                                fontSize = 9.sp,
                                                 color = Color.Gray,
                                             )
                                             Spacer(modifier = Modifier.height(3.dp))
@@ -3441,7 +3569,7 @@ private fun PostPreviewDialog(
                                                 Icon(
                                                     painter = painterResource(id = com.archeGlobal.one.R.drawable.green),
                                                     contentDescription = "Start Date",
-                                                    modifier = Modifier.size(14.dp),
+                                                    modifier = Modifier.size(12.dp),
                                                     tint = Color(0xFF66BB6A)
                                                 )
                                                 Spacer(modifier = Modifier.width(4.dp))
@@ -3449,7 +3577,7 @@ private fun PostPreviewDialog(
                                                     text = convertToShortMonth(postStartDate),
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Medium,
-                                                    fontSize = 11.sp,
+                                                    fontSize = 10.sp,
                                                     color = Color.Black,
                                                 )
                                             }
@@ -3463,7 +3591,7 @@ private fun PostPreviewDialog(
                                                 text = "Post End Date",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Normal,
-                                                fontSize = 10.sp,
+                                                fontSize = 9.sp,
                                                 color = Color.Gray,
                                             )
                                             Spacer(modifier = Modifier.height(3.dp))
@@ -3471,7 +3599,7 @@ private fun PostPreviewDialog(
                                                 Icon(
                                                     painter = painterResource(id = com.archeGlobal.one.R.drawable.red),
                                                     contentDescription = "End Date",
-                                                    modifier = Modifier.size(14.dp),
+                                                    modifier = Modifier.size(12.dp),
                                                     tint = Color(0xFFD32F2F)
                                                 )
                                                 Spacer(modifier = Modifier.width(4.dp))
@@ -3479,7 +3607,7 @@ private fun PostPreviewDialog(
                                                     text = convertToShortMonth(postEndDate),
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Medium,
-                                                    fontSize = 11.sp,
+                                                    fontSize = 10.sp,
                                                     color = Color.Black,
                                                 )
                                             }

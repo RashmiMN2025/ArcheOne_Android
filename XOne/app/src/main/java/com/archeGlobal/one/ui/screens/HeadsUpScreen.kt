@@ -652,28 +652,19 @@ fun HeadsUpPostCard(
 // Helper function to format post time
 private fun formatPostTime(createdAt: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+        // Parse the date from API format: "2025-11-19 18:04:44"
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val date = inputFormat.parse(createdAt)
 
         if (date != null) {
-            val now = Calendar.getInstance().time
-            val diff = now.time - date.time
-            val seconds = diff / 1000
-            val minutes = seconds / 60
-            val hours = minutes / 60
-            val days = hours / 24
-
-            when {
-                days > 0 -> "$days day${if (days > 1) "s" else ""} ago"
-                hours > 0 -> "$hours hour${if (hours > 1) "s" else ""} ago"
-                minutes > 0 -> "$minutes minute${if (minutes > 1) "s" else ""} ago"
-                else -> "Just now"
-            }
+            // Format to "19 November 2025"
+            val outputFormat = SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
+            outputFormat.format(date)
         } else {
             "Unknown"
         }
     } catch (e: Exception) {
+        android.util.Log.e("HeadsUpScreen", "Error formatting date: $createdAt", e)
         "Unknown"
     }
 }
