@@ -206,7 +206,7 @@ fun HeadsUpScreen(
                                         modifier = Modifier.fillMaxSize()
                                     ) {
                                         Icon(
-                                            painter = painterResource(id = R.drawable.newpost),
+                                            painter = painterResource(id = R.drawable.headsup),
                                             contentDescription = "No Posts",
                                             modifier = Modifier.size(64.dp),
                                             tint = Color(0xFF999999)
@@ -229,14 +229,16 @@ fun HeadsUpScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
 
                                 // Subtitle
-                                Text(
-                                    text = "Create a post by clicking on New Post!",
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    color = Color(0xFF666666),
-                                    textAlign = TextAlign.Center
-                                )
+                                if (canCreatePost) {
+                                    Text(
+                                        text = "Create a post by clicking on New Post!",
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color(0xFF666666),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
 
                                 Spacer(modifier = Modifier.height(200.dp))
                             }

@@ -415,9 +415,15 @@ fun AssetInventoryDetailCard(
             )
 
             DetailRow(
-                icon = painterResource(R.drawable.updated_by),
-                label = "Updated By",
-                value = "N/A"
+                icon = painterResource(R.drawable.warranty),
+                label = "Warranty Start",
+                value = item.warrantyStart ?: "N/A"
+            )
+
+            DetailRow(
+                icon = painterResource(R.drawable.warranty),
+                label = "Warranty End",
+                value = item.warrantyEnd ?: "N/A"
             )
         }
     }

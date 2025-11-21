@@ -59,7 +59,7 @@ class AssetInventoryDetailController(private val assetType: String) : ViewModel(
                                     serialNo = asset.serialNumber,
                                     location = asset.location,
                                     configuration = asset.configuration,
-                                    purchaseDate = asset.purchaseDate,
+                                    purchaseDate = asset.purchaseDate ?: "N/A",
                                     warrantyStart = asset.warrantyStart,
                                     warrantyEnd = asset.warrantyEnd,
                                     updatedBy = "",
