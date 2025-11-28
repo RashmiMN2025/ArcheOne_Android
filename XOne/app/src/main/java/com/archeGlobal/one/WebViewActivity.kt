@@ -1508,7 +1508,7 @@ class WebViewActivity : ComponentActivity() {
                                                                 
                                                                 <!-- Fallback container if PDF.js fails -->
                                                                 <div id="fallbackContainer">
-                                                                    <iframe src="https://docs.google.com/viewer?url=$fileUrl&embedded=true" width="100%" height="100%" style="border: none;"></iframe>
+                                                                    <iframe src="https://docs.google.com/viewer?url=${java.net.URLEncoder.encode(fileUrl, "UTF-8")}&embedded=true" width="100%" height="100%" style="border: none;"></iframe>
                                                                 </div>
                                                                 
                                                                 <script>
@@ -1605,7 +1605,8 @@ class WebViewActivity : ComponentActivity() {
                                                         )
                                                     } else {
                                                         // Use Google Docs viewer for other PDF types
-                                                        loadUrl("https://docs.google.com/viewer?url=$fileUrl&embedded=true")
+                                                        val encodedUrl = java.net.URLEncoder.encode(fileUrl, "UTF-8")
+                                                        loadUrl("https://docs.google.com/viewer?url=$encodedUrl&embedded=true")
                                                         Log.d("WebViewActivity", "Loading PDF using Google Docs viewer: $fileUrl")
                                                     }
                                                 } else {

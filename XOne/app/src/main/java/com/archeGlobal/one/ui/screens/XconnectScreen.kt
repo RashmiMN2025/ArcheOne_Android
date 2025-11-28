@@ -571,8 +571,7 @@ fun PostTile(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(150.dp) // Adjusted image height
-                        .clip(RoundedCornerShape(12.dp)),
+                        .height(150.dp), // Adjusted image height
                 // Added rounded corners for the image
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(id = R.drawable.ic_image_placeholder),
@@ -791,8 +790,7 @@ fun ArticleCard(
                 modifier =
                     Modifier
                         .height(125.dp)
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp)),
+                        .fillMaxWidth(),
                 // Added rounded corners for the image
                 contentScale = ContentScale.Crop,
                 error = painterResource(id = R.drawable.ic_image_placeholder),
