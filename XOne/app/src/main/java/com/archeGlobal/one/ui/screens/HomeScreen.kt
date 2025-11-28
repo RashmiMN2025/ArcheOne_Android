@@ -355,6 +355,10 @@ fun HomeScreenContent(
         var isVerifyingMpin by remember { mutableStateOf(false) }
         var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
         var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+        var selectedSize by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+        var snapshotApp by remember { mutableStateOf<HomeItem?>(null) }
+        var snapshotPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+        var snapshotSize by remember { mutableStateOf<Pair<Float, Float>?>(null) }
         var isRefreshing by remember { mutableStateOf(false) }
 
         // SwipeRefresh state
@@ -1049,7 +1053,10 @@ fun HomeScreenContent(
                                                 )
                                             }
 
-                                            items(items.chunked(columns)) { rowItems ->
+                                            items(
+                                                items = items.chunked(columns),
+                                                key = { rowItems -> "${category}_${rowItems.joinToString("_") { "${it.title}_${it.isFavorite}" }}" }
+                                            ) { rowItems ->
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1064,9 +1071,10 @@ fun HomeScreenContent(
                                                             modifier = Modifier.weight(1f),
                                                             showFavoriteButton = false,
                                                             isSelected = false,
-                                                            onLongPress = { position ->
+                                                            onLongPress = { position, size ->
                                                                 selectedApp = item
                                                                 selectedPosition = position
+                                                                selectedSize = size
                                                             },
                                                             isNew = item.isNew,
                                                             stickerText = item.stickerText,
@@ -1105,7 +1113,10 @@ fun HomeScreenContent(
                                                     )
                                                 }
 
-                                                items(items.chunked(columns)) { rowItems ->
+                                                items(
+                                                    items = items.chunked(columns),
+                                                    key = { rowItems -> "fav_${category}_${rowItems.joinToString("_") { it.title }}" }
+                                                ) { rowItems ->
                                                     Row(
                                                         modifier = Modifier.fillMaxWidth(),
                                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1120,9 +1131,10 @@ fun HomeScreenContent(
                                                                 modifier = Modifier.weight(1f),
                                                                 showFavoriteButton = false,
                                                                 isSelected = false,
-                                                                onLongPress = { position ->
+                                                                onLongPress = { position, size ->
                                                                     selectedApp = item
                                                                     selectedPosition = position
+                                                                    selectedSize = size
                                                                 },
                                                                 isNew = item.isNew,
                                                                 stickerText = item.stickerText,
@@ -1150,7 +1162,7 @@ fun HomeScreenContent(
             }
 
             // Semi-transparent overlay when an app is selected
-            if (selectedApp != null) {
+            if (selectedApp != null || snapshotApp != null) {
                 Box(
                     modifier =
                         Modifier
@@ -1160,36 +1172,47 @@ fun HomeScreenContent(
                             .clickable(onClick = {
                                 selectedApp = null
                                 selectedPosition = null
+                                selectedSize = null
+                                snapshotApp = null
+                                snapshotPosition = null
+                                snapshotSize = null
                             }),
                 )
             }
 
-            // Overlay the selected app
-            if (selectedApp != null) {
-                selectedPosition?.let { (x, y) ->
+            // Overlay the selected app - use snapshot if available to maintain position during favorite toggle
+            if (snapshotApp != null || selectedApp != null) {
+                val displayApp = snapshotApp ?: selectedApp
+                val displayPosition = snapshotPosition ?: selectedPosition
+                
+                if (displayPosition != null) {
+                    val (x, y) = displayPosition
                     val density = LocalDensity.current
-                    val itemSize = 80.dp
-                    val scaleFactor = 1.2f // Slightly bigger than original
-                    val itemSizePx = with(density) { itemSize.toPx() }
+                    
+                    // Use the fixed card size for positioning calculations
+                    val cardSize = 115.dp
+                    val cardSizePx = with(density) { cardSize.toPx() }
+
+                    // Adjust for system bars padding since the Box is inside systemBarsPadding()
+                    val topPadding = WindowInsets.systemBars.getTop(density)
 
                     Box(
                         modifier =
                             Modifier
                                 .offset {
                                     IntOffset(
-                                        x = (x - itemSizePx * scaleFactor / 2).toInt(),
-                                        y = (y - itemSizePx - 15).toInt(), // Position exactly above with exact pixel offset
+                                        x = (x - cardSizePx / 2).toInt(),
+                                        y = (y - cardSizePx / 2 - topPadding).toInt(),
                                     )
                                 },
                     ) {
-                        val formattedTitle = formatServiceTitle(selectedApp!!.title)
+                        val formattedTitle = formatServiceTitle(displayApp!!.title)
 
                         Card(
                             modifier =
                                 Modifier
-                                    .width(115.dp) // Set fixed width
+                                    .width(115.dp) 
                                     .height(115.dp),
-                            // Set fixed height
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                             shape = RoundedCornerShape(12.dp),
@@ -1203,7 +1226,7 @@ fun HomeScreenContent(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center,
                                 ) {
-                                    AppIcon(title = selectedApp!!.title, modifier = Modifier.size(50.dp))
+                                    AppIcon(title = displayApp!!.title, modifier = Modifier.size(50.dp))
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
                                         text = formattedTitle,
@@ -1224,17 +1247,28 @@ fun HomeScreenContent(
                 }
             }
 
-            // Show favorite dialog
-            if (selectedApp != null && selectedPosition != null) {
-                selectedPosition?.let { (x, y) ->
-                    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-                    val dialogWidth = 160.dp // Return to original width
+            // Show favorite dialog - use snapshot if available
+            if (snapshotApp != null || (selectedApp != null && selectedPosition != null)) {
+                val displayApp = snapshotApp ?: selectedApp
+                val displayPosition = snapshotPosition ?: selectedPosition
+                val displaySize = snapshotSize ?: selectedSize // Keep for snapshot logic consistency
+
+                if (displayPosition != null) {
+                    val (x, y) = displayPosition
                     val density = LocalDensity.current
+
+                    // Use the fixed card size for dialog positioning
+                    val cardSize = 115.dp
+                    val cardSizePx = with(density) { cardSize.toPx() }
+
+                    // Adjust for system bars padding
+                    val topPadding = WindowInsets.systemBars.getTop(density)
+
+                    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+                    val dialogWidth = 160.dp 
 
                     val dialogWidthPx = with(density) { dialogWidth.toPx() }
                     val screenWidthPx = with(density) { screenWidth.toPx() }
-                    val itemSizePx = with(density) { 80.dp.toPx() }
-                    val scaleFactor = 1.1f // Same as app scale factor
 
                     // Calculate x position (centered with the app)
                     val xOffset =
@@ -1245,7 +1279,11 @@ fun HomeScreenContent(
                         }
 
                     // Reduce the yOffset to decrease the space between the service card and the dialog
-                    val yOffset = y - itemSizePx - 180 // Reduced from 235 to 200
+                    val tooltipHeight = with(density) { 50.dp.toPx() } // Approximate height
+                    val gap = with(density) { 8.dp.toPx() }
+                    
+                    // Calculate Y offset: Center Y - Half Card Height - Tooltip Height - Gap
+                    val yOffset = y - (cardSizePx / 2) - tooltipHeight - gap - topPadding
 
                     Card(
                         modifier =
@@ -1262,16 +1300,28 @@ fun HomeScreenContent(
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     ) {
                         Text(
-                            text = if (selectedApp!!.isFavorite) "Remove from Favourites" else "Add to Favourites",
+                            text = if (displayApp!!.isFavorite) "Remove from Favourites" else "Add to Favourites",
                             fontSize = 13.sp,
                             color = Color.Black,
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        onToggleFavorite(selectedApp!!)
+                                        val appToToggle = displayApp!!
+                                        // Create snapshot to freeze position during animation
+                                        snapshotApp = appToToggle
+                                        snapshotPosition = displayPosition
+                                        snapshotSize = displaySize
+                                        // Clear selection immediately
                                         selectedApp = null
                                         selectedPosition = null
+                                        // Toggle favorite and clear snapshot after animation
+                                        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                                            onToggleFavorite(appToToggle)
+                                            kotlinx.coroutines.delay(300) // Keep snapshot visible during transition
+                                            snapshotApp = null
+                                            snapshotPosition = null
+                                        }
                                     }.padding(vertical = 8.dp),
                             textAlign = TextAlign.Center,
                         )
@@ -1578,11 +1628,12 @@ private fun AppItem(
     modifier: Modifier = Modifier,
     showFavoriteButton: Boolean = false,
     isSelected: Boolean = false,
-    onLongPress: (Pair<Float, Float>) -> Unit,
+    onLongPress: (Pair<Float, Float>, Pair<Float, Float>) -> Unit,
     isNew: Boolean = false,
     stickerText: String = "New",
 ) {
     var itemPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    var itemSize by remember { mutableStateOf<Pair<Float, Float>?>(null) }
     val context = LocalContext.current
     // Format the title for better display
     val formattedTitle = formatServiceTitle(title)
@@ -1591,7 +1642,7 @@ private fun AppItem(
         modifier =
             modifier
                 .aspectRatio(0.95f)
-                .padding(3.dp)
+                .padding(8.dp)
                 .onGloballyPositioned { coordinates ->
                     val position = coordinates.positionInRoot()
                     itemPosition =
@@ -1599,13 +1650,16 @@ private fun AppItem(
                             position.x + (coordinates.size.width / 2),
                             position.y + (coordinates.size.height / 2),
                         )
+                    itemSize = Pair(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
                 }.pointerInput(Unit) {
                     detectTapGestures(
                         onTap = {
                             onClick()
                         },
                         onLongPress = {
-                            itemPosition?.let { pos -> onLongPress(pos) }
+                            if (itemPosition != null && itemSize != null) {
+                                onLongPress(itemPosition!!, itemSize!!)
+                            }
                         },
                     )
                 },
