@@ -720,9 +720,10 @@ fun NewPostDialog(
                 userData?.profilePic?.let { postRequestMap["profile_pic"] = it }
 
                 // Add target fields based on target group - only include relevant field
+                postRequestMap["target_group"] = targetGroup
                 when (targetGroup) {
                     "Everyone" -> {
-                        postRequestMap["target_group"] = "Everyone"
+                        // target_group already set above
                     }
                     "DepartmentBased" -> {
                         targetDepartment?.let { postRequestMap["target_department"] = it }
