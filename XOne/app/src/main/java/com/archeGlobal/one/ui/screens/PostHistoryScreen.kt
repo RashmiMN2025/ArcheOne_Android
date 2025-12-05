@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -323,29 +324,28 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                     modifier = Modifier.weight(1f)
                 ) {
                     // Profile picture
-                    if (!post.profile_pic.isNullOrEmpty()) {
-                        Image(
-                            painter = rememberAsyncImagePainter(post.profile_pic),
-                            contentDescription = "Profile",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.LightGray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Always show placeholder
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.padding(4.dp).fillMaxSize(),
+                            tint = Color.DarkGray
                         )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.Gray),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = post.username.take(1).uppercase(),
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                color = Color.White
+
+                        if (!post.profile_pic.isNullOrEmpty()) {
+                            Image(
+                                painter = rememberAsyncImagePainter(post.profile_pic),
+                                contentDescription = "Profile",
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Crop
                             )
                         }
                     }
@@ -391,6 +391,33 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                                 fontSize = 10.sp,
                                 color = Color(0xFF999999),
                                 modifier = Modifier.padding(start = 16.dp)
+                            )
+                        } else if (!post.target_location.isNullOrEmpty()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.item_name),
+                                    contentDescription = "Tagged Locations",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = Color.Gray
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Tagged Locations",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF666666)
+                                )
+                            }
+                            Text(
+                                text = post.target_location.joinToString(", "),
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 10.sp,
+                                color = Color(0xFF999999),
+                                modifier = Modifier
+                                    .padding(start = 16.dp)
+                                    .offset(y = (-3).dp)
                             )
                         } else if (!post.target_employee.isNullOrEmpty()) {
                             Row(
@@ -752,29 +779,28 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
                     modifier = Modifier.weight(1f)
                 ) {
                     // Profile picture
-                    if (!post.profile_pic.isNullOrEmpty()) {
-                        Image(
-                            painter = rememberAsyncImagePainter(post.profile_pic),
-                            contentDescription = "Profile",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.LightGray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Always show placeholder
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.padding(4.dp).fillMaxSize(),
+                            tint = Color.DarkGray
                         )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.Gray),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = post.username.take(1).uppercase(),
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                color = Color.White
+
+                        if (!post.profile_pic.isNullOrEmpty()) {
+                            Image(
+                                painter = rememberAsyncImagePainter(post.profile_pic),
+                                contentDescription = "Profile",
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Crop
                             )
                         }
                     }

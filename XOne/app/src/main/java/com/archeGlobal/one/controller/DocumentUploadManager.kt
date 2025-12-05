@@ -70,12 +70,7 @@ class DocumentUploadManager(
             return null
         }
 
-        // Validate the format: must be NT followed by 4 digits
-        if (!employeeId.matches(Regex("^NT\\d{4}$"))) {
-            Log.e("DocumentUploadManager", "Employee ID has invalid format: $employeeId. Must be NT followed by 4 digits.")
-            errorMessage.postValue("Invalid employee ID format. It must start with 'NT' followed by exactly 4 digits (e.g., NT1234)")
-            return null
-        }
+
 
         Log.d("DocumentUploadManager", "Retrieved employee ID from user data: $employeeId")
         return employeeId

@@ -98,7 +98,8 @@ class UserDocumentsController(
             // Only process API response if it has valid documents
             val apiDocs =
                 response.personalDoc?.filter { doc ->
-                    !doc.document_name.isNullOrBlank() && !doc.documentType.isNullOrBlank()
+                    !doc.document_name.isNullOrBlank()
+                    // Filter relaxed: documentType can be null/empty and inferred later
                 } ?: emptyList()
 
             if (apiDocs.isNotEmpty()) {
@@ -346,8 +347,6 @@ class UserDocumentsController(
         documentUploadManager.uploadDocumentFromUri(documentName, uri) { response ->
             if (response.status == 200) {
                 Toast.makeText(context, "$documentName uploaded successfully", Toast.LENGTH_SHORT).show()
-                // Force process the upload response even if it's normally invalid
-                forceProcessApiResponse(response)
                 onSuccess(response)
                 // Also update user data to reflect the change
                 updateUserDataAfterUpload(documentName, response)
@@ -485,10 +484,7 @@ class UserDocumentsController(
         }
     }
 
-    private fun forceProcessApiResponse(response: DocumentListResponse) {
-        Log.d(TAG, "Force processing API response for immediate UI update")
-        processApiResponse(response)
-    }
+
 
     private fun updateUserDataAfterUpload(
         documentName: String,
@@ -497,41 +493,60 @@ class UserDocumentsController(
         val currentDocs = _userDocuments.value?.map { it.copy() }?.toMutableList() ?: mutableListOf()
 
         // Find the uploaded document in the response
+        // Logic: Strict matching for ID Card to avoid ambiguity
         val uploadedDoc =
             response.personalDoc?.find { doc ->
-                doc.document_name == documentName ||
-                    (doc.documentType == "pan" && documentName == "PAN Card") ||
-                    (doc.documentType == "id" && documentName == "ID Card") ||
-                    (doc.documentType == "medical" && documentName == "Medical Insurance Card")
+                val type = doc.documentType?.lowercase() ?: ""
+                val name = doc.document_name ?: ""
+                
+                when (documentName) {
+                    "ID Card" -> type == "id" || name.equals("ID Card", ignoreCase = true)
+                    "PAN Card" -> type == "pan" || name.equals("PAN Card", ignoreCase = true)
+                    "Medical Insurance Card" -> type == "medical" || name.equals("Medical Insurance Card", ignoreCase = true)
+                    else -> name == documentName
+                }
             }
-
-        if (uploadedDoc != null && !uploadedDoc.doc_data.isNullOrBlank()) {
-            // Update or add the document with the new data
-            val existingIndex = currentDocs.indexOfFirst { it.document_name == documentName }
-            val updatedDoc =
-                UserDocument(
-                    document_name = documentName,
-                    doc_data = uploadedDoc.doc_data,
-                    documentType = uploadedDoc.documentType ?: "",
-                )
-
-            if (existingIndex >= 0) {
-                currentDocs[existingIndex] = updatedDoc
-            } else {
-                currentDocs.add(updatedDoc)
-            }
-
-            _userDocuments.postValue(currentDocs)
-
-            // Also update the user data in storage to persist the change
-            updateUserDataDocuments(currentDocs)
-            Log.d(TAG, "Updated $documentName with new doc_data after upload - LiveData updated with ${currentDocs.size} documents")
-
-            // Log the updated document for verification
-            currentDocs.find { it.document_name == documentName }?.let { doc ->
-                Log.d(TAG, "Updated document details: name=${doc.document_name}, hasData=${!doc.doc_data.isBlank()}")
-            }
+            
+        if (uploadedDoc == null) {
+            Log.w(TAG, "Could not find uploaded document '$documentName' in response. Available docs: ${response.personalDoc?.map { "${it.document_name}(${it.documentType})" }}")
         }
+
+        // Use the data from response if available, otherwise use a placeholder to ensure UI updates
+        // This handles cases where the immediate upload response might not have the full URL yet
+        val newData = if (uploadedDoc != null && !uploadedDoc.doc_data.isNullOrBlank()) {
+             uploadedDoc.doc_data
+        } else {
+             Log.d(TAG, "Using placeholder data for $documentName to ensure UI update")
+             "UPLOADED_PLACEHOLDER"
+        }
+        
+        val newType = uploadedDoc?.documentType ?: when(documentName) {
+             "ID Card" -> "id"
+             "PAN Card" -> "pan"
+             "Medical Insurance Card" -> "medical"
+             else -> ""
+        }
+
+        // Update or add the document
+        val existingIndex = currentDocs.indexOfFirst { it.document_name == documentName }
+        val updatedDoc =
+            UserDocument(
+                document_name = documentName,
+                doc_data = newData!!,
+                documentType = newType
+            )
+
+        if (existingIndex >= 0) {
+            currentDocs[existingIndex] = updatedDoc
+        } else {
+            currentDocs.add(updatedDoc)
+        }
+
+        _userDocuments.postValue(currentDocs)
+
+        // Also update the user data in storage to persist the change
+        updateUserDataDocuments(currentDocs)
+        Log.d(TAG, "Updated $documentName with new data ($newData) after upload - LiveData updated with ${currentDocs.size} documents")
     }
 
     private fun updateDocumentAfterDelete(documentName: String) {

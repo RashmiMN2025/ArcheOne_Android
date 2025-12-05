@@ -1641,8 +1641,8 @@ private fun AppItem(
     Card(
         modifier =
             modifier
-                .aspectRatio(0.95f)
-                .padding(8.dp)
+                .aspectRatio(0.92f)
+                .padding(6.dp)
                 .onGloballyPositioned { coordinates ->
                     val position = coordinates.positionInRoot()
                     itemPosition =

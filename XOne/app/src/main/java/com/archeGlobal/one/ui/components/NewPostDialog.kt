@@ -65,91 +65,99 @@ import java.util.*
 // Helper function to convert API date format to display format (dd-MMM-yyyy)
 fun formatApiDateToDisplayDate(apiDateString: String?): String {
     if (apiDateString.isNullOrEmpty()) return ""
-    return try {
-        val apiFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val date = apiFormat.parse(apiDateString)
-        if (date != null) {
-            val displayFormat = SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault())
-            displayFormat.format(date)
-        } else {
-            ""
-        }
-    } catch (e: Exception) {
-        // Fallback for ISO format
+    val displayFormat = SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault())
+    
+    // List of patterns to try
+    val patterns = listOf(
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "yyyy-MM-dd'T'HH:mm:ss"
+    )
+    
+    for (pattern in patterns) {
         try {
-            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
-            val date = isoFormat.parse(apiDateString)
+            val format = SimpleDateFormat(pattern, Locale.getDefault())
+            if (pattern.contains("'Z'")) {
+                 format.timeZone = TimeZone.getTimeZone("UTC")
+            }
+            val date = format.parse(apiDateString)
             if (date != null) {
-                val displayFormat = SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault())
-                displayFormat.format(date)
-            } else {
-                ""
+                return displayFormat.format(date)
             }
         } catch (e: Exception) {
-            ""
+            // Continue to next pattern
         }
     }
+    return ""
 }
 
 // Helper function to convert API date format to full month display format (dd MMMM yyyy)
 fun formatApiDateToFullMonthDisplayDate(apiDateString: String?): String {
     if (apiDateString.isNullOrEmpty()) return ""
-    return try {
-        val apiFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val date = apiFormat.parse(apiDateString)
-        if (date != null) {
-            val displayFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
-            displayFormat.format(date)
-        } else {
-            ""
-        }
-    } catch (e: Exception) {
-        // Fallback for ISO format
+    val displayFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
+    
+    // List of patterns to try
+    val patterns = listOf(
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "yyyy-MM-dd'T'HH:mm:ss"
+    )
+    
+    for (pattern in patterns) {
         try {
-            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
-            val date = isoFormat.parse(apiDateString)
+            val format = SimpleDateFormat(pattern, Locale.getDefault())
+            if (pattern.contains("'Z'")) {
+                 format.timeZone = TimeZone.getTimeZone("UTC")
+            }
+            val date = format.parse(apiDateString)
             if (date != null) {
-                val displayFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
-                displayFormat.format(date)
-            } else {
-                ""
+                return displayFormat.format(date)
             }
         } catch (e: Exception) {
-            ""
+            // Continue to next pattern
         }
     }
+    return ""
 }
 
 // Helper function to convert API date format to display time (h:mm a)
 fun formatApiTimeToDisplayTime(apiDateString: String?): String {
     if (apiDateString.isNullOrEmpty()) return ""
-    return try {
-        val apiFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val date = apiFormat.parse(apiDateString)
-        if (date != null) {
-            val displayFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
-            displayFormat.format(date)
-        } else {
-            ""
-        }
-    } catch (e: Exception) {
-        // Fallback for ISO format
+    // Log the input for debugging
+    // android.util.Log.d("NewPostDialog", "Formatting time for: $apiDateString")
+    
+    val displayFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+    
+    // List of patterns to try
+    val patterns = listOf(
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "yyyy-MM-dd'T'HH:mm:ss"
+    )
+    
+    for (pattern in patterns) {
         try {
-            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
-            val date = isoFormat.parse(apiDateString)
+            val format = SimpleDateFormat(pattern, Locale.getDefault())
+            if (pattern.contains("'Z'")) {
+                 format.timeZone = TimeZone.getTimeZone("UTC")
+            }
+            val date = format.parse(apiDateString)
             if (date != null) {
-                val displayFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
-                displayFormat.format(date)
-            } else {
-                ""
+                return displayFormat.format(date)
             }
         } catch (e: Exception) {
-            ""
+            // Continue to next pattern
         }
     }
+    
+    // android.util.Log.e("NewPostDialog", "Failed to parse time: $apiDateString")
+    return ""
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -382,7 +390,7 @@ fun NewPostDialog(
         }
         // Filter from fetched locations
         suggestedLocations = fetchedLocations.filter {
-            it.contains(query, ignoreCase = true)
+            it.contains(query, ignoreCase = true) && !selectedLocations.contains(it)
         }.take(5)
     }
 
