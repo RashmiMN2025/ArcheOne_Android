@@ -118,27 +118,6 @@ fun AboutMeScreen(
 
                             Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
 
-                            // Reporting Structure Section
-                            SectionContent(
-                                icon = R.drawable.reporting,
-                                title = "Reporting Structure",
-                                items =
-                                    listOf(
-                                        LabeledInfo(
-                                            label = "Reporting Manager",
-                                            value = controller.model.reportingManager,
-                                            icon = R.drawable.profile, // Custom icon for Reporting Manager
-                                        ),
-                                        LabeledInfo(
-                                            label = "Divisional Head",
-                                            value = controller.model.divisionalHead,
-                                            icon = R.drawable.account, // Custom icon for Divisional Head
-                                        ),
-                                    ),
-                            )
-
-                            Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
-
                             // Work Information Section
                             SectionContent(
                                 icon = R.drawable.building1,

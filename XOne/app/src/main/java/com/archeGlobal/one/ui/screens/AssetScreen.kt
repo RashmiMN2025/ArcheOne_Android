@@ -156,7 +156,7 @@ fun AssetScreen(
                                         )
 
                                         val hasAssets = model.assetDetails.isNotEmpty()
-                                        val tagButtonColor = if (hasAssets) Color(0xFF9E9E9E) else PrimaryRed  // Red if no assets
+                                        val tagButtonColor = if (hasAssets) PrimaryRed else PrimaryRed  // Red if no assets
                                         val tagButtonText = if (hasAssets) "Tag Asset" else "Tag Asset"
 
                                         if (access == "it") {

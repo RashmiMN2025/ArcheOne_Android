@@ -27,12 +27,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
 import com.archeGlobal.one.network.CreatedPost
 import com.archeGlobal.one.network.CreatedPostsRequest
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.ui.components.NewPostDialog
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.launch
@@ -43,6 +45,7 @@ import java.util.*
 @Composable
 fun PostHistoryScreen(
     onBackPressed: () -> Unit,
+    initialTab: Int = 0, // 0 for HeadsUp, 1 for Home Page
 ) {
     val context = LocalContext.current
     val userDataManager = UserDataManager.getInstance(context)
@@ -50,7 +53,7 @@ fun PostHistoryScreen(
     val userEmail = userData?.email ?: ""
     val userAccess = userData?.userDetails?.access ?: ""
 
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableStateOf(initialTab) }
     var posts by remember { mutableStateOf<List<CreatedPost>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var refreshTrigger by remember { mutableStateOf(0) }
@@ -221,14 +224,7 @@ fun PostHistoryScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Posts List
-            if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFFDD3825))
-                }
-            } else if (posts.isEmpty()) {
+            if (posts.isEmpty() && !isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -270,6 +266,11 @@ fun PostHistoryScreen(
                 }
             }
         }
+
+        // Universal loader
+        if (isLoading) {
+            UniversalLoader(isLoading = true)
+        }
     }
 
     // Edit dialog
@@ -290,7 +291,11 @@ fun PostHistoryScreen(
                 showEditDialog = false
                 postToEdit = null
             },
-            onHistoryClick = {},
+            onHistoryClick = {
+                // Close the dialog since we're already on the history screen
+                showEditDialog = false
+                postToEdit = null
+            },
             existingPost = postToEdit
         )
     }
@@ -358,16 +363,36 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp,
-                            color = Color.Black
+                            color = Color.Black,
+                            lineHeight = 18.sp
                         )
                         Text(
                             text = formatPostDate(post.created_at),
                             fontFamily = GraphikFontFamily,
                             fontSize = 12.sp,
-                            color = Color.Gray
+                            color = Color.Gray,
+                            lineHeight = 14.sp
                         )
                         // Tagged Employees or Target Departments
-                        if (post.target_group == "DepartmentBased" && !post.target_department.isNullOrEmpty()) {
+                        if (post.target_group == "Everyone") {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.item_name),
+                                    contentDescription = "Target",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = Color.Gray
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Tagged: Everyone",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF666666)
+                                )
+                            }
+                        } else if (post.target_group == "DepartmentBased" && !post.target_department.isNullOrEmpty()) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -547,25 +572,24 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Images if available (displayed side-by-side)
+            // Images if available
             if (!post.image_urls.isNullOrEmpty() && post.image_urls.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(140.dp)
+                        .padding(horizontal = 16.dp)
                         .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy((-40).dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     post.image_urls.forEach { imageUrl ->
                         Image(
                             painter = rememberAsyncImagePainter(imageUrl),
                             contentDescription = "Post image",
                             modifier = Modifier
-                                .width(130.dp)
-                                .height(130.dp)
-                                .clip(RoundedCornerShape(4.dp)),
+                                .heightIn(max = 200.dp)
+                                .widthIn(max = 280.dp)
+                                .clip(RoundedCornerShape(8.dp)),
                             contentScale = ContentScale.Fit
                         )
                     }
@@ -624,6 +648,7 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                             Text(
                                 text = "Post Start Date",
                                 fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 11.sp,
                                 color = Color.Gray
                             )
@@ -639,9 +664,9 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                                 Text(
                                     text = formatPostDateShort(post.start_date),
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     fontSize = 12.sp,
-                                    color = Color.Black
+                                    color = Color.Gray
                                 )
                             }
                         }
@@ -652,6 +677,7 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                             Text(
                                 text = "Post End Date",
                                 fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 11.sp,
                                 color = Color.Gray
                             )
@@ -667,9 +693,9 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                                 Text(
                                     text = formatPostDateShort(post.end_date),
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     fontSize = 12.sp,
-                                    color = Color.Black
+                                    color = Color.Gray
                                 )
                             }
                         }
@@ -828,11 +854,11 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
                 Box {
                     IconButton(
                         onClick = { showMenu = true },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(28.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(28.dp)
                                 .background(Color(0xFFDD3825), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
@@ -840,7 +866,7 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "Menu",
                                 tint = Color.White,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                         }
                     }
@@ -877,27 +903,25 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(500.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color.White),
                     contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            model = post.image_urls[0],
-                            onError = {
-                                android.util.Log.e("HomePagePostCard", "Failed to load image: ${post.image_urls[0]}")
-                                android.util.Log.e("HomePagePostCard", "Error: ${it.result.throwable}")
-                            },
-                            onSuccess = {
-                                android.util.Log.d("HomePagePostCard", "Image loaded successfully: ${post.image_urls[0]}")
-                            }
-                        ),
+                    AsyncImage(
+                        model = post.image_urls[0],
                         contentDescription = "Post banner",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight(),
-                        contentScale = ContentScale.Fit
+                            .wrapContentHeight(),
+                        contentScale = ContentScale.Fit,
+                        onError = {
+                            android.util.Log.e("HomePagePostCard", "Failed to load image: ${post.image_urls[0]}")
+                            android.util.Log.e("HomePagePostCard", "Error: ${it.result.throwable}")
+                        },
+                        onSuccess = {
+                            android.util.Log.d("HomePagePostCard", "Image loaded successfully: ${post.image_urls[0]}")
+                        }
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -976,6 +1000,7 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
                                 text = "Post Start Date",
                                 fontFamily = GraphikFontFamily,
                                 fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
                                 color = Color.Gray
                             )
                             Spacer(modifier = Modifier.height(6.dp))
@@ -995,7 +1020,7 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 13.sp,
-                                    color = Color.Black
+                                    color = Color.Gray
                                 )
                             }
                         }
@@ -1010,6 +1035,7 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
                                 text = "Post End Date",
                                 fontFamily = GraphikFontFamily,
                                 fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
                                 color = Color.Gray
                             )
                             Spacer(modifier = Modifier.height(6.dp))
@@ -1029,7 +1055,7 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 13.sp,
-                                    color = Color.Black
+                                    color = Color.Gray
                                 )
                             }
                         }

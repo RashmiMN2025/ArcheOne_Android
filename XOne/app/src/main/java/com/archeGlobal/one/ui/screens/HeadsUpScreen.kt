@@ -1,4 +1,5 @@
 package com.archeGlobal.one.ui.screens
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +40,7 @@ import com.archeGlobal.one.network.HeadsUpPostsRequest
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.components.NewPostDialog
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -56,7 +59,7 @@ fun HeadsUpScreen(
     onFooterHeadsUpClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
-    onHistoryClick: () -> Unit = {},
+    onHistoryClick: (initialTab: Int) -> Unit = {},
 ) {
     val context = LocalContext.current
     val userDataManager = UserDataManager.getInstance(context)
@@ -69,11 +72,16 @@ fun HeadsUpScreen(
     val userAccess = userData?.userDetails?.access ?: ""
     val canCreatePost = userAccess.lowercase() in listOf("admin", "it", "hr")
 
-    var showNewPostDialog by remember { mutableStateOf(false) }
+    var showNewPostDialog by rememberSaveable { mutableStateOf(false) }
     var posts by remember { mutableStateOf<List<CreatedPost>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var refreshTrigger by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
+
+    // Handle back press when dialog is open - close dialog instead of leaving screen
+    BackHandler(enabled = showNewPostDialog) {
+        showNewPostDialog = false
+    }
 
     // Function to load HeadsUp posts
     val loadPosts = suspend {
@@ -182,7 +190,8 @@ fun HeadsUpScreen(
                         scope.launch {
                             loadPosts()
                         }
-                    }
+                    },
+                    indicator = { _, _ -> } // Hide default indicator - use UniversalLoader instead
                 ) {
                     if (posts.isEmpty() && !isLoading) {
                         // Empty state
@@ -304,13 +313,20 @@ fun HeadsUpScreen(
                 userName = userName,
                 userAccess = userAccess,
                 onDismiss = { showNewPostDialog = false },
-                onSubmit = { _, _, _ ->
-                    showNewPostDialog = false
-                    // Navigate to post history screen after successful post creation
-                    onHistoryClick()
+                onSubmit = { _, _, formType ->
+                    // Don't close dialog - keep it open when navigating to history
+                    // so it reopens when user comes back from Post History screen
+                    // Navigate to correct tab: 0 for HeadsUp, 1 for Home Page
+                    val tab = if (formType == "Event") 1 else 0
+                    onHistoryClick(tab)
                 },
-                onHistoryClick = onHistoryClick
+                onHistoryClick = { onHistoryClick(0) }
             )
+        }
+
+        // Universal loader
+        if (isLoading) {
+            UniversalLoader(isLoading = true)
         }
     }
 }
@@ -324,6 +340,7 @@ fun HeadsUpPostCard(
     var expanded by remember { mutableStateOf(false) }
     var showImageZoom by remember { mutableStateOf(false) }
     var zoomedImageUrl by remember { mutableStateOf("") }
+    var showTargetDetailsDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -391,37 +408,77 @@ fun HeadsUpPostCard(
                             text = formatPostTime(post.created_at),
                             fontFamily = GraphikFontFamily,
                             fontSize = 12.sp,
-                            color = Color.Gray
+                            color = Color.Gray,
+                            lineHeight = 14.sp
                         )
-                        // Target audience with icon
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.item_name),
-                                contentDescription = "Target Audience",
-                                modifier = Modifier.size(12.dp),
-                                tint = Color.Gray
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = formatTargetAudience(post),
-                                fontFamily = GraphikFontFamily,
-                                fontSize = 12.sp,
-                                color = Color(0xFF666666)
-                            )
+                        
+                        // Target audience logic
+                        val isEveryone = post.target_group == "Everyone" || 
+                                        (post.target_department.isNullOrEmpty() && 
+                                         post.target_location.isNullOrEmpty() && 
+                                         post.target_employee.isNullOrEmpty() &&
+                                         post.target_group != "DepartmentBased" &&
+                                         post.target_group != "LocationBased" &&
+                                         post.target_group != "EmployeeBased" &&
+                                         post.target_group != "ProjectBased")
+
+                        // Only show label/icon if NOT everyone
+                        if (!isEveryone) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.item_name),
+                                    contentDescription = "Target Audience",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = Color.Gray
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = formatTargetAudience(post),
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF666666),
+                                    lineHeight = 14.sp
+                                )
+                            }
                         }
+
                         // Show actual target details (emails/departments/locations)
-                        val targetDetails = formatTargetDetails(post)
-                        if (targetDetails.isNotEmpty()) {
+                        // Prepare the list of items
+                        val targetItems = when {
+                            isEveryone -> listOf("everyone@arche.global")
+                            !post.target_department.isNullOrEmpty() -> post.target_department
+                            !post.target_location.isNullOrEmpty() -> post.target_location
+                            !post.target_employee.isNullOrEmpty() -> post.target_employee
+                            else -> listOf("everyone@arche.global")
+                        } ?: emptyList()
+
+                        if (targetItems.isNotEmpty()) {
+                            val displayText = if (targetItems.size > 3) {
+                                val firstThree = targetItems.take(3).joinToString("\n")
+                                "$firstThree\n+${targetItems.size - 3}"
+                            } else {
+                                targetItems.joinToString("\n")
+                            }
+
                             Text(
-                                text = targetDetails,
+                                text = displayText,
                                 fontFamily = GraphikFontFamily,
                                 fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
                                 color = Color(0xFF999999),
-                                modifier = Modifier.padding(start = 16.dp),
+                                modifier = Modifier
+                                    .padding(start = if (isEveryone) 0.dp else 16.dp)
+                                    .clickable(enabled = targetItems.size > 3) {
+                                        if (targetItems.size > 3) {
+                                            showTargetDetailsDialog = true
+                                        }
+                                    },
                                 softWrap = true,
-                                overflow = TextOverflow.Visible
+                                overflow = TextOverflow.Visible,
+                                lineHeight = 14.sp
                             )
                         }
                     }
@@ -545,25 +602,24 @@ fun HeadsUpPostCard(
                 lineHeight = 20.sp
             )
 
-            // Images if available with zoom functionality (displayed side-by-side)
+            // Images if available with zoom functionality
             if (!post.image_urls.isNullOrEmpty() && post.image_urls.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(140.dp)
+                        .padding(horizontal = 16.dp)
                         .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy((-40).dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     post.image_urls.forEach { imageUrl ->
                         Image(
                             painter = rememberAsyncImagePainter(imageUrl),
                             contentDescription = "Post image",
                             modifier = Modifier
-                                .width(130.dp)
-                                .height(130.dp)
-                                .clip(RoundedCornerShape(4.dp))
+                                .heightIn(max = 200.dp)
+                                .widthIn(max = 280.dp)
+                                .clip(RoundedCornerShape(8.dp))
                                 .clickable {
                                     zoomedImageUrl = imageUrl
                                     showImageZoom = true
@@ -609,6 +665,74 @@ fun HeadsUpPostCard(
                     color = Color(0xFF666666)
                 )
             }
+
+            // Post Start Date and Post End Date
+            if (!post.start_date.isNullOrEmpty() || !post.end_date.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    if (!post.start_date.isNullOrEmpty()) {
+                        Column(horizontalAlignment = Alignment.Start) {
+                            Text(
+                                text = "Post Start Date",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.green),
+                                    contentDescription = "Start Date",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFF66BB6A)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = formatPostDateShort(post.start_date),
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    }
+
+                    if (!post.end_date.isNullOrEmpty()) {
+                        Column(horizontalAlignment = Alignment.Start) {
+                            Text(
+                                text = "Post End Date",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.red),
+                                    contentDescription = "End Date",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFFD32F2F)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = formatPostDateShort(post.end_date),
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -649,6 +773,63 @@ fun HeadsUpPostCard(
             }
         }
     }
+    
+    // Target Details Dialog
+    if (showTargetDetailsDialog) {
+        Dialog(onDismissRequest = { showTargetDetailsDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Tagged Users",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    val targetItems = when {
+                        post.target_group == "Everyone" -> listOf("everyone@arche.global")
+                        !post.target_department.isNullOrEmpty() -> post.target_department
+                        !post.target_location.isNullOrEmpty() -> post.target_location
+                        !post.target_employee.isNullOrEmpty() -> post.target_employee
+                        else -> listOf("everyone@arche.global")
+                    } ?: emptyList()
+
+                    LazyColumn {
+                        items(targetItems) { item ->
+                            Text(
+                                text = item,
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 14.sp,
+                                color = Color.Black,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                            HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Button(
+                        onClick = { showTargetDetailsDialog = false },
+                        modifier = Modifier.align(Alignment.End),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                    ) {
+                        Text("Close", color = Color.White)
+                    }
+                }
+            }
+        }
+    }
 }
 
 // Helper function to format post time
@@ -659,9 +840,11 @@ private fun formatPostTime(createdAt: String): String {
         val date = inputFormat.parse(createdAt)
 
         if (date != null) {
-            // Format to "19 November 2025"
-            val outputFormat = SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
-            outputFormat.format(date)
+            android.text.format.DateUtils.getRelativeTimeSpanString(
+                date.time,
+                System.currentTimeMillis(),
+                android.text.format.DateUtils.MINUTE_IN_MILLIS
+            ).toString()
         } else {
             "Unknown"
         }

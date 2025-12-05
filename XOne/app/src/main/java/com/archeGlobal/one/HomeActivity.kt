@@ -661,13 +661,19 @@ class HomeActivity : AppCompatActivity() {
                             onFooterHeadsUpClick = { /* Already on HeadsUp */ },
                             onFooterSOSClick = { navController.navigate("sos") },
                             onFooterProfileClick = { navController.navigate("profile") },
-                            onHistoryClick = { navController.navigate("post_history") },
+                            onHistoryClick = { tab -> navController.navigate("post_history?initialTab=$tab") },
                         )
                     }
 
                     // Post History Screen
                     composable(
-                        route = "post_history",
+                        route = "post_history?initialTab={initialTab}",
+                        arguments = listOf(
+                            navArgument("initialTab") {
+                                type = NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
                         },
@@ -680,9 +686,11 @@ class HomeActivity : AppCompatActivity() {
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
                         },
-                    ) {
+                    ) { backStackEntry ->
+                        val initialTab = backStackEntry.arguments?.getInt("initialTab") ?: 0
                         PostHistoryScreen(
-                            onBackPressed = { navController.popBackStack() }
+                            onBackPressed = { navController.popBackStack() },
+                            initialTab = initialTab
                         )
                     }
 

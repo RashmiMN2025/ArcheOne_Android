@@ -172,7 +172,7 @@ fun NewPostDialog(
     existingPost: com.archeGlobal.one.network.CreatedPost? = null,
 ) {
     // Form type switcher state - initialize based on existing post type
-    var formType by remember {
+    var formType by remember(existingPost) {
         mutableStateOf(
             if (existingPost?.post_type == "homeView") "Event" else "Post"
         )
@@ -201,11 +201,37 @@ fun NewPostDialog(
     // Note: Don't pre-fill postType from existingPost as we'll infer it from subject
     var postType by remember { mutableStateOf("") }
     var postSubject by remember { mutableStateOf(existingPost?.subject ?: "") }
+    // Track loading state while inferring post type in edit mode
+    var isLoadingPostType by remember { mutableStateOf(isEditMode && !existingPost?.subject.isNullOrEmpty()) }
+    var customSubject by remember { mutableStateOf("") }
+
+    // Calculate available post types based on user access
+    val availablePostTypes = remember(announcementCategories, userAccess) {
+        val types = mutableListOf<String>()
+        val userCategory = announcementCategories.find {
+            it.access.equals(userAccess, ignoreCase = true)
+        }
+        userCategory?.fields?.forEach { field ->
+             val categoryName = when {
+                field.category.contains("Planned & Unplanned", ignoreCase = true) -> {
+                    types.add("Planned Post")
+                    types.add("Unplanned Post")
+                    null
+                }
+                field.category.contains("Unplanned", ignoreCase = true) -> "Unplanned Post"
+                field.category.contains("Planned", ignoreCase = true) -> "Planned Post"
+                else -> field.category
+            }
+            categoryName?.let { types.add(it) }
+        }
+        types.distinct()
+    }
 
     // Infer post type from post subject in edit mode
     LaunchedEffect(announcementCategories, userAccess, isEditMode, postSubject) {
         // Only infer post type in edit mode when we have a subject but no post type
         if (isEditMode && postType.isEmpty() && postSubject.isNotEmpty() && announcementCategories.isNotEmpty()) {
+            isLoadingPostType = true
             android.util.Log.d("NewPostDialog", "Attempting to infer post type from subject: '$postSubject'")
 
             // Get user's category
@@ -238,8 +264,21 @@ fun NewPostDialog(
             }
 
             if (postType.isEmpty()) {
-                android.util.Log.w("NewPostDialog", "Could not infer post type from subject: '$postSubject'")
+                android.util.Log.w("NewPostDialog", "Could not infer post type from subject: '$postSubject'. Assuming Custom Subject (Other).")
+                // Fallback for Custom Subject
+                if (availablePostTypes.isNotEmpty()) {
+                    postType = availablePostTypes.first()
+                    customSubject = postSubject
+                    postSubject = "Other"
+                    android.util.Log.d("NewPostDialog", "Fallback: Set postType='$postType', postSubject='Other', customSubject='$customSubject'")
+                }
             }
+
+            // Loading complete
+            isLoadingPostType = false
+        } else if (!isEditMode) {
+            // Not in edit mode, so no loading needed
+            isLoadingPostType = false
         }
     }
     var postPriority by remember { mutableStateOf(existingPost?.priority ?: "") }
@@ -623,6 +662,12 @@ fun NewPostDialog(
         android.util.Log.d("NewPostDialog", "Username: ${userData?.name}")
         android.util.Log.d("NewPostDialog", "Employee ID: ${userData?.employeeId}")
 
+        // Validate support channel details before submission (only for HeadsUp posts)
+        if (formType == "Post" && supportChannelDetails.isBlank()) {
+            Toast.makeText(context, "Please enter Support Channel Details", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         coroutineScope.launch {
             isSubmitting = true
             android.util.Log.d("NewPostDialog", "Submission state set to true")
@@ -717,7 +762,9 @@ fun NewPostDialog(
                     "username" to (userData?.name ?: userName),
                     "emp_id" to (userData?.employeeId ?: ""),
                     "post_type" to if (formType == "Post") "headsUp" else "homeView",
-                    "subject" to if (formType == "Post") postSubject else eventSubject,
+                    "subject" to if (formType == "Post") {
+                        if (postSubject == "Other") customSubject else postSubject
+                    } else eventSubject,
                     "priority" to if (formType == "Post") postPriority else "Medium",
                     "description" to if (formType == "Post") announcementDescription else eventDescription,
                     "start_date" to formatDateToISO(if (formType == "Post") postStartDate else eventStartDate),
@@ -761,8 +808,10 @@ fun NewPostDialog(
                     postRequestMap["support_channel"] = supportChannelDetails
                 }
 
-                // Remove existing_images from the map as they are now sent as multipart files
-                postRequestMap.remove("existing_images")
+                // Add existing_images to the map if in edit mode
+                if (isEditMode) {
+                    postRequestMap["existing_images"] = existingImageUrls
+                }
 
                 android.util.Log.d("NewPostDialog", "=== FINAL API REQUEST DATA ===")
                 android.util.Log.d("NewPostDialog", "Post Type: ${postRequestMap["post_type"]}")
@@ -859,7 +908,8 @@ fun NewPostDialog(
                     }
                 }
 
-                // Process existing images (from URLs) if in edit mode
+                // Process existing images (from URLs) logic REMOVED - we send existing_images list in body instead
+                /*
                 if (isEditMode && existingImageUrls.isNotEmpty()) {
                     android.util.Log.d("NewPostDialog", "Processing ${existingImageUrls.size} existing images (from URLs)")
                     existingImageUrls.mapIndexedNotNullTo(allImageParts) { index, imageUrl ->
@@ -873,6 +923,7 @@ fun NewPostDialog(
                         part
                     }
                 }
+                */
 
                 android.util.Log.d("NewPostDialog", "Total images ready for upload: ${allImageParts.size}")
 
@@ -1012,7 +1063,7 @@ fun NewPostDialog(
                     Row(
                         modifier = Modifier
                             .clickable {
-                                onDismiss()
+                                // onDismiss() - Removed to keep dialog open when returning from history
                                 onHistoryClick()
                             }
                             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -1106,6 +1157,8 @@ fun NewPostDialog(
                             onPostTypeChange = { postType = it },
                             postSubject = postSubject,
                             onPostSubjectChange = { postSubject = it },
+                            customSubject = customSubject,
+                            onCustomSubjectChange = { customSubject = it },
                             postPriority = postPriority,
                             onPostPriorityChange = { postPriority = it },
                             postGroup = postGroup,
@@ -1268,6 +1321,9 @@ fun NewPostDialog(
             )
         }
 
+        // Show loader while inferring post type in edit mode
+        UniversalLoader(isLoading = isLoadingPostType)
+
     }
 }
 
@@ -1279,6 +1335,8 @@ private fun PostFormContent(
     onPostTypeChange: (String) -> Unit,
     postSubject: String,
     onPostSubjectChange: (String) -> Unit,
+    customSubject: String,
+    onCustomSubjectChange: (String) -> Unit,
     postPriority: String,
     onPostPriorityChange: (String) -> Unit,
     postGroup: String,
@@ -1450,6 +1508,17 @@ private fun PostFormContent(
         onValueSelected = onPostSubjectChange,
         placeholder = "Select Post Subject",
     )
+
+    if (postSubject == "Other") {
+        Spacer(modifier = Modifier.height(12.dp))
+        PostTextField(
+            label = "Custom Subject",
+            value = customSubject,
+            onValueChange = onCustomSubjectChange,
+            placeholder = "Enter Custom Subject",
+            singleLine = true
+        )
+    }
 
     Spacer(modifier = Modifier.height(24.dp))
 
@@ -2467,7 +2536,12 @@ private fun PostFormContent(
                 disabledContentColor = Color.White,
             ),
             shape = RoundedCornerShape(12.dp),
-            enabled = !isSubmitting && announcementDescription.isNotBlank() && postSubject.isNotBlank() && postPriority.isNotBlank(),
+            enabled = !isSubmitting &&
+                announcementDescription.isNotBlank() &&
+                postSubject.isNotBlank() &&
+                postPriority.isNotBlank() &&
+                (postSubject != "Other" || customSubject.isNotBlank()) &&
+                isDateRangeValid(postStartDate, postEndDate),
         ) {
             if (isSubmitting) {
                 CircularProgressIndicator(
@@ -2478,9 +2552,10 @@ private fun PostFormContent(
                 Spacer(modifier = Modifier.width(8.dp))
             }
             Icon(
-                imageVector = Icons.Default.Send,
+                painter = painterResource(id = R.drawable.newpost),
                 contentDescription = if (isEditMode) "Update" else "Post",
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
+                tint = Color.White
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -2822,13 +2897,14 @@ private fun EventFormContent(
                 Spacer(modifier = Modifier.width(8.dp))
             }
             Icon(
-                imageVector = Icons.Default.Send,
-                contentDescription = "Create Post",
-                modifier = Modifier.size(20.dp)
+                painter = painterResource(id = R.drawable.newpost),
+                contentDescription = "Post",
+                modifier = Modifier.size(20.dp),
+                tint = Color.White
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Create Post",
+                text = "Post",
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
@@ -3025,6 +3101,7 @@ private fun PostDateField(
         month,
         day,
     )
+    datePickerDialog.datePicker.minDate = System.currentTimeMillis() - 1000
 
     Column(modifier = modifier) {
         if (label.isNotEmpty()) {
@@ -3517,7 +3594,7 @@ private fun PostPreviewDialog(
                                     text = "Activity Duration :",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
-                                    fontSize = 11.sp,
+                                    fontSize = 13.sp,
                                     color = Color.Black
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -3549,7 +3626,7 @@ private fun PostPreviewDialog(
                                 Text(
                                     text = "$startDateFull, $startDurationTime - $endDateFull, $endDurationTime",
                                     fontFamily = GraphikFontFamily,
-                                    fontSize = 8.sp,
+                                    fontSize = 11.sp,
                                     color = Color.Gray,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -3561,7 +3638,7 @@ private fun PostPreviewDialog(
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                    horizontalArrangement = Arrangement.Start
                                 ) {
                                     // Post Start Date - only if filled
                                     if (postStartDate.isNotEmpty()) {
@@ -3569,7 +3646,7 @@ private fun PostPreviewDialog(
                                             Text(
                                                 text = "Post Start Date",
                                                 fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Normal,
+                                                fontWeight = FontWeight.SemiBold,
                                                 fontSize = 9.sp,
                                                 color = Color.Gray,
                                             )
@@ -3585,9 +3662,9 @@ private fun PostPreviewDialog(
                                                 Text(
                                                     text = convertToShortMonth(postStartDate),
                                                     fontFamily = GraphikFontFamily,
-                                                    fontWeight = FontWeight.Medium,
+                                                    fontWeight = FontWeight.Normal,
                                                     fontSize = 10.sp,
-                                                    color = Color.Black,
+                                                    color = Color.Gray,
                                                 )
                                             }
                                         }
@@ -3595,11 +3672,14 @@ private fun PostPreviewDialog(
 
                                     // Post End Date - only if filled
                                     if (postEndDate.isNotEmpty()) {
-                                        Column(horizontalAlignment = Alignment.Start) {
+                                        Column(
+                                            horizontalAlignment = Alignment.Start,
+                                            modifier = Modifier.padding(start = 24.dp)
+                                        ) {
                                             Text(
                                                 text = "Post End Date",
                                                 fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Normal,
+                                                fontWeight = FontWeight.SemiBold,
                                                 fontSize = 9.sp,
                                                 color = Color.Gray,
                                             )
@@ -3615,9 +3695,9 @@ private fun PostPreviewDialog(
                                                 Text(
                                                     text = convertToShortMonth(postEndDate),
                                                     fontFamily = GraphikFontFamily,
-                                                    fontWeight = FontWeight.Medium,
+                                                    fontWeight = FontWeight.Normal,
                                                     fontSize = 10.sp,
-                                                    color = Color.Black,
+                                                    color = Color.Gray,
                                                 )
                                             }
                                         }
@@ -3881,5 +3961,21 @@ private fun EventPreviewDialog(
                 }
             }
         }
+    }
+}
+
+private fun isDateRangeValid(startDate: String, endDate: String): Boolean {
+    if (startDate.isEmpty() || endDate.isEmpty()) return false
+    return try {
+        val format = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
+        val start = format.parse(startDate)
+        val end = format.parse(endDate)
+        if (start != null && end != null) {
+            !start.after(end)
+        } else {
+            false
+        }
+    } catch (e: Exception) {
+        false
     }
 }
