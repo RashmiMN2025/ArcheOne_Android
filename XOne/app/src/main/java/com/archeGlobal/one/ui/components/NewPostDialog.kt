@@ -38,8 +38,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.R
 import coil.compose.rememberAsyncImagePainter
@@ -1226,7 +1230,22 @@ fun NewPostDialog(
                             announcementDescription = announcementDescription,
                             onAnnouncementDescriptionChange = { announcementDescription = it },
                             postStartDate = postStartDate,
-                            onPostStartDateChange = { postStartDate = it },
+                            onPostStartDateChange = { newDate ->
+                                postStartDate = newDate
+                                postEndDate = newDate
+                                try {
+                                    val inputFormat = SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
+                                    val date = inputFormat.parse(newDate)
+                                    if (date != null) {
+                                        val outputFormat = SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH)
+                                        val shortDate = outputFormat.format(date)
+                                        startDurationDate = shortDate
+                                        endDurationDate = shortDate
+                                    }
+                                } catch (e: Exception) {
+                                    // Ignore
+                                }
+                            },
                             postEndDate = postEndDate,
                             onPostEndDateChange = { postEndDate = it },
                             startDurationDate = startDurationDate,
@@ -2383,6 +2402,16 @@ private fun PostFormContent(
 
     Spacer(modifier = Modifier.height(24.dp))
 
+    // Calculate min date based on post start date
+    val postStartDateMillis = remember(postStartDate) {
+        try {
+             val format = SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
+             format.parse(postStartDate)?.time
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     // Post Start Date
     PostDateField(
         label = "Post Start Date",
@@ -2397,6 +2426,7 @@ private fun PostFormContent(
         label = "Post End Date",
         value = postEndDate,
         onValueChange = onPostEndDateChange,
+        minDateMillis = postStartDateMillis
     )
 
     Spacer(modifier = Modifier.height(24.dp))
@@ -2432,7 +2462,8 @@ private fun PostFormContent(
             onValueChange = onStartDurationDateChange,
             compact = true,
             useShortMonth = true,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            minDateMillis = postStartDateMillis
         )
         PostTimeField(
             label = "",
@@ -2466,7 +2497,8 @@ private fun PostFormContent(
             onValueChange = onEndDurationDateChange,
             compact = true,
             useShortMonth = true,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            minDateMillis = postStartDateMillis
         )
         PostTimeField(
             label = "",
@@ -3082,6 +3114,7 @@ private fun PostDateField(
     onValueChange: (String) -> Unit,
     compact: Boolean = false,
     useShortMonth: Boolean = false,
+    minDateMillis: Long? = null,
     modifier: Modifier = Modifier,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -3101,7 +3134,7 @@ private fun PostDateField(
         month,
         day,
     )
-    datePickerDialog.datePicker.minDate = System.currentTimeMillis() - 1000
+    datePickerDialog.datePicker.minDate = minDateMillis ?: (System.currentTimeMillis() - 1000)
 
     Column(modifier = modifier) {
         if (label.isNotEmpty()) {
@@ -3319,6 +3352,9 @@ private fun PostPreviewDialog(
     selectedProjects: List<String> = emptyList(),
     onDismiss: () -> Unit,
 ) {
+    var isImagesExpanded by remember { mutableStateOf(false) }
+    var isTargetDetailsExpanded by remember { mutableStateOf(false) }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -3379,7 +3415,7 @@ private fun PostPreviewDialog(
                                 ) {
                                     // Profile picture
                                     Card(
-                                        modifier = Modifier.size(32.dp),
+                                        modifier = Modifier.size(40.dp),
                                         shape = CircleShape,
                                         colors = CardDefaults.cardColors(containerColor = Color.Gray)
                                     ) {
@@ -3401,7 +3437,7 @@ private fun PostPreviewDialog(
                                                     text = userName.take(1).uppercase(),
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Bold,
-                                                    fontSize = 12.sp,
+                                                    fontSize = 18.sp,
                                                     color = Color.White
                                                 )
                                             }
@@ -3413,15 +3449,16 @@ private fun PostPreviewDialog(
                                             text = userName,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 12.sp,
+                                            fontSize = 16.sp,
                                             color = Color.Black,
                                         )
                                         Text(
                                             text = "12 November 2025",
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
-                                            fontSize = 10.sp,
+                                            fontSize = 12.sp,
                                             color = Color.Gray,
+                                            lineHeight = 14.sp
                                         )
                                         // Target audience with icon
                                         val targetLabel = when {
@@ -3440,38 +3477,64 @@ private fun PostPreviewDialog(
                                                 Icon(
                                                     painter = painterResource(id = R.drawable.item_name),
                                                     contentDescription = "Target Audience",
-                                                    modifier = Modifier.size(10.dp),
+                                                    modifier = Modifier.size(12.dp),
                                                     tint = Color.Gray
                                                 )
                                                 Spacer(modifier = Modifier.width(4.dp))
                                                 Text(
                                                     text = targetLabel,
                                                     fontFamily = GraphikFontFamily,
-                                                    fontSize = 10.sp,
-                                                    color = Color(0xFF666666)
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = Color(0xFF666666),
+                                                    lineHeight = 14.sp
                                                 )
                                             }
                                         }
 
                                         // Show actual target details
-                                        val targetDetails = when {
-                                            postGroup == "Everyone" -> "Everyone@arche.global"
-                                            selectedDepartments.isNotEmpty() -> selectedDepartments.joinToString("\n")
-                                            selectedLocations.isNotEmpty() -> selectedLocations.joinToString("\n")
-                                            selectedEmployees.isNotEmpty() -> selectedEmployees.map { it.mail }.joinToString("\n")
-                                            selectedProjects.isNotEmpty() -> selectedProjects.joinToString("\n")
-                                            else -> null
+                                        val targetList = when {
+                                            postGroup == "Everyone" -> listOf("everyone@arche.global")
+                                            selectedDepartments.isNotEmpty() -> selectedDepartments
+                                            selectedLocations.isNotEmpty() -> selectedLocations
+                                            selectedEmployees.isNotEmpty() -> selectedEmployees.map { it.mail }
+                                            selectedProjects.isNotEmpty() -> selectedProjects
+                                            else -> emptyList()
                                         }
 
-                                        if (targetDetails != null) {
+                                        if (targetList.isNotEmpty()) {
+                                            val annotatedString = if (!isTargetDetailsExpanded && targetList.size > 3) {
+                                                val displayLimit = 3
+                                                val displayItems = targetList.take(displayLimit)
+                                                val remainingCount = targetList.size - displayLimit
+                                                buildAnnotatedString {
+                                                    append(displayItems.joinToString("\n"))
+                                                    if (remainingCount > 0) {
+                                                        append("\n")
+                                                        withStyle(style = SpanStyle(color = Color(0xFFDD3825), fontWeight = FontWeight.Bold)) {
+                                                            append("+$remainingCount")
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                buildAnnotatedString {
+                                                    append(targetList.joinToString("\n"))
+                                                }
+                                            }
+
                                             Text(
-                                                text = targetDetails,
+                                                text = annotatedString,
                                                 fontFamily = GraphikFontFamily,
-                                                fontSize = 10.sp,
+                                                fontSize = 12.sp,
                                                 color = Color(0xFF999999),
-                                                modifier = Modifier.padding(start = 14.dp),
+                                                modifier = Modifier
+                                                    .padding(start = 16.dp)
+                                                    .clickable(enabled = targetList.size > 3) {
+                                                        isTargetDetailsExpanded = !isTargetDetailsExpanded
+                                                    },
                                                 softWrap = true,
-                                                overflow = TextOverflow.Visible
+                                                overflow = TextOverflow.Visible,
+                                                lineHeight = 14.sp
                                             )
                                         }
                                     }
@@ -3496,24 +3559,24 @@ private fun PostPreviewDialog(
                                             text = postPriority,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 9.sp,
+                                            fontSize = 10.sp,
                                             color = Color.White,
                                         )
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             // Post Subject - only show if not default selection
                             if (postSubject.isNotBlank()) {
                                 Text(
                                     text = postSubject,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 12.sp,
+                                    fontSize = 18.sp,
                                     color = Color.Black,
                                 )
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                             }
 
                             // Announcement Description - only show if not empty
@@ -3522,47 +3585,90 @@ private fun PostPreviewDialog(
                                     text = announcementDescription,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    fontSize = 11.sp,
-                                    color = Color.Black,
-                                    lineHeight = 16.sp
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF666666),
+                                    lineHeight = 20.sp
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
                             }
 
                             // Attached Images - display horizontally scrollable like in HeadsUpScreen
-                            val totalImages = existingImageUrls.size + postImageUris.size
-                            if (totalImages > 0) {
+                            val allImages = existingImageUrls + postImageUris
+                            if (allImages.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(10.dp))
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(140.dp)
-                                        .horizontalScroll(rememberScrollState()),
-                                    horizontalArrangement = Arrangement.spacedBy((-20).dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // Show existing images first, then new images
-                                    existingImageUrls.forEach { imageUrl ->
-                                        Image(
-                                            painter = rememberAsyncImagePainter(imageUrl),
-                                            contentDescription = "Post image",
-                                            modifier = Modifier
-                                                .width(130.dp)
-                                                .height(130.dp)
-                                                .clip(RoundedCornerShape(4.dp)),
-                                            contentScale = ContentScale.Fit
-                                        )
+                                
+                                if (isImagesExpanded) {
+                                    // Expanded: Show all images in a scrollable row with normal spacing
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        allImages.forEach { imageSource ->
+                                            Box(
+                                                modifier = Modifier.clickable { isImagesExpanded = false }
+                                            ) {
+                                                Image(
+                                                    painter = rememberAsyncImagePainter(imageSource),
+                                                    contentDescription = "Post image",
+                                                    modifier = Modifier
+                                                        .heightIn(max = 130.dp)
+                                                        .widthIn(max = 200.dp)
+                                                        .clip(RoundedCornerShape(4.dp)),
+                                                    contentScale = ContentScale.Fit
+                                                )
+                                            }
+                                        }
                                     }
-                                    postImageUris.forEach { imageUri ->
-                                        Image(
-                                            painter = rememberAsyncImagePainter(imageUri),
-                                            contentDescription = "Post image",
-                                            modifier = Modifier
-                                                .width(130.dp)
-                                                .height(130.dp)
-                                                .clip(RoundedCornerShape(4.dp)),
-                                            contentScale = ContentScale.Fit
-                                        )
+                                } else {
+                                    // Collapsed: Show top 3 images spaced normally but truncated
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        val displayLimit = 3
+                                        val displayImages = allImages.take(displayLimit)
+                                        val remainingCount = allImages.size - displayLimit
+
+                                        displayImages.forEachIndexed { index, imageSource ->
+                                            Box(
+                                                modifier = Modifier.clip(RoundedCornerShape(4.dp))
+                                            ) {
+                                                Image(
+                                                    painter = rememberAsyncImagePainter(imageSource),
+                                                    contentDescription = "Post image",
+                                                    modifier = Modifier
+                                                        .heightIn(max = 130.dp)
+                                                        .widthIn(max = 200.dp)
+                                                        .clip(RoundedCornerShape(4.dp)),
+                                                    contentScale = ContentScale.Fit
+                                                )
+
+                                                // Overlay for the last item if there are more
+                                                if (index == displayLimit - 1 && remainingCount > 0) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .matchParentSize()
+                                                            .background(Color.Black.copy(alpha = 0.5f))
+                                                            .clickable { isImagesExpanded = true },
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Text(
+                                                            text = "+$remainingCount",
+                                                            color = Color.White,
+                                                            fontSize = 24.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontFamily = GraphikFontFamily
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -3573,16 +3679,16 @@ private fun PostPreviewDialog(
                                 Text(
                                     text = "Support Details :",
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
                                     color = Color.Black
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = supportChannelDetails,
                                     fontFamily = GraphikFontFamily,
-                                    fontSize = 10.sp,
-                                    color = Color.Gray
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF666666)
                                 )
                             }
 
@@ -3593,8 +3699,8 @@ private fun PostPreviewDialog(
                                 Text(
                                     text = "Activity Duration :",
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
                                     color = Color.Black
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -3626,8 +3732,8 @@ private fun PostPreviewDialog(
                                 Text(
                                     text = "$startDateFull, $startDurationTime - $endDateFull, $endDurationTime",
                                     fontFamily = GraphikFontFamily,
-                                    fontSize = 11.sp,
-                                    color = Color.Gray,
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF666666),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -3638,7 +3744,7 @@ private fun PostPreviewDialog(
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.Start
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
                                     // Post Start Date - only if filled
                                     if (postStartDate.isNotEmpty()) {
@@ -3647,23 +3753,23 @@ private fun PostPreviewDialog(
                                                 text = "Post Start Date",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.SemiBold,
-                                                fontSize = 9.sp,
+                                                fontSize = 11.sp,
                                                 color = Color.Gray,
                                             )
-                                            Spacer(modifier = Modifier.height(3.dp))
+                                            Spacer(modifier = Modifier.height(4.dp))
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     painter = painterResource(id = com.archeGlobal.one.R.drawable.green),
                                                     contentDescription = "Start Date",
-                                                    modifier = Modifier.size(12.dp),
+                                                    modifier = Modifier.size(16.dp),
                                                     tint = Color(0xFF66BB6A)
                                                 )
-                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
                                                     text = convertToShortMonth(postStartDate),
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Normal,
-                                                    fontSize = 10.sp,
+                                                    fontSize = 12.sp,
                                                     color = Color.Gray,
                                                 )
                                             }
@@ -3672,31 +3778,28 @@ private fun PostPreviewDialog(
 
                                     // Post End Date - only if filled
                                     if (postEndDate.isNotEmpty()) {
-                                        Column(
-                                            horizontalAlignment = Alignment.Start,
-                                            modifier = Modifier.padding(start = 24.dp)
-                                        ) {
+                                        Column(horizontalAlignment = Alignment.Start) {
                                             Text(
                                                 text = "Post End Date",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.SemiBold,
-                                                fontSize = 9.sp,
+                                                fontSize = 11.sp,
                                                 color = Color.Gray,
                                             )
-                                            Spacer(modifier = Modifier.height(3.dp))
+                                            Spacer(modifier = Modifier.height(4.dp))
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     painter = painterResource(id = com.archeGlobal.one.R.drawable.red),
                                                     contentDescription = "End Date",
-                                                    modifier = Modifier.size(12.dp),
+                                                    modifier = Modifier.size(16.dp),
                                                     tint = Color(0xFFD32F2F)
                                                 )
-                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
                                                     text = convertToShortMonth(postEndDate),
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Normal,
-                                                    fontSize = 10.sp,
+                                                    fontSize = 12.sp,
                                                     color = Color.Gray,
                                                 )
                                             }

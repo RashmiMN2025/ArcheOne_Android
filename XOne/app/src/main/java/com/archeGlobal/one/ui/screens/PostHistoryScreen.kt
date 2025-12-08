@@ -2,6 +2,7 @@ package com.archeGlobal.one.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,10 +24,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
@@ -304,6 +310,7 @@ fun PostHistoryScreen(
 @Composable
 fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (CreatedPost) -> Unit) {
     var showMenu by remember { mutableStateOf(false) }
+    var isTargetDetailsExpanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
@@ -373,102 +380,105 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                             color = Color.Gray,
                             lineHeight = 14.sp
                         )
-                        // Tagged Employees or Target Departments
-                        if (post.target_group == "Everyone") {
+                        // Target audience logic
+                        val isEveryone = post.target_group == "Everyone" || 
+                                        (post.target_department.isNullOrEmpty() && 
+                                         post.target_location.isNullOrEmpty() && 
+                                         post.target_employee.isNullOrEmpty() &&
+                                         post.target_group != "DepartmentBased" &&
+                                         post.target_group != "LocationBased" &&
+                                         post.target_group != "EmployeeBased" &&
+                                         post.target_group != "ProjectBased")
+
+                        // Only show label/icon if NOT everyone
+                        if (!isEveryone) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.item_name),
-                                    contentDescription = "Target",
+                                    contentDescription = "Target Audience",
                                     modifier = Modifier.size(12.dp),
                                     tint = Color.Gray
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Tagged: Everyone",
+                                    text = formatTargetAudience(post),
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 12.sp,
-                                    color = Color(0xFF666666)
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF666666),
+                                    lineHeight = 14.sp
                                 )
                             }
-                        } else if (post.target_group == "DepartmentBased" && !post.target_department.isNullOrEmpty()) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.item_name),
-                                    contentDescription = "Target Departments",
-                                    modifier = Modifier.size(12.dp),
-                                    tint = Color.Gray
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
+                        }
+
+                        // Show actual target details (emails/departments/locations)
+                        // Prepare the list of items
+                        val targetItems = when {
+                            isEveryone -> listOf("everyone@arche.global")
+                            !post.target_department.isNullOrEmpty() -> post.target_department
+                            !post.target_location.isNullOrEmpty() -> post.target_location
+                            !post.target_employee.isNullOrEmpty() -> post.target_employee
+                            else -> listOf("everyone@arche.global")
+                        } ?: emptyList()
+
+                        if (targetItems.isNotEmpty()) {
+                            val annotatedString = if (!isTargetDetailsExpanded && targetItems.size > 3) {
+                                val firstThree = targetItems.take(3).joinToString("\n")
+                                val remainingCount = targetItems.size - 3
+                                buildAnnotatedString {
+                                    append(firstThree)
+                                    append("\n")
+                                    withStyle(style = SpanStyle(color = Color(0xFFDD3825), fontWeight = FontWeight.Bold)) {
+                                        append("+$remainingCount")
+                                    }
+                                }
+                            } else {
+                                buildAnnotatedString {
+                                    append(targetItems.joinToString("\n"))
+                                }
+                            }
+
+                            if (isEveryone) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.item_name),
+                                        contentDescription = "Target Audience",
+                                        modifier = Modifier.size(12.dp),
+                                        tint = Color.Gray
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = annotatedString,
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color(0xFF999999),
+                                        softWrap = true,
+                                        overflow = TextOverflow.Visible,
+                                        lineHeight = 14.sp
+                                    )
+                                }
+                            } else {
                                 Text(
-                                    text = "Target Departments",
+                                    text = annotatedString,
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 12.sp,
-                                    color = Color(0xFF666666)
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color(0xFF999999),
+                                    modifier = Modifier
+                                        .padding(start = 16.dp)
+                                        .clickable(enabled = targetItems.size > 3) {
+                                            isTargetDetailsExpanded = !isTargetDetailsExpanded
+                                        },
+                                    softWrap = true,
+                                    overflow = TextOverflow.Visible,
+                                    lineHeight = 14.sp
                                 )
                             }
-                            Text(
-                                text = post.target_department.joinToString(", "),
-                                fontFamily = GraphikFontFamily,
-                                fontSize = 10.sp,
-                                color = Color(0xFF999999),
-                                modifier = Modifier.padding(start = 16.dp)
-                            )
-                        } else if (!post.target_location.isNullOrEmpty()) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.item_name),
-                                    contentDescription = "Tagged Locations",
-                                    modifier = Modifier.size(12.dp),
-                                    tint = Color.Gray
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "Tagged Locations",
-                                    fontFamily = GraphikFontFamily,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF666666)
-                                )
-                            }
-                            Text(
-                                text = post.target_location.joinToString(", "),
-                                fontFamily = GraphikFontFamily,
-                                fontSize = 10.sp,
-                                color = Color(0xFF999999),
-                                modifier = Modifier
-                                    .padding(start = 16.dp)
-                                    .offset(y = (-3).dp)
-                            )
-                        } else if (!post.target_employee.isNullOrEmpty()) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.item_name),
-                                    contentDescription = "Tagged Employees",
-                                    modifier = Modifier.size(12.dp),
-                                    tint = Color.Gray
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "Tagged Employees",
-                                    fontFamily = GraphikFontFamily,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF666666)
-                                )
-                            }
-                            Text(
-                                text = post.target_employee.joinToString(", "),
-                                fontFamily = GraphikFontFamily,
-                                fontSize = 10.sp,
-                                color = Color(0xFF999999),
-                                modifier = Modifier.padding(start = 16.dp)
-                            )
                         }
                     }
                 }
@@ -1065,4 +1075,30 @@ fun HomePagePostCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Cre
             }
         }
     }
+}
+
+// Helper function to format target audience label
+private fun formatTargetAudience(post: CreatedPost): String {
+    // Infer target group from which field is populated
+    val inferredGroup = when {
+        post.target_group == "Everyone" -> "Everyone"
+        !post.target_department.isNullOrEmpty() -> "DepartmentBased"
+        !post.target_location.isNullOrEmpty() -> "LocationBased"
+        !post.target_employee.isNullOrEmpty() -> "EmployeeBased"
+        post.target_group == "DepartmentBased" -> "DepartmentBased"
+        post.target_group == "LocationBased" -> "LocationBased"
+        post.target_group == "EmployeeBased" -> "EmployeeBased"
+        post.target_group == "ProjectBased" -> "ProjectBased"
+        else -> "Everyone"
+    }
+
+    val label = when (inferredGroup) {
+        "Everyone" -> "Tagged Employees"
+        "DepartmentBased" -> "Tagged Department"
+        "LocationBased" -> "Tagged Location"
+        "EmployeeBased" -> "Tagged Employees"
+        "ProjectBased" -> "Tagged Project"
+        else -> "Tagged Employees"
+    }
+    return label
 }

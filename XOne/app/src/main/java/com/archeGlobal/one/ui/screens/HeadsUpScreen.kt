@@ -28,6 +28,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -337,10 +340,10 @@ fun HeadsUpPostCard(
     canManagePost: Boolean,
     userEmail: String
 ) {
+    var isTargetDetailsExpanded by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     var showImageZoom by remember { mutableStateOf(false) }
     var zoomedImageUrl by remember { mutableStateOf("") }
-    var showTargetDetailsDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -456,11 +459,20 @@ fun HeadsUpPostCard(
                         } ?: emptyList()
 
                         if (targetItems.isNotEmpty()) {
-                            val displayText = if (targetItems.size > 3) {
+                            val annotatedString = if (!isTargetDetailsExpanded && targetItems.size > 3) {
                                 val firstThree = targetItems.take(3).joinToString("\n")
-                                "$firstThree\n+${targetItems.size - 3}"
+                                val remainingCount = targetItems.size - 3
+                                buildAnnotatedString {
+                                    append(firstThree)
+                                    append("\n")
+                                    withStyle(style = SpanStyle(color = Color(0xFFDD3825), fontWeight = FontWeight.Bold)) {
+                                        append("+$remainingCount")
+                                    }
+                                }
                             } else {
-                                targetItems.joinToString("\n")
+                                buildAnnotatedString {
+                                    append(targetItems.joinToString("\n"))
+                                }
                             }
 
                             if (isEveryone) {
@@ -475,7 +487,7 @@ fun HeadsUpPostCard(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = displayText,
+                                        text = annotatedString,
                                         fontFamily = GraphikFontFamily,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Normal,
@@ -487,7 +499,7 @@ fun HeadsUpPostCard(
                                 }
                             } else {
                                 Text(
-                                    text = displayText,
+                                    text = annotatedString,
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Normal,
@@ -495,9 +507,7 @@ fun HeadsUpPostCard(
                                     modifier = Modifier
                                         .padding(start = 16.dp)
                                         .clickable(enabled = targetItems.size > 3) {
-                                            if (targetItems.size > 3) {
-                                                showTargetDetailsDialog = true
-                                            }
+                                            isTargetDetailsExpanded = !isTargetDetailsExpanded
                                         },
                                     softWrap = true,
                                     overflow = TextOverflow.Visible,
@@ -794,63 +804,6 @@ fun HeadsUpPostCard(
                         tint = Color.White,
                         modifier = Modifier.size(32.dp)
                     )
-                }
-            }
-        }
-    }
-    
-    // Target Details Dialog
-    if (showTargetDetailsDialog) {
-        Dialog(onDismissRequest = { showTargetDetailsDialog = false }) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 400.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Tagged Users",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color.Black
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    val targetItems = when {
-                        post.target_group == "Everyone" -> listOf("everyone@arche.global")
-                        !post.target_department.isNullOrEmpty() -> post.target_department
-                        !post.target_location.isNullOrEmpty() -> post.target_location
-                        !post.target_employee.isNullOrEmpty() -> post.target_employee
-                        else -> listOf("everyone@arche.global")
-                    } ?: emptyList()
-
-                    LazyColumn {
-                        items(targetItems) { item ->
-                            Text(
-                                text = item,
-                                fontFamily = GraphikFontFamily,
-                                fontSize = 14.sp,
-                                color = Color.Black,
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            )
-                            HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Button(
-                        onClick = { showTargetDetailsDialog = false },
-                        modifier = Modifier.align(Alignment.End),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
-                    ) {
-                        Text("Close", color = Color.White)
-                    }
                 }
             }
         }
