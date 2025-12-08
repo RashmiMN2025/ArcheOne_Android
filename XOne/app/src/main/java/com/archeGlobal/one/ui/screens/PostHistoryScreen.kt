@@ -590,7 +590,8 @@ fun PostHistoryCard(post: CreatedPost, onDelete: (String) -> Unit, onEdit: (Crea
                                 .heightIn(max = 200.dp)
                                 .widthIn(max = 280.dp)
                                 .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Fit
+                            contentScale = ContentScale.Fit,
+                            alignment = Alignment.CenterStart
                         )
                     }
                 }

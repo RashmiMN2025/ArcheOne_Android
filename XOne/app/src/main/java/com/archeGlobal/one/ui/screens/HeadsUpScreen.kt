@@ -624,7 +624,8 @@ fun HeadsUpPostCard(
                                     zoomedImageUrl = imageUrl
                                     showImageZoom = true
                                 },
-                            contentScale = ContentScale.Fit
+                            contentScale = ContentScale.Fit,
+                            alignment = Alignment.CenterStart
                         )
                     }
                 }
