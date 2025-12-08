@@ -463,23 +463,47 @@ fun HeadsUpPostCard(
                                 targetItems.joinToString("\n")
                             }
 
-                            Text(
-                                text = displayText,
-                                fontFamily = GraphikFontFamily,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Normal,
-                                color = Color(0xFF999999),
-                                modifier = Modifier
-                                    .padding(start = if (isEveryone) 0.dp else 16.dp)
-                                    .clickable(enabled = targetItems.size > 3) {
-                                        if (targetItems.size > 3) {
-                                            showTargetDetailsDialog = true
-                                        }
-                                    },
-                                softWrap = true,
-                                overflow = TextOverflow.Visible,
-                                lineHeight = 14.sp
-                            )
+                            if (isEveryone) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.item_name),
+                                        contentDescription = "Target Audience",
+                                        modifier = Modifier.size(12.dp),
+                                        tint = Color.Gray
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = displayText,
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color(0xFF999999),
+                                        softWrap = true,
+                                        overflow = TextOverflow.Visible,
+                                        lineHeight = 14.sp
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text = displayText,
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color(0xFF999999),
+                                    modifier = Modifier
+                                        .padding(start = 16.dp)
+                                        .clickable(enabled = targetItems.size > 3) {
+                                            if (targetItems.size > 3) {
+                                                showTargetDetailsDialog = true
+                                            }
+                                        },
+                                    softWrap = true,
+                                    overflow = TextOverflow.Visible,
+                                    lineHeight = 14.sp
+                                )
+                            }
                         }
                     }
                 }
