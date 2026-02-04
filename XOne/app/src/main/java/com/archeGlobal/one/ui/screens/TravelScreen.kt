@@ -51,6 +51,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -307,6 +315,136 @@ fun TravelScreen(controller: TravelController) {
                                 Spacer(modifier = Modifier.height(20.dp))
                             }
 
+                            // Booking Mode Selection (Self / On Behalf)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.clickable { controller.updateBookingMode(true) }
+                                ) {
+                                    androidx.compose.material.RadioButton(
+                                        selected = controller.isBookingForSelf,
+                                        onClick = { controller.updateBookingMode(true) },
+                                        colors = androidx.compose.material.RadioButtonDefaults.colors(selectedColor = PrimaryRed)
+                                    )
+                                    Text(
+                                        text = "Self",
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 16.sp,
+                                        color = Color.Black
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(24.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.clickable { controller.updateBookingMode(false) }
+                                ) {
+                                    androidx.compose.material.RadioButton(
+                                        selected = !controller.isBookingForSelf,
+                                        onClick = { controller.updateBookingMode(false) },
+                                        colors = androidx.compose.material.RadioButtonDefaults.colors(selectedColor = PrimaryRed)
+                                    )
+                                    Text(
+                                        text = "On Behalf of Employee",
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 16.sp,
+                                        color = Color.Black
+                                    )
+                                }
+                            }
+
+                            // Search Bar for On Behalf
+                            if (!controller.isBookingForSelf) {
+                                var expanded by remember { mutableStateOf(false) }
+                                val focusRequester = remember { FocusRequester() }
+                                var isFocused by remember { mutableStateOf(false) }
+
+                                // Update expanded state based on results
+                                LaunchedEffect(controller.employeeSearchResults) {
+                                    if (controller.employeeSearchResults.isNotEmpty()) {
+                                        expanded = true
+                                    }
+                                }
+
+                                androidx.compose.material3.ExposedDropdownMenuBox(
+                                    expanded = expanded,
+                                    onExpandedChange = { 
+                                        if (isFocused) {
+                                            expanded = true
+                                        } else {
+                                            expanded = it 
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                                ) {
+                                    OutlinedTextField(
+                                        value = controller.attendeeSearchQuery,
+                                        onValueChange = {
+                                            controller.updateAttendeeSearchQuery(it)
+                                            controller.searchEmployees(it)
+                                            expanded = true
+                                        },
+                                        placeholder = { Text("Search Employee by Name", fontFamily = GraphikFontFamily) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .menuAnchor()
+                                            .focusRequester(focusRequester)
+                                            .onFocusChanged { focusState ->
+                                                isFocused = focusState.isFocused
+                                                if (focusState.isFocused && controller.employeeSearchResults.isNotEmpty()) {
+                                                    expanded = true
+                                                }
+                                            }
+                                            .onKeyEvent { keyEvent ->
+                                                if (keyEvent.key == Key.Backspace && keyEvent.type == KeyEventType.KeyUp) {
+                                                    true
+                                                } else {
+                                                    false
+                                                }
+                                            },
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            unfocusedBorderColor = Color.LightGray,
+                                            focusedBorderColor = PrimaryRed,
+                                            unfocusedContainerColor = Color.White,
+                                            focusedContainerColor = Color.White
+                                        ),
+                                        shape = RoundedCornerShape(8.dp),
+                                        trailingIcon = {
+                                             androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                                        }
+                                    )
+
+                                    ExposedDropdownMenu(
+                                        expanded = expanded && controller.employeeSearchResults.isNotEmpty(),
+                                        onDismissRequest = { expanded = false },
+                                        modifier = Modifier.background(Color.White)
+                                    ) {
+                                        controller.employeeSearchResults.forEach { employee ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Column {
+                                                        Text(employee.name, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Bold)
+                                                        Text(
+                                                            text = if (employee.employeeId.isNotEmpty()) "${employee.employeeId} - ${employee.email}" else employee.email,
+                                                            fontFamily = GraphikFontFamily,
+                                                            fontSize = 12.sp
+                                                        )
+                                                    }
+                                                },
+                                                onClick = {
+                                                    controller.selectOnBehalfEmployee(employee)
+                                                    expanded = false
+                                                    isFocused = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (controller.isBookingForSelf || controller.selectedOnBehalfEmployee != null) {
                             // Employee Details header
                             Text(
                                 text = "Employee Details",
@@ -1526,6 +1664,7 @@ fun TravelScreen(controller: TravelController) {
 
                             // Spacer at the bottom for better padding
                             Spacer(modifier = Modifier.height(16.dp))
+                            }
                         }
                     }
                 }

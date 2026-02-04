@@ -179,6 +179,62 @@ class TravelController(
     var employeeEmail by mutableStateOf("")
         private set
 
+    // Self Booking / On Behalf
+    var isBookingForSelf by mutableStateOf(true)
+        private set
+
+    // Selected employee for On Behalf booking
+    var selectedOnBehalfEmployee: EmployeeSearchResult? = null
+        private set
+
+    fun updateBookingMode(isSelf: Boolean) {
+        isBookingForSelf = isSelf
+        if (isSelf) {
+            val userData = userDataManager.getUserData()
+            employeeName = userData?.name ?: ""
+            employeeId = userData?.employeeId ?: ""
+            mobileNumber = userData?.mobile ?: ""
+            employeeEmail = userData?.email ?: ""
+            // Restore default values for current user
+            // Note: In a real app, these should come from user profile API
+            employeeGrade = "Grade 6" 
+            dateOfBirth = "01 Jan 1990"
+            aadharNumber = "XXXX-XXXX-XXXX"
+            reportingManagerName = userData?.userDetails?.reporting_manager ?: ""
+            reportingManagerEmail = userData?.userDetails?.reporting_manager_mail ?: ""
+        } else {
+            // Clear fields to prompt selection
+            employeeName = ""
+            employeeId = ""
+            mobileNumber = ""
+            employeeEmail = ""
+            employeeGrade = ""
+            dateOfBirth = ""
+            aadharNumber = ""
+            reportingManagerName = ""
+            reportingManagerEmail = ""
+            selectedOnBehalfEmployee = null
+        }
+    }
+
+    fun selectOnBehalfEmployee(employee: EmployeeSearchResult) {
+        selectedOnBehalfEmployee = employee
+        employeeName = employee.name
+        employeeId = employee.employeeId
+        employeeEmail = employee.email
+        // Default values since search result doesn't have these
+        mobileNumber = "N/A"
+        employeeGrade = "N/A"
+        dateOfBirth = "N/A"
+        aadharNumber = "N/A"
+        reportingManagerName = "N/A"
+        reportingManagerEmail = "N/A"
+        
+        // Clear search results
+        employeeSearchResults = emptyList()
+        attendeeSearchQuery = "" 
+    }
+
     // UserDataManager instance
     private val userDataManager = UserDataManager.getInstance(context)
 
@@ -2363,31 +2419,35 @@ class TravelController(
 
     /**
      * Search for employees to add as attendees
+     * Now uses the same API as cab search (suggestUsers)
      */
     fun searchEmployees(query: String) {
-        if (query.length < 3) return
+        if (query.length < 2) return
 
         isSearchingEmployees = true
-        val searchRequest =
-            EmployeeSearchRequest(
-                query = query,
-                searchType = "name",
-                limit = 10,
-            )
-
-        RetrofitClient.apiService.searchEmployees(searchRequest).enqueue(
-            object : Callback<EmployeeSearchResponse> {
+        
+        // Use suggestUsers API instead of searchEmployees to unify with cab search
+        RetrofitClient.apiService.suggestUsers(query).enqueue(
+            object : Callback<List<SuggestedUser>> {
                 override fun onResponse(
-                    call: Call<EmployeeSearchResponse>,
-                    response: Response<EmployeeSearchResponse>,
+                    call: Call<List<SuggestedUser>>,
+                    response: Response<List<SuggestedUser>>,
                 ) {
                     isSearchingEmployees = false
                     if (response.isSuccessful && response.body() != null) {
-                        val searchResponse = response.body()!!
-                        if (searchResponse.status == 200) {
-                            employeeSearchResults = searchResponse.employees
-                        } else {
-                            employeeSearchResults = emptyList()
+                        val users = response.body()!!
+                        // Map SuggestedUser to EmployeeSearchResult
+                        // Note: suggestUsers API provides less data (only name and email)
+                        // so we fill other required fields with placeholders
+                        employeeSearchResults = users.map { user ->
+                            EmployeeSearchResult(
+                                name = user.displayName,
+                                employeeId = "", // Not provided by suggestUsers API
+                                email = user.mail,
+                                department = "N/A",
+                                designation = "N/A",
+                                location = "N/A"
+                            )
                         }
                     } else {
                         employeeSearchResults = emptyList()
@@ -2396,7 +2456,7 @@ class TravelController(
                 }
 
                 override fun onFailure(
-                    call: Call<EmployeeSearchResponse>,
+                    call: Call<List<SuggestedUser>>,
                     t: Throwable,
                 ) {
                     isSearchingEmployees = false
