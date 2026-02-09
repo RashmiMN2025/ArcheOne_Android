@@ -54,11 +54,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.type
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -361,20 +356,28 @@ fun TravelScreen(controller: TravelController) {
                                 val focusRequester = remember { FocusRequester() }
                                 var isFocused by remember { mutableStateOf(false) }
 
+                                // Debounce search: wait 300ms after typing stops before searching
+                                LaunchedEffect(controller.attendeeSearchQuery) {
+                                    if (controller.attendeeSearchQuery.length >= 2) {
+                                        kotlinx.coroutines.delay(300)
+                                        controller.searchEmployees(controller.attendeeSearchQuery)
+                                    }
+                                }
+
                                 // Update expanded state based on results
                                 LaunchedEffect(controller.employeeSearchResults) {
-                                    if (controller.employeeSearchResults.isNotEmpty()) {
+                                    if (controller.employeeSearchResults.isNotEmpty() && isFocused) {
                                         expanded = true
                                     }
                                 }
 
                                 androidx.compose.material3.ExposedDropdownMenuBox(
                                     expanded = expanded,
-                                    onExpandedChange = { 
+                                    onExpandedChange = {
                                         if (isFocused) {
                                             expanded = true
                                         } else {
-                                            expanded = it 
+                                            expanded = it
                                         }
                                     },
                                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
@@ -383,8 +386,6 @@ fun TravelScreen(controller: TravelController) {
                                         value = controller.attendeeSearchQuery,
                                         onValueChange = {
                                             controller.updateAttendeeSearchQuery(it)
-                                            controller.searchEmployees(it)
-                                            expanded = true
                                         },
                                         placeholder = { Text("Search Employee by Name", fontFamily = GraphikFontFamily) },
                                         modifier = Modifier
@@ -395,13 +396,6 @@ fun TravelScreen(controller: TravelController) {
                                                 isFocused = focusState.isFocused
                                                 if (focusState.isFocused && controller.employeeSearchResults.isNotEmpty()) {
                                                     expanded = true
-                                                }
-                                            }
-                                            .onKeyEvent { keyEvent ->
-                                                if (keyEvent.key == Key.Backspace && keyEvent.type == KeyEventType.KeyUp) {
-                                                    true
-                                                } else {
-                                                    false
                                                 }
                                             },
                                         colors = OutlinedTextFieldDefaults.colors(

@@ -1,25 +1,33 @@
 package com.archeGlobal.one.ui.screens
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,12 +37,15 @@ import com.archeGlobal.one.controller.TravelController.TravelHistoryState
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelStatus
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.utils.DateFormatter
 import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun TravelHistoryScreen(controller: TravelController) {
@@ -44,13 +55,44 @@ fun TravelHistoryScreen(controller: TravelController) {
 
     val state = controller.travelHistoryState
 
+    // Filter states
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedDateFilter by remember { mutableStateOf("All") }
+    var selectedCategoryFilter by remember { mutableStateOf("All") }
+    var selectedStatusFilter by remember { mutableStateOf("All") }
+    var selectedLocationFilter by remember { mutableStateOf("All") }
+    var selectedTransportFilter by remember { mutableStateOf("All") }
+
+    // Initialize dates with current date range (last 30 days to today)
+    val currentDate = remember { Calendar.getInstance() }
+    val thirtyDaysAgo = remember {
+        Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_MONTH, -30)
+        }
+    }
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+
+    var fromDate by remember { mutableStateOf(dateFormatter.format(thirtyDaysAgo.time)) }
+    var toDate by remember { mutableStateOf(dateFormatter.format(currentDate.time)) }
+    var showDateFilterDropdown by remember { mutableStateOf(false) }
+    var showCategoryDropdown by remember { mutableStateOf(false) }
+    var showStatusDropdown by remember { mutableStateOf(false) }
+    var showLocationDropdown by remember { mutableStateOf(false) }
+    var showTransportDropdown by remember { mutableStateOf(false) }
+    var showCalendar by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var isFromDatePicker by remember { mutableStateOf(true) }
+
+    // Calendar state
+    var currentMonth by remember { mutableStateOf(Calendar.getInstance()) }
+
     // Wrap entire content with font scale adjustment
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
+                    .background(MaterialTheme.colorScheme.background)
                     .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
         ) {
             Box(
@@ -100,32 +142,611 @@ fun TravelHistoryScreen(controller: TravelController) {
                         actions = {},
                     )
 
-                    // Add more space after the TopAppBar
-                    Spacer(modifier = Modifier.height(20.dp))
+                    // Filter Section
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 16.dp)
+                    ) {
+                        // Search Bar
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            placeholder = {
+                                Text(
+                                    text = "Search by ID or Project",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = Color.Gray,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                backgroundColor = Color.White,
+                                focusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Search
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onSearch = {
+                                    // Filtering is already reactive via remember
+                                }
+                            )
+                        )
 
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Filter Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Date Filter Dropdown
+                            Box(modifier = Modifier.weight(1f)) {
+                                Column {
+                                    Text(
+                                        text = "Date Filter",
+                                        fontSize = 12.sp,
+                                        color = Color.Gray,
+                                        fontFamily = GraphikFontFamily,
+                                        modifier = Modifier.padding(bottom = 4.dp)
+                                    )
+
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .clickable { showDateFilterDropdown = !showDateFilterDropdown }
+                                            .padding(12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = selectedDateFilter,
+                                                fontSize = 14.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                color = Color.Black
+                                            )
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = "Dropdown",
+                                                tint = Color.Gray
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // Date Filter Dropdown Menu
+                                DropdownMenu(
+                                    expanded = showDateFilterDropdown,
+                                    onDismissRequest = { showDateFilterDropdown = false },
+                                    modifier = Modifier
+                                        .background(Color(0xFF424242))
+                                        .clip(RoundedCornerShape(8.dp))
+                                ) {
+                                    listOf("All", "1 Week", "1 Month", "Date Range").forEach { option ->
+                                        DropdownMenuItem(
+                                            onClick = {
+                                                selectedDateFilter = option
+                                                showDateFilterDropdown = false
+                                                if (option == "Date Range") {
+                                                    showCalendar = true
+                                                }
+                                            }
+                                        ) {
+                                            Text(
+                                                text = option,
+                                                fontFamily = GraphikFontFamily,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Category Filter Dropdown
+                            Box(modifier = Modifier.weight(1f)) {
+                                Column {
+                                    Text(
+                                        text = "Category Filter",
+                                        fontSize = 12.sp,
+                                        color = Color.Gray,
+                                        fontFamily = GraphikFontFamily,
+                                        modifier = Modifier.padding(bottom = 4.dp)
+                                    )
+
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .clickable { showCategoryDropdown = !showCategoryDropdown }
+                                            .padding(12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = selectedCategoryFilter,
+                                                fontSize = 14.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                color = Color.Black
+                                            )
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = "Dropdown",
+                                                tint = Color.Gray
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // Category Filter Dropdown Menu
+                                DropdownMenu(
+                                    expanded = showCategoryDropdown,
+                                    onDismissRequest = { showCategoryDropdown = false },
+                                    modifier = Modifier
+                                        .background(Color(0xFF424242))
+                                        .clip(RoundedCornerShape(8.dp))
+                                ) {
+                                    listOf("All", "Status", "Location", "Mode of Transport").forEach { option ->
+                                        DropdownMenuItem(
+                                            onClick = {
+                                                selectedCategoryFilter = option
+                                                showCategoryDropdown = false
+                                            }
+                                        ) {
+                                            Text(
+                                                text = option,
+                                                fontFamily = GraphikFontFamily,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Status Filter Row (centered) - Only show when Status category is selected
+                        if (selectedCategoryFilter == "Status") {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Status Filter",
+                                    fontSize = 12.sp,
+                                    color = Color.Gray,
+                                    fontFamily = GraphikFontFamily,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+
+                                Box(modifier = Modifier.width(200.dp)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .clickable { showStatusDropdown = !showStatusDropdown }
+                                            .padding(12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = selectedStatusFilter,
+                                                fontSize = 14.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                color = Color.Black
+                                            )
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = "Dropdown",
+                                                tint = Color.Gray
+                                            )
+                                        }
+                                    }
+
+                                    // Status Filter Dropdown Menu
+                                    DropdownMenu(
+                                        expanded = showStatusDropdown,
+                                        onDismissRequest = { showStatusDropdown = false },
+                                        modifier = Modifier
+                                            .background(Color(0xFF424242))
+                                            .clip(RoundedCornerShape(8.dp))
+                                    ) {
+                                        listOf("All", "Pending", "Approved", "Rejected", "Cancelled").forEach { option ->
+                                            DropdownMenuItem(
+                                                onClick = {
+                                                    selectedStatusFilter = option
+                                                    showStatusDropdown = false
+                                                }
+                                            ) {
+                                                Text(
+                                                    text = option,
+                                                    fontFamily = GraphikFontFamily,
+                                                    color = Color.White
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Location Filter Row (centered) - Only show when Location category is selected
+                        if (selectedCategoryFilter == "Location") {
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Location Filter",
+                                    fontSize = 12.sp,
+                                    color = Color.Gray,
+                                    fontFamily = GraphikFontFamily,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+
+                                Box(modifier = Modifier.width(200.dp)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .clickable { showLocationDropdown = !showLocationDropdown }
+                                            .padding(12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = selectedLocationFilter,
+                                                fontSize = 14.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                color = Color.Black
+                                            )
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = "Dropdown",
+                                                tint = Color.Gray
+                                            )
+                                        }
+                                    }
+
+                                    // Location Filter Dropdown Menu
+                                    DropdownMenu(
+                                        expanded = showLocationDropdown,
+                                        onDismissRequest = { showLocationDropdown = false },
+                                        modifier = Modifier
+                                            .background(Color(0xFF424242))
+                                            .clip(RoundedCornerShape(8.dp))
+                                    ) {
+                                        val locations = remember(state) {
+                                            if (state is TravelHistoryState.Success) {
+                                                listOf("All") + state.historyItems
+                                                    .mapNotNull { it.userLocation }
+                                                    .filter { it.isNotBlank() }
+                                                    .distinct()
+                                                    .sorted()
+                                            } else {
+                                                listOf("All")
+                                            }
+                                        }
+
+                                        locations.forEach { option ->
+                                            DropdownMenuItem(
+                                                onClick = {
+                                                    selectedLocationFilter = option
+                                                    showLocationDropdown = false
+                                                }
+                                            ) {
+                                                Text(
+                                                    text = option,
+                                                    fontFamily = GraphikFontFamily,
+                                                    color = Color.White
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Mode of Transport Filter Row (centered) - Only show when Mode of Transport category is selected
+                        if (selectedCategoryFilter == "Mode of Transport") {
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Mode of Transport Filter",
+                                    fontSize = 12.sp,
+                                    color = Color.Gray,
+                                    fontFamily = GraphikFontFamily,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+
+                                Box(modifier = Modifier.width(200.dp)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .clickable { showTransportDropdown = !showTransportDropdown }
+                                            .padding(12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = selectedTransportFilter,
+                                                fontSize = 14.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                color = Color.Black
+                                            )
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = "Dropdown",
+                                                tint = Color.Gray
+                                            )
+                                        }
+                                    }
+
+                                    // Mode of Transport Filter Dropdown Menu
+                                    DropdownMenu(
+                                        expanded = showTransportDropdown,
+                                        onDismissRequest = { showTransportDropdown = false },
+                                        modifier = Modifier
+                                            .background(Color(0xFF424242))
+                                            .clip(RoundedCornerShape(8.dp))
+                                    ) {
+                                        val transportModes = remember(state) {
+                                            if (state is TravelHistoryState.Success) {
+                                                val modes = state.historyItems
+                                                    .mapNotNull { it.modeOfTransport }
+                                                    .distinct()
+                                                    .sorted()
+                                                listOf("All") + modes
+                                            } else {
+                                                listOf("All", "Flight", "Bus", "Train", "Cab")
+                                            }
+                                        }
+
+                                        transportModes.forEach { option ->
+                                            DropdownMenuItem(
+                                                onClick = {
+                                                    selectedTransportFilter = option
+                                                    showTransportDropdown = false
+                                                }
+                                            ) {
+                                                Text(
+                                                    text = option,
+                                                    fontFamily = GraphikFontFamily,
+                                                    color = Color.White
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Date Range Display (only show when Date Range is selected)
+                        if (selectedDateFilter == "Date Range") {
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                DateDisplayCard(
+                                    label = "From:",
+                                    date = fromDate,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    isFromDatePicker = true
+                                    showDatePicker = true
+                                }
+
+                                DateDisplayCard(
+                                    label = "To:",
+                                    date = toDate,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    isFromDatePicker = false
+                                    showDatePicker = true
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Main content based on state
                     Box(
                         modifier =
                             Modifier
                                 .fillMaxSize()
                                 .padding(horizontal = 16.dp),
                     ) {
-                        // Render UI based on current travel history state
                         when (val currentState = state) {
                             is TravelHistoryState.Loading -> {
                                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                             }
 
                             is TravelHistoryState.Success -> {
-                                if (currentState.historyItems.isEmpty()) {
+                                // Apply filters to the history items
+                                val filteredRequests = remember(
+                                    currentState.historyItems,
+                                    searchQuery,
+                                    selectedStatusFilter,
+                                    selectedLocationFilter,
+                                    selectedTransportFilter,
+                                    selectedCategoryFilter,
+                                    selectedDateFilter,
+                                    fromDate,
+                                    toDate
+                                ) {
+                                    currentState.historyItems.filter { request ->
+                                        // Apply search filter
+                                        val matchesSearch = searchQuery.isEmpty() ||
+                                            request.id.contains(searchQuery, ignoreCase = true) ||
+                                            request.project.contains(searchQuery, ignoreCase = true) ||
+                                            request.employeeName?.contains(searchQuery, ignoreCase = true) == true
+
+                                        // Apply status filter
+                                        val matchesStatus = selectedStatusFilter == "All" ||
+                                            request.status.name.equals(selectedStatusFilter, ignoreCase = true)
+
+                                        // Apply location filter (using userLocation field)
+                                        val matchesLocation = selectedLocationFilter == "All" ||
+                                            request.userLocation?.equals(selectedLocationFilter, ignoreCase = true) == true
+
+                                        // Apply transport filter
+                                        val matchesTransport = selectedTransportFilter == "All" ||
+                                            request.modeOfTransport?.equals(selectedTransportFilter, ignoreCase = true) == true
+
+                                        // Apply category filter
+                                        val matchesCategory = when (selectedCategoryFilter) {
+                                            "All" -> true
+                                            "Status" -> true
+                                            "Location" -> matchesLocation
+                                            "Mode of Transport" -> matchesTransport
+                                            else -> true
+                                        }
+
+                                        // Apply date filter
+                                        val matchesDate = when (selectedDateFilter) {
+                                            "All" -> true
+                                            "1 Week" -> {
+                                                val oneWeekAgo = Calendar.getInstance().apply {
+                                                    add(Calendar.WEEK_OF_YEAR, -1)
+                                                    set(Calendar.HOUR_OF_DAY, 0)
+                                                    set(Calendar.MINUTE, 0)
+                                                    set(Calendar.SECOND, 0)
+                                                    set(Calendar.MILLISECOND, 0)
+                                                }.time
+                                                !request.createdDate.before(oneWeekAgo)
+                                            }
+                                            "1 Month" -> {
+                                                val oneMonthAgo = Calendar.getInstance().apply {
+                                                    add(Calendar.MONTH, -1)
+                                                    set(Calendar.HOUR_OF_DAY, 0)
+                                                    set(Calendar.MINUTE, 0)
+                                                    set(Calendar.SECOND, 0)
+                                                    set(Calendar.MILLISECOND, 0)
+                                                }.time
+                                                !request.createdDate.before(oneMonthAgo)
+                                            }
+                                            "Date Range" -> {
+                                                try {
+                                                    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                                                    val fromDateParsed = formatter.parse(fromDate)
+                                                    val toDateParsed = formatter.parse(toDate)
+
+                                                    if (fromDateParsed != null && toDateParsed != null) {
+                                                        val fromCal = Calendar.getInstance().apply {
+                                                            time = fromDateParsed
+                                                            set(Calendar.HOUR_OF_DAY, 0)
+                                                            set(Calendar.MINUTE, 0)
+                                                            set(Calendar.SECOND, 0)
+                                                            set(Calendar.MILLISECOND, 0)
+                                                        }
+                                                        val toCal = Calendar.getInstance().apply {
+                                                            time = toDateParsed
+                                                            set(Calendar.HOUR_OF_DAY, 23)
+                                                            set(Calendar.MINUTE, 59)
+                                                            set(Calendar.SECOND, 59)
+                                                            set(Calendar.MILLISECOND, 999)
+                                                        }
+
+                                                        !request.createdDate.before(fromCal.time) && !request.createdDate.after(toCal.time)
+                                                    } else {
+                                                        true
+                                                    }
+                                                } catch (e: Exception) {
+                                                    true
+                                                }
+                                            }
+                                            else -> true
+                                        }
+
+                                        // Combine all filters based on selected category
+                                        when (selectedCategoryFilter) {
+                                            "All" -> matchesSearch && matchesDate
+                                            "Status" -> matchesSearch && matchesStatus && matchesDate
+                                            "Location" -> matchesSearch && matchesLocation && matchesDate
+                                            "Mode of Transport" -> matchesSearch && matchesTransport && matchesDate
+                                            else -> matchesSearch && matchesDate
+                                        }
+                                    }
+                                }
+
+                                if (filteredRequests.isEmpty()) {
                                     Box(
                                         modifier = Modifier.fillMaxSize(),
                                         contentAlignment = Alignment.Center,
                                     ) {
-                                        Text(text = "No travel history found", fontFamily = GraphikFontFamily)
+                                        Text(
+                                            text = if (currentState.historyItems.isEmpty()) {
+                                                "No travel history found"
+                                            } else {
+                                                "No requests match your filters"
+                                            },
+                                            fontFamily = GraphikFontFamily,
+                                            color = Color.Gray,
+                                            fontSize = 16.sp,
+                                            textAlign = TextAlign.Center,
+                                        )
                                     }
                                 } else {
                                     TravelHistoryList(
-                                        travelRequests = currentState.historyItems,
+                                        travelRequests = filteredRequests,
                                         onTravelRequestClick = { requestId ->
                                             controller.navigateToTravelDetails(requestId)
                                         },
@@ -153,6 +774,43 @@ fun TravelHistoryScreen(controller: TravelController) {
                         }
                     }
                 }
+            }
+
+            // Calendar Overlay
+            if (showCalendar) {
+                CalendarOverlay(
+                    currentMonth = currentMonth,
+                    onMonthChange = { currentMonth = it },
+                    onDateSelected = { selectedDate ->
+                        showCalendar = false
+                    },
+                    onDismiss = { showCalendar = false }
+                )
+            }
+
+            // Date Picker Dialog
+            if (showDatePicker) {
+                val calendar = Calendar.getInstance()
+                DatePickerDialog(
+                    context,
+                    { _, year, month, dayOfMonth ->
+                        val selectedCalendar = Calendar.getInstance().apply {
+                            set(year, month, dayOfMonth)
+                        }
+                        val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                        val formattedDate = formatter.format(selectedCalendar.time)
+
+                        if (isFromDatePicker) {
+                            fromDate = formattedDate
+                        } else {
+                            toDate = formattedDate
+                        }
+                        showDatePicker = false
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH)
+                ).show()
             }
         }
     } // Close FontScaleAdjusted block
