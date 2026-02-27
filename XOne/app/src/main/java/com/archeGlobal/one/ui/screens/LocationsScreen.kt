@@ -282,13 +282,7 @@ private fun LocationCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .then(
-                    if (location.hasMultipleLocations) {
-                        Modifier.clickable(onClick = onClick)
-                    } else {
-                        Modifier
-                    },
-                ),
+                .clickable(onClick = onClick),
         colors =
             CardDefaults.cardColors(
                 containerColor = Color(0xFFF6F4EE),

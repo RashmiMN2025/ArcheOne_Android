@@ -179,7 +179,7 @@ fun TravelAdminDashboardScreen(controller: TravelController) {
                             onValueChange = { searchQuery = it },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(52.dp), // Reduce height
+                                .height(48.dp), // Reduce height
                             placeholder = {
                                 Text(
                                     text = "Search by Employee Name",

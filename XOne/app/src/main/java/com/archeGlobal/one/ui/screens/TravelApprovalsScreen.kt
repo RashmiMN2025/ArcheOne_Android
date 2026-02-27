@@ -239,7 +239,7 @@ fun TravelApprovalsScreen(controller: TravelController) {
                             onValueChange = { searchQuery = it },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(52.dp),
+                                .height(48.dp),
                             placeholder = {
                                 Text(
                                     text = "Search by Employee Name",

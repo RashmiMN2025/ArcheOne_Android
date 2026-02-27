@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(awk:*)",
+      "Bash(\"C:/Users/User/Documents/GitHub/XOne---Android/XOne/temp_modified.kt\")",
+      "Bash(git --git-dir=\"C:/Users/User/Documents/GitHub/XOne---Android/.git\" --work-tree=\"C:/Users/User/Documents/GitHub/XOne---Android\" show BIAL_RashmiDev:XOne/app/src/main/java/com/archeGlobal/one/ui/screens/HeadsUpScreen.kt)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
