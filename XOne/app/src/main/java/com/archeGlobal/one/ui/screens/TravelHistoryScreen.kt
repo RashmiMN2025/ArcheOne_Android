@@ -155,7 +155,7 @@ fun TravelHistoryScreen(controller: TravelController) {
                             onValueChange = { searchQuery = it },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp),
+                                .height(52.dp),
                             placeholder = {
                                 Text(
                                     text = "Search by ID or Project",
