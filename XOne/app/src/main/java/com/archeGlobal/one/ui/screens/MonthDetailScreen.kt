@@ -43,6 +43,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
+import java.time.Year
 
 @Composable
 fun MonthDetailScreen(
@@ -50,6 +51,7 @@ fun MonthDetailScreen(
     controller: HolidayCalendarController,
     onBackPressed: () -> Unit,
 ) {
+    val currentYear = Year.now().value
     val holidaysState = controller.holidays.observeAsState()
     val hiddenHolidaysUpdated = controller.hiddenHolidaysUpdated.observeAsState()
     val milestonesState = controller.milestones.observeAsState()
@@ -324,10 +326,10 @@ fun MonthDetailScreen(
         // Only auto-select if no user selection has been made
         if (!isUserSelectedDate) {
             val currentDate = LocalDate.now()
-            if (currentDate.monthValue == selectedMonth && currentDate.year == 2025) {
+            if (currentDate.monthValue == selectedMonth && currentDate.year == currentYear) {
                 // If it's current month, select today's date
                 val todayStr =
-                    String.format("%02d-%02d-%04d", currentDate.dayOfMonth, selectedMonth, 2025)
+                    String.format("%02d-%02d-%04d", currentDate.dayOfMonth, selectedMonth, currentYear)
                 selectedDate = todayStr
                 selectedDay = currentDate.dayOfMonth
 
@@ -504,8 +506,8 @@ fun MonthDetailScreen(
                                                 String.format(
                                                     "%02d-%02d-%04d",
                                                     1,
-                                                    selectedMonth - 1,
-                                                    2025,
+                                                    selectedMonth,
+                                                    currentYear,
                                                 )
                                             selectedDate = firstDayStr
                                             selectedDay = 1
@@ -526,12 +528,12 @@ fun MonthDetailScreen(
                                 Text(
                                     text =
                                         YearMonth
-                                            .of(2025, selectedMonth)
+                                            .of(currentYear, selectedMonth)
                                             .month
                                             .getDisplayName(
                                                 TextStyle.FULL,
                                                 Locale.getDefault(),
-                                            ) + " 2025",
+                                            ) + " $currentYear",
                                     color = Color.Black,
                                     fontSize = 24.sp,
                                     fontFamily = GraphikFontFamily,
@@ -554,8 +556,8 @@ fun MonthDetailScreen(
                                                 String.format(
                                                     "%02d-%02d-%04d",
                                                     1,
-                                                    selectedMonth + 1,
-                                                    2025,
+                                                    selectedMonth,
+                                                    currentYear,
                                                 )
                                             selectedDate = firstDayStr
                                             selectedDay = 1
@@ -578,6 +580,7 @@ fun MonthDetailScreen(
                             Spacer(modifier = Modifier.height(24.dp)) // Month Calendar
                             MonthCalendarView(
                                 selectedMonth = selectedMonth,
+                                currentYear = currentYear,
                                 holidays = monthHolidays,
                                 milestoneDates = milestoneDates,
                                 globalEventDates = globalEventDates,
@@ -593,17 +596,17 @@ fun MonthDetailScreen(
                                     // This handles the case where the API's date format might be different
                                     val knownGlobalEventDates =
                                         mapOf(
-                                            "08-03-2025" to "International Women's Day",
-                                            "22-04-2025" to "Earth Day",
-                                            "07-04-2025" to "World Health Day",
-                                            "01-05-2025" to "International Workers' day",
-                                            "05-06-2025" to "World Environment Day",
-                                            "21-09-2025" to "World Peace Day",
-                                            "19-11-2025" to "International Men's Day",
-                                            "11-05-2025" to "International Mother's Day",
-                                            "15-06-2025" to "International Father's Day",
-                                            "11-04-2025" to "International Pets Day",
-                                            "28-06-2025" to "LGBT Pride Day",
+                                            "08-03-$currentYear" to "International Women's Day",
+                                            "22-04-$currentYear" to "Earth Day",
+                                            "07-04-$currentYear" to "World Health Day",
+                                            "01-05-$currentYear" to "International Workers' day",
+                                            "05-06-$currentYear" to "World Environment Day",
+                                            "21-09-$currentYear" to "World Peace Day",
+                                            "19-11-$currentYear" to "International Men's Day",
+                                            "11-05-$currentYear" to "International Mother's Day",
+                                            "15-06-$currentYear" to "International Father's Day",
+                                            "11-04-$currentYear" to "International Pets Day",
+                                            "28-06-$currentYear" to "LGBT Pride Day",
                                         )
 
                                     // Update milestone data for selected date
@@ -744,6 +747,7 @@ fun MonthDetailScreen(
 @Composable
 fun MonthCalendarView(
     selectedMonth: Int,
+    currentYear: Int,
     holidays: List<Holiday>,
     milestoneDates: Set<Int> = emptySet(),
     globalEventDates: Set<Int> = emptySet(),
@@ -757,13 +761,13 @@ fun MonthCalendarView(
     }
 
     val daysOfWeek = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
-    val yearMonth = YearMonth.of(2025, selectedMonth)
+    val yearMonth = YearMonth.of(currentYear, selectedMonth)
     val daysInMonth = yearMonth.lengthOfMonth()
     val firstDayOfMonth = yearMonth.atDay(1).dayOfWeek.value % 7
 
     // Get current date to correctly mark today
     val currentDate = LocalDate.now()
-    val isCurrentMonth = currentDate.monthValue == selectedMonth && currentDate.year == 2025
+    val isCurrentMonth = currentDate.monthValue == selectedMonth && currentDate.year == currentYear
 
     Column {
         // Days of week header
@@ -814,7 +818,7 @@ fun MonthCalendarView(
                     val day = weekIndex * 7 + dayOfWeekIndex + 1 - firstDayOfMonth
                     if (day in 1..daysInMonth) {
                         // Format the date to "dd-MM-yyyy" for consistency
-                        val dateStr = String.format("%02d-%02d-%04d", day, selectedMonth, 2025)
+                        val dateStr = String.format("%02d-%02d-%04d", day, selectedMonth, currentYear)
 
                         // Only mark as today if it's the current date
                         val isToday = isCurrentMonth && day == currentDate.dayOfMonth

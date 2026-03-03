@@ -27,6 +27,7 @@ import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.NetworkResult
 import java.time.LocalDate
+import java.time.Year
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -35,6 +36,7 @@ fun HolidayListScreen(
     navigator: Navigator,
     onBackPressed: () -> Unit,
 ) {
+    val currentYear = Year.now().value
     val holidaysState = controller.holidays.observeAsState()
     val holidayFileUrl = controller.holidayFileUrl.observeAsState()
 
@@ -99,7 +101,7 @@ fun HolidayListScreen(
 
                 // Title centered in the Box
                 Text(
-                    text = "Holiday list 2025",
+                    text = "Holiday list $currentYear",
                     color = Color.Black,
                     fontSize = 20.sp,
                     fontFamily = GraphikFontFamily,
@@ -114,7 +116,7 @@ fun HolidayListScreen(
                             onClick = {
                                 if (url.isNotBlank()) {
                                     Log.d("HolidayListScreen", "Opening PDF with URL: $url")
-                                    navigator.navigateToPDFViewer(url, "Holiday list 2025")
+                                    navigator.navigateToPDFViewer(url, "Holiday list $currentYear")
                                 } else {
                                     Log.e("HolidayListScreen", "Cannot open PDF: URL is empty")
                                     // Could show a toast here if needed

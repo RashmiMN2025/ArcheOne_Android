@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -597,13 +598,44 @@ private fun LocationDetails(
                     .fillMaxWidth()
                     .padding(16.dp),
         ) {
-            Text(
-                text = location.name,
-                fontSize = 19.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = location.name,
+                    fontSize = 19.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                )
+                IconButton(
+                    onClick = {
+                        val mapLink = if (!location.redirection.isNullOrEmpty() && location.redirection.startsWith("http")) {
+                            location.redirection
+                        } else {
+                            "https://www.google.com/maps/search/?api=1&query=${Uri.encode(location.address)}"
+                        }
+                        
+                        val shareText = "Arche Global Private Limited,\n${location.address}\n\nLocation Link: $mapLink"
+                        
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share Location"))
+                    },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share",
+                        tint = PrimaryRed,
+                        modifier = Modifier.size(25.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 

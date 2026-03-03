@@ -254,7 +254,7 @@ fun MeetingHistoryScreen(
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                                     .offset(x = (-24).dp),
-                                text = "Booking History",
+                                text = if (source == "admin") "Admin Meeting View" else "Booking History",
                                 color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,

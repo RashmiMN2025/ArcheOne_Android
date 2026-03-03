@@ -32,6 +32,7 @@ import com.archeGlobal.one.model.Holiday
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.NetworkResult
 import java.time.LocalDate
+import java.time.Year
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.*
@@ -43,6 +44,7 @@ fun HolidayCalendarScreen(
     onMonthClick: (Int) -> Unit,
     onHolidayListClick: (String) -> Unit,
 ) {
+    val currentYear = Year.now().value
     val holidaysState = controller.holidays.observeAsState()
     val holidays = remember { mutableStateOf<List<Holiday>>(emptyList()) }
     val globalEvents = remember { mutableStateOf<List<GlobalEvent>>(emptyList()) }
@@ -135,7 +137,7 @@ fun HolidayCalendarScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "Year 2025",
+                        text = "Year $currentYear",
                         fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
@@ -147,7 +149,7 @@ fun HolidayCalendarScreen(
                             pdfUrl.value?.let { url ->
                                 controller.onViewClick(
                                     context = context,
-                                    documentName = "Holiday list 2025",
+                                    documentName = "Holiday list $currentYear",
                                     filePath = url,
                                 )
                                 // onHolidayListClick(url)
@@ -229,6 +231,7 @@ fun HolidayCalendarScreen(
                                     }
                                 },
                             onMonthClick = onMonthClick,
+                            currentYear = currentYear,
                         )
                     }
                 }
@@ -244,6 +247,7 @@ fun MonthCard(
     holidays: List<Holiday>,
     globalEvents: List<GlobalEvent> = emptyList(),
     onMonthClick: (Int) -> Unit,
+    currentYear: Int,
 ) {
     // Get screen width
     val screenWidth = LocalConfiguration.current.screenWidthDp
@@ -274,7 +278,7 @@ fun MonthCard(
             Text(
                 text =
                     YearMonth
-                        .of(2025, month)
+                        .of(currentYear, month)
                         .month
                         .getDisplayName(TextStyle.FULL, Locale.ENGLISH)
                         .take(3),
@@ -288,7 +292,7 @@ fun MonthCard(
 
             // Removed spacer to bring date numbers closer to month name
 
-            MonthDates(month, holidays, globalEvents)
+            MonthDates(month, holidays, globalEvents, currentYear)
         }
     }
 }
@@ -299,13 +303,14 @@ fun MonthDates(
     month: Int,
     holidays: List<Holiday>,
     globalEvents: List<GlobalEvent> = emptyList(),
+    currentYear: Int,
 ) {
-    val firstDayOfMonth = LocalDate.of(2025, month, 1).dayOfWeek.value % 7
-    val totalDays = YearMonth.of(2025, month).lengthOfMonth()
+    val firstDayOfMonth = LocalDate.of(currentYear, month, 1).dayOfWeek.value % 7
+    val totalDays = YearMonth.of(currentYear, month).lengthOfMonth()
 
     // Get current date to check if today should be highlighted
     val currentDate = LocalDate.now()
-    val isCurrentMonth = currentDate.monthValue == month && currentDate.year == 2025
+    val isCurrentMonth = currentDate.monthValue == month && currentDate.year == currentYear
 
     Column(
         verticalArrangement = Arrangement.spacedBy(3.dp), // Slightly reduced spacing between rows

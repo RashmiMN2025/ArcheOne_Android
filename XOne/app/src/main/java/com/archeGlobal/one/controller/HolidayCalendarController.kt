@@ -20,6 +20,7 @@ import com.archeGlobal.one.utils.NetworkResult
 import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.Year
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -93,21 +94,22 @@ class HolidayCalendarController(
         Log.d("HolidayCalendarController", "Looking for global events on date: $date")
         Log.d("HolidayCalendarController", "Total global events available: ${_globalEvents.value?.size ?: 0}")
 
+        val currentYear = Year.now().value
         // Hard-coded test for specific API event dates to verify if our data is loaded correctly
         // The dates below are taken directly from the API response you provided
         val knownDates =
             listOf(
-                "08-03-2025", // International Women's Day
-                "22-04-2025", // Earth Day
-                "07-04-2025", // World Health Day
-                "01-05-2025", // International Workers' day
-                "05-06-2025", // World Environment Day
-                "21-09-2025", // World Peace Day
-                "19-11-2025", // International Men's Day
-                "11-05-2025", // International Mother's Day
-                "15-06-2025", // International Father's Day
-                "11-04-2025", // International Pets Day
-                "28-06-2025", // LGBT Pride Day
+                "08-03-$currentYear", // International Women's Day
+                "22-04-$currentYear", // Earth Day
+                "07-04-$currentYear", // World Health Day
+                "01-05-$currentYear", // International Workers' day
+                "05-06-$currentYear", // World Environment Day
+                "21-09-$currentYear", // World Peace Day
+                "19-11-$currentYear", // International Men's Day
+                "11-05-$currentYear", // International Mother's Day
+                "15-06-$currentYear", // International Father's Day
+                "11-04-$currentYear", // International Pets Day
+                "28-06-$currentYear", // LGBT Pride Day
             )
 
         // Check if the requested date matches any known global event date
@@ -289,13 +291,14 @@ class HolidayCalendarController(
 
                 // Set and log the holidays file URL
                 val holidayFileUrl = calendarResponse.holidaysFile
+                val currentYear = Year.now().value
 
                 if (!holidayFileUrl.isNullOrBlank()) {
                     _holidayFileUrl.value = holidayFileUrl
                     Log.d("HolidayCalendarController", "Holiday PDF URL: $holidayFileUrl")
                 } else {
                     // Set a default PDF URL if none is provided
-                    val defaultUrl = "https://archaeglobal.com/holidays_2025.pdf"
+                    val defaultUrl = "https://archaeglobal.com/holidays_$currentYear.pdf"
                     _holidayFileUrl.value = defaultUrl
                     Log.w("HolidayCalendarController", "Using default holiday PDF URL: $defaultUrl")
                 }
@@ -340,37 +343,39 @@ class HolidayCalendarController(
         }
 
     // For testing or offline mode
-    fun getDefaultHolidays(): List<Holiday> =
-        listOf(
+    fun getDefaultHolidays(): List<Holiday> {
+        val currentYear = Year.now().value
+        return listOf(
             Holiday(
                 name = "New Year Day",
-                date = "01-01-2025",
+                date = "01-01-$currentYear",
                 holidayType = "Yes",
                 description = "",
             ),
             Holiday(
                 name = "Republic Day",
-                date = "26-01-2025",
+                date = "26-01-$currentYear",
                 holidayType = "Yes",
                 description = "",
             ),
             Holiday(
                 name = "Independence Day",
-                date = "15-08-2025",
+                date = "15-08-$currentYear",
                 holidayType = "Yes",
                 description = "",
             ),
             Holiday(
                 name = "Gandhi Jayanthi",
-                date = "02-10-2025",
+                date = "02-10-$currentYear",
                 holidayType = "Yes",
                 description = "",
             ),
             Holiday(
                 name = "Christmas",
-                date = "25-12-2025",
+                date = "25-12-$currentYear",
                 holidayType = "Yes",
                 description = "",
             ),
         )
+    }
 }
