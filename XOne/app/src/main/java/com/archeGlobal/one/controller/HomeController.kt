@@ -1,12 +1,17 @@
 package com.archeGlobal.one.controller
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.location.LocationManager
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat
 import com.archeGlobal.one.AssetActivity
 import com.archeGlobal.one.BusinessCardActivity
 import com.archeGlobal.one.CommuniqueActivity
@@ -50,6 +55,101 @@ class HomeController(
 
     fun dismissAttendanceSheet() {
         showAttendanceSheet = false
+    }
+
+    var showPunchInDialog by mutableStateOf(false)
+    var showPunchOutDialog by mutableStateOf(false)
+    var currentLocationText by mutableStateOf("Fetching location...")
+    var isPunchedIn by mutableStateOf(false)
+    var punchInTime by mutableStateOf("")
+
+    fun showPunchIn() {
+        showPunchInDialog = true
+        fetchCurrentLocation()
+    }
+
+    fun dismissPunchInDialog() {
+        showPunchInDialog = false
+    }
+
+    fun onPunchInConfirmed() {
+        dismissPunchInDialog()
+        isPunchedIn = true
+        punchInTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+        Log.d("HomeController", "Punch In confirmed at: $currentLocationText, time: $punchInTime")
+        // TODO: call punch-in API
+    }
+
+    fun showPunchOut() {
+        showPunchOutDialog = true
+        fetchCurrentLocation()
+    }
+
+    fun dismissPunchOutDialog() {
+        showPunchOutDialog = false
+    }
+
+    fun onPunchOutConfirmed() {
+        dismissPunchOutDialog()
+        isPunchedIn = false
+        punchInTime = ""
+        Log.d("HomeController", "Punch Out confirmed at: $currentLocationText")
+        // TODO: call punch-out API
+    }
+
+    fun fetchLocationAfterPermission() {
+        currentLocationText = "Fetching location..."
+        fetchCurrentLocation()
+    }
+
+    private fun fetchCurrentLocation() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val hasCoarse = ActivityCompat.checkSelfPermission(
+                    context, Manifest.permission.ACCESS_COARSE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
+                val hasFine = ActivityCompat.checkSelfPermission(
+                    context, Manifest.permission.ACCESS_FINE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
+
+                if (!hasCoarse && !hasFine) {
+                    withContext(Dispatchers.Main) { currentLocationText = "Location permission required" }
+                    return@launch
+                }
+
+                val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                    ?: locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
+
+                if (location == null) {
+                    withContext(Dispatchers.Main) { currentLocationText = "Determining location..." }
+                    return@launch
+                }
+
+                @Suppress("DEPRECATION")
+                val addresses = Geocoder(context, Locale.getDefault())
+                    .getFromLocation(location.latitude, location.longitude, 1)
+
+                val address = addresses?.firstOrNull()
+                val locationStr = if (address != null) {
+                    val city = address.locality ?: address.subAdminArea ?: ""
+                    val state = address.adminArea ?: ""
+                    val place = address.subLocality?.let { "($it)" } ?: ""
+                    buildString {
+                        if (city.isNotEmpty()) append(city)
+                        if (state.isNotEmpty()) append(", $state")
+                        if (place.isNotEmpty()) append("\n$place")
+                    }.trim()
+                } else {
+                    "${location.latitude}, ${location.longitude}"
+                }
+
+                withContext(Dispatchers.Main) { currentLocationText = locationStr }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { currentLocationText = "Unable to fetch location" }
+            }
+        }
     }
 
     var employeeData by mutableStateOf(
@@ -671,6 +771,14 @@ class HomeController(
                 "zentask" -> {
                     Log.d("HomeController", "Navigating to Zentask")
                     navigator.navigateToTodo()
+                }
+                "punch in" -> {
+                    Log.d("HomeController", "Showing Punch In dialog")
+                    showPunchIn()
+                }
+                "punch out" -> {
+                    Log.d("HomeController", "Showing Punch Out dialog")
+                    showPunchOut()
                 }
                 "id" -> navigator.navigateToID()
                 "timesheet" -> {

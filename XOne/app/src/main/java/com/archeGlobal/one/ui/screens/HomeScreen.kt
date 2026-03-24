@@ -1,11 +1,16 @@
 package com.archeGlobal.one.ui.screens
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -803,6 +808,56 @@ fun HomeScreenContent(
             )
         }
 
+        // Location permission launcher (shared by punch in/out dialogs)
+        val locationPermissionLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions(),
+        ) { results ->
+            val granted = results.values.any { it }
+            if (granted) controller.fetchLocationAfterPermission()
+        }
+
+        val showingPunchDialog = controller.showPunchInDialog || controller.showPunchOutDialog
+        if (showingPunchDialog) {
+            LaunchedEffect(showingPunchDialog) {
+                val hasFine = ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.ACCESS_FINE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
+                val hasCoarse = ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.ACCESS_COARSE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
+                if (!hasFine && !hasCoarse) {
+                    locationPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                        ),
+                    )
+                }
+            }
+        }
+
+        if (controller.showPunchInDialog) {
+            PunchActionDialog(
+                title = "Punch In",
+                locationText = controller.currentLocationText,
+                confirmText = "Punch In",
+                confirmColor = Color(0xFF4CAF50),
+                onCancel = { controller.dismissPunchInDialog() },
+                onConfirm = { controller.onPunchInConfirmed() },
+            )
+        }
+
+        if (controller.showPunchOutDialog) {
+            PunchActionDialog(
+                title = "Punch Out",
+                locationText = controller.currentLocationText,
+                confirmText = "Punch Out",
+                confirmColor = Color(0xFFF5A623),
+                onCancel = { controller.dismissPunchOutDialog() },
+                onConfirm = { controller.onPunchOutConfirmed() },
+            )
+        }
+
         // Attendance bottom sheet
         if (controller.showAttendanceSheet) {
             ModalBottomSheet(
@@ -1066,11 +1121,14 @@ fun HomeScreenContent(
                                     ) {
                                         item {
                                             TimeAttendanceCard(
+                                                isPunchedIn = controller.isPunchedIn,
+                                                punchInTime = controller.punchInTime,
                                                 onViewAllClick = {
                                                     onItemClick(HomeItem(title = "Timesheet", icon = "timesheet", category = ""))
                                                 },
                                                 onPunchInClick = {
-                                                    onItemClick(HomeItem(title = "Punch In", icon = "punch_in", category = ""))
+                                                    val title = if (controller.isPunchedIn) "Punch Out" else "Punch In"
+                                                    onItemClick(HomeItem(title = title, icon = "punch_in", category = ""))
                                                 },
                                                 onApplyLeaveClick = {
                                                     onItemClick(HomeItem(title = "Apply Leave", icon = "apply_leave", category = ""))
@@ -1919,6 +1977,8 @@ private fun CategoryHeader(
 fun TimeAttendanceCard(
     timeSpent: String = "-- h -- m",
     punchStatus: String = "Not Punched",
+    isPunchedIn: Boolean = false,
+    punchInTime: String = "",
     onViewAllClick: () -> Unit = {},
     onPunchInClick: () -> Unit = {},
     onApplyLeaveClick: () -> Unit = {},
@@ -1926,7 +1986,12 @@ fun TimeAttendanceCard(
     onRegularizeClick: () -> Unit = {},
 ) {
     val primaryRed = Color(0xFFDD3825)
-    val punchStatusColor = if (punchStatus == "Not Punched") Color(0xFFE6A817) else primaryRed
+    val punchGreen = Color(0xFF4CAF50)
+    val punchStatusColor = when {
+        isPunchedIn -> punchGreen
+        punchStatus == "Not Punched" -> Color(0xFFE6A817)
+        else -> primaryRed
+    }
 
     Card(
         modifier = Modifier
@@ -1991,13 +2056,32 @@ fun TimeAttendanceCard(
                     fontSize = 13.sp,
                     color = Color(0xFF888888),
                 )
-                Text(
-                    text = punchStatus,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
-                    color = punchStatusColor,
-                )
+                if (isPunchedIn) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "Punched In",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp,
+                            color = punchGreen,
+                        )
+                        Text(
+                            text = punchInTime,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = Color(0xFF555555),
+                        )
+                    }
+                } else {
+                    Text(
+                        text = punchStatus,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp,
+                        color = punchStatusColor,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -2015,12 +2099,14 @@ fun TimeAttendanceCard(
                     fontSize = 28.sp,
                     color = Color.Black,
                 )
-                Text(
-                    text = "—",
-                    fontFamily = GraphikFontFamily,
-                    fontSize = 18.sp,
-                    color = Color(0xFFAAAAAA),
-                )
+                if (!isPunchedIn) {
+                    Text(
+                        text = "—",
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 18.sp,
+                        color = Color(0xFFAAAAAA),
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -2038,7 +2124,7 @@ fun TimeAttendanceCard(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
                 ) {
                     Text(
-                        text = "Punch In",
+                        text = if (isPunchedIn) "Punch Out" else "Punch In",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 14.sp,
@@ -2098,6 +2184,96 @@ fun TimeAttendanceCard(
                         fontSize = 14.sp,
                         color = primaryRed,
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PunchActionDialog(
+    title: String,
+    locationText: String,
+    confirmText: String,
+    confirmColor: Color,
+    onCancel: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Dialog(onDismissRequest = onCancel) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = title,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color.Black,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Current Location",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 13.sp,
+                    color = Color(0xFF888888),
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = locationText,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 21.sp,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Button(
+                        onClick = onCancel,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFEEEEEE),
+                            contentColor = Color(0xFF555555),
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(0.dp),
+                    ) {
+                        Text(
+                            text = "Cancel",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 15.sp,
+                        )
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = confirmColor,
+                            contentColor = Color.White,
+                        ),
+                    ) {
+                        Text(
+                            text = confirmText,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                        )
+                    }
                 }
             }
         }
