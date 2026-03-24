@@ -349,7 +349,7 @@ fun AssetScreen(
                                     val intent =
                                         android.content.Intent(context, com.archeGlobal.one.RaiseConcernActivity::class.java).apply {
                                             putExtra("source", "asset")
-                                            putExtra("prefilledCategory", "Asset") // asset category pre-selected
+                                            putExtra("prefilledCategory", "Asset related issues") // asset category pre-selected
                                         }
                                     context.startActivity(intent)
                                 },

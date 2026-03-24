@@ -240,7 +240,7 @@ class AssetController(
                 name = name,
                 email = email,
                 mobile = mobile,
-                category = "Asset Related Issue",
+                category = "Asset related issues",
                 query = description,
                 anonymous = false, // Asset issues are not anonymous since they're tied to specific assets
             )
@@ -316,10 +316,10 @@ class AssetController(
         // Navigate directly to HomeActivity with track_tickets as the target
         val intent =
             Intent(context, TrackTicketsActivity::class.java).apply {
-                putExtra("ticketCategory", "Asset Related Issue")
+                putExtra("ticketCategory", "Asset related issues")
                 putExtra("source", "asset")
             }
-        Log.d("AssetController", "Starting TrackTicketsActivity with ticketCategory=Asset Related Issue")
+        Log.d("AssetController", "Starting TrackTicketsActivity with ticketCategory = Asset related issues")
         context.startActivity(intent)
         // Apply forward animation
         (context as? AssetActivity)?.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)

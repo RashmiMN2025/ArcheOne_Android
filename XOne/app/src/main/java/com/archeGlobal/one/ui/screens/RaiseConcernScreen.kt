@@ -42,6 +42,7 @@ import com.archeGlobal.one.ui.components.DynamicFormFieldComponent
 import com.archeGlobal.one.ui.components.EmployeeDetailsSection
 import com.archeGlobal.one.ui.components.validateDynamicField
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -522,11 +523,6 @@ fun RaiseConcernScreen(
                                 }
 
                             Toast.makeText(context, successMessage, Toast.LENGTH_LONG).show()
-
-                            // Reset form on success
-                            selectedCategory = null
-                            selectedSubcategory = null
-                            issueDescription = ""
 
                             // Show timer dialog for helpdesk tickets only
                             showTimerDialog = true
@@ -1215,7 +1211,13 @@ fun RaiseConcernScreen(
                         }
                     },
                     enabled = !isSubmitting,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = PrimaryRed,
+                            disabledContainerColor = PrimaryRed,
+                            contentColor = Color.White,
+                            disabledContentColor = Color.White,
+                        ),
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -1351,6 +1353,12 @@ fun RaiseConcernScreen(
                     }
                     if (timerSeconds <= 0) {
                         showTimerDialog = false
+
+                        // Reset form on success AFTER timer completes
+                        selectedCategory = null
+                        selectedSubcategory = null
+                        issueDescription = ""
+
                         // Navigate to track tickets after timer completes
                         if (onNavigateToTrackTickets != null) {
                             onNavigateToTrackTickets("Helpdesk")
