@@ -300,6 +300,7 @@ fun ResponsiveHomeScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
     model: HomeModel,
@@ -802,6 +803,27 @@ fun HomeScreenContent(
             )
         }
 
+        // Attendance bottom sheet
+        if (controller.showAttendanceSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { controller.dismissAttendanceSheet() },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                containerColor = Color.White,
+            ) {
+                AttendanceSheetContent(
+                    controller = controller.attendanceController,
+                    onRegularizeClick = {
+                        controller.dismissAttendanceSheet()
+                        controller.onItemClick(HomeItem(title = "Regularize", icon = "regularize", category = ""))
+                    },
+                    onOutdoorClick = {
+                        controller.dismissAttendanceSheet()
+                        controller.onItemClick(HomeItem(title = "Apply OutDoor", icon = "apply_outdoor", category = ""))
+                    },
+                )
+            }
+        }
+
         // Wrap with FooterScaffold for bottom navigation
         FooterScaffold(
             footerNavigation = model.footerNavigation,
@@ -1040,8 +1062,29 @@ fun HomeScreenContent(
                                     // All Apps View
                                     LazyColumn(
                                         modifier = Modifier.fillMaxSize(),
-                                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp),
+                                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
                                     ) {
+                                        item {
+                                            TimeAttendanceCard(
+                                                onViewAllClick = {
+                                                    onItemClick(HomeItem(title = "Timesheet", icon = "timesheet", category = ""))
+                                                },
+                                                onPunchInClick = {
+                                                    onItemClick(HomeItem(title = "Punch In", icon = "punch_in", category = ""))
+                                                },
+                                                onApplyLeaveClick = {
+                                                    onItemClick(HomeItem(title = "Apply Leave", icon = "apply_leave", category = ""))
+                                                },
+                                                onApplyOutDoorClick = {
+                                                    onItemClick(HomeItem(title = "Apply OutDoor", icon = "apply_outdoor", category = ""))
+                                                },
+                                                onRegularizeClick = {
+                                                    onItemClick(HomeItem(title = "Regularize", icon = "regularize", category = ""))
+                                                },
+                                            )
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                        }
+
                                         model.categories.forEach { (category, items) ->
                                             item {
                                                 CategoryHeader(
@@ -1869,5 +1912,194 @@ private fun CategoryHeader(
                 ),
             modifier = Modifier.padding(vertical = 8.dp),
         )
+    }
+}
+
+@Composable
+fun TimeAttendanceCard(
+    timeSpent: String = "-- h -- m",
+    punchStatus: String = "Not Punched",
+    onViewAllClick: () -> Unit = {},
+    onPunchInClick: () -> Unit = {},
+    onApplyLeaveClick: () -> Unit = {},
+    onApplyOutDoorClick: () -> Unit = {},
+    onRegularizeClick: () -> Unit = {},
+) {
+    val primaryRed = Color(0xFFDD3825)
+    val punchStatusColor = if (punchStatus == "Not Punched") Color(0xFFE6A817) else primaryRed
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 0.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        ) {
+            // Header Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "Your Time & Attendance",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                )
+                OutlinedButton(
+                    onClick = onViewAllClick,
+                    shape = RoundedCornerShape(20.dp),
+                    border = BorderStroke(1.dp, primaryRed),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier.height(32.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
+                ) {
+                    Text(
+                        text = "View All",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp,
+                        color = primaryRed,
+                    )
+                }
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 12.dp),
+                color = Color(0xFFE5E5E5),
+                thickness = 0.5.dp,
+            )
+
+            // Time Spent Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Time Spent",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 13.sp,
+                    color = Color(0xFF888888),
+                )
+                Text(
+                    text = punchStatus,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = punchStatusColor,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Time Display Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = timeSpent,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp,
+                    color = Color.Black,
+                )
+                Text(
+                    text = "—",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 18.sp,
+                    color = Color(0xFFAAAAAA),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Action Buttons Row 1
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                OutlinedButton(
+                    onClick = onPunchInClick,
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, primaryRed),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
+                ) {
+                    Text(
+                        text = "Punch In",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = primaryRed,
+                    )
+                }
+                OutlinedButton(
+                    onClick = onApplyLeaveClick,
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, primaryRed),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
+                ) {
+                    Text(
+                        text = "Apply Leave",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = primaryRed,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Action Buttons Row 2
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                OutlinedButton(
+                    onClick = onApplyOutDoorClick,
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, primaryRed),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
+                ) {
+                    Text(
+                        text = "Apply OutDoor",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = primaryRed,
+                    )
+                }
+                OutlinedButton(
+                    onClick = onRegularizeClick,
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, primaryRed),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
+                ) {
+                    Text(
+                        text = "Regularize",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = primaryRed,
+                    )
+                }
+            }
+        }
     }
 }

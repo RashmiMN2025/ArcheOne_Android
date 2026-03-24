@@ -162,7 +162,6 @@ class HomeActivity : AppCompatActivity() {
         Log.d("HomeActivity", "DeskCartController access stack trace: ${Thread.currentThread().stackTrace.take(10).joinToString("\n")}")
         DeskCartController(this@HomeActivity, navigator)
     }
-
     // Lazy controllers can be accessed directly by property name
     // No explicit getter methods needed - Kotlin generates them automatically
 
@@ -1926,6 +1925,7 @@ class HomeActivity : AppCompatActivity() {
                             onBackPressed = { navController.popBackStack() },
                         )
                     }
+
                 }
 
                 // Update Required Dialog

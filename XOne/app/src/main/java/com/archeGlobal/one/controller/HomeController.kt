@@ -45,6 +45,13 @@ class HomeController(
     private val context: Context,
     initialModel: HomeModel = HomeModel(),
 ) {
+    var showAttendanceSheet by mutableStateOf(false)
+    val attendanceController = AttendanceController(context)
+
+    fun dismissAttendanceSheet() {
+        showAttendanceSheet = false
+    }
+
     var employeeData by mutableStateOf(
         AboutMeModel(
             name = OtpVerificationController.getUserData()?.name ?: "",
@@ -667,8 +674,8 @@ class HomeController(
                 }
                 "id" -> navigator.navigateToID()
                 "timesheet" -> {
-                    Log.d("HomeController", "Navigating to Service Not Available screen for Timesheet")
-                    navigate("service_not_available?serviceName=Timesheet")
+                    Log.d("HomeController", "Showing Attendance bottom sheet")
+                    showAttendanceSheet = true
                 }
                 "leave" -> {
                     Log.d("HomeController", "Navigating to Service Not Available screen for Leave")

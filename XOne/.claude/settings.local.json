@@ -5,7 +5,9 @@
       "Bash(./gradlew assembleDebug:*)",
       "Bash(awk:*)",
       "Bash(\"C:/Users/User/Documents/GitHub/XOne---Android/XOne/temp_modified.kt\")",
-      "Bash(git --git-dir=\"C:/Users/User/Documents/GitHub/XOne---Android/.git\" --work-tree=\"C:/Users/User/Documents/GitHub/XOne---Android\" show BIAL_RashmiDev:XOne/app/src/main/java/com/archeGlobal/one/ui/screens/HeadsUpScreen.kt)"
+      "Bash(git --git-dir=\"C:/Users/User/Documents/GitHub/XOne---Android/.git\" --work-tree=\"C:/Users/User/Documents/GitHub/XOne---Android\" show BIAL_RashmiDev:XOne/app/src/main/java/com/archeGlobal/one/ui/screens/HeadsUpScreen.kt)",
+      "Bash(grep -r services C:/Users/User/Documents/GitHub/XOne---Android/XOne/app/src/main/java/com/archeGlobal/one/model --include=*.kt)",
+      "Bash(grep -l \"class.*Activity\" /c/Users/User/Documents/GitHub/XOne---Android/XOne/app/src/main/java/com/archeGlobal/one/*.kt)"
     ],
     "deny": [],
     "ask": []
