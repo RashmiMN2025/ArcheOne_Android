@@ -1926,6 +1926,60 @@ class HomeActivity : AppCompatActivity() {
                         )
                     }
 
+                    // Attendance full-page screen
+                    composable(
+                        route = "attendance",
+                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                    ) {
+                        AttendanceScreen(
+                            controller = controller.attendanceController,
+                            onBack = { navController.popBackStack() },
+                            onLeaveCardClick = { leaveType ->
+                                navController.navigate("apply_leave?leaveType=${java.net.URLEncoder.encode(leaveType, "UTF-8")}")
+                            },
+                            onRegularizeClick = {
+                                navController.navigate("regularize")
+                            },
+                            onOutdoorDutyClick = {
+                                controller.onItemClick(com.archeGlobal.one.model.HomeItem(title = "Apply OutDoor", icon = "apply_outdoor", category = ""))
+                            },
+                        )
+                    }
+
+                    // Apply Leave screen
+                    composable(
+                        route = "apply_leave?leaveType={leaveType}",
+                        arguments = listOf(androidx.navigation.navArgument("leaveType") { type = androidx.navigation.NavType.StringType; defaultValue = "" }),
+                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                    ) { backStackEntry ->
+                        val leaveType = backStackEntry.arguments?.getString("leaveType")?.let {
+                            java.net.URLDecoder.decode(it, "UTF-8")
+                        } ?: ""
+                        ApplyLeaveScreen(
+                            initialLeaveType = leaveType,
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    // Apply Regularization screen
+                    composable(
+                        route = "regularize",
+                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                    ) {
+                        ApplyRegularizationScreen(
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
                 }
 
                 // Update Required Dialog

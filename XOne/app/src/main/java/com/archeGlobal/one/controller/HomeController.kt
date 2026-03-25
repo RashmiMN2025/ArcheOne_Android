@@ -50,12 +50,7 @@ class HomeController(
     private val context: Context,
     initialModel: HomeModel = HomeModel(),
 ) {
-    var showAttendanceSheet by mutableStateOf(false)
     val attendanceController = AttendanceController(context)
-
-    fun dismissAttendanceSheet() {
-        showAttendanceSheet = false
-    }
 
     var showPunchInDialog by mutableStateOf(false)
     var showPunchOutDialog by mutableStateOf(false)
@@ -782,12 +777,20 @@ class HomeController(
                 }
                 "id" -> navigator.navigateToID()
                 "timesheet" -> {
-                    Log.d("HomeController", "Showing Attendance bottom sheet")
-                    showAttendanceSheet = true
+                    Log.d("HomeController", "Navigating to Attendance screen")
+                    navigate("attendance")
+                }
+                "apply leave" -> {
+                    Log.d("HomeController", "Navigating to Apply Leave screen")
+                    navigate("apply_leave")
+                }
+                "regularize" -> {
+                    Log.d("HomeController", "Navigating to Apply Regularization screen")
+                    navigate("regularize")
                 }
                 "leave" -> {
-                    Log.d("HomeController", "Navigating to Service Not Available screen for Leave")
-                    navigate("service_not_available?serviceName=Leave")
+                    Log.d("HomeController", "Navigating to Apply Leave screen")
+                    navigate("apply_leave")
                 }
                 "my documents", "mydocuments" -> {
                     Log.d("MyDocuments", "Navigating to My Documents")

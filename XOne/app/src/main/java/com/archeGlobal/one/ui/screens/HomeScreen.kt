@@ -858,27 +858,6 @@ fun HomeScreenContent(
             )
         }
 
-        // Attendance bottom sheet
-        if (controller.showAttendanceSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { controller.dismissAttendanceSheet() },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                containerColor = Color.White,
-            ) {
-                AttendanceSheetContent(
-                    controller = controller.attendanceController,
-                    onRegularizeClick = {
-                        controller.dismissAttendanceSheet()
-                        controller.onItemClick(HomeItem(title = "Regularize", icon = "regularize", category = ""))
-                    },
-                    onOutdoorClick = {
-                        controller.dismissAttendanceSheet()
-                        controller.onItemClick(HomeItem(title = "Apply OutDoor", icon = "apply_outdoor", category = ""))
-                    },
-                )
-            }
-        }
-
         // Wrap with FooterScaffold for bottom navigation
         FooterScaffold(
             footerNavigation = model.footerNavigation,

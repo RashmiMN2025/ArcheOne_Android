@@ -64,12 +64,12 @@ class AttendanceController(private val context: Context) {
         attendanceMap = weekends + mockAttendance
 
         leaveBalances = listOf(
-            LeaveBalance("Apply Optional Holiday", 2.0),
-            LeaveBalance("Apply Privilege Leave", 24.0),
-            LeaveBalance("Apply Casual Leave", 9.0),
-            LeaveBalance("Apply Sick Leave", 12.0),
-            LeaveBalance("Apply Paternity Leaves", 5.0),
-            LeaveBalance("Apply Work from Home", 2.0),
+            LeaveBalance("Optional Holiday", 2.0),
+            LeaveBalance("Privilege Leave", 24.0),
+            LeaveBalance("Casual Leave", 9.0),
+            LeaveBalance("Sick Leave", 12.0),
+            LeaveBalance("Paternity Leave", 5.0),
+            LeaveBalance("Work from Home", 2.0),
         )
     }
 }
