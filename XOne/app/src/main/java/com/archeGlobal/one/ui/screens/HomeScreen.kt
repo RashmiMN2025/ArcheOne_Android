@@ -1994,7 +1994,7 @@ fun TimeAttendanceCard(
                 Text(
                     text = "Your Time & Attendance",
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp,
                     color = Color.Black,
                 )
@@ -2031,7 +2031,7 @@ fun TimeAttendanceCard(
                 Text(
                     text = "Time Spent",
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
+                    fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
                     color = Color(0xFF888888),
                 )
@@ -2040,7 +2040,7 @@ fun TimeAttendanceCard(
                         Text(
                             text = "Punched In",
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.Normal,
                             fontSize = 13.sp,
                             color = punchGreen,
                         )
@@ -2056,7 +2056,7 @@ fun TimeAttendanceCard(
                     Text(
                         text = punchStatus,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.Normal,
                         fontSize = 13.sp,
                         color = punchStatusColor,
                     )
@@ -2074,7 +2074,7 @@ fun TimeAttendanceCard(
                 Text(
                     text = timeSpent,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 28.sp,
                     color = Color.Black,
                 )
@@ -2105,7 +2105,7 @@ fun TimeAttendanceCard(
                     Text(
                         text = if (isPunchedIn) "Punch Out" else "Punch In",
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = primaryRed,
                     )
@@ -2120,7 +2120,7 @@ fun TimeAttendanceCard(
                     Text(
                         text = "Apply Leave",
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = primaryRed,
                     )
@@ -2144,7 +2144,7 @@ fun TimeAttendanceCard(
                     Text(
                         text = "Apply OutDoor",
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = primaryRed,
                     )
@@ -2159,7 +2159,7 @@ fun TimeAttendanceCard(
                     Text(
                         text = "Regularize",
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = primaryRed,
                     )
@@ -2193,15 +2193,15 @@ private fun PunchActionDialog(
                 Text(
                     text = title,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 17.sp,
                     color = Color.Black,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "Current Location",
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
+                    fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
                     color = Color(0xFF888888),
                 )
@@ -2209,7 +2209,7 @@ private fun PunchActionDialog(
                 Text(
                     text = locationText,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 15.sp,
                     color = Color.Black,
                     textAlign = TextAlign.Center,
@@ -2234,7 +2234,7 @@ private fun PunchActionDialog(
                             text = "Cancel",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 15.sp,
+                            fontSize = 13.sp,
                         )
                     }
                     Button(
@@ -2250,7 +2250,7 @@ private fun PunchActionDialog(
                             text = confirmText,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
+                            fontSize = 13.sp,
                         )
                     }
                 }

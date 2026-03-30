@@ -1937,22 +1937,25 @@ class HomeActivity : AppCompatActivity() {
                         AttendanceScreen(
                             controller = controller.attendanceController,
                             onBack = { navController.popBackStack() },
-                            onLeaveCardClick = { leaveType ->
-                                navController.navigate("apply_leave?leaveType=${java.net.URLEncoder.encode(leaveType, "UTF-8")}")
+                            onLeaveCardClick = { leaveType, date ->
+                                navController.navigate("apply_leave?leaveType=${java.net.URLEncoder.encode(leaveType, "UTF-8")}&date=${date}")
                             },
-                            onRegularizeClick = {
-                                navController.navigate("regularize")
+                            onRegularizeClick = { date ->
+                                navController.navigate("regularize?date=${date}")
                             },
-                            onOutdoorDutyClick = {
-                                controller.onItemClick(com.archeGlobal.one.model.HomeItem(title = "Apply OutDoor", icon = "apply_outdoor", category = ""))
+                            onOutdoorDutyClick = { date ->
+                                navController.navigate("regularize?date=${date}")
                             },
                         )
                     }
 
                     // Apply Leave screen
                     composable(
-                        route = "apply_leave?leaveType={leaveType}",
-                        arguments = listOf(androidx.navigation.navArgument("leaveType") { type = androidx.navigation.NavType.StringType; defaultValue = "" }),
+                        route = "apply_leave?leaveType={leaveType}&date={date}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("leaveType") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("date") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                        ),
                         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
                         popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
@@ -1961,21 +1964,34 @@ class HomeActivity : AppCompatActivity() {
                         val leaveType = backStackEntry.arguments?.getString("leaveType")?.let {
                             java.net.URLDecoder.decode(it, "UTF-8")
                         } ?: ""
+                        val dateStr = backStackEntry.arguments?.getString("date") ?: ""
+                        val initialDate = if (dateStr.isNotEmpty()) {
+                            try { java.time.LocalDate.parse(dateStr) } catch (e: Exception) { java.time.LocalDate.now() }
+                        } else java.time.LocalDate.now()
                         ApplyLeaveScreen(
                             initialLeaveType = leaveType,
+                            initialDate = initialDate,
                             onBack = { navController.popBackStack() },
                         )
                     }
 
                     // Apply Regularization screen
                     composable(
-                        route = "regularize",
+                        route = "regularize?date={date}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("date") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                        ),
                         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
                         popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
-                    ) {
+                    ) { backStackEntry ->
+                        val dateStr = backStackEntry.arguments?.getString("date") ?: ""
+                        val initialDate = if (dateStr.isNotEmpty()) {
+                            try { java.time.LocalDate.parse(dateStr) } catch (e: Exception) { java.time.LocalDate.now() }
+                        } else java.time.LocalDate.now()
                         ApplyRegularizationScreen(
+                            date = initialDate,
                             onBack = { navController.popBackStack() },
                         )
                     }

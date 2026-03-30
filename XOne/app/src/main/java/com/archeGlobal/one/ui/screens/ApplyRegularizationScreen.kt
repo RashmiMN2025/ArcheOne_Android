@@ -125,7 +125,7 @@ fun ApplyRegularizationScreen(
                             Text(
                                 text = "Regularization of - ${date.format(dateFormatter)}",
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 15.sp,
                                 color = Color.Black,
                             )
@@ -226,7 +226,7 @@ fun ApplyRegularizationScreen(
                                 Text(
                                     text = totalHours.ifEmpty { "—" },
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     fontSize = 15.sp,
                                     color = Color.Black,
                                 )
@@ -245,7 +245,7 @@ fun ApplyRegularizationScreen(
                             Text(
                                 text = "Action & Description",
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 16.sp,
                                 color = Color.Black,
                             )
@@ -383,7 +383,7 @@ fun ApplyRegularizationScreen(
                         Text(
                             text = "Submit Regularization",
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Medium,
                             fontSize = 16.sp,
                             color = Color.White,
                         )

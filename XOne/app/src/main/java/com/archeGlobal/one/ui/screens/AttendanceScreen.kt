@@ -15,6 +15,10 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,11 +58,12 @@ private val leaveColors = listOf(
 fun AttendanceScreen(
     controller: AttendanceController,
     onBack: () -> Unit,
-    onLeaveCardClick: (String) -> Unit,
-    onRegularizeClick: () -> Unit,
-    onOutdoorDutyClick: () -> Unit,
+    onLeaveCardClick: (String, LocalDate) -> Unit,
+    onRegularizeClick: (LocalDate) -> Unit,
+    onOutdoorDutyClick: (LocalDate) -> Unit,
 ) {
     val today = LocalDate.now()
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
     Box(
         modifier = Modifier
@@ -135,7 +140,7 @@ fun AttendanceScreen(
                                     Text(
                                         text = "${controller.currentMonth.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())} ${controller.currentMonth.year}",
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         fontSize = 17.sp,
                                         color = Color.Black,
                                     )
@@ -168,6 +173,8 @@ fun AttendanceScreen(
                                     yearMonth = controller.currentMonth,
                                     today = today,
                                     attendanceMap = controller.attendanceMap,
+                                    selectedDate = selectedDate,
+                                    onDateClick = { date -> selectedDate = date },
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
@@ -180,7 +187,7 @@ fun AttendanceScreen(
                         Text(
                             text = "Leave Balance",
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp,
                             color = Color.Black,
                         )
@@ -208,7 +215,7 @@ fun AttendanceScreen(
                                         dotColor = leaveColors.getOrElse(colorIndex) { Color(0xFF888888) },
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clickable { onLeaveCardClick(leave.type) },
+                                            .clickable { onLeaveCardClick(leave.type, selectedDate ?: today) },
                                     )
                                 }
                                 if (row.size == 1) {
@@ -227,7 +234,7 @@ fun AttendanceScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             OutlinedButton(
-                                onClick = onRegularizeClick,
+                                onClick = { onRegularizeClick(selectedDate ?: today) },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(48.dp),
@@ -241,13 +248,13 @@ fun AttendanceScreen(
                                 Text(
                                     text = "Regularize",
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.SemiBold,
                                     fontSize = 15.sp,
                                     color = primaryRed,
                                 )
                             }
                             OutlinedButton(
-                                onClick = onOutdoorDutyClick,
+                                onClick = { onOutdoorDutyClick(selectedDate ?: today) },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(48.dp),
@@ -261,7 +268,7 @@ fun AttendanceScreen(
                                 Text(
                                     text = "Outdoor Duty",
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.SemiBold,
                                     fontSize = 15.sp,
                                     color = primaryRed,
                                 )
@@ -280,6 +287,8 @@ private fun CalendarGrid(
     yearMonth: YearMonth,
     today: LocalDate,
     attendanceMap: Map<Int, AttendanceDayStatus>,
+    selectedDate: LocalDate?,
+    onDateClick: (LocalDate) -> Unit,
 ) {
     val daysInMonth = yearMonth.lengthOfMonth()
     val firstDayOfMonth = yearMonth.atDay(1).dayOfWeek
@@ -307,12 +316,19 @@ private fun CalendarGrid(
                         if (day in 1..daysInMonth) {
                             val date = yearMonth.atDay(day)
                             val isToday = date == today
+                            val isSelected = date == selectedDate
                             val isWeekend =
                                 date.dayOfWeek == DayOfWeek.SATURDAY ||
                                     date.dayOfWeek == DayOfWeek.SUNDAY
                             val status = attendanceMap[day]
                                 ?: if (isWeekend) AttendanceDayStatus.WEEKEND else null
-                            DayCell(day = day, isToday = isToday, status = status)
+                            DayCell(
+                                day = day,
+                                isToday = isToday,
+                                isSelected = isSelected,
+                                status = status,
+                                onClick = { onDateClick(date) },
+                            )
                         }
                     }
                 }
@@ -325,9 +341,12 @@ private fun CalendarGrid(
 private fun DayCell(
     day: Int,
     isToday: Boolean,
+    isSelected: Boolean,
     status: AttendanceDayStatus?,
+    onClick: () -> Unit,
 ) {
     val todayBg = Color(0xFFDD3825)
+    val selectedBg = Color(0xFF64B5F6)
     val dotColor = when (status) {
         AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
         AttendanceDayStatus.ABSENT -> primaryRed
@@ -337,24 +356,33 @@ private fun DayCell(
         AttendanceDayStatus.WEEKEND -> Color(0xFFCCCCCC)
         null -> Color.Transparent
     }
+    val circleBg = when {
+        isToday -> todayBg
+        isSelected -> selectedBg
+        else -> Color.Transparent
+    }
+    val textColor = if (isToday || isSelected) Color.White else Color.Black
+    val textWeight = if (isToday || isSelected) FontWeight.SemiBold else FontWeight.Normal
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(vertical = 4.dp),
+        modifier = Modifier
+            .padding(vertical = 4.dp)
+            .clickable(onClick = onClick),
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(if (isToday) todayBg else Color.Transparent),
+                .background(circleBg),
         ) {
             Text(
                 text = day.toString(),
                 fontFamily = GraphikFontFamily,
-                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                fontWeight = textWeight,
                 fontSize = 14.sp,
-                color = if (isToday) Color.White else Color.Black,
+                color = textColor,
             )
         }
         Spacer(modifier = Modifier.height(3.dp))
@@ -406,7 +434,7 @@ private fun LeaveBalanceCard(
                 Text(
                     text = String.format("%.2f", leaveBalance.balance),
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp,
                     color = Color.Black,
                 )

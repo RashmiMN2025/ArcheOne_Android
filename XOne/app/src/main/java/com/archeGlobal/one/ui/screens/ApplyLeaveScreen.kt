@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -48,6 +49,7 @@ private val leaveReasons = listOf("Personal", "Outdoor", "Not Well")
 @Composable
 fun ApplyLeaveScreen(
     initialLeaveType: String = "",
+    initialDate: LocalDate = LocalDate.now(),
     onBack: () -> Unit,
 ) {
     val primaryRed = Color(0xFFDD3825)
@@ -55,8 +57,10 @@ fun ApplyLeaveScreen(
     var selectedLeaveType by remember { mutableStateOf(initialLeaveType) }
     var leaveTypeExpanded by remember { mutableStateOf(false) }
 
-    var fromDate by remember { mutableStateOf(LocalDate.now()) }
-    var toDate by remember { mutableStateOf(LocalDate.now()) }
+    var fromDate by remember { mutableStateOf(initialDate) }
+    var toDate by remember { mutableStateOf(initialDate) }
+    var showFromDatePicker by remember { mutableStateOf(false) }
+    var showToDatePicker by remember { mutableStateOf(false) }
 
     var selectedReason by remember { mutableStateOf("") }
     var reasonExpanded by remember { mutableStateOf(false) }
@@ -134,7 +138,7 @@ fun ApplyLeaveScreen(
                             Text(
                                 text = "Leave Details",
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 16.sp,
                                 color = Color.Black,
                             )
@@ -215,7 +219,7 @@ fun ApplyLeaveScreen(
                                     Text(
                                         text = "From",
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium,
+                                        fontWeight = FontWeight.Normal,
                                         fontSize = 12.sp,
                                         color = Color(0xFF888888),
                                     )
@@ -225,6 +229,7 @@ fun ApplyLeaveScreen(
                                             .fillMaxWidth()
                                             .border(1.dp, Color(0xFFDDDDDD), RoundedCornerShape(10.dp))
                                             .background(Color.White, RoundedCornerShape(10.dp))
+                                            .clickable { showFromDatePicker = true }
                                             .padding(horizontal = 12.dp, vertical = 14.dp),
                                     ) {
                                         Text(
@@ -239,7 +244,7 @@ fun ApplyLeaveScreen(
                                     Text(
                                         text = "To",
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium,
+                                        fontWeight = FontWeight.Normal,
                                         fontSize = 12.sp,
                                         color = Color(0xFF888888),
                                     )
@@ -249,6 +254,7 @@ fun ApplyLeaveScreen(
                                             .fillMaxWidth()
                                             .border(1.dp, Color(0xFFDDDDDD), RoundedCornerShape(10.dp))
                                             .background(Color.White, RoundedCornerShape(10.dp))
+                                            .clickable { showToDatePicker = true }
                                             .padding(horizontal = 12.dp, vertical = 14.dp),
                                     ) {
                                         Text(
@@ -263,7 +269,7 @@ fun ApplyLeaveScreen(
                                     Text(
                                         text = "$totalDays",
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         fontSize = 22.sp,
                                         color = Color.Black,
                                     )
@@ -279,6 +285,69 @@ fun ApplyLeaveScreen(
                         }
                     }
 
+                    // From date picker dialog
+                    if (showFromDatePicker) {
+                        val datePickerState = rememberDatePickerState(
+                            initialDisplayMode = DisplayMode.Picker,
+                            initialSelectedDateMillis = System.currentTimeMillis(),
+                        )
+                        DatePickerDialog(
+                            onDismissRequest = { showFromDatePicker = false },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    datePickerState.selectedDateMillis?.let { millis ->
+                                        val selected = LocalDate.ofEpochDay(millis / 86400000L)
+                                        fromDate = selected
+                                        if (toDate.isBefore(selected)) toDate = selected
+                                    }
+                                    showFromDatePicker = false
+                                }) {
+                                    Text("OK", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showFromDatePicker = false }) {
+                                    Text("Cancel", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                        ) {
+                            DatePicker(state = datePickerState)
+                        }
+                    }
+
+                    // To date picker dialog
+                    if (showToDatePicker) {
+                        val datePickerState = rememberDatePickerState(
+                            initialDisplayMode = DisplayMode.Picker,
+                            initialSelectedDateMillis = System.currentTimeMillis(),
+                            selectableDates = object : androidx.compose.material3.SelectableDates {
+                                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                    return utcTimeMillis >= fromDate.toEpochDay() * 86400000L
+                                }
+                            },
+                        )
+                        DatePickerDialog(
+                            onDismissRequest = { showToDatePicker = false },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    datePickerState.selectedDateMillis?.let { millis ->
+                                        toDate = LocalDate.ofEpochDay(millis / 86400000L)
+                                    }
+                                    showToDatePicker = false
+                                }) {
+                                    Text("OK", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showToDatePicker = false }) {
+                                    Text("Cancel", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                        ) {
+                            DatePicker(state = datePickerState)
+                        }
+                    }
+
                     // Reason & Description Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -290,7 +359,7 @@ fun ApplyLeaveScreen(
                             Text(
                                 text = "Reason & Description",
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 16.sp,
                                 color = Color.Black,
                             )
@@ -428,7 +497,7 @@ fun ApplyLeaveScreen(
                         Text(
                             text = "Apply Leave",
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Medium,
                             fontSize = 16.sp,
                             color = Color.White,
                         )
@@ -436,6 +505,7 @@ fun ApplyLeaveScreen(
                 }
             }
         }
+
     }
 }
 
@@ -454,7 +524,7 @@ fun ApproverCard(
             Text(
                 text = "Approver",
                 fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
                 color = Color.Black,
             )
@@ -482,7 +552,7 @@ fun ApproverCard(
                     Text(
                         text = name.ifEmpty { "—" },
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 15.sp,
                         color = Color.Black,
                     )
@@ -505,7 +575,7 @@ fun ApproverCard(
                         text = "Reporting\nManager",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 10.sp,
+                        fontSize = 12.sp,
                         color = Color(0xFF2E7D32),
                         textAlign = TextAlign.Center,
                         lineHeight = 13.sp,
