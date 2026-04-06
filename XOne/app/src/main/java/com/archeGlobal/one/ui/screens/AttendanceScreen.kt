@@ -202,27 +202,40 @@ fun AttendanceScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 
-                    controller.leaveBalances.chunked(2).forEachIndexed { rowIndex, row ->
+                    if (controller.isLoading && controller.leaveBalances.isEmpty()) {
                         item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
-                                row.forEachIndexed { colIndex, leave ->
-                                    val colorIndex = rowIndex * 2 + colIndex
-                                    LeaveBalanceCard(
-                                        leaveBalance = leave,
-                                        dotColor = leaveColors.getOrElse(colorIndex) { Color(0xFF888888) },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .clickable { onLeaveCardClick(leave.type, selectedDate ?: today) },
-                                    )
-                                }
-                                if (row.size == 1) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
+                                CircularProgressIndicator(color = primaryRed)
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    } else {
+                        controller.leaveBalances.chunked(2).forEachIndexed { rowIndex, row ->
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    row.forEachIndexed { colIndex, leave ->
+                                        val colorIndex = rowIndex * 2 + colIndex
+                                        LeaveBalanceCard(
+                                            leaveBalance = leave,
+                                            dotColor = leaveColors.getOrElse(colorIndex) { Color(0xFF888888) },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clickable { onLeaveCardClick(leave.type, selectedDate ?: today) },
+                                        )
+                                    }
+                                    if (row.size == 1) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
                         }
                     }
 

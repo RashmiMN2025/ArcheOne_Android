@@ -6,6 +6,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.AttendanceDayStatus
 import com.archeGlobal.one.model.LeaveBalance
+import com.archeGlobal.one.model.LeaveRequest
+import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.YearMonth
 
@@ -20,16 +26,22 @@ class AttendanceController(private val context: Context) {
     var leaveBalances by mutableStateOf<List<LeaveBalance>>(emptyList())
         private set
 
+    var isLoading by mutableStateOf(false)
+        private set
+
     init {
         loadData()
+        fetchLeaveBalances()
     }
 
     fun previousMonth() {
         currentMonth = currentMonth.minusMonths(1)
+        loadData()
     }
 
     fun nextMonth() {
         currentMonth = currentMonth.plusMonths(1)
+        loadData()
     }
 
     private fun loadData() {
@@ -62,14 +74,32 @@ class AttendanceController(private val context: Context) {
         )
 
         attendanceMap = weekends + mockAttendance
+    }
 
-        leaveBalances = listOf(
-            LeaveBalance("Optional Holiday", 2.0),
-            LeaveBalance("Privilege Leave", 24.0),
-            LeaveBalance("Casual Leave", 9.0),
-            LeaveBalance("Sick Leave", 12.0),
-            LeaveBalance("Paternity Leave", 5.0),
-            LeaveBalance("Work from Home", 2.0),
-        )
+    fun fetchLeaveBalances() {
+        val userData = UserDataManager.getInstance(context).getUserData()
+        val employeeId = userData?.employeeId ?: ""
+
+        if (employeeId.isEmpty()) return
+
+        isLoading = true
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val response = RetrofitClient.apiService.getLeaves(LeaveRequest(employeeId))
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val leaveDataList = response.body()?.data ?: emptyList()
+                    leaveBalances = leaveDataList.map {
+                        LeaveBalance(
+                            type = it.leaveType,
+                            balance = it.availableBalance
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle error or keep existing balances
+            } finally {
+                isLoading = false
+            }
+        }
     }
 }

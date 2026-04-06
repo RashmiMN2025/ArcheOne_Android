@@ -1102,6 +1102,8 @@ fun HomeScreenContent(
                                             TimeAttendanceCard(
                                                 isPunchedIn = controller.isPunchedIn,
                                                 punchInTime = controller.punchInTime,
+                                                punchOutTime = controller.punchOutTime,
+                                                timeSpent = controller.timeSpent,
                                                 onViewAllClick = {
                                                     onItemClick(HomeItem(title = "Timesheet", icon = "timesheet", category = ""))
                                                 },
@@ -1958,6 +1960,7 @@ fun TimeAttendanceCard(
     punchStatus: String = "Not Punched",
     isPunchedIn: Boolean = false,
     punchInTime: String = "",
+    punchOutTime: String = "",
     onViewAllClick: () -> Unit = {},
     onPunchInClick: () -> Unit = {},
     onApplyLeaveClick: () -> Unit = {},
@@ -2046,6 +2049,23 @@ fun TimeAttendanceCard(
                         )
                         Text(
                             text = punchInTime,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = Color(0xFF555555),
+                        )
+                    }
+                } else if (punchOutTime.isNotEmpty()) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "Punched Out",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 13.sp,
+                            color = primaryRed,
+                        )
+                        Text(
+                            text = punchOutTime,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,

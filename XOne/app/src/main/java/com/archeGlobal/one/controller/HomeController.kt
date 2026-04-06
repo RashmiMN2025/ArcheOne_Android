@@ -9,6 +9,7 @@ import android.location.LocationManager
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.app.ActivityCompat
@@ -20,7 +21,10 @@ import com.archeGlobal.one.HolidayCalendarActivity
 import com.archeGlobal.one.LocationsActivity
 import com.archeGlobal.one.MeetSpaceActivity
 import com.archeGlobal.one.PolicyActivity
+import com.archeGlobal.one.model.PunchInRequest
+import com.archeGlobal.one.model.PunchInResponse
 import com.archeGlobal.one.model.AboutMeModel
+
 import com.archeGlobal.one.model.CelebrationResponse
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.model.HomeItem
@@ -57,6 +61,11 @@ class HomeController(
     var currentLocationText by mutableStateOf("Fetching location...")
     var isPunchedIn by mutableStateOf(false)
     var punchInTime by mutableStateOf("")
+    var punchOutTime by mutableStateOf("")
+    var timeSpent by mutableStateOf("00:00")
+    private var punchId by mutableIntStateOf(-1)
+    private var timerJob: kotlinx.coroutines.Job? = null
+    private var punchInDateTime: Date? = null
 
     fun showPunchIn() {
         showPunchInDialog = true
@@ -69,10 +78,86 @@ class HomeController(
 
     fun onPunchInConfirmed() {
         dismissPunchInDialog()
-        isPunchedIn = true
-        punchInTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
-        Log.d("HomeController", "Punch In confirmed at: $currentLocationText, time: $punchInTime")
-        // TODO: call punch-in API
+        
+        val userData = UserDataManager.getInstance(context).getUserData()
+        val request = com.archeGlobal.one.model.PunchInRequest(
+            employeeCode = userData?.employeeId ?: "",
+            employeeName = userData?.name ?: "",
+            employeeEmail = userData?.email ?: "",
+            location = currentLocationText
+        )
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.apiService.punchIn(request)
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        val data = response.body()?.data
+                        isPunchedIn = true
+                        punchId = data?.id ?: -1
+                        punchOutTime = ""
+                        
+                        // Parse punchIn time for the timer and display
+                        val apiFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                        val displayFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+                        
+                        try {
+                             data?.punchIn?.let {
+                                 val parsedDate = apiFormat.parse(it)
+                                 if (parsedDate != null) {
+                                     // Set display time
+                                     punchInTime = displayFormat.format(parsedDate)
+                                     
+                                     // Set dateTime for timer calculation
+                                     val calendar = Calendar.getInstance()
+                                     val timeCalendar = Calendar.getInstance()
+                                     timeCalendar.time = parsedDate
+                                     calendar.set(Calendar.HOUR_OF_DAY, timeCalendar.get(Calendar.HOUR_OF_DAY))
+                                     calendar.set(Calendar.MINUTE, timeCalendar.get(Calendar.MINUTE))
+                                     calendar.set(Calendar.SECOND, timeCalendar.get(Calendar.SECOND))
+                                     punchInDateTime = calendar.time
+                                 } else {
+                                     punchInTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                                     punchInDateTime = Date()
+                                 }
+                             } ?: run {
+                                 punchInTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                                 punchInDateTime = Date()
+                             }
+                        } catch (e: Exception) {
+                            punchInTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                            punchInDateTime = Date()
+                        }
+                        
+                        android.widget.Toast.makeText(context, response.body()?.message, android.widget.Toast.LENGTH_SHORT).show()
+                        startTimer()
+                    } else {
+                        android.widget.Toast.makeText(context, "Punch in failed: ${response.body()?.message ?: "Unknown error"}", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, "Error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun startTimer() {
+        timerJob?.cancel()
+        timerJob = CoroutineScope(Dispatchers.Default).launch {
+            while (isPunchedIn) {
+                val now = Date()
+                val diff = now.time - (punchInDateTime?.time ?: now.time)
+                val hours = diff / (1000 * 60 * 60)
+                val minutes = (diff / (1000 * 60)) % 60
+                
+                withContext(Dispatchers.Main) {
+                    timeSpent = String.format("%02d:%02d", hours, minutes)
+                }
+                kotlinx.coroutines.delay(60000) // Update every minute
+            }
+        }
     }
 
     fun showPunchOut() {
@@ -86,10 +171,52 @@ class HomeController(
 
     fun onPunchOutConfirmed() {
         dismissPunchOutDialog()
-        isPunchedIn = false
-        punchInTime = ""
-        Log.d("HomeController", "Punch Out confirmed at: $currentLocationText")
-        // TODO: call punch-out API
+        
+        val request = com.archeGlobal.one.model.PunchOutRequest(
+            id = punchId
+        )
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.apiService.punchOut(request)
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        val data = response.body()?.data
+                        isPunchedIn = false
+                        timerJob?.cancel()
+                        timerJob = null
+                        
+                        // Parse punchOut time for display
+                        val apiFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                        val displayFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+                        
+                        try {
+                             val lastPunchOut = data?.punchOut?.lastOrNull()
+                             if (lastPunchOut != null) {
+                                 val parsedDate = apiFormat.parse(lastPunchOut)
+                                 if (parsedDate != null) {
+                                     punchOutTime = displayFormat.format(parsedDate)
+                                 } else {
+                                     punchOutTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                                 }
+                             } else {
+                                 punchOutTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                             }
+                        } catch (e: Exception) {
+                            punchOutTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                        }
+                        
+                        android.widget.Toast.makeText(context, response.body()?.message, android.widget.Toast.LENGTH_SHORT).show()
+                    } else {
+                        android.widget.Toast.makeText(context, "Punch out failed: ${response.body()?.message ?: "Unknown error"}", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, "Error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     fun fetchLocationAfterPermission() {
@@ -134,7 +261,7 @@ class HomeController(
                     buildString {
                         if (city.isNotEmpty()) append(city)
                         if (state.isNotEmpty()) append(", $state")
-                        if (place.isNotEmpty()) append("\n$place")
+                        if (place.isNotEmpty()) append(" $place")
                     }.trim()
                 } else {
                     "${location.latitude}, ${location.longitude}"
@@ -778,6 +905,7 @@ class HomeController(
                 "id" -> navigator.navigateToID()
                 "timesheet" -> {
                     Log.d("HomeController", "Navigating to Attendance screen")
+                    attendanceController.fetchLeaveBalances()
                     navigate("attendance")
                 }
                 "apply leave" -> {

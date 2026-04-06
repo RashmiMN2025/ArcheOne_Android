@@ -33,6 +33,8 @@ import com.archeGlobal.one.model.EmployeeSearchResponse
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.InventoryRequest
 import com.archeGlobal.one.model.InventoryResponse
+import com.archeGlobal.one.model.LeaveRequest
+import com.archeGlobal.one.model.LeaveResponse
 import com.archeGlobal.one.model.LocationsResponse
 import com.archeGlobal.one.model.LocationAssetCountResponse
 import com.archeGlobal.one.model.MeetingApprovalRequest
@@ -40,6 +42,10 @@ import com.archeGlobal.one.model.MeetingApprovalResponse
 import com.archeGlobal.one.model.PasswordResetRequest
 import com.archeGlobal.one.model.PasswordResetResponse
 import com.archeGlobal.one.model.PolicyModel
+import com.archeGlobal.one.model.PunchInRequest
+import com.archeGlobal.one.model.PunchInResponse
+import com.archeGlobal.one.model.PunchOutRequest
+import com.archeGlobal.one.model.PunchOutResponse
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.model.SelfTagAssetRequest
 import com.archeGlobal.one.model.SelfTagAssetResponse
@@ -133,6 +139,21 @@ interface ApiService {
     fun logout(
         @Body request: LogoutRequest,
     ): Call<LogoutResponse>
+
+    @POST("/api/v1/timesheet/attendance/punch-in")
+    suspend fun punchIn(
+        @Body request: PunchInRequest
+    ): Response<PunchInResponse>
+
+    @POST("/api/v1/timesheet/attendance/punch-out")
+    suspend fun punchOut(
+        @Body request: PunchOutRequest
+    ): Response<PunchOutResponse>
+
+    @POST("/api/v1/timesheet/leaves/get")
+    suspend fun getLeaves(
+        @Body request: LeaveRequest
+    ): Response<LeaveResponse>
 
     @HTTP(method = "DELETE", path = "/delete_doc", hasBody = true)
     fun deleteDoc(
