@@ -1944,7 +1944,10 @@ class HomeActivity : AppCompatActivity() {
                                 navController.navigate("regularize?date=${date}")
                             },
                             onOutdoorDutyClick = { date ->
-                                navController.navigate("regularize?date=${date}")
+                                navController.navigate("apply_outdoor_duty?date=${date}")
+                            },
+                            onWfhClick = { date ->
+                                navController.navigate("apply_wfh?date=${date}")
                             },
                         )
                     }
@@ -1971,6 +1974,7 @@ class HomeActivity : AppCompatActivity() {
                         ApplyLeaveScreen(
                             initialLeaveType = leaveType,
                             initialDate = initialDate,
+                            attendanceController = controller.attendanceController,
                             onBack = { navController.popBackStack() },
                         )
                     }
@@ -1992,6 +1996,75 @@ class HomeActivity : AppCompatActivity() {
                         } else java.time.LocalDate.now()
                         ApplyRegularizationScreen(
                             date = initialDate,
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    // Apply WFH screen
+                    composable(
+                        route = "apply_wfh?date={date}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("date") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                        ),
+                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                    ) { backStackEntry ->
+                        val dateStr = backStackEntry.arguments?.getString("date") ?: ""
+                        val initialDate = if (dateStr.isNotEmpty()) {
+                            try { java.time.LocalDate.parse(dateStr) } catch (e: Exception) { java.time.LocalDate.now() }
+                        } else java.time.LocalDate.now()
+                        ApplyWfhScreen(
+                            initialDate = initialDate,
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    // Apply Outdoor Duty screen
+                    composable(
+                        route = "apply_outdoor_duty?date={date}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("date") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                        ),
+                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                    ) { backStackEntry ->
+                        val dateStr = backStackEntry.arguments?.getString("date") ?: ""
+                        val initialDate = if (dateStr.isNotEmpty()) {
+                            try { java.time.LocalDate.parse(dateStr) } catch (e: Exception) { java.time.LocalDate.now() }
+                        } else java.time.LocalDate.now()
+                        ApplyOutdoorDutyScreen(
+                            initialDate = initialDate,
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    // Approval Requests screen
+                    composable(
+                        route = "approval_requests",
+                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                    ) {
+                        ApprovalRequestsScreen(
+                            onBack = { navController.popBackStack() },
+                            onRequestClick = { navController.navigate("approval_request_detail") },
+                        )
+                    }
+
+                    // Approval Request Detail screen
+                    composable(
+                        route = "approval_request_detail",
+                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                    ) {
+                        com.archeGlobal.one.ui.screens.ApprovalRequestDetailScreen(
                             onBack = { navController.popBackStack() },
                         )
                     }

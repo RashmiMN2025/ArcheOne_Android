@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,39 +30,30 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-private val regularizationActions = listOf(
-    "Regularization",
-    "Forgot to Punch",
-    "Early Leave",
-    "Late Arrival",
-    "Work from Home",
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ApplyRegularizationScreen(
-    date: LocalDate = LocalDate.now(),
-    scheduledIn: String = "",
-    scheduledOut: String = "",
-    actualIn: String = "",
-    actualOut: String = "",
-    prePostTime: String = "",
-    shiftName: String = "",
-    totalHours: String = "",
+fun ApplyOutdoorDutyScreen(
+    initialDate: LocalDate = LocalDate.now(),
     onBack: () -> Unit,
 ) {
     val primaryRed = Color(0xFFDD3825)
-    val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
-    var selectedAction by remember { mutableStateOf("") }
-    var actionExpanded by remember { mutableStateOf(false) }
+    var fromDate by remember { mutableStateOf(initialDate) }
+    var toDate by remember { mutableStateOf(initialDate) }
+    var showFromDatePicker by remember { mutableStateOf(false) }
+    var showToDatePicker by remember { mutableStateOf(false) }
+
     var inTime by remember { mutableStateOf(LocalTime.now()) }
     var outTime by remember { mutableStateOf(LocalTime.now()) }
     var showInTimePicker by remember { mutableStateOf(false) }
     var showOutTimePicker by remember { mutableStateOf(false) }
-    val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+
     var description by remember { mutableStateOf("") }
+
+    val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
+    val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+    val totalDays = (toDate.toEpochDay() - fromDate.toEpochDay() + 1).coerceAtLeast(1)
 
     val reportingManagerName = OtpVerificationController.getUserData()?.userDetails?.reporting_manager ?: ""
     val reportingManagerEmail = OtpVerificationController.getUserData()?.userDetails?.reporting_manager_mail ?: ""
@@ -91,7 +81,7 @@ fun ApplyRegularizationScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Apply Regularization",
+                            text = "Apply for Outdoor Duty",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp,
@@ -114,7 +104,6 @@ fun ApplyRegularizationScreen(
                     ),
                 )
 
-                // Scrollable content
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -122,7 +111,7 @@ fun ApplyRegularizationScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    // Regularization Details Card
+                    // Outdoor Details Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -131,127 +120,7 @@ fun ApplyRegularizationScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Regularization of - ${date.format(dateFormatter)}",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp,
-                                color = Color.Black,
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    text = "Scheduled",
-                                    modifier = Modifier.weight(1f),
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF888888),
-                                )
-                                Text(
-                                    text = "Actual",
-                                    modifier = Modifier.weight(1f),
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF888888),
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    text = if (scheduledIn.isNotEmpty() && scheduledOut.isNotEmpty()) "$scheduledIn to $scheduledOut" else "—",
-                                    modifier = Modifier.weight(1f),
-                                    fontFamily = GraphikFontFamily,
-                                    fontSize = 13.sp,
-                                    color = Color.Black,
-                                )
-                                Text(
-                                    text = if (actualIn.isNotEmpty() && actualOut.isNotEmpty()) "$actualIn to $actualOut" else "—",
-                                    modifier = Modifier.weight(1f),
-                                    fontFamily = GraphikFontFamily,
-                                    fontSize = 13.sp,
-                                    color = Color.Black,
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-                            HorizontalDivider(color = Color(0xFFF0F0F0), thickness = 1.dp)
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    text = "Pre-post time",
-                                    modifier = Modifier.weight(1f),
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF888888),
-                                )
-                                Text(
-                                    text = "Shift Name",
-                                    modifier = Modifier.weight(1f),
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF888888),
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    text = prePostTime.ifEmpty { "—" },
-                                    modifier = Modifier.weight(1f),
-                                    fontFamily = GraphikFontFamily,
-                                    fontSize = 13.sp,
-                                    color = Color.Black,
-                                )
-                                Text(
-                                    text = shiftName.ifEmpty { "—" },
-                                    modifier = Modifier.weight(1f),
-                                    fontFamily = GraphikFontFamily,
-                                    fontSize = 13.sp,
-                                    color = Color.Black,
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-                            HorizontalDivider(color = Color(0xFFF0F0F0), thickness = 1.dp)
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = "Total Hours",
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 13.sp,
-                                    color = Color(0xFF888888),
-                                )
-                                Text(
-                                    text = totalHours.ifEmpty { "—" },
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 15.sp,
-                                    color = Color.Black,
-                                )
-                            }
-                        }
-                    }
-
-                    // Action & Description Card
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "Action & Description",
+                                text = "Outdoor Details",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 16.sp,
@@ -259,68 +128,84 @@ fun ApplyRegularizationScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            Text(
-                                text = "Select Action",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                                color = Color.Black,
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            ExposedDropdownMenuBox(
-                                expanded = actionExpanded,
-                                onExpandedChange = { actionExpanded = it },
+                            // From / To / Total Days row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                OutlinedTextField(
-                                    value = selectedAction.ifEmpty { "Select Action" },
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.KeyboardArrowDown,
-                                            contentDescription = null,
-                                            tint = Color(0xFF888888),
-                                        )
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .menuAnchor(),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color(0xFFDDDDDD),
-                                        focusedBorderColor = primaryRed,
-                                        unfocusedTextColor = if (selectedAction.isEmpty()) Color(0xFF888888) else Color.Black,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedContainerColor = Color.White,
-                                    ),
-                                    textStyle = LocalTextStyle.current.copy(
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "From",
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 14.sp,
-                                    ),
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = actionExpanded,
-                                    onDismissRequest = { actionExpanded = false },
-                                    modifier = Modifier.background(Color.White),
-                                ) {
-                                    regularizationActions.forEach { action ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    text = action,
-                                                    fontFamily = GraphikFontFamily,
-                                                    fontSize = 14.sp,
-                                                    color = Color.Black,
-                                                )
-                                            },
-                                            onClick = {
-                                                selectedAction = action
-                                                actionExpanded = false
-                                            },
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF888888),
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .border(1.dp, Color(0xFFDDDDDD), RoundedCornerShape(10.dp))
+                                            .background(Color.White, RoundedCornerShape(10.dp))
+                                            .clickable { showFromDatePicker = true }
+                                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                                    ) {
+                                        Text(
+                                            text = fromDate.format(dateFormatter),
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 14.sp,
+                                            color = Color.Black,
+                                            modifier = Modifier
+                                                .background(Color(0xFFF5F5F5), RoundedCornerShape(6.dp))
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "To",
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF888888),
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .border(1.dp, Color(0xFFDDDDDD), RoundedCornerShape(10.dp))
+                                            .background(Color.White, RoundedCornerShape(10.dp))
+                                            .clickable { showToDatePicker = true }
+                                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                                    ) {
+                                        Text(
+                                            text = toDate.format(dateFormatter),
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 14.sp,
+                                            color = Color.Black,
+                                            modifier = Modifier
+                                                .background(Color(0xFFF5F5F5), RoundedCornerShape(6.dp))
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "$totalDays",
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 22.sp,
+                                        color = Color.Black,
+                                    )
+                                    Text(
+                                        text = "Total Day(s)",
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF888888),
+                                        textAlign = TextAlign.Center,
+                                    )
                                 }
                             }
 
@@ -391,47 +276,6 @@ fun ApplyRegularizationScreen(
                                     }
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            Text(
-                                text = "Description",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                                color = Color.Black,
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            OutlinedTextField(
-                                value = description,
-                                onValueChange = { description = it },
-                                placeholder = {
-                                    Text(
-                                        text = "Enter your message here",
-                                        fontFamily = GraphikFontFamily,
-                                        fontSize = 13.sp,
-                                        color = Color(0xFFAAAAAA),
-                                    )
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(120.dp),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color(0xFFDDDDDD),
-                                    focusedBorderColor = primaryRed,
-                                    unfocusedTextColor = Color.Black,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedContainerColor = Color.White,
-                                ),
-                                textStyle = LocalTextStyle.current.copy(
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp,
-                                ),
-                                maxLines = 5,
-                            )
                         }
                     }
 
@@ -487,6 +331,127 @@ fun ApplyRegularizationScreen(
                         )
                     }
 
+                    // From date picker dialog
+                    if (showFromDatePicker) {
+                        val datePickerState = rememberDatePickerState(
+                            initialDisplayMode = DisplayMode.Picker,
+                            initialSelectedDateMillis = System.currentTimeMillis(),
+                        )
+                        DatePickerDialog(
+                            onDismissRequest = { showFromDatePicker = false },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    datePickerState.selectedDateMillis?.let { millis ->
+                                        val selected = LocalDate.ofEpochDay(millis / 86400000L)
+                                        fromDate = selected
+                                        if (toDate.isBefore(selected)) toDate = selected
+                                    }
+                                    showFromDatePicker = false
+                                }) {
+                                    Text("OK", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showFromDatePicker = false }) {
+                                    Text("Cancel", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                        ) {
+                            DatePicker(state = datePickerState)
+                        }
+                    }
+
+                    // To date picker dialog
+                    if (showToDatePicker) {
+                        val datePickerState = rememberDatePickerState(
+                            initialDisplayMode = DisplayMode.Picker,
+                            initialSelectedDateMillis = System.currentTimeMillis(),
+                            selectableDates = object : SelectableDates {
+                                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                    return utcTimeMillis >= fromDate.toEpochDay() * 86400000L
+                                }
+                            },
+                        )
+                        DatePickerDialog(
+                            onDismissRequest = { showToDatePicker = false },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    datePickerState.selectedDateMillis?.let { millis ->
+                                        toDate = LocalDate.ofEpochDay(millis / 86400000L)
+                                    }
+                                    showToDatePicker = false
+                                }) {
+                                    Text("OK", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showToDatePicker = false }) {
+                                    Text("Cancel", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                        ) {
+                            DatePicker(state = datePickerState)
+                        }
+                    }
+
+                    // Reason & Description Card
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Reason & Description",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                                color = Color.Black,
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = "Description",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 13.sp,
+                                color = Color(0xFF555555),
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = description,
+                                onValueChange = { description = it },
+                                placeholder = {
+                                    Text(
+                                        text = "Enter your message here",
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFFAAAAAA),
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color(0xFFDDDDDD),
+                                    focusedBorderColor = primaryRed,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White,
+                                ),
+                                textStyle = LocalTextStyle.current.copy(
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                ),
+                                maxLines = 5,
+                            )
+                        }
+                    }
+
                     // Approver Card
                     ApproverCard(
                         name = reportingManagerName,
@@ -511,7 +476,7 @@ fun ApplyRegularizationScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
                     ) {
                         Text(
-                            text = "Submit Regularization",
+                            text = "Submit Outdoor Duty Request",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 16.sp,

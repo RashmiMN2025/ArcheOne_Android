@@ -61,6 +61,8 @@ fun AttendanceScreen(
     onLeaveCardClick: (String, LocalDate) -> Unit,
     onRegularizeClick: (LocalDate) -> Unit,
     onOutdoorDutyClick: (LocalDate) -> Unit,
+    onWfhClick: (LocalDate) -> Unit = {},
+    onHistoryClick: () -> Unit = {},
 ) {
     val today = LocalDate.now()
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
@@ -288,6 +290,26 @@ fun AttendanceScreen(
                             }
                         }
                     }
+
+                    item {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = { onWfhClick(selectedDate ?: today) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
+                        ) {
+                            Text(
+                                text = "Work From Home",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = Color.White,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -375,7 +397,7 @@ private fun DayCell(
         else -> Color.Transparent
     }
     val textColor = if (isToday || isSelected) Color.White else Color.Black
-    val textWeight = if (isToday || isSelected) FontWeight.SemiBold else FontWeight.Normal
+    val textWeight = FontWeight.SemiBold
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -401,7 +423,7 @@ private fun DayCell(
         Spacer(modifier = Modifier.height(3.dp))
         Box(
             modifier = Modifier
-                .size(5.dp)
+                .size(8.dp)
                 .clip(CircleShape)
                 .background(dotColor),
         )

@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -1120,6 +1121,9 @@ fun HomeScreenContent(
                                                 onRegularizeClick = {
                                                     onItemClick(HomeItem(title = "Regularize", icon = "regularize", category = ""))
                                                 },
+                                                onManagerApprovalsClick = {
+                                                    onItemClick(HomeItem(title = "Manager Approvals", icon = "manager_approvals", category = ""))
+                                                },
                                             )
                                             Spacer(modifier = Modifier.height(16.dp))
                                         }
@@ -1966,6 +1970,7 @@ fun TimeAttendanceCard(
     onApplyLeaveClick: () -> Unit = {},
     onApplyOutDoorClick: () -> Unit = {},
     onRegularizeClick: () -> Unit = {},
+    onManagerApprovalsClick: () -> Unit = {},
 ) {
     val primaryRed = Color(0xFFDD3825)
     val punchGreen = Color(0xFF4CAF50)
@@ -2184,6 +2189,33 @@ fun TimeAttendanceCard(
                         color = primaryRed,
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Manager Approvals Button
+            Button(
+                onClick = onManagerApprovalsClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Manager Approvals",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Color.White,
+                )
             }
         }
     }

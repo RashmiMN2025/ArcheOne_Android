@@ -21,10 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.R
+import com.archeGlobal.one.controller.AttendanceController
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -39,10 +42,18 @@ private val leaveTypes = listOf(
     "Sick Leave",
     "Paternity Leave",
     "Optional Holiday",
-    "Work from Home",
 )
 
 private val leaveReasons = listOf("Personal", "Outdoor", "Not Well")
+
+private val dayOptions = listOf("Full Day", "First Half", "Second Half")
+
+private val leaveTypesWithStartEndDay = setOf(
+    "Casual Leave",
+    "Sick Leave",
+    "Privilege Leave",
+    "Optional Holiday",
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -50,6 +61,7 @@ private val leaveReasons = listOf("Personal", "Outdoor", "Not Well")
 fun ApplyLeaveScreen(
     initialLeaveType: String = "",
     initialDate: LocalDate = LocalDate.now(),
+    attendanceController: AttendanceController? = null,
     onBack: () -> Unit,
 ) {
     val primaryRed = Color(0xFFDD3825)
@@ -62,13 +74,29 @@ fun ApplyLeaveScreen(
     var showFromDatePicker by remember { mutableStateOf(false) }
     var showToDatePicker by remember { mutableStateOf(false) }
 
+    var startDay by remember { mutableStateOf("Full Day") }
+    var startDayExpanded by remember { mutableStateOf(false) }
+    var endDay by remember { mutableStateOf("Full Day") }
+    var endDayExpanded by remember { mutableStateOf(false) }
+
     var selectedReason by remember { mutableStateOf("") }
     var reasonExpanded by remember { mutableStateOf(false) }
 
     var description by remember { mutableStateOf("") }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
+    val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
     val totalDays = (toDate.toEpochDay() - fromDate.toEpochDay() + 1).coerceAtLeast(1)
+
+    val showStartEndDay = selectedLeaveType in leaveTypesWithStartEndDay
+
+    val leaveBalance = attendanceController?.leaveBalances?.find {
+        it.type.equals(selectedLeaveType, ignoreCase = true)
+    }?.balance
+
+    val screenTitle = when {
+        selectedLeaveType.isNotEmpty() -> "Apply for $selectedLeaveType"
+        else -> "Apply for Leave"
+    }
 
     val reportingManagerName = OtpVerificationController.getUserData()?.userDetails?.reporting_manager ?: ""
     val reportingManagerEmail = OtpVerificationController.getUserData()?.userDetails?.reporting_manager_mail ?: ""
@@ -96,7 +124,7 @@ fun ApplyLeaveScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Apply for Leave",
+                            text = screenTitle,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp,
@@ -131,7 +159,7 @@ fun ApplyLeaveScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -147,9 +175,9 @@ fun ApplyLeaveScreen(
                             Text(
                                 text = "Leave Type",
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp,
-                                color = Color(0xFF555555),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color.Black,
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             ExposedDropdownMenuBox(
@@ -181,6 +209,7 @@ fun ApplyLeaveScreen(
                                     ),
                                     textStyle = LocalTextStyle.current.copy(
                                         fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
                                         fontSize = 14.sp,
                                     ),
                                 )
@@ -221,7 +250,7 @@ fun ApplyLeaveScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 12.sp,
-                                        color = Color(0xFF888888),
+                                        color = Color.Black,
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Box(
@@ -230,13 +259,17 @@ fun ApplyLeaveScreen(
                                             .border(1.dp, Color(0xFFDDDDDD), RoundedCornerShape(10.dp))
                                             .background(Color.White, RoundedCornerShape(10.dp))
                                             .clickable { showFromDatePicker = true }
-                                            .padding(horizontal = 12.dp, vertical = 14.dp),
+                                            .padding(horizontal = 16.dp, vertical = 16.dp),
                                     ) {
                                         Text(
                                             text = fromDate.format(dateFormatter),
                                             fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
                                             fontSize = 14.sp,
                                             color = Color.Black,
+                                            modifier = Modifier
+                                                .background(Color(0xFFF5F5F5), RoundedCornerShape(6.dp))
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }
                                 }
@@ -246,7 +279,7 @@ fun ApplyLeaveScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 12.sp,
-                                        color = Color(0xFF888888),
+                                        color = Color.Black,
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Box(
@@ -255,13 +288,17 @@ fun ApplyLeaveScreen(
                                             .border(1.dp, Color(0xFFDDDDDD), RoundedCornerShape(10.dp))
                                             .background(Color.White, RoundedCornerShape(10.dp))
                                             .clickable { showToDatePicker = true }
-                                            .padding(horizontal = 12.dp, vertical = 14.dp),
+                                            .padding(horizontal = 16.dp, vertical = 16.dp),
                                     ) {
                                         Text(
                                             text = toDate.format(dateFormatter),
                                             fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
                                             fontSize = 14.sp,
                                             color = Color.Black,
+                                            modifier = Modifier
+                                                .background(Color(0xFFF5F5F5), RoundedCornerShape(6.dp))
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }
                                 }
@@ -280,6 +317,155 @@ fun ApplyLeaveScreen(
                                         color = Color(0xFF888888),
                                         textAlign = TextAlign.Center,
                                     )
+                                }
+                            }
+
+                            // Start Day / End Day dropdowns (only for certain leave types)
+                            if (showStartEndDay) {
+                                Spacer(modifier = Modifier.height(14.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    // Start Day dropdown
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Start Day",
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.sp,
+                                            color = Color.Black,
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        ExposedDropdownMenuBox(
+                                            expanded = startDayExpanded,
+                                            onExpandedChange = { startDayExpanded = it },
+                                        ) {
+                                            OutlinedTextField(
+                                                value = startDay,
+                                                onValueChange = {},
+                                                readOnly = true,
+                                                trailingIcon = {
+                                                    Icon(
+                                                        imageVector = Icons.Default.KeyboardArrowDown,
+                                                        contentDescription = null,
+                                                        tint = Color(0xFF888888),
+                                                        modifier = Modifier.size(20.dp),
+                                                    )
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .menuAnchor(),
+                                                shape = RoundedCornerShape(10.dp),
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    unfocusedBorderColor = Color(0xFFDDDDDD),
+                                                    focusedBorderColor = primaryRed,
+                                                    unfocusedTextColor = Color.Black,
+                                                    focusedTextColor = Color.Black,
+                                                    unfocusedContainerColor = Color.White,
+                                                    focusedContainerColor = Color.White,
+                                                ),
+                                                textStyle = LocalTextStyle.current.copy(
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 14.sp,
+                                                ),
+                                                singleLine = true,
+                                            )
+                                            ExposedDropdownMenu(
+                                                expanded = startDayExpanded,
+                                                onDismissRequest = { startDayExpanded = false },
+                                                modifier = Modifier.background(Color.White),
+                                            ) {
+                                                dayOptions.forEach { option ->
+                                                    DropdownMenuItem(
+                                                        text = {
+                                                            Text(
+                                                                text = option,
+                                                                fontFamily = GraphikFontFamily,
+                                                                fontSize = 13.sp,
+                                                                color = Color.Black,
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            startDay = option
+                                                            startDayExpanded = false
+                                                        },
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // End Day dropdown
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "End Day",
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.sp,
+                                            color = Color.Black,
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        ExposedDropdownMenuBox(
+                                            expanded = endDayExpanded,
+                                            onExpandedChange = { endDayExpanded = it },
+                                        ) {
+                                            OutlinedTextField(
+                                                value = endDay,
+                                                onValueChange = {},
+                                                readOnly = true,
+                                                trailingIcon = {
+                                                    Icon(
+                                                        imageVector = Icons.Default.KeyboardArrowDown,
+                                                        contentDescription = null,
+                                                        tint = Color(0xFF888888),
+                                                        modifier = Modifier.size(20.dp),
+                                                    )
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .menuAnchor(),
+                                                shape = RoundedCornerShape(10.dp),
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    unfocusedBorderColor = Color(0xFFDDDDDD),
+                                                    focusedBorderColor = primaryRed,
+                                                    unfocusedTextColor = Color.Black,
+                                                    focusedTextColor = Color.Black,
+                                                    unfocusedContainerColor = Color.White,
+                                                    focusedContainerColor = Color.White,
+                                                ),
+                                                textStyle = LocalTextStyle.current.copy(
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 14.sp,
+                                                ),
+                                                singleLine = true,
+                                            )
+                                            ExposedDropdownMenu(
+                                                expanded = endDayExpanded,
+                                                onDismissRequest = { endDayExpanded = false },
+                                                modifier = Modifier.background(Color.White),
+                                            ) {
+                                                dayOptions.forEach { option ->
+                                                    DropdownMenuItem(
+                                                        text = {
+                                                            Text(
+                                                                text = option,
+                                                                fontFamily = GraphikFontFamily,
+                                                                fontSize = 13.sp,
+                                                                color = Color.Black,
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            endDay = option
+                                                            endDayExpanded = false
+                                                        },
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -352,7 +538,7 @@ fun ApplyLeaveScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -368,62 +554,99 @@ fun ApplyLeaveScreen(
                             Text(
                                 text = "Leave Reason",
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp,
-                                color = Color(0xFF555555),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color.Black,
                             )
                             Spacer(modifier = Modifier.height(6.dp))
-                            ExposedDropdownMenuBox(
-                                expanded = reasonExpanded,
-                                onExpandedChange = { reasonExpanded = it },
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                OutlinedTextField(
-                                    value = selectedReason.ifEmpty { "Select Reason" },
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.KeyboardArrowDown,
-                                            contentDescription = null,
-                                            tint = Color(0xFF888888),
-                                        )
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .menuAnchor(),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color(0xFFDDDDDD),
-                                        focusedBorderColor = primaryRed,
-                                        unfocusedTextColor = if (selectedReason.isEmpty()) Color(0xFF888888) else Color.Black,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedContainerColor = Color.White,
-                                    ),
-                                    textStyle = LocalTextStyle.current.copy(
-                                        fontFamily = GraphikFontFamily,
-                                        fontSize = 14.sp,
-                                    ),
-                                )
-                                ExposedDropdownMenu(
+                                ExposedDropdownMenuBox(
                                     expanded = reasonExpanded,
-                                    onDismissRequest = { reasonExpanded = false },
-                                    modifier = Modifier.background(Color.White),
+                                    onExpandedChange = { reasonExpanded = it },
+                                    modifier = Modifier.weight(1f),
                                 ) {
-                                    leaveReasons.forEach { reason ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    text = reason,
-                                                    fontFamily = GraphikFontFamily,
-                                                    fontSize = 14.sp,
-                                                    color = Color.Black,
-                                                )
-                                            },
-                                            onClick = {
-                                                selectedReason = reason
-                                                reasonExpanded = false
-                                            },
+                                    OutlinedTextField(
+                                        value = selectedReason.ifEmpty { "Select" },
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.KeyboardArrowDown,
+                                                contentDescription = null,
+                                                tint = Color(0xFF888888),
+                                            )
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .menuAnchor(),
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            unfocusedBorderColor = Color(0xFFDDDDDD),
+                                            focusedBorderColor = primaryRed,
+                                            unfocusedTextColor = if (selectedReason.isEmpty()) Color(0xFF888888) else Color.Black,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedContainerColor = Color.White,
+                                            focusedContainerColor = Color.White,
+                                        ),
+                                        textStyle = LocalTextStyle.current.copy(
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 14.sp,
+                                        ),
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = reasonExpanded,
+                                        onDismissRequest = { reasonExpanded = false },
+                                        modifier = Modifier.background(Color.White),
+                                    ) {
+                                        leaveReasons.forEach { reason ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = reason,
+                                                        fontFamily = GraphikFontFamily,
+                                                        fontSize = 14.sp,
+                                                        color = Color.Black,
+                                                    )
+                                                },
+                                                onClick = {
+                                                    selectedReason = reason
+                                                    reasonExpanded = false
+                                                },
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // Leave Balance indicator
+                                if (leaveBalance != null) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_calendar),
+                                                contentDescription = null,
+                                                tint = Color(0xFF555555),
+                                                modifier = Modifier.size(16.dp),
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = leaveBalance.toInt().toString(),
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 18.sp,
+                                                color = Color.Black,
+                                            )
+                                        }
+                                        Text(
+                                            text = "Leave Balance",
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 10.sp,
+                                            color = Color(0xFF888888),
                                         )
                                     }
                                 }
@@ -434,9 +657,9 @@ fun ApplyLeaveScreen(
                             Text(
                                 text = "Description",
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp,
-                                color = Color(0xFF555555),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color.Black,
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             OutlinedTextField(
@@ -444,7 +667,7 @@ fun ApplyLeaveScreen(
                                 onValueChange = { description = it },
                                 placeholder = {
                                     Text(
-                                        text = "Enter additional details (optional)",
+                                        text = "Enter your message here",
                                         fontFamily = GraphikFontFamily,
                                         fontSize = 13.sp,
                                         color = Color(0xFFAAAAAA),
@@ -464,6 +687,7 @@ fun ApplyLeaveScreen(
                                 ),
                                 textStyle = LocalTextStyle.current.copy(
                                     fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
                                     fontSize = 14.sp,
                                 ),
                                 maxLines = 5,
@@ -495,7 +719,7 @@ fun ApplyLeaveScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
                     ) {
                         Text(
-                            text = "Apply Leave",
+                            text = if (selectedLeaveType.isNotEmpty()) "Apply $selectedLeaveType" else "Apply Leave",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 16.sp,
@@ -517,7 +741,7 @@ fun ApproverCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
