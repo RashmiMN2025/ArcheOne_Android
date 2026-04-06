@@ -328,11 +328,10 @@ fun ApplyRegularizationScreen(
 
                             // In Time / Out Time row
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.width(130.dp)) {
                                     Text(
                                         text = "In Time",
                                         fontFamily = GraphikFontFamily,
@@ -361,7 +360,7 @@ fun ApplyRegularizationScreen(
                                         )
                                     }
                                 }
-                                Column(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.width(130.dp)) {
                                     Text(
                                         text = "Out Time",
                                         fontFamily = GraphikFontFamily,

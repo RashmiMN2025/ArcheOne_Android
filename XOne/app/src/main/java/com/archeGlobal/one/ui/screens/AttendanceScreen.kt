@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
@@ -44,12 +45,11 @@ import java.time.YearMonth
 private val primaryRed = Color(0xFFDD3825)
 
 private val leaveColors = listOf(
-    Color(0xFF2196F3), // blue
-    Color(0xFF4CAF50), // green
-    Color(0xFF00BCD4), // teal
-    Color(0xFF9C27B0), // purple
-    Color(0xFF2196F3), // blue
-    Color(0xFF00BCD4), // teal
+    Color(0xFF00BCD4), // teal   – Casual Leave
+    Color(0xFF2196F3), // blue   – Optional Holiday
+    Color(0xFFFF9800), // orange – Paternity Leave
+    Color(0xFF4CAF50), // green  – Privilege Leave
+    Color(0xFF9C27B0), // purple – Sick Leave
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,6 +103,28 @@ fun AttendanceScreen(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Back",
                                 tint = Color.Black,
+                            )
+                        }
+                    },
+                    actions = {
+                        Row(
+                            modifier = Modifier
+                                .clickable { onHistoryClick() }
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "History",
+                                color = primaryRed,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 16.sp,
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Filled.History,
+                                contentDescription = "Attendance History",
+                                tint = primaryRed,
                             )
                         }
                     },
@@ -292,7 +314,7 @@ fun AttendanceScreen(
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
                         Button(
                             onClick = { onWfhClick(selectedDate ?: today) },
                             modifier = Modifier

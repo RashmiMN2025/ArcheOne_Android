@@ -330,15 +330,7 @@ fun ApplyWfhScreen(
                         email = reportingManagerEmail,
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                // Submit button
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                ) {
+                    // Submit button
                     Button(
                         onClick = { /* TODO: submit */ },
                         modifier = Modifier
@@ -355,6 +347,8 @@ fun ApplyWfhScreen(
                             color = Color.White,
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }

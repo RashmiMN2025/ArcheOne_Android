@@ -58,6 +58,8 @@ import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.repository.UserRepository
 import com.archeGlobal.one.ui.components.WhatsNewDialog
+import com.archeGlobal.one.ui.screens.ApprovalRequest
+import com.archeGlobal.one.ui.screens.UserApprovalRequest
 import com.archeGlobal.one.ui.screens.*
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.XOneTheme
@@ -1949,6 +1951,67 @@ class HomeActivity : AppCompatActivity() {
                             onWfhClick = { date ->
                                 navController.navigate("apply_wfh?date=${date}")
                             },
+                            onHistoryClick = {
+                                navController.navigate("my_requests")
+                            },
+                        )
+                    }
+
+                    // My Requests list screen
+                    composable(
+                        route = "my_requests",
+                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                    ) {
+                        com.archeGlobal.one.ui.screens.MyRequestsScreen(
+                            onBack = { navController.popBackStack() },
+                            onRequestClick = { request ->
+                                navController.navigate(
+                                    "user_approval_history" +
+                                        "?name=${java.net.URLEncoder.encode(request.employeeName, "UTF-8")}" +
+                                        "&leaveType=${java.net.URLEncoder.encode(request.leaveType, "UTF-8")}" +
+                                        "&code=${java.net.URLEncoder.encode(request.employeeCode, "UTF-8")}" +
+                                        "&date=${java.net.URLEncoder.encode(request.date, "UTF-8")}" +
+                                        "&duration=${java.net.URLEncoder.encode(request.duration, "UTF-8")}" +
+                                        "&reason=${java.net.URLEncoder.encode(request.reason, "UTF-8")}" +
+                                        "&description=${java.net.URLEncoder.encode(request.description, "UTF-8")}" +
+                                        "&status=${java.net.URLEncoder.encode(request.status, "UTF-8")}",
+                                )
+                            },
+                        )
+                    }
+
+                    // User Approval History detail screen
+                    composable(
+                        route = "user_approval_history?name={name}&leaveType={leaveType}&code={code}&date={date}&duration={duration}&reason={reason}&description={description}&status={status}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("name") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("leaveType") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("code") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("date") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("duration") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("reason") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("description") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("status") { type = androidx.navigation.NavType.StringType; defaultValue = "Pending" },
+                        ),
+                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+                        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+                    ) { backStackEntry ->
+                        val args = backStackEntry.arguments
+                        com.archeGlobal.one.ui.screens.UserApprovalHistoryScreen(
+                            employeeName = java.net.URLDecoder.decode(args?.getString("name") ?: "", "UTF-8"),
+                            leaveType = java.net.URLDecoder.decode(args?.getString("leaveType") ?: "", "UTF-8"),
+                            employeeCode = java.net.URLDecoder.decode(args?.getString("code") ?: "", "UTF-8"),
+                            date = java.net.URLDecoder.decode(args?.getString("date") ?: "", "UTF-8"),
+                            duration = java.net.URLDecoder.decode(args?.getString("duration") ?: "", "UTF-8"),
+                            reason = java.net.URLDecoder.decode(args?.getString("reason") ?: "", "UTF-8"),
+                            description = java.net.URLDecoder.decode(args?.getString("description") ?: "", "UTF-8"),
+                            status = java.net.URLDecoder.decode(args?.getString("status") ?: "Pending", "UTF-8"),
+                            onBack = { navController.popBackStack() },
                         )
                     }
 
@@ -2052,19 +2115,50 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         ApprovalRequestsScreen(
                             onBack = { navController.popBackStack() },
-                            onRequestClick = { navController.navigate("approval_request_detail") },
+                            onRequestClick = { request ->
+                                navController.navigate(
+                                    "approval_request_detail" +
+                                        "?name=${java.net.URLEncoder.encode(request.employeeName, "UTF-8")}" +
+                                        "&leaveType=${java.net.URLEncoder.encode(request.requestType, "UTF-8")}" +
+                                        "&code=${java.net.URLEncoder.encode(request.employeeCode, "UTF-8")}" +
+                                        "&date=${java.net.URLEncoder.encode(request.date, "UTF-8")}" +
+                                        "&duration=${java.net.URLEncoder.encode(request.duration, "UTF-8")}" +
+                                        "&reason=${java.net.URLEncoder.encode(request.reason, "UTF-8")}" +
+                                        "&description=${java.net.URLEncoder.encode(request.description, "UTF-8")}" +
+                                        "&status=${java.net.URLEncoder.encode(request.status, "UTF-8")}",
+                                )
+                            },
                         )
                     }
 
                     // Approval Request Detail screen
                     composable(
-                        route = "approval_request_detail",
+                        route = "approval_request_detail?name={name}&leaveType={leaveType}&code={code}&date={date}&duration={duration}&reason={reason}&description={description}&status={status}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("name") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("leaveType") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("code") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("date") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("duration") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("reason") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("description") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("status") { type = androidx.navigation.NavType.StringType; defaultValue = "Pending" },
+                        ),
                         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
                         popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
-                    ) {
+                    ) { backStackEntry ->
+                        val args = backStackEntry.arguments
                         com.archeGlobal.one.ui.screens.ApprovalRequestDetailScreen(
+                            employeeName = java.net.URLDecoder.decode(args?.getString("name") ?: "", "UTF-8"),
+                            leaveType = java.net.URLDecoder.decode(args?.getString("leaveType") ?: "", "UTF-8"),
+                            employeeCode = java.net.URLDecoder.decode(args?.getString("code") ?: "", "UTF-8"),
+                            date = java.net.URLDecoder.decode(args?.getString("date") ?: "", "UTF-8"),
+                            duration = java.net.URLDecoder.decode(args?.getString("duration") ?: "", "UTF-8"),
+                            reason = java.net.URLDecoder.decode(args?.getString("reason") ?: "", "UTF-8"),
+                            description = java.net.URLDecoder.decode(args?.getString("description") ?: "", "UTF-8"),
+                            status = java.net.URLDecoder.decode(args?.getString("status") ?: "Pending", "UTF-8"),
                             onBack = { navController.popBackStack() },
                         )
                     }

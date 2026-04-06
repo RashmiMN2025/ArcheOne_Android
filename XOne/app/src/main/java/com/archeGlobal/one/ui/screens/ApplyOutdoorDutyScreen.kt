@@ -213,11 +213,10 @@ fun ApplyOutdoorDutyScreen(
 
                             // In Time / Out Time row
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.width(130.dp)) {
                                     Text(
                                         text = "In Time",
                                         fontFamily = GraphikFontFamily,
@@ -246,7 +245,7 @@ fun ApplyOutdoorDutyScreen(
                                         )
                                     }
                                 }
-                                Column(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.width(130.dp)) {
                                     Text(
                                         text = "Out Time",
                                         fontFamily = GraphikFontFamily,
@@ -458,15 +457,7 @@ fun ApplyOutdoorDutyScreen(
                         email = reportingManagerEmail,
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                // Submit button
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                ) {
+                    // Submit button
                     Button(
                         onClick = { /* TODO: submit */ },
                         modifier = Modifier
@@ -483,6 +474,8 @@ fun ApplyOutdoorDutyScreen(
                             color = Color.White,
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }

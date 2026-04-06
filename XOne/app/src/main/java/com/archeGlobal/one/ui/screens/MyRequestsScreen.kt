@@ -12,7 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -27,9 +27,9 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
-data class ApprovalRequest(
+data class UserApprovalRequest(
     val employeeName: String,
-    val requestType: String,
+    val leaveType: String,
     val employeeCode: String,
     val date: String,
     val duration: String,
@@ -41,55 +41,43 @@ data class ApprovalRequest(
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ApprovalRequestsScreen(
+fun MyRequestsScreen(
     onBack: () -> Unit,
-    onRequestClick: (ApprovalRequest) -> Unit = {},
+    onRequestClick: (UserApprovalRequest) -> Unit = {},
 ) {
     // Mock data — replace with API data when available
-    val approvalRequests = remember {
-        listOf(
-            ApprovalRequest(
-                employeeName = "Rashmi MN",
-                requestType = "Casual Leave",
-                employeeCode = "NT1324",
-                date = "2026-04-07",
-                duration = "First Half",
-                reason = "Personal",
-                description = "personal",
-                status = "Pending",
-            ),
-            ApprovalRequest(
-                employeeName = "Biswajit Dixit",
-                requestType = "Privilege Leave",
-                employeeCode = "NT1426",
-                date = "2026-04-22",
-                duration = "Full",
-                reason = "Personal",
-                description = "Personal",
-                status = "Approved",
-            ),
-            ApprovalRequest(
-                employeeName = "Rashmi MN",
-                requestType = "Optional Holiday",
-                employeeCode = "NT1324",
-                date = "2026-04-07",
-                duration = "First Half",
-                reason = "Personal",
-                description = "personal leave",
-                status = "Pending",
-            ),
-            ApprovalRequest(
-                employeeName = "Biswajit Dixit",
-                requestType = "Sick Leave",
-                employeeCode = "NT1426",
-                date = "2026-04-15",
-                duration = "Full",
-                reason = "Not Well",
-                description = "",
-                status = "Pending",
-            ),
-        )
-    }
+    val requests = listOf(
+        UserApprovalRequest(
+            employeeName = "Biswajit Dixit",
+            leaveType = "Casual Leave",
+            employeeCode = "NT1426",
+            date = "2026-04-06",
+            duration = "Full",
+            reason = "Outdoor",
+            description = "personal",
+            status = "Pending",
+        ),
+        UserApprovalRequest(
+            employeeName = "Biswajit Dixit",
+            leaveType = "Work From Home",
+            employeeCode = "NT1426",
+            date = "2026-03-28",
+            duration = "Full",
+            reason = "Personal work",
+            description = "",
+            status = "Approved",
+        ),
+        UserApprovalRequest(
+            employeeName = "Biswajit Dixit",
+            leaveType = "Regularisation",
+            employeeCode = "NT1426",
+            date = "2026-03-20",
+            duration = "Half",
+            reason = "Forgot to punch in",
+            description = "",
+            status = "Rejected",
+        ),
+    )
 
     Box(
         modifier = Modifier
@@ -114,7 +102,7 @@ fun ApprovalRequestsScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Approval Requests",
+                            text = "My Requests",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp,
@@ -142,8 +130,11 @@ fun ApprovalRequestsScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(approvalRequests) { request ->
-                        ApprovalRequestCard(request = request, onClick = { onRequestClick(request) })
+                    items(requests) { request ->
+                        MyRequestCard(
+                            request = request,
+                            onClick = { onRequestClick(request) },
+                        )
                     }
                 }
             }
@@ -152,7 +143,10 @@ fun ApprovalRequestsScreen(
 }
 
 @Composable
-private fun ApprovalRequestCard(request: ApprovalRequest, onClick: () -> Unit = {}) {
+private fun MyRequestCard(
+    request: UserApprovalRequest,
+    onClick: () -> Unit,
+) {
     val statusColor = when (request.status.lowercase()) {
         "approved" -> Color(0xFF4CAF50)
         "rejected" -> Color(0xFFDD3825)
@@ -191,7 +185,7 @@ private fun ApprovalRequestCard(request: ApprovalRequest, onClick: () -> Unit = 
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = request.requestType,
+                        text = request.leaveType,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 13.sp,

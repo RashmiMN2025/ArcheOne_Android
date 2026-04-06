@@ -21,33 +21,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ApprovalRequestDetailScreen(
-    employeeName: String = "Biswajit Dixit",
-    leaveType: String = "Casual Leave",
-    employeeCode: String = "NT1426",
-    date: String = "2026-04-06",
-    duration: String = "Full",
-    reason: String = "Outdoor",
+fun UserApprovalHistoryScreen(
+    employeeName: String = "",
+    leaveType: String = "",
+    employeeCode: String = "",
+    date: String = "",
+    duration: String = "",
+    reason: String = "",
     description: String = "",
     status: String = "Pending",
     onBack: () -> Unit,
-    onReject: () -> Unit = {},
-    onApprove: () -> Unit = {},
+    onCancelRequest: () -> Unit = {},
 ) {
     val statusColor = when (status.lowercase()) {
         "approved" -> Color(0xFF4CAF50)
         "rejected" -> Color(0xFFDD3825)
-        "pending" -> Color(0xFFFF9800)
+        "pending" -> Color(0xFFE6A817)
         else -> Color(0xFF888888)
     }
     val statusBgColor = when (status.lowercase()) {
         "approved" -> Color(0xFFE8F5E9)
         "rejected" -> Color(0xFFFFEBEE)
-        "pending" -> Color(0xFFFFF3E0)
+        "pending" -> Color(0xFFFFF8E1)
         else -> Color(0xFFF5F5F5)
     }
 
@@ -63,9 +65,9 @@ fun ApprovalRequestDetailScreen(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFFE0E0E0),
-                            Color(0xFFBDBDBD),
-                            Color(0xFF9E9E9E),
+                            WelcomeBackgroundTop,
+                            WelcomeBackgroundMiddle,
+                            WelcomeBackgroundBottom,
                         ),
                     ),
                 ),
@@ -147,13 +149,13 @@ fun ApprovalRequestDetailScreen(
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Info rows
-                        InfoRow(label = "Employee Code", value = employeeCode)
+                        UserHistoryDetailInfoRow(label = "Employee Code", value = employeeCode)
                         Spacer(modifier = Modifier.height(12.dp))
-                        InfoRow(iconRes = R.drawable.ic_calendar, label = "Date", value = date)
+                        UserHistoryDetailInfoRow(iconRes = R.drawable.ic_calendar, label = "Date", value = date)
                         Spacer(modifier = Modifier.height(12.dp))
-                        InfoRow(imageVector = Icons.Default.AccessTime, label = "Duration", value = duration)
+                        UserHistoryDetailInfoRow(imageVector = Icons.Default.AccessTime, label = "Duration", value = duration)
                         Spacer(modifier = Modifier.height(12.dp))
-                        InfoRow(iconRes = R.drawable.ic_file, label = "Reason", value = reason)
+                        UserHistoryDetailInfoRow(iconRes = R.drawable.ic_file, label = "Reason", value = reason)
 
                         Spacer(modifier = Modifier.height(16.dp))
                         HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)
@@ -176,45 +178,24 @@ fun ApprovalRequestDetailScreen(
                             color = Color.Black,
                         )
 
-                        // Buttons — only for pending
+                        // Cancel button — only for pending
                         if (status.lowercase() == "pending") {
                             Spacer(modifier = Modifier.height(24.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            Button(
+                                onClick = onCancelRequest,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                             ) {
-                                Button(
-                                    onClick = onReject,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(52.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                                ) {
-                                    Text(
-                                        text = "Reject",
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 16.sp,
-                                        color = Color.White,
-                                    )
-                                }
-                                Button(
-                                    onClick = onApprove,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(52.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E9B4E)),
-                                ) {
-                                    Text(
-                                        text = "Approve",
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 16.sp,
-                                        color = Color.White,
-                                    )
-                                }
+                                Text(
+                                    text = "Cancel Request",
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                )
                             }
                         }
                     }
@@ -225,7 +206,7 @@ fun ApprovalRequestDetailScreen(
 }
 
 @Composable
-private fun InfoRow(
+private fun UserHistoryDetailInfoRow(
     iconRes: Int? = null,
     imageVector: androidx.compose.ui.graphics.vector.ImageVector? = null,
     label: String,

@@ -51,8 +51,6 @@ private val dayOptions = listOf("Full Day", "First Half", "Second Half")
 private val leaveTypesWithStartEndDay = setOf(
     "Casual Leave",
     "Sick Leave",
-    "Privilege Leave",
-    "Optional Holiday",
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
