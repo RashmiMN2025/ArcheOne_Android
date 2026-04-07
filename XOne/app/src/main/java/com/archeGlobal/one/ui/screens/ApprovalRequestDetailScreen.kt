@@ -147,7 +147,7 @@ fun ApprovalRequestDetailScreen(
                                     .padding(horizontal = 12.dp, vertical = 6.dp),
                             ) {
                                 Text(
-                                    text = status,
+                                    text = status.replaceFirstChar { it.uppercase() },
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 13.sp,

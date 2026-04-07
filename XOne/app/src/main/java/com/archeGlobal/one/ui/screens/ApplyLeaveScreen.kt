@@ -779,15 +779,7 @@ fun ApplyLeaveScreen(
                             .height(52.dp),
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
-                        enabled = !isSubmitting
                     ) {
-                        if (isSubmitting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
                             val buttonText = if (selectedLeaveType.isNotEmpty()) "Apply $selectedLeaveType Request" else "Apply Leave"
                             Text(
                                 text = buttonText,
@@ -796,7 +788,6 @@ fun ApplyLeaveScreen(
                                 fontSize = 16.sp,
                                 color = Color.White,
                             )
-                        }
                     }
                 }
             }

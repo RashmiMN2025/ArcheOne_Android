@@ -36,7 +36,9 @@ data class CreateLeaveRequest(
     @SerializedName("requestType") val requestType: String,
     @SerializedName("leaveDuration") val leaveDuration: String,
     @SerializedName("description") val description: String,
-    @SerializedName("reason") val reason: String
+    @SerializedName("reason") val reason: String,
+    @SerializedName("punchIn") val punchIn: String? = null,
+    @SerializedName("punchOut") val punchOut: String? = null
 )
 
 data class CreateLeaveResponse(
