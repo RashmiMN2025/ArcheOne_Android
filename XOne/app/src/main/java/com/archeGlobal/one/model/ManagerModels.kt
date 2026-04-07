@@ -37,3 +37,29 @@ data class ApprovalRequestItem(
     @SerializedName("createdAt") val createdAt: String? = "",
     @SerializedName("updatedAt") val updatedAt: String? = ""
 )
+
+data class ApprovalActionResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("message") val message: String,
+    @SerializedName("status") val status: Int,
+    @SerializedName("data") val data: ApprovalActionData? = null
+)
+
+data class ApprovalActionData(
+    @SerializedName("id") val id: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("message") val message: String
+)
+
+data class RejectActionResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("message") val message: String,
+    @SerializedName("status") val status: Int,
+    @SerializedName("data") val data: RejectActionData? = null
+)
+
+data class RejectActionData(
+    @SerializedName("id") val id: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("message") val message: String
+)

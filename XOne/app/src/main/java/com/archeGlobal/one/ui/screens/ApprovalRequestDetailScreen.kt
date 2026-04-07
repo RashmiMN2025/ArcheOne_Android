@@ -19,6 +19,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.*
+import com.archeGlobal.one.network.RetrofitClient
+import kotlinx.coroutines.launch
 import com.archeGlobal.one.R
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
@@ -26,6 +31,7 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ApprovalRequestDetailScreen(
+    eventId: String = "",
     employeeName: String = "Biswajit Dixit",
     leaveType: String = "Casual Leave",
     employeeCode: String = "NT1426",
@@ -40,6 +46,10 @@ fun ApprovalRequestDetailScreen(
     onReject: () -> Unit = {},
     onApprove: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var isProcessing by remember { mutableStateOf(false) }
+
     val statusColor = when (status.lowercase()) {
         "approved" -> Color(0xFF4CAF50)
         "rejected" -> Color(0xFFDD3825)
@@ -197,7 +207,28 @@ fun ApprovalRequestDetailScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 Button(
-                                    onClick = onReject,
+                                    onClick = {
+                                        if (eventId.isEmpty()) {
+                                            Toast.makeText(context, "Request ID is missing", Toast.LENGTH_SHORT).show()
+                                            return@Button
+                                        }
+                                        scope.launch {
+                                            try {
+                                                val response = RetrofitClient.apiService.rejectRequest(eventId)
+                                                if (response.isSuccessful && response.body()?.success == true) {
+                                                    Toast.makeText(context, response.body()?.message ?: "Rejected successfully", Toast.LENGTH_LONG).show()
+                                                    onApprove()
+                                                    onBack()
+                                                } else {
+                                                    Toast.makeText(context, response.body()?.message ?: "Failed to approve", Toast.LENGTH_SHORT).show()
+                                                }
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            } finally {
+                                                isProcessing = false
+                                            }
+                                        }
+                                    },
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(52.dp),
@@ -213,7 +244,28 @@ fun ApprovalRequestDetailScreen(
                                     )
                                 }
                                 Button(
-                                    onClick = onApprove,
+                                    onClick = {
+                                        if (eventId.isEmpty()) {
+                                            Toast.makeText(context, "Request ID is missing", Toast.LENGTH_SHORT).show()
+                                            return@Button
+                                        }
+                                        scope.launch {
+                                            try {
+                                                val response = RetrofitClient.apiService.approveRequest(eventId)
+                                                if (response.isSuccessful && response.body()?.success == true) {
+                                                    Toast.makeText(context, response.body()?.message ?: "Approved successfully", Toast.LENGTH_LONG).show()
+                                                    onApprove()
+                                                    onBack()
+                                                } else {
+                                                    Toast.makeText(context, response.body()?.message ?: "Failed to approve", Toast.LENGTH_SHORT).show()
+                                                }
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            } finally {
+                                                isProcessing = false
+                                            }
+                                        }
+                                    },
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(52.dp),

@@ -2126,7 +2126,8 @@ class HomeActivity : AppCompatActivity() {
                                 }
                                 navController.navigate(
                                     "approval_request_detail" +
-                                        "?name=${java.net.URLEncoder.encode(request.employeeName ?: "", "UTF-8")}" +
+                                        "?id=${java.net.URLEncoder.encode(request.eventId ?: "", "UTF-8")}" +
+                                        "&name=${java.net.URLEncoder.encode(request.employeeName ?: "", "UTF-8")}" +
                                         "&leaveType=${java.net.URLEncoder.encode(request.requestType ?: "", "UTF-8")}" +
                                         "&code=${java.net.URLEncoder.encode(request.employeeCode ?: "", "UTF-8")}" +
                                         "&date=${java.net.URLEncoder.encode(dateText, "UTF-8")}" +
@@ -2143,8 +2144,9 @@ class HomeActivity : AppCompatActivity() {
 
                     // Approval Request Detail screen
                     composable(
-                        route = "approval_request_detail?name={name}&leaveType={leaveType}&code={code}&date={date}&duration={duration}&reason={reason}&description={description}&status={status}&punchIn={punchIn}&punchOut={punchOut}",
+                        route = "approval_request_detail?id={id}&name={name}&leaveType={leaveType}&code={code}&date={date}&duration={duration}&reason={reason}&description={description}&status={status}&punchIn={punchIn}&punchOut={punchOut}",
                         arguments = listOf(
+                            androidx.navigation.navArgument("id") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
                             androidx.navigation.navArgument("name") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
                             androidx.navigation.navArgument("leaveType") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
                             androidx.navigation.navArgument("code") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
@@ -2163,6 +2165,7 @@ class HomeActivity : AppCompatActivity() {
                     ) { backStackEntry ->
                         val args = backStackEntry.arguments
                         com.archeGlobal.one.ui.screens.ApprovalRequestDetailScreen(
+                            eventId = java.net.URLDecoder.decode(args?.getString("id") ?: "", "UTF-8"),
                             employeeName = java.net.URLDecoder.decode(args?.getString("name") ?: "", "UTF-8"),
                             leaveType = java.net.URLDecoder.decode(args?.getString("leaveType") ?: "", "UTF-8"),
                             employeeCode = java.net.URLDecoder.decode(args?.getString("code") ?: "", "UTF-8"),
@@ -2174,6 +2177,8 @@ class HomeActivity : AppCompatActivity() {
                             punchIn = java.net.URLDecoder.decode(args?.getString("punchIn") ?: "", "UTF-8"),
                             punchOut = java.net.URLDecoder.decode(args?.getString("punchOut") ?: "", "UTF-8"),
                             onBack = { navController.popBackStack() },
+                            onApprove = { approvalRequestsController.fetchManagerApprovals() },
+                            onReject = { approvalRequestsController.fetchManagerApprovals() }
                         )
                     }
 

@@ -2,6 +2,7 @@ package com.archeGlobal.one.network
 
 import com.archeGlobal.one.model.AddInventoryAssetItemRequest
 import com.archeGlobal.one.model.AddInventoryAssetItemResponse
+import com.archeGlobal.one.model.ApprovalActionResponse
 import com.archeGlobal.one.model.AddInventoryItemRequest
 import com.archeGlobal.one.model.AddInventoryItemResponse
 import com.archeGlobal.one.model.ApiGreetingCategory
@@ -50,6 +51,7 @@ import com.archeGlobal.one.model.PunchInRequest
 import com.archeGlobal.one.model.PunchInResponse
 import com.archeGlobal.one.model.PunchOutRequest
 import com.archeGlobal.one.model.PunchOutResponse
+import com.archeGlobal.one.model.RejectActionResponse
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.model.SelfTagAssetRequest
 import com.archeGlobal.one.model.SelfTagAssetResponse
@@ -168,6 +170,16 @@ interface ApiService {
     suspend fun getManagerDashboard(
         @Body request: ManagerDashboardRequest
     ): Response<ManagerDashboardResponse>
+
+    @GET("/api/v1/timesheet/approvals/approve-phone")
+    suspend fun approveRequest(
+        @Query("event_id") id: String
+    ): Response<ApprovalActionResponse>
+
+    @GET("/api/v1/timesheet/approvals/reject-phone")
+    suspend fun rejectRequest(
+        @Query("event_id") id: String
+    ): Response<RejectActionResponse>
 
     @HTTP(method = "DELETE", path = "/delete_doc", hasBody = true)
     fun deleteDoc(
