@@ -26,6 +26,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
+import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.launch
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.AttendanceController
 import com.archeGlobal.one.controller.OtpVerificationController
@@ -82,10 +87,22 @@ fun ApplyLeaveScreen(
 
     var description by remember { mutableStateOf("") }
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var isSubmitting by remember { mutableStateOf(false) }
+
     val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
     val totalDays = (toDate.toEpochDay() - fromDate.toEpochDay() + 1).coerceAtLeast(1)
 
-    val showStartEndDay = selectedLeaveType in leaveTypesWithStartEndDay
+    // Use available leave balances from controller if provided, otherwise fallback to default list
+    val availableLeaveTypes = if (attendanceController != null && attendanceController.leaveBalances.isNotEmpty()) {
+        attendanceController.leaveBalances.map { it.type }
+    } else {
+        leaveTypes
+    }
+
+    val showStartEndDay = selectedLeaveType in leaveTypesWithStartEndDay ||
+                         (attendanceController?.leaveBalances?.any { it.type == selectedLeaveType } == true)
 
     val leaveBalance = attendanceController?.leaveBalances?.find {
         it.type.equals(selectedLeaveType, ignoreCase = true)
@@ -216,7 +233,7 @@ fun ApplyLeaveScreen(
                                     onDismissRequest = { leaveTypeExpanded = false },
                                     modifier = Modifier.background(Color.White),
                                 ) {
-                                    leaveTypes.forEach { type ->
+                                    availableLeaveTypes.forEach { type ->
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
@@ -709,20 +726,77 @@ fun ApplyLeaveScreen(
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
                     Button(
-                        onClick = { /* TODO: submit */ },
+                        onClick = {
+                            if (selectedLeaveType.isEmpty()) {
+                                Toast.makeText(context, "Please select leave type", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            if (selectedReason.isEmpty()) {
+                                Toast.makeText(context, "Please select leave reason", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+
+                            val userData = UserDataManager.getInstance(context).getUserData()
+                            val employeeName = userData?.name ?: ""
+                            val employeeCode = userData?.employeeId ?: ""
+
+                            val apiRequest = com.archeGlobal.one.model.CreateLeaveRequest(
+                                employeeName = employeeName,
+                                employeeCode = employeeCode,
+                                startDate = fromDate.toString(), // YYYY-MM-DD
+                                endDate = toDate.toString(), // YYYY-MM-DD
+                                requestType = selectedLeaveType,
+                                leaveDuration = when (startDay) {
+                                    "First Half" -> "First Half"
+                                    "Second Half" -> "Second Half"
+                                    else -> "Full"
+                                },
+                                description = description,
+                                reason = selectedReason
+                            )
+
+                            isSubmitting = true
+                            scope.launch {
+                                try {
+                                    val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
+                                    if (response.isSuccessful && response.body()?.success == true) {
+                                        Toast.makeText(context, response.body()?.message ?: "Request created successfully", Toast.LENGTH_LONG).show()
+                                        // Refresh balances in controller before going back
+                                        attendanceController?.fetchLeaveBalances()
+                                        onBack()
+                                    } else {
+                                        Toast.makeText(context, response.body()?.message ?: "Failed to create request", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                } finally {
+                                    isSubmitting = false
+                                }
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
+                        enabled = !isSubmitting
                     ) {
-                        Text(
-                            text = if (selectedLeaveType.isNotEmpty()) "Apply $selectedLeaveType" else "Apply Leave",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            color = Color.White,
-                        )
+                        if (isSubmitting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            val buttonText = if (selectedLeaveType.isNotEmpty()) "Apply $selectedLeaveType Request" else "Apply Leave"
+                            Text(
+                                text = buttonText,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 16.sp,
+                                color = Color.White,
+                            )
+                        }
                     }
                 }
             }

@@ -22,75 +22,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
+import com.archeGlobal.one.controller.ApprovalRequestsController
+import com.archeGlobal.one.model.ApprovalRequestItem
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
-data class ApprovalRequest(
-    val employeeName: String,
-    val requestType: String,
-    val employeeCode: String,
-    val date: String,
-    val duration: String,
-    val reason: String,
-    val description: String,
-    val status: String,
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ApprovalRequestsScreen(
+    controller: ApprovalRequestsController,
     onBack: () -> Unit,
-    onRequestClick: (ApprovalRequest) -> Unit = {},
+    onRequestClick: (ApprovalRequestItem) -> Unit = {},
 ) {
-    // Mock data — replace with API data when available
-    val approvalRequests = remember {
-        listOf(
-            ApprovalRequest(
-                employeeName = "Rashmi MN",
-                requestType = "Casual Leave",
-                employeeCode = "NT1324",
-                date = "2026-04-07",
-                duration = "First Half",
-                reason = "Personal",
-                description = "personal",
-                status = "Pending",
-            ),
-            ApprovalRequest(
-                employeeName = "Biswajit Dixit",
-                requestType = "Privilege Leave",
-                employeeCode = "NT1426",
-                date = "2026-04-22",
-                duration = "Full",
-                reason = "Personal",
-                description = "Personal",
-                status = "Approved",
-            ),
-            ApprovalRequest(
-                employeeName = "Rashmi MN",
-                requestType = "Optional Holiday",
-                employeeCode = "NT1324",
-                date = "2026-04-07",
-                duration = "First Half",
-                reason = "Personal",
-                description = "personal leave",
-                status = "Pending",
-            ),
-            ApprovalRequest(
-                employeeName = "Biswajit Dixit",
-                requestType = "Sick Leave",
-                employeeCode = "NT1426",
-                date = "2026-04-15",
-                duration = "Full",
-                reason = "Not Well",
-                description = "",
-                status = "Pending",
-            ),
-        )
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -137,13 +83,27 @@ fun ApprovalRequestsScreen(
                     ),
                 )
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(approvalRequests) { request ->
-                        ApprovalRequestCard(request = request, onClick = { onRequestClick(request) })
+                if (controller.isLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Color(0xFFDD3825))
+                    }
+                } else if (controller.approvalRequests.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = controller.errorMessage ?: "No approval requests found",
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(controller.approvalRequests) { request ->
+                            ApprovalRequestCard(request = request, onClick = { onRequestClick(request) })
+                        }
                     }
                 }
             }
@@ -152,14 +112,15 @@ fun ApprovalRequestsScreen(
 }
 
 @Composable
-private fun ApprovalRequestCard(request: ApprovalRequest, onClick: () -> Unit = {}) {
-    val statusColor = when (request.status.lowercase()) {
+private fun ApprovalRequestCard(request: ApprovalRequestItem, onClick: () -> Unit = {}) {
+    val status = request.status?.lowercase() ?: "pending"
+    val statusColor = when (status) {
         "approved" -> Color(0xFF4CAF50)
         "rejected" -> Color(0xFFDD3825)
         "pending" -> Color(0xFFE6A817)
         else -> Color(0xFF888888)
     }
-    val statusBgColor = when (request.status.lowercase()) {
+    val statusBgColor = when (status) {
         "approved" -> Color(0xFFE8F5E9)
         "rejected" -> Color(0xFFFFEBEE)
         "pending" -> Color(0xFFFFF8E1)
@@ -175,7 +136,7 @@ private fun ApprovalRequestCard(request: ApprovalRequest, onClick: () -> Unit = 
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Name + status
+            // Name + Status row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -183,7 +144,7 @@ private fun ApprovalRequestCard(request: ApprovalRequest, onClick: () -> Unit = 
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = request.employeeName,
+                        text = request.employeeName ?: "Unknown Employee",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
@@ -191,7 +152,7 @@ private fun ApprovalRequestCard(request: ApprovalRequest, onClick: () -> Unit = 
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = request.requestType,
+                        text = request.requestType ?: "Unknown Request",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 13.sp,
@@ -204,7 +165,7 @@ private fun ApprovalRequestCard(request: ApprovalRequest, onClick: () -> Unit = 
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                 ) {
                     Text(
-                        text = request.status,
+                        text = (request.status ?: "pending").replaceFirstChar { it.uppercase() },
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 13.sp,
@@ -215,37 +176,45 @@ private fun ApprovalRequestCard(request: ApprovalRequest, onClick: () -> Unit = 
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Date + Duration row
+            // Date row
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_calendar),
                     contentDescription = null,
                     tint = Color(0xFF888888),
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(18.dp),
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                val dateText = if (request.startDate == request.endDate || request.endDate.isNullOrEmpty()) {
+                    request.startDate ?: ""
+                } else {
+                    "${request.startDate} - ${request.endDate}"
+                }
                 Text(
-                    text = request.date,
+                    text = dateText,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 14.sp,
                     color = Color.Black,
                 )
-                Spacer(modifier = Modifier.width(16.dp))
-                Icon(
-                    imageVector = Icons.Default.AccessTime,
-                    contentDescription = null,
-                    tint = Color(0xFF888888),
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = request.duration,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                )
+                
+                if (!request.leaveDuration.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Icon(
+                        imageVector = Icons.Default.AccessTime,
+                        contentDescription = null,
+                        tint = Color(0xFF888888),
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = request.leaveDuration,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -254,13 +223,13 @@ private fun ApprovalRequestCard(request: ApprovalRequest, onClick: () -> Unit = 
             Text(
                 text = "Reason",
                 fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Normal,
+                fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,
-                color = Color(0xFF888888),
+                color = Color(0xFFDD3825),
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = request.reason,
+                text = request.reason ?: "No reason provided",
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,

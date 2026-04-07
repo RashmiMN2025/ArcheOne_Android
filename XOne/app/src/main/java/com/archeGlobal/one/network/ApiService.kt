@@ -32,10 +32,14 @@ import com.archeGlobal.one.model.EmployeeSearchRequest
 import com.archeGlobal.one.model.EmployeeSearchResponse
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.InventoryRequest
+import com.archeGlobal.one.model.CreateLeaveRequest
+import com.archeGlobal.one.model.CreateLeaveResponse
 import com.archeGlobal.one.model.InventoryResponse
 import com.archeGlobal.one.model.LeaveRequest
 import com.archeGlobal.one.model.LeaveResponse
 import com.archeGlobal.one.model.LocationsResponse
+import com.archeGlobal.one.model.ManagerDashboardRequest
+import com.archeGlobal.one.model.ManagerDashboardResponse
 import com.archeGlobal.one.model.LocationAssetCountResponse
 import com.archeGlobal.one.model.MeetingApprovalRequest
 import com.archeGlobal.one.model.MeetingApprovalResponse
@@ -150,10 +154,20 @@ interface ApiService {
         @Body request: PunchOutRequest
     ): Response<PunchOutResponse>
 
-    @POST("/api/v1/timesheet/leaves/get")
+    @POST("/api/v1/timesheet/leave-counter/")
     suspend fun getLeaves(
         @Body request: LeaveRequest
     ): Response<LeaveResponse>
+
+    @POST("/api/v1/timesheet/requests/create")
+    suspend fun createLeaveRequest(
+        @Body request: CreateLeaveRequest
+    ): Response<CreateLeaveResponse>
+
+    @POST("/api/v1/timesheet/manager-dashboard/")
+    suspend fun getManagerDashboard(
+        @Body request: ManagerDashboardRequest
+    ): Response<ManagerDashboardResponse>
 
     @HTTP(method = "DELETE", path = "/delete_doc", hasBody = true)
     fun deleteDoc(

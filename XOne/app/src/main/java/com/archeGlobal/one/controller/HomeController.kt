@@ -922,6 +922,9 @@ class HomeController(
                 }
                 "manager approvals" -> {
                     Log.d("HomeController", "Navigating to Approval Requests screen")
+                    if (context is com.archeGlobal.one.HomeActivity) {
+                        context.approvalRequestsController.fetchManagerApprovals()
+                    }
                     navigate("approval_requests")
                 }
                 "leave" -> {

@@ -34,6 +34,8 @@ fun ApprovalRequestDetailScreen(
     reason: String = "Outdoor",
     description: String = "",
     status: String = "Pending",
+    punchIn: String? = null,
+    punchOut: String? = null,
     onBack: () -> Unit,
     onReject: () -> Unit = {},
     onApprove: () -> Unit = {},
@@ -152,6 +154,17 @@ fun ApprovalRequestDetailScreen(
                         InfoRow(iconRes = R.drawable.ic_calendar, label = "Date", value = date)
                         Spacer(modifier = Modifier.height(12.dp))
                         InfoRow(imageVector = Icons.Default.AccessTime, label = "Duration", value = duration)
+                        
+                        if (!punchIn.isNullOrEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            InfoRow(imageVector = Icons.Default.AccessTime, label = "Punch In", value = punchIn)
+                        }
+                        
+                        if (!punchOut.isNullOrEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            InfoRow(imageVector = Icons.Default.AccessTime, label = "Punch Out", value = punchOut)
+                        }
+
                         Spacer(modifier = Modifier.height(12.dp))
                         InfoRow(iconRes = R.drawable.ic_file, label = "Reason", value = reason)
 

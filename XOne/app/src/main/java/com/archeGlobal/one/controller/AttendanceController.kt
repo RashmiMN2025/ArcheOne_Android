@@ -7,6 +7,8 @@ import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.AttendanceDayStatus
 import com.archeGlobal.one.model.LeaveBalance
 import com.archeGlobal.one.model.LeaveRequest
+import com.archeGlobal.one.model.ManagerDashboardRequest
+import com.archeGlobal.one.model.ApprovalRequestItem
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +31,15 @@ class AttendanceController(private val context: Context) {
     var isLoading by mutableStateOf(false)
         private set
 
+    var approvalRequests by mutableStateOf<List<ApprovalRequestItem>>(emptyList())
+        private set
+
+    var isApprovalsLoading by mutableStateOf(false)
+        private set
+
+    var approvalsErrorMessage by mutableStateOf<String?>(null)
+        private set
+
     init {
         loadData()
         fetchLeaveBalances()
@@ -44,7 +55,7 @@ class AttendanceController(private val context: Context) {
         loadData()
     }
 
-    private fun loadData() {
+    fun loadData() {
         val daysInMonth = currentMonth.lengthOfMonth()
         val weekends = (1..daysInMonth)
             .filter { day ->
@@ -77,17 +88,18 @@ class AttendanceController(private val context: Context) {
     }
 
     fun fetchLeaveBalances() {
+        loadData()
         val userData = UserDataManager.getInstance(context).getUserData()
-        val employeeId = userData?.employeeId ?: ""
+        val userEmail = userData?.email ?: ""
 
-        if (employeeId.isEmpty()) return
+        if (userEmail.isEmpty()) return
 
         isLoading = true
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val response = RetrofitClient.apiService.getLeaves(LeaveRequest(employeeId))
+                val response = RetrofitClient.apiService.getLeaves(LeaveRequest(userEmail))
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val leaveDataList = response.body()?.data ?: emptyList()
+                    val leaveDataList = response.body()?.data?.leaves ?: emptyList()
                     leaveBalances = leaveDataList.map {
                         LeaveBalance(
                             type = it.leaveType,
@@ -99,6 +111,36 @@ class AttendanceController(private val context: Context) {
                 // Handle error or keep existing balances
             } finally {
                 isLoading = false
+            }
+        }
+    }
+
+    fun fetchManagerApprovals() {
+        val userData = UserDataManager.getInstance(context).getUserData()
+        val approverEmail = userData?.email ?: ""
+
+        if (approverEmail.isEmpty()) {
+            approvalsErrorMessage = "Approver email not found"
+            return
+        }
+
+        isApprovalsLoading = true
+        approvalsErrorMessage = null
+
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val response = RetrofitClient.apiService.getManagerDashboard(
+                    ManagerDashboardRequest(approverEmail)
+                )
+                if (response.isSuccessful && response.body()?.success == true) {
+                    approvalRequests = response.body()?.data?.requests ?: emptyList()
+                } else {
+                    approvalsErrorMessage = response.body()?.message ?: "Failed to fetch approvals"
+                }
+            } catch (e: Exception) {
+                approvalsErrorMessage = "Error: ${e.message}"
+            } finally {
+                isApprovalsLoading = false
             }
         }
     }

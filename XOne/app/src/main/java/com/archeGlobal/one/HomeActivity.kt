@@ -58,8 +58,6 @@ import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.repository.UserRepository
 import com.archeGlobal.one.ui.components.WhatsNewDialog
-import com.archeGlobal.one.ui.screens.ApprovalRequest
-import com.archeGlobal.one.ui.screens.UserApprovalRequest
 import com.archeGlobal.one.ui.screens.*
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.XOneTheme
@@ -158,6 +156,10 @@ class HomeActivity : AppCompatActivity() {
     private val smartCollateralcontroller by lazy {
         Log.d("HomeActivity", "Lazy initializing SmartCollateralController")
         SmartCollateralController(this@HomeActivity)
+    }
+    internal val approvalRequestsController by lazy {
+        Log.d("HomeActivity", "Lazy initializing ApprovalRequestsController")
+        ApprovalRequestsController(this@HomeActivity)
     }
     internal val deskCartController by lazy {
         Log.d("HomeActivity", "Lazy initializing DeskCartController")
@@ -2114,18 +2116,26 @@ class HomeActivity : AppCompatActivity() {
                         popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
                     ) {
                         ApprovalRequestsScreen(
+                            controller = approvalRequestsController,
                             onBack = { navController.popBackStack() },
                             onRequestClick = { request ->
+                                val dateText = if (request.startDate == request.endDate || request.endDate.isNullOrEmpty()) {
+                                    request.startDate ?: ""
+                                } else {
+                                    "${request.startDate} - ${request.endDate}"
+                                }
                                 navController.navigate(
                                     "approval_request_detail" +
-                                        "?name=${java.net.URLEncoder.encode(request.employeeName, "UTF-8")}" +
-                                        "&leaveType=${java.net.URLEncoder.encode(request.requestType, "UTF-8")}" +
-                                        "&code=${java.net.URLEncoder.encode(request.employeeCode, "UTF-8")}" +
-                                        "&date=${java.net.URLEncoder.encode(request.date, "UTF-8")}" +
-                                        "&duration=${java.net.URLEncoder.encode(request.duration, "UTF-8")}" +
-                                        "&reason=${java.net.URLEncoder.encode(request.reason, "UTF-8")}" +
-                                        "&description=${java.net.URLEncoder.encode(request.description, "UTF-8")}" +
-                                        "&status=${java.net.URLEncoder.encode(request.status, "UTF-8")}",
+                                        "?name=${java.net.URLEncoder.encode(request.employeeName ?: "", "UTF-8")}" +
+                                        "&leaveType=${java.net.URLEncoder.encode(request.requestType ?: "", "UTF-8")}" +
+                                        "&code=${java.net.URLEncoder.encode(request.employeeCode ?: "", "UTF-8")}" +
+                                        "&date=${java.net.URLEncoder.encode(dateText, "UTF-8")}" +
+                                        "&duration=${java.net.URLEncoder.encode(request.leaveDuration ?: "Full", "UTF-8")}" +
+                                        "&reason=${java.net.URLEncoder.encode(request.reason ?: "", "UTF-8")}" +
+                                        "&description=${java.net.URLEncoder.encode(request.description ?: "", "UTF-8")}" +
+                                        "&status=${java.net.URLEncoder.encode(request.status ?: "pending", "UTF-8")}" +
+                                        "&punchIn=${java.net.URLEncoder.encode(request.punchIn ?: "", "UTF-8")}" +
+                                        "&punchOut=${java.net.URLEncoder.encode(request.punchOut ?: "", "UTF-8")}",
                                 )
                             },
                         )
@@ -2133,7 +2143,7 @@ class HomeActivity : AppCompatActivity() {
 
                     // Approval Request Detail screen
                     composable(
-                        route = "approval_request_detail?name={name}&leaveType={leaveType}&code={code}&date={date}&duration={duration}&reason={reason}&description={description}&status={status}",
+                        route = "approval_request_detail?name={name}&leaveType={leaveType}&code={code}&date={date}&duration={duration}&reason={reason}&description={description}&status={status}&punchIn={punchIn}&punchOut={punchOut}",
                         arguments = listOf(
                             androidx.navigation.navArgument("name") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
                             androidx.navigation.navArgument("leaveType") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
@@ -2143,6 +2153,8 @@ class HomeActivity : AppCompatActivity() {
                             androidx.navigation.navArgument("reason") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
                             androidx.navigation.navArgument("description") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
                             androidx.navigation.navArgument("status") { type = androidx.navigation.NavType.StringType; defaultValue = "Pending" },
+                            androidx.navigation.navArgument("punchIn") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("punchOut") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
                         ),
                         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
@@ -2159,6 +2171,8 @@ class HomeActivity : AppCompatActivity() {
                             reason = java.net.URLDecoder.decode(args?.getString("reason") ?: "", "UTF-8"),
                             description = java.net.URLDecoder.decode(args?.getString("description") ?: "", "UTF-8"),
                             status = java.net.URLDecoder.decode(args?.getString("status") ?: "Pending", "UTF-8"),
+                            punchIn = java.net.URLDecoder.decode(args?.getString("punchIn") ?: "", "UTF-8"),
+                            punchOut = java.net.URLDecoder.decode(args?.getString("punchOut") ?: "", "UTF-8"),
                             onBack = { navController.popBackStack() },
                         )
                     }
