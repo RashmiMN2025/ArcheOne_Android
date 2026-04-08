@@ -67,6 +67,39 @@ class HomeController(
     private var timerJob: kotlinx.coroutines.Job? = null
     private var punchInDateTime: Date? = null
 
+    val hasReportees: Boolean
+        get() = UserDataManager.getInstance(context).getUserData()?.hasReportees ?: false
+
+    init {
+        // Pre-fill punch state from login response attendance data
+        val userData = UserDataManager.getInstance(context).getUserData()
+        val loginPunchIn = userData?.loginPunchIn
+        val loginPunchOut = userData?.loginPunchOut
+        if (!loginPunchIn.isNullOrEmpty()) {
+            isPunchedIn = loginPunchOut.isNullOrEmpty()
+            punchInTime = loginPunchIn
+            if (isPunchedIn) {
+                // Start timer from the login punch-in time
+                try {
+                    val fmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                    val parsed = fmt.parse(loginPunchIn)
+                    if (parsed != null) {
+                        val cal = java.util.Calendar.getInstance()
+                        val timeCal = java.util.Calendar.getInstance()
+                        timeCal.time = parsed
+                        cal.set(java.util.Calendar.HOUR_OF_DAY, timeCal.get(java.util.Calendar.HOUR_OF_DAY))
+                        cal.set(java.util.Calendar.MINUTE, timeCal.get(java.util.Calendar.MINUTE))
+                        cal.set(java.util.Calendar.SECOND, timeCal.get(java.util.Calendar.SECOND))
+                        punchInDateTime = cal.time
+                        startTimer()
+                    }
+                } catch (_: Exception) {}
+            } else {
+                punchOutTime = loginPunchOut ?: ""
+            }
+        }
+    }
+
     fun showPunchIn() {
         showPunchInDialog = true
         fetchCurrentLocation()

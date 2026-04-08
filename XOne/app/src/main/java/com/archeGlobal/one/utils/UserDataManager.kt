@@ -250,8 +250,10 @@ class UserDataManager private constructor(
                     profilePic = response.profile_pic,
                     sosContact = response.sos,
                     userDetails = it.userDetails,
-                    // Use the full greetings map here
                     greetings = fullGreetingsData,
+                    hasReportees = it.hasReportees,
+                    loginPunchIn = it.attendance?.punchin,
+                    loginPunchOut = it.attendance?.punchout?.lastOrNull(),
                 )
             }
 

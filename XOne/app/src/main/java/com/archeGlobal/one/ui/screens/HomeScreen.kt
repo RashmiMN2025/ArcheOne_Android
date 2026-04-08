@@ -1124,6 +1124,7 @@ fun HomeScreenContent(
                                                 onManagerApprovalsClick = {
                                                     onItemClick(HomeItem(title = "Manager Approvals", icon = "manager_approvals", category = ""))
                                                 },
+                                                showManagerApprovals = controller.hasReportees,
                                             )
                                             Spacer(modifier = Modifier.height(16.dp))
                                         }
@@ -1971,6 +1972,7 @@ fun TimeAttendanceCard(
     onApplyOutDoorClick: () -> Unit = {},
     onRegularizeClick: () -> Unit = {},
     onManagerApprovalsClick: () -> Unit = {},
+    showManagerApprovals: Boolean = false,
 ) {
     val primaryRed = Color(0xFFDD3825)
     val punchGreen = Color(0xFF4CAF50)
@@ -2193,8 +2195,8 @@ fun TimeAttendanceCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Manager Approvals Button
-            Button(
+            // Manager Approvals Button — only shown when user has reportees
+            if (showManagerApprovals) Button(
                 onClick = onManagerApprovalsClick,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -2216,7 +2218,7 @@ fun TimeAttendanceCard(
                     fontSize = 14.sp,
                     color = Color.White,
                 )
-            }
+            } // end Manager Approvals Button
         }
     }
 }

@@ -16,4 +16,7 @@ data class UserData(
     val sosContact: String? = null,
     val userDetails: UserDetails? = null,
     val greetings: Map<String, List<String>> = emptyMap(),
+    val hasReportees: Boolean = false,
+    val loginPunchIn: String? = null,
+    val loginPunchOut: String? = null,
 )

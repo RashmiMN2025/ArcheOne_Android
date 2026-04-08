@@ -649,6 +649,11 @@ data class VerifyOtpResponse(
     val smartCollateral: List<SmartCollateralCategory>? = emptyList(),
 )
 
+data class LoginAttendance(
+    val punchin: String? = null,
+    val punchout: List<String>? = null,
+)
+
 data class User(
     val name: String,
     val designation: String,
@@ -659,6 +664,8 @@ data class User(
     val location: String,
     val state: String? = null,
     val userDetails: UserDetails? = null,
+    val hasReportees: Boolean = false,
+    val attendance: LoginAttendance? = null,
 )
 
 data class UserDetails(
