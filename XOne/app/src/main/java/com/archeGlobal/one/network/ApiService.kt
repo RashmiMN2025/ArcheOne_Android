@@ -159,6 +159,11 @@ interface ApiService {
         @Body request: PunchOutRequest
     ): Response<PunchOutResponse>
 
+    @POST("/api/v1/timesheet/attendance/range")
+    suspend fun getAttendanceRecords(
+        @Body request: com.archeGlobal.one.model.AttendanceRequest
+    ): Response<com.archeGlobal.one.model.AttendanceResponse>
+
     @POST("/api/v1/timesheet/leave-counter/")
     suspend fun getLeaves(
         @Body request: LeaveRequest

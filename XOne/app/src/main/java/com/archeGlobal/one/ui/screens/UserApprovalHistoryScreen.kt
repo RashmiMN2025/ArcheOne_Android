@@ -126,7 +126,7 @@ fun UserApprovalHistoryScreen(
                                     Text(
                                         text = item.employeeName,
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         fontSize = 20.sp,
                                         color = Color.Black,
                                     )

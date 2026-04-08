@@ -2099,8 +2099,8 @@ fun TimeAttendanceCard(
                 Text(
                     text = timeSpent,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 24.sp,
                     color = Color.Black,
                 )
                 if (!isPunchedIn) {

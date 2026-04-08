@@ -99,15 +99,15 @@ class HomeController(
                         
                         // Parse punchIn time for the timer and display
                         val apiFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-                        val displayFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                        
+                        val displayFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
                         try {
                              data?.punchIn?.let {
                                  val parsedDate = apiFormat.parse(it)
                                  if (parsedDate != null) {
                                      // Set display time
                                      punchInTime = displayFormat.format(parsedDate)
-                                     
+
                                      // Set dateTime for timer calculation
                                      val calendar = Calendar.getInstance()
                                      val timeCalendar = Calendar.getInstance()
@@ -117,15 +117,15 @@ class HomeController(
                                      calendar.set(Calendar.SECOND, timeCalendar.get(Calendar.SECOND))
                                      punchInDateTime = calendar.time
                                  } else {
-                                     punchInTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                                     punchInTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
                                      punchInDateTime = Date()
                                  }
                              } ?: run {
-                                 punchInTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                                 punchInTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
                                  punchInDateTime = Date()
                              }
                         } catch (e: Exception) {
-                            punchInTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                            punchInTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
                             punchInDateTime = Date()
                         }
                         
@@ -188,8 +188,8 @@ class HomeController(
                         
                         // Parse punchOut time for display
                         val apiFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-                        val displayFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                        
+                        val displayFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
                         try {
                              val lastPunchOut = data?.punchOut?.lastOrNull()
                              if (lastPunchOut != null) {
@@ -197,13 +197,13 @@ class HomeController(
                                  if (parsedDate != null) {
                                      punchOutTime = displayFormat.format(parsedDate)
                                  } else {
-                                     punchOutTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                                     punchOutTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
                                  }
                              } else {
-                                 punchOutTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                                 punchOutTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
                              }
                         } catch (e: Exception) {
-                            punchOutTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                            punchOutTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
                         }
                         
                         android.widget.Toast.makeText(context, response.body()?.message, android.widget.Toast.LENGTH_SHORT).show()

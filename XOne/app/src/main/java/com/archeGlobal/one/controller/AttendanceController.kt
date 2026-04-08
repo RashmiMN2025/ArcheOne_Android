@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.AttendanceDayStatus
+import com.archeGlobal.one.model.AttendanceRequest
 import com.archeGlobal.one.model.LeaveBalance
 import com.archeGlobal.one.model.LeaveRequest
 import com.archeGlobal.one.model.ManagerDashboardRequest
@@ -14,8 +15,10 @@ import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
 class AttendanceController(private val context: Context) {
 
@@ -33,6 +36,11 @@ class AttendanceController(private val context: Context) {
     var isLoading by mutableStateOf(false)
         private set
 
+    var isAttendanceLoading by mutableStateOf(false)
+        private set
+
+    val isPageLoading get() = isLoading || isAttendanceLoading
+
     var approvalRequests by mutableStateOf<List<ApprovalRequestItem>>(emptyList())
         private set
 
@@ -43,54 +51,89 @@ class AttendanceController(private val context: Context) {
         private set
 
     init {
-        loadData()
         fetchLeaveBalances()
     }
 
     fun previousMonth() {
         currentMonth = currentMonth.minusMonths(1)
-        loadData()
+        fetchAttendance()
     }
 
     fun nextMonth() {
         currentMonth = currentMonth.plusMonths(1)
-        loadData()
+        fetchAttendance()
     }
 
-    fun loadData() {
+    fun fetchAttendance() {
+        val userData = UserDataManager.getInstance(context).getUserData()
+        val userEmail = userData?.email ?: return
+
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val startDate = currentMonth.atDay(1).format(formatter)
+        val endDate = currentMonth.atEndOfMonth().format(formatter)
+
+        // Seed weekends immediately so calendar isn't blank while loading
         val daysInMonth = currentMonth.lengthOfMonth()
-        val weekends = (1..daysInMonth)
+        attendanceMap = (1..daysInMonth)
             .filter { day ->
                 val dow = currentMonth.atDay(day).dayOfWeek
                 dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY
             }
             .associateWith { AttendanceDayStatus.WEEKEND }
 
-        // Placeholder attendance data — replace with API call when available
-        val mockAttendance = mapOf(
-            1 to AttendanceDayStatus.PRESENT,
-            3 to AttendanceDayStatus.PRESENT,
-            4 to AttendanceDayStatus.PRESENT,
-            5 to AttendanceDayStatus.PRESENT,
-            6 to AttendanceDayStatus.LATE,
-            7 to AttendanceDayStatus.PRESENT,
-            10 to AttendanceDayStatus.PRESENT,
-            11 to AttendanceDayStatus.ABSENT,
-            12 to AttendanceDayStatus.PRESENT,
-            13 to AttendanceDayStatus.PRESENT,
-            14 to AttendanceDayStatus.LEAVE,
-            17 to AttendanceDayStatus.HOLIDAY,
-            18 to AttendanceDayStatus.PRESENT,
-            19 to AttendanceDayStatus.PRESENT,
-            20 to AttendanceDayStatus.PRESENT,
-            21 to AttendanceDayStatus.PRESENT,
-        )
+        isAttendanceLoading = true
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitClient.apiService.getAttendanceRecords(
+                        AttendanceRequest(userEmail, startDate, endDate)
+                    )
+                }
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val records = response.body()?.data ?: emptyList()
+                    val apiMap = mutableMapOf<Int, AttendanceDayStatus>()
+                    for (record in records) {
+                        val day = record.date.split("-").last().toIntOrNull() ?: continue
+                        val dow = currentMonth.atDay(day).dayOfWeek
+                        if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) continue
+                        val status = resolveStatus(record.attendanceStatus, record.requests)
+                        apiMap[day] = status
+                    }
+                    val weekends = attendanceMap
+                    attendanceMap = weekends + apiMap
+                }
+            } catch (e: Exception) {
+                // Keep weekend seeds on error
+            } finally {
+                isAttendanceLoading = false
+            }
+        }
+    }
 
-        attendanceMap = weekends + mockAttendance
+    private fun resolveStatus(
+        attendanceStatus: String?,
+        requests: List<com.archeGlobal.one.model.AttendanceDayRequest>?,
+    ): AttendanceDayStatus {
+        // Approved leave request → LEAVE
+        val hasApprovedLeave = requests?.any {
+            it.status.equals("approved", ignoreCase = true) &&
+                it.requestType != "Regularisation"
+        } ?: false
+        if (hasApprovedLeave) return AttendanceDayStatus.LEAVE
+
+        val status = attendanceStatus?.lowercase() ?: ""
+        return when {
+            status.contains("holiday") -> AttendanceDayStatus.HOLIDAY
+            status.contains("present") -> AttendanceDayStatus.PRESENT
+            status.contains("late")    -> AttendanceDayStatus.ABSENT
+            status.contains("absent")  -> AttendanceDayStatus.ABSENT
+            requests?.any { it.requestType != "Regularisation" } == true -> AttendanceDayStatus.LEAVE
+            else -> AttendanceDayStatus.ABSENT
+        }
     }
 
     fun fetchLeaveBalances() {
-        loadData()
+        fetchAttendance()
         val userData = UserDataManager.getInstance(context).getUserData()
         val userEmail = userData?.email ?: ""
 
