@@ -104,8 +104,10 @@ fun ApplyLeaveScreen(
         leaveTypes
     }
 
-    val showStartEndDay = selectedLeaveType in leaveTypesWithStartEndDay ||
-                         (attendanceController?.leaveBalances?.any { it.type == selectedLeaveType } == true)
+    val showStartEndDay = selectedLeaveType != "Privilege Leave" &&
+                         selectedLeaveType != "Optional Holiday" &&
+                         (selectedLeaveType in leaveTypesWithStartEndDay ||
+                         (attendanceController?.leaveBalances?.any { it.type == selectedLeaveType } == true))
 
     val leaveBalance = attendanceController?.leaveBalances?.find {
         it.type.equals(selectedLeaveType, ignoreCase = true)

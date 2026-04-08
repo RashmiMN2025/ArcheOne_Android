@@ -34,6 +34,7 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.AttendanceController
 import com.archeGlobal.one.model.AttendanceDayStatus
 import com.archeGlobal.one.model.LeaveBalance
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
@@ -44,13 +45,17 @@ import java.time.YearMonth
 
 private val primaryRed = Color(0xFFDD3825)
 
-private val leaveColors = listOf(
-    Color(0xFF00BCD4), // teal   – Casual Leave
-    Color(0xFF2196F3), // blue   – Optional Holiday
-    Color(0xFFFF9800), // orange – Paternity Leave
-    Color(0xFF4CAF50), // green  – Privilege Leave
-    Color(0xFF9C27B0), // purple – Sick Leave
-)
+private fun leaveColor(type: String): Color {
+    val t = type.lowercase()
+    return when {
+        t.contains("casual")    -> Color(0xFF00BCD4) // teal
+        t.contains("optional")  -> Color(0xFF2196F3) // blue
+        t.contains("paternity") -> Color(0xFFFF9800) // orange
+        t.contains("privilege") -> Color(0xFF4CAF50) // green
+        t.contains("sick")      -> Color(0xFF9C27B0) // purple
+        else                    -> Color(0xFF888888) // grey fallback
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -226,40 +231,26 @@ fun AttendanceScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 
-                    if (controller.isLoading && controller.leaveBalances.isEmpty()) {
+                    controller.leaveBalances.chunked(2).forEach { row ->
                         item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(100.dp),
-                                contentAlignment = Alignment.Center,
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                CircularProgressIndicator(color = primaryRed)
-                            }
-                        }
-                    } else {
-                        controller.leaveBalances.chunked(2).forEachIndexed { rowIndex, row ->
-                            item {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                ) {
-                                    row.forEachIndexed { colIndex, leave ->
-                                        val colorIndex = rowIndex * 2 + colIndex
-                                        LeaveBalanceCard(
-                                            leaveBalance = leave,
-                                            dotColor = leaveColors.getOrElse(colorIndex) { Color(0xFF888888) },
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clickable { onLeaveCardClick(leave.type, selectedDate ?: today) },
-                                        )
-                                    }
-                                    if (row.size == 1) {
-                                        Spacer(modifier = Modifier.weight(1f))
-                                    }
+                                row.forEach { leave ->
+                                    LeaveBalanceCard(
+                                        leaveBalance = leave,
+                                        dotColor = leaveColor(leave.type),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable { onLeaveCardClick(leave.type, selectedDate ?: today) },
+                                    )
                                 }
-                                Spacer(modifier = Modifier.height(12.dp))
+                                if (row.size == 1) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
 
@@ -335,6 +326,7 @@ fun AttendanceScreen(
                 }
             }
         }
+        UniversalLoader(isLoading = controller.isPageLoading)
     }
 }
 
