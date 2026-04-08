@@ -6,6 +6,48 @@ data class LeaveRequest(
     @SerializedName("userEmail") val userEmail: String
 )
 
+data class MyRequestsRequest(
+    @SerializedName("employeeCode") val employeeCode: String
+)
+
+data class MyRequestsResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("message") val message: String,
+    @SerializedName("status") val status: Int,
+    @SerializedName("data") val data: MyRequestsData,
+)
+
+data class MyRequestsData(
+    @SerializedName("requests") val requests: List<MyRequestItem>,
+    @SerializedName("total") val total: Int,
+)
+
+data class DeleteRequestResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("message") val message: String,
+    @SerializedName("status") val status: Int,
+)
+
+data class MyRequestItem(
+    @SerializedName("eventId") val eventId: String,
+    @SerializedName("employeeName") val employeeName: String,
+    @SerializedName("employeeCode") val employeeCode: String,
+    @SerializedName("startDate") val startDate: String,
+    @SerializedName("endDate") val endDate: String,
+    @SerializedName("totalDays") val totalDays: Int,
+    @SerializedName("requestType") val requestType: String,
+    @SerializedName("leaveDuration") val leaveDuration: String,
+    @SerializedName("approver") val approver: String,
+    @SerializedName("approverEmail") val approverEmail: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("reason") val reason: String,
+    @SerializedName("description") val description: String?,
+    @SerializedName("punchIn") val punchIn: String?,
+    @SerializedName("punchOut") val punchOut: String?,
+    @SerializedName("createdAt") val createdAt: String,
+    @SerializedName("updatedAt") val updatedAt: String,
+)
+
 data class LeaveResponse(
     @SerializedName("success") val success: Boolean,
     @SerializedName("message") val message: String,

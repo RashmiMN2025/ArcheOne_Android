@@ -36,8 +36,11 @@ import com.archeGlobal.one.model.InventoryRequest
 import com.archeGlobal.one.model.CreateLeaveRequest
 import com.archeGlobal.one.model.CreateLeaveResponse
 import com.archeGlobal.one.model.InventoryResponse
+import com.archeGlobal.one.model.DeleteRequestResponse
 import com.archeGlobal.one.model.LeaveRequest
 import com.archeGlobal.one.model.LeaveResponse
+import com.archeGlobal.one.model.MyRequestsRequest
+import com.archeGlobal.one.model.MyRequestsResponse
 import com.archeGlobal.one.model.LocationsResponse
 import com.archeGlobal.one.model.ManagerDashboardRequest
 import com.archeGlobal.one.model.ManagerDashboardResponse
@@ -165,6 +168,16 @@ interface ApiService {
     suspend fun createLeaveRequest(
         @Body request: CreateLeaveRequest
     ): Response<CreateLeaveResponse>
+
+    @POST("/api/v1/timesheet/requests/get")
+    suspend fun getMyRequests(
+        @Body request: MyRequestsRequest
+    ): Response<MyRequestsResponse>
+
+    @DELETE("/api/v1/timesheet/requests/delete/{request_id}")
+    suspend fun deleteRequest(
+        @Path("request_id") requestId: String
+    ): Response<DeleteRequestResponse>
 
     @POST("/api/v1/timesheet/manager-dashboard/")
     suspend fun getManagerDashboard(

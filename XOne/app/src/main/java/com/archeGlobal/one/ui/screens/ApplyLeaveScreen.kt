@@ -82,6 +82,9 @@ fun ApplyLeaveScreen(
     var endDay by remember { mutableStateOf("Full Day") }
     var endDayExpanded by remember { mutableStateOf(false) }
 
+    var selectedHoliday by remember { mutableStateOf("") }
+    var holidayExpanded by remember { mutableStateOf(false) }
+
     var selectedReason by remember { mutableStateOf("") }
     var reasonExpanded by remember { mutableStateOf(false) }
 
@@ -332,6 +335,75 @@ fun ApplyLeaveScreen(
                                         color = Color(0xFF888888),
                                         textAlign = TextAlign.Center,
                                     )
+                                }
+                            }
+
+                            // Available Holiday dropdown (only for Optional Holiday)
+                            if (selectedLeaveType == "Optional Holiday") {
+                                Spacer(modifier = Modifier.height(14.dp))
+                                Text(
+                                    text = "Available Holiday",
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                    color = Color.Black,
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                ExposedDropdownMenuBox(
+                                    expanded = holidayExpanded,
+                                    onExpandedChange = { holidayExpanded = it },
+                                ) {
+                                    OutlinedTextField(
+                                        value = selectedHoliday.ifEmpty { "Select Holiday" },
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.KeyboardArrowDown,
+                                                contentDescription = null,
+                                                tint = Color(0xFF888888),
+                                            )
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .menuAnchor(),
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            unfocusedBorderColor = Color(0xFFDDDDDD),
+                                            focusedBorderColor = primaryRed,
+                                            unfocusedTextColor = if (selectedHoliday.isEmpty()) Color(0xFF888888) else Color.Black,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedContainerColor = Color.White,
+                                            focusedContainerColor = Color.White,
+                                        ),
+                                        textStyle = LocalTextStyle.current.copy(
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 14.sp,
+                                        ),
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = holidayExpanded,
+                                        onDismissRequest = { holidayExpanded = false },
+                                        modifier = Modifier.background(Color.White),
+                                    ) {
+                                        attendanceController?.optionalHolidays?.forEach { holiday ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = holiday,
+                                                        fontFamily = GraphikFontFamily,
+                                                        fontSize = 14.sp,
+                                                        color = Color.Black,
+                                                    )
+                                                },
+                                                onClick = {
+                                                    selectedHoliday = holiday
+                                                    holidayExpanded = false
+                                                },
+                                            )
+                                        }
+                                    }
                                 }
                             }
 

@@ -4,22 +4,26 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
+import com.archeGlobal.one.model.MyRequestItem
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
@@ -29,17 +33,12 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun UserApprovalHistoryScreen(
-    employeeName: String = "",
-    leaveType: String = "",
-    employeeCode: String = "",
-    date: String = "",
-    duration: String = "",
-    reason: String = "",
-    description: String = "",
-    status: String = "Pending",
+    item: MyRequestItem,
     onBack: () -> Unit,
-    onCancelRequest: () -> Unit = {},
+    onCancelRequest: ((onDone: () -> Unit) -> Unit)? = null,
 ) {
+    var isCancelling by remember { mutableStateOf(false) }
+    val status = item.status
     val statusColor = when (status.lowercase()) {
         "approved" -> Color(0xFF4CAF50)
         "rejected" -> Color(0xFFDD3825)
@@ -52,6 +51,10 @@ fun UserApprovalHistoryScreen(
         "pending" -> Color(0xFFFFF8E1)
         else -> Color(0xFFF5F5F5)
     }
+    val displayStatus = status.replaceFirstChar { it.uppercase() }
+
+    val dateDisplay = if (item.startDate == item.endDate) item.startDate
+    else "${item.startDate} – ${item.endDate}"
 
     Box(
         modifier = Modifier
@@ -99,96 +102,118 @@ fun UserApprovalHistoryScreen(
                     ),
                 )
 
-                Card(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFCFCF9)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        // Name + status
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top,
-                        ) {
-                            Column {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFCFCF9)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            // Name + status
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = item.employeeName,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = Color.Black,
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = item.requestType,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF888888),
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .background(statusBgColor, RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                ) {
+                                    Text(
+                                        text = displayStatus,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 13.sp,
+                                        color = statusColor,
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            DetailInfoRow(label = "Employee Code", value = item.employeeCode)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            DetailInfoRow(iconRes = R.drawable.ic_calendar, label = "Date", value = dateDisplay)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            DetailInfoRow(
+                                imageVector = Icons.Default.AccessTime,
+                                label = "Duration",
+                                value = "${item.leaveDuration} · ${item.totalDays} day(s)",
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            DetailInfoRow(iconRes = R.drawable.ic_file, label = "Reason", value = item.reason)
+
+                            if (!item.description.isNullOrEmpty()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)
+                                Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = employeeName,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    color = Color.Black,
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = leaveType,
+                                    text = "Description",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    fontSize = 14.sp,
+                                    fontSize = 12.sp,
                                     color = Color(0xFF888888),
                                 )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .background(statusBgColor, RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                            ) {
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = status,
+                                    text = item.description,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 13.sp,
-                                    color = statusColor,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 16.sp,
+                                    color = Color.Black,
                                 )
                             }
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // Info rows
-                        UserHistoryDetailInfoRow(label = "Employee Code", value = employeeCode)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        UserHistoryDetailInfoRow(iconRes = R.drawable.ic_calendar, label = "Date", value = date)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        UserHistoryDetailInfoRow(imageVector = Icons.Default.AccessTime, label = "Duration", value = duration)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        UserHistoryDetailInfoRow(iconRes = R.drawable.ic_file, label = "Reason", value = reason)
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                        HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Description
-                        Text(
-                            text = "Description",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
-                            color = Color(0xFF888888),
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = description.ifEmpty { "—" },
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 16.sp,
-                            color = Color.Black,
-                        )
-
-                        // Cancel button — only for pending
-                        if (status.lowercase() == "pending") {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Button(
-                                onClick = onCancelRequest,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                            ) {
+                    // Cancel button — only for pending
+                    if (status.lowercase() == "pending" && onCancelRequest != null) {
+                        Button(
+                            onClick = {
+                            if (!isCancelling) {
+                                isCancelling = true
+                                onCancelRequest { isCancelling = false }
+                            }
+                        },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                            enabled = !isCancelling,
+                        ) {
+                            if (isCancelling) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
                                 Text(
                                     text = "Cancel Request",
                                     fontFamily = GraphikFontFamily,
@@ -199,6 +224,8 @@ fun UserApprovalHistoryScreen(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
@@ -206,9 +233,9 @@ fun UserApprovalHistoryScreen(
 }
 
 @Composable
-private fun UserHistoryDetailInfoRow(
+private fun DetailInfoRow(
     iconRes: Int? = null,
-    imageVector: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    imageVector: ImageVector? = null,
     label: String,
     value: String,
 ) {
@@ -216,22 +243,20 @@ private fun UserHistoryDetailInfoRow(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (iconRes != null) {
-            Icon(
+        when {
+            iconRes != null -> Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
                 tint = Color(0xFF888888),
                 modifier = Modifier.size(20.dp),
             )
-        } else if (imageVector != null) {
-            Icon(
+            imageVector != null -> Icon(
                 imageVector = imageVector,
                 contentDescription = null,
                 tint = Color(0xFF888888),
                 modifier = Modifier.size(20.dp),
             )
-        } else {
-            Text(
+            else -> Text(
                 text = "#",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,

@@ -31,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +43,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -57,6 +62,7 @@ import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.repository.UserRepository
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.components.WhatsNewDialog
 import com.archeGlobal.one.ui.screens.*
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -165,6 +171,10 @@ class HomeActivity : AppCompatActivity() {
         Log.d("HomeActivity", "Lazy initializing DeskCartController")
         Log.d("HomeActivity", "DeskCartController access stack trace: ${Thread.currentThread().stackTrace.take(10).joinToString("\n")}")
         DeskCartController(this@HomeActivity, navigator)
+    }
+    internal val myRequestsController by lazy {
+        Log.d("HomeActivity", "Lazy initializing MyRequestsController")
+        MyRequestsController(this@HomeActivity)
     }
     // Lazy controllers can be accessed directly by property name
     // No explicit getter methods needed - Kotlin generates them automatically
@@ -1937,7 +1947,12 @@ class HomeActivity : AppCompatActivity() {
                         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
                         popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
-                    ) {
+                    ) { backStackEntry ->
+                        LaunchedEffect(backStackEntry) {
+                            backStackEntry.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                                controller.attendanceController.fetchLeaveBalances()
+                            }
+                        }
                         AttendanceScreen(
                             controller = controller.attendanceController,
                             onBack = { navController.popBackStack() },
@@ -1966,55 +1981,63 @@ class HomeActivity : AppCompatActivity() {
                         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
                         popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
-                    ) {
+                    ) { backStackEntry ->
+                        val scope = rememberCoroutineScope()
+                        var isNavigatingBack by remember { mutableStateOf(false) }
+                        LaunchedEffect(backStackEntry) {
+                            backStackEntry.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                                myRequestsController.fetchRequests()
+                            }
+                        }
                         com.archeGlobal.one.ui.screens.MyRequestsScreen(
-                            onBack = { navController.popBackStack() },
-                            onRequestClick = { request ->
-                                navController.navigate(
-                                    "user_approval_history" +
-                                        "?name=${java.net.URLEncoder.encode(request.employeeName, "UTF-8")}" +
-                                        "&leaveType=${java.net.URLEncoder.encode(request.leaveType, "UTF-8")}" +
-                                        "&code=${java.net.URLEncoder.encode(request.employeeCode, "UTF-8")}" +
-                                        "&date=${java.net.URLEncoder.encode(request.date, "UTF-8")}" +
-                                        "&duration=${java.net.URLEncoder.encode(request.duration, "UTF-8")}" +
-                                        "&reason=${java.net.URLEncoder.encode(request.reason, "UTF-8")}" +
-                                        "&description=${java.net.URLEncoder.encode(request.description, "UTF-8")}" +
-                                        "&status=${java.net.URLEncoder.encode(request.status, "UTF-8")}",
-                                )
+                            controller = myRequestsController,
+                            onBack = {
+                                if (!isNavigatingBack) {
+                                    isNavigatingBack = true
+                                    scope.launch {
+                                        delay(2000)
+                                        navController.popBackStack()
+                                    }
+                                }
+                            },
+                            onRequestClick = { eventId ->
+                                val item = myRequestsController.requests.find { it.eventId == eventId }
+                                if (item != null) {
+                                    com.archeGlobal.one.controller.MyRequestsController.selectedRequest = item
+                                    navController.navigate("user_approval_history")
+                                }
                             },
                         )
+                        UniversalLoader(isLoading = isNavigatingBack)
                     }
 
                     // User Approval History detail screen
                     composable(
-                        route = "user_approval_history?name={name}&leaveType={leaveType}&code={code}&date={date}&duration={duration}&reason={reason}&description={description}&status={status}",
-                        arguments = listOf(
-                            androidx.navigation.navArgument("name") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
-                            androidx.navigation.navArgument("leaveType") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
-                            androidx.navigation.navArgument("code") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
-                            androidx.navigation.navArgument("date") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
-                            androidx.navigation.navArgument("duration") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
-                            androidx.navigation.navArgument("reason") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
-                            androidx.navigation.navArgument("description") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
-                            androidx.navigation.navArgument("status") { type = androidx.navigation.NavType.StringType; defaultValue = "Pending" },
-                        ),
+                        route = "user_approval_history",
                         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
                         popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
-                    ) { backStackEntry ->
-                        val args = backStackEntry.arguments
-                        com.archeGlobal.one.ui.screens.UserApprovalHistoryScreen(
-                            employeeName = java.net.URLDecoder.decode(args?.getString("name") ?: "", "UTF-8"),
-                            leaveType = java.net.URLDecoder.decode(args?.getString("leaveType") ?: "", "UTF-8"),
-                            employeeCode = java.net.URLDecoder.decode(args?.getString("code") ?: "", "UTF-8"),
-                            date = java.net.URLDecoder.decode(args?.getString("date") ?: "", "UTF-8"),
-                            duration = java.net.URLDecoder.decode(args?.getString("duration") ?: "", "UTF-8"),
-                            reason = java.net.URLDecoder.decode(args?.getString("reason") ?: "", "UTF-8"),
-                            description = java.net.URLDecoder.decode(args?.getString("description") ?: "", "UTF-8"),
-                            status = java.net.URLDecoder.decode(args?.getString("status") ?: "Pending", "UTF-8"),
-                            onBack = { navController.popBackStack() },
-                        )
+                    ) {
+                        val item = com.archeGlobal.one.controller.MyRequestsController.selectedRequest
+                        if (item != null) {
+                            com.archeGlobal.one.ui.screens.UserApprovalHistoryScreen(
+                                item = item,
+                                onBack = { navController.popBackStack() },
+                                onCancelRequest = { onDone ->
+                                    myRequestsController.cancelRequest(
+                                        eventId = item.eventId,
+                                        onSuccess = {
+                                            onDone()
+                                            navController.popBackStack()
+                                        },
+                                        onError = { onDone() },
+                                    )
+                                },
+                            )
+                        } else {
+                            navController.popBackStack()
+                        }
                     }
 
                     // Apply Leave screen

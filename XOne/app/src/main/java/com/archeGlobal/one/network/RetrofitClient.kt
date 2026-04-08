@@ -154,9 +154,19 @@ object RetrofitClient {
         val sslContext = SSLContext.getInstance("TLS")
         sslContext.init(null, arrayOf<TrustManager>(archeTrustManager), null)
 
+        val noCacheInterceptor = Interceptor { chain ->
+            chain.proceed(
+                chain.request().newBuilder()
+                    .header("Cache-Control", "no-cache, no-store")
+                    .header("Pragma", "no-cache")
+                    .build()
+            )
+        }
+
         val okHttpClient =
             OkHttpClient
                 .Builder()
+                .addInterceptor(noCacheInterceptor)
                 .addInterceptor(loggingInterceptor)
                 .addInterceptor(AuthInterceptor(context))
                 .sslSocketFactory(sslContext.socketFactory, archeTrustManager)

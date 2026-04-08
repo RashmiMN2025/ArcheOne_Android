@@ -28,6 +28,8 @@ class AttendanceController(private val context: Context) {
     var leaveBalances by mutableStateOf<List<LeaveBalance>>(emptyList())
         private set
 
+    var optionalHolidays by mutableStateOf<List<String>>(emptyList())
+
     var isLoading by mutableStateOf(false)
         private set
 
@@ -103,7 +105,7 @@ class AttendanceController(private val context: Context) {
                     leaveBalances = leaveDataList.map {
                         LeaveBalance(
                             type = it.leaveType,
-                            balance = it.availableBalance
+                            balance = it.effectiveBalance
                         )
                     }
                 }

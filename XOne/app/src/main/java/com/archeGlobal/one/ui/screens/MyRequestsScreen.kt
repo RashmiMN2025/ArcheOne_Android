@@ -22,63 +22,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
+import com.archeGlobal.one.controller.MyRequestsController
+import com.archeGlobal.one.model.MyRequestItem
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
-data class UserApprovalRequest(
-    val employeeName: String,
-    val leaveType: String,
-    val employeeCode: String,
-    val date: String,
-    val duration: String,
-    val reason: String,
-    val description: String,
-    val status: String,
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MyRequestsScreen(
+    controller: MyRequestsController,
     onBack: () -> Unit,
-    onRequestClick: (UserApprovalRequest) -> Unit = {},
+    onRequestClick: (String) -> Unit = {},
 ) {
-    // Mock data — replace with API data when available
-    val requests = listOf(
-        UserApprovalRequest(
-            employeeName = "Biswajit Dixit",
-            leaveType = "Casual Leave",
-            employeeCode = "NT1426",
-            date = "2026-04-06",
-            duration = "Full",
-            reason = "Outdoor",
-            description = "personal",
-            status = "Pending",
-        ),
-        UserApprovalRequest(
-            employeeName = "Biswajit Dixit",
-            leaveType = "Work From Home",
-            employeeCode = "NT1426",
-            date = "2026-03-28",
-            duration = "Full",
-            reason = "Personal work",
-            description = "",
-            status = "Approved",
-        ),
-        UserApprovalRequest(
-            employeeName = "Biswajit Dixit",
-            leaveType = "Regularisation",
-            employeeCode = "NT1426",
-            date = "2026-03-20",
-            duration = "Half",
-            reason = "Forgot to punch in",
-            description = "",
-            status = "Rejected",
-        ),
-    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -125,18 +84,44 @@ fun MyRequestsScreen(
                     ),
                 )
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(requests) { request ->
-                        MyRequestCard(
-                            request = request,
-                            onClick = { onRequestClick(request) },
-                        )
+                when {
+                    controller.errorMessage != null -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = controller.errorMessage ?: "Error",
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 14.sp,
+                                color = Color(0xFF888888),
+                            )
+                        }
+                    }
+                    !controller.isLoading && controller.requests.isEmpty() -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "No requests found",
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 14.sp,
+                                color = Color(0xFF888888),
+                            )
+                        }
+                    }
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(controller.requests) { item ->
+                                MyRequestCard(
+                                    request = item,
+                                    onClick = { onRequestClick(item.eventId) },
+                                )
+                            }
+                        }
                     }
                 }
+
+                UniversalLoader(isLoading = controller.isLoading)
             }
         }
     }
@@ -144,7 +129,7 @@ fun MyRequestsScreen(
 
 @Composable
 private fun MyRequestCard(
-    request: UserApprovalRequest,
+    request: MyRequestItem,
     onClick: () -> Unit,
 ) {
     val statusColor = when (request.status.lowercase()) {
@@ -159,6 +144,7 @@ private fun MyRequestCard(
         "pending" -> Color(0xFFFFF8E1)
         else -> Color(0xFFF5F5F5)
     }
+    val displayStatus = request.status.replaceFirstChar { it.uppercase() }
 
     Card(
         modifier = Modifier
@@ -185,7 +171,7 @@ private fun MyRequestCard(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = request.leaveType,
+                        text = request.requestType,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 13.sp,
@@ -198,7 +184,7 @@ private fun MyRequestCard(
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                 ) {
                     Text(
-                        text = request.status,
+                        text = displayStatus,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 13.sp,
@@ -218,8 +204,13 @@ private fun MyRequestCard(
                     modifier = Modifier.size(16.dp),
                 )
                 Spacer(modifier = Modifier.width(6.dp))
+                val dateDisplay = if (request.startDate == request.endDate) {
+                    request.startDate
+                } else {
+                    "${request.startDate} – ${request.endDate}"
+                }
                 Text(
-                    text = request.date,
+                    text = dateDisplay,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 14.sp,
@@ -234,7 +225,7 @@ private fun MyRequestCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = request.duration,
+                    text = "${request.leaveDuration} · ${request.totalDays} day(s)",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 14.sp,

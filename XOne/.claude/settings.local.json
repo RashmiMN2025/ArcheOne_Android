@@ -9,7 +9,16 @@
       "Bash(grep -r services C:/Users/User/Documents/GitHub/XOne---Android/XOne/app/src/main/java/com/archeGlobal/one/model --include=*.kt)",
       "Bash(grep -l \"class.*Activity\" /c/Users/User/Documents/GitHub/XOne---Android/XOne/app/src/main/java/com/archeGlobal/one/*.kt)",
       "Bash(xargs grep:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(where git:*)",
+      "Bash(export PATH=\"/mingw64/bin:$PATH\")",
+      "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" stash list)",
+      "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" stash show -p stash@{0} --stat)",
+      "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" stash show -p stash@{0} -- \"XOne/app/src/main/java/com/archeGlobal/one/controller/AttendanceController.kt\")",
+      "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" diff stash@{0}^1 stash@{0} -- \"XOne/app/src/main/java/com/archeGlobal/one/controller/AttendanceController.kt\")",
+      "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" diff stash@{0}~ stash@{0} -- \"XOne/app/src/main/java/com/archeGlobal/one/controller/AttendanceController.kt\")",
+      "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" show stash@{0})",
+      "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" stash apply stash@{0})"
     ],
     "deny": [],
     "ask": []
