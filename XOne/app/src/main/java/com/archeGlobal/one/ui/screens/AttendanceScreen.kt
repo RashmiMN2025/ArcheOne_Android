@@ -45,15 +45,37 @@ import java.time.YearMonth
 
 private val primaryRed = Color(0xFFDD3825)
 
+private fun typeColor(type: String): Color {
+    val t = type.lowercase()
+    return when {
+        t.contains("outdoor")                                              -> Color(0xFFFF9800) // orange
+        t.contains("regularisation") || t.contains("regularize") ||
+            t.contains("regularised")                                      -> Color(0xFF9C27B0) // purple
+        t.contains("wfh") || t.contains("work from home")                 -> Color(0xFF26C6B0) // mint
+        t.contains("privilege")                                            -> Color(0xFFEC407A) // pink
+        t.contains("paternity") || t.contains("maternity")                -> Color(0xFF8D6E63) // brown
+        t.contains("casual")                                               -> Color(0xFF26A69A) // teal
+        t.contains("sick")                                                 -> Color(0xFF5C6BC0) // indigo
+        t.contains("optional")                                             -> Color(0xFF2196F3) // blue
+        t.contains("probationary")                                         -> Color(0xFFFFCA28) // yellow
+        t.contains("present")                                              -> Color(0xFF4CAF50) // green
+        t.contains("absent") || t.contains("late")                        -> Color(0xFFDD3825) // red
+        else                                                               -> Color(0xFF888888) // grey
+    }
+}
+
+// Used for leave balance cards only
 private fun leaveColor(type: String): Color {
     val t = type.lowercase()
     return when {
-        t.contains("casual")    -> Color(0xFF00BCD4) // teal
-        t.contains("optional")  -> Color(0xFF2196F3) // blue
-        t.contains("paternity") -> Color(0xFFFF9800) // orange
-        t.contains("privilege") -> Color(0xFF4CAF50) // green
-        t.contains("sick")      -> Color(0xFF9C27B0) // purple
-        else                    -> Color(0xFF888888) // grey fallback
+        t.contains("privilege")                        -> Color(0xFFEC407A) // pink
+        t.contains("casual")                           -> Color(0xFF26A69A) // teal
+        t.contains("sick")                             -> Color(0xFF5C6BC0) // indigo
+        t.contains("optional")                         -> Color(0xFF2196F3) // blue
+        t.contains("paternity") || t.contains("maternity") -> Color(0xFF8D6E63) // brown
+        t.contains("wfh") || t.contains("work from home")  -> Color(0xFF26C6B0) // mint
+        t.contains("probationary")                     -> Color(0xFFFFCA28) // yellow
+        else                                           -> Color(0xFF2196F3) // blue default
     }
 }
 
@@ -202,6 +224,7 @@ fun AttendanceScreen(
                                     yearMonth = controller.currentMonth,
                                     today = today,
                                     attendanceMap = controller.attendanceMap,
+                                    attendanceTypeMap = controller.attendanceTypeMap,
                                     selectedDate = selectedDate,
                                     onDateClick = { date -> selectedDate = date },
                                 )
@@ -336,6 +359,7 @@ private fun CalendarGrid(
     yearMonth: YearMonth,
     today: LocalDate,
     attendanceMap: Map<Int, AttendanceDayStatus>,
+    attendanceTypeMap: Map<Int, String>,
     selectedDate: LocalDate?,
     onDateClick: (LocalDate) -> Unit,
 ) {
@@ -376,6 +400,7 @@ private fun CalendarGrid(
                                 isToday = isToday,
                                 isSelected = isSelected,
                                 status = status,
+                                rawType = attendanceTypeMap[day],
                                 onClick = { onDateClick(date) },
                             )
                         }
@@ -392,25 +417,31 @@ private fun DayCell(
     isToday: Boolean,
     isSelected: Boolean,
     status: AttendanceDayStatus?,
+    rawType: String? = null,
     onClick: () -> Unit,
 ) {
-    val todayBg = Color(0xFFDD3825)
-    val selectedBg = Color(0xFF64B5F6)
-    val dotColor = when (status) {
-        AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
-        AttendanceDayStatus.ABSENT -> primaryRed
-        AttendanceDayStatus.LATE -> Color(0xFFF5A623)
-        AttendanceDayStatus.LEAVE -> Color(0xFF9C27B0)
-        AttendanceDayStatus.HOLIDAY -> Color(0xFFFF9800)
-        AttendanceDayStatus.WEEKEND -> Color(0xFFCCCCCC)
-        null -> Color.Transparent
+    val todayBg = Color(0xFF64B5F6).copy(alpha = 0.5f)
+    val selectedBg = Color(0xFFDD3825)
+    val dotColor = when {
+        status == AttendanceDayStatus.WEEKEND -> Color(0xFFCCCCCC)
+        status == null -> Color.Transparent
+        !rawType.isNullOrEmpty() -> typeColor(rawType)
+        status == AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
+        status == AttendanceDayStatus.ABSENT  -> primaryRed
+        status == AttendanceDayStatus.HOLIDAY -> Color(0xFFFF9800)
+        else -> Color.Transparent
     }
     val circleBg = when {
+        isToday && isSelected -> selectedBg
         isToday -> todayBg
         isSelected -> selectedBg
         else -> Color.Transparent
     }
-    val textColor = if (isToday || isSelected) Color.White else Color.Black
+    val textColor = when {
+        isToday || isSelected -> Color.White
+        status == AttendanceDayStatus.WEEKEND -> Color(0xFF999999)
+        else -> Color.Black
+    }
     val textWeight = FontWeight.SemiBold
 
     Column(
@@ -454,11 +485,10 @@ private fun LeaveBalanceCard(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, primaryRed),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(modifier = Modifier.size(44.dp)) {

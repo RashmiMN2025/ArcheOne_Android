@@ -28,6 +28,10 @@ class AttendanceController(private val context: Context) {
     var attendanceMap by mutableStateOf<Map<Int, AttendanceDayStatus>>(emptyMap())
         private set
 
+    // Raw type string per day (leave type or attendance status) used for dot colour
+    var attendanceTypeMap by mutableStateOf<Map<Int, String>>(emptyMap())
+        private set
+
     var leaveBalances by mutableStateOf<List<LeaveBalance>>(emptyList())
         private set
 
@@ -92,15 +96,18 @@ class AttendanceController(private val context: Context) {
                 if (response.isSuccessful && response.body()?.success == true) {
                     val records = response.body()?.data ?: emptyList()
                     val apiMap = mutableMapOf<Int, AttendanceDayStatus>()
+                    val typeMap = mutableMapOf<Int, String>()
                     for (record in records) {
                         val day = record.date.split("-").last().toIntOrNull() ?: continue
                         val dow = currentMonth.atDay(day).dayOfWeek
                         if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) continue
                         val status = resolveStatus(record.attendanceStatus, record.requests)
                         apiMap[day] = status
+                        typeMap[day] = resolveRawType(record.attendanceStatus, record.requests)
                     }
                     val weekends = attendanceMap
                     attendanceMap = weekends + apiMap
+                    attendanceTypeMap = typeMap
                 }
             } catch (e: Exception) {
                 // Keep weekend seeds on error
@@ -130,6 +137,20 @@ class AttendanceController(private val context: Context) {
             requests?.any { it.requestType != "Regularisation" } == true -> AttendanceDayStatus.LEAVE
             else -> AttendanceDayStatus.ABSENT
         }
+    }
+
+    private fun resolveRawType(
+        attendanceStatus: String?,
+        requests: List<com.archeGlobal.one.model.AttendanceDayRequest>?,
+    ): String {
+        // Approved request takes priority
+        val approved = requests?.firstOrNull { it.status.equals("approved", ignoreCase = true) }
+        if (approved != null) return approved.requestType
+        // Pending request next
+        val pending = requests?.firstOrNull { it.status.equals("pending", ignoreCase = true) }
+        if (pending != null) return pending.requestType
+        // Fall back to raw attendance status
+        return attendanceStatus ?: ""
     }
 
     fun fetchLeaveBalances() {
