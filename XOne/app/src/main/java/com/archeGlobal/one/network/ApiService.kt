@@ -37,6 +37,8 @@ import com.archeGlobal.one.model.CreateLeaveRequest
 import com.archeGlobal.one.model.CreateLeaveResponse
 import com.archeGlobal.one.model.InventoryResponse
 import com.archeGlobal.one.model.DeleteRequestResponse
+import com.archeGlobal.one.model.LeaveCheckRequest
+import com.archeGlobal.one.model.LeaveCheckResponse
 import com.archeGlobal.one.model.LeaveRequest
 import com.archeGlobal.one.model.LeaveResponse
 import com.archeGlobal.one.model.MyRequestsRequest
@@ -163,6 +165,11 @@ interface ApiService {
     suspend fun getLeaves(
         @Body request: LeaveRequest
     ): Response<LeaveResponse>
+
+    @POST("/api/v1/timesheet/leave-check/")
+    suspend fun leaveCheck(
+        @Body request: LeaveCheckRequest
+    ): Response<LeaveCheckResponse>
 
     @POST("/api/v1/timesheet/requests/create")
     suspend fun createLeaveRequest(

@@ -493,6 +493,25 @@ fun ApplyOutdoorDutyScreen(
                             isSubmitting = true
                             scope.launch {
                                 try {
+                                    // 1. Pre-check for conflicts
+                                    val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
+                                        email = userData?.email ?: "",
+                                        startDate = fromDate.toString(),
+                                        endDate = toDate.toString()
+                                    )
+                                    val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
+                                    
+                                    val conflicts = checkResponse.body()?.data?.breakdown?.filter { 
+                                        it.status.lowercase() == "pending" || it.status.lowercase() == "approved"
+                                    } ?: emptyList()
+
+                                    if (checkResponse.isSuccessful && conflicts.isNotEmpty()) {
+                                        Toast.makeText(context, "A request already exists for these dates. Please change the date.", Toast.LENGTH_LONG).show()
+                                        isSubmitting = false
+                                        return@launch
+                                    }
+
+                                    // 2. Proceed with creation if no conflicts
                                     val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
                                     if (response.isSuccessful && response.body()?.success == true) {
                                         Toast.makeText(context, response.body()?.message ?: "Outdoor duty request submitted successfully", Toast.LENGTH_LONG).show()

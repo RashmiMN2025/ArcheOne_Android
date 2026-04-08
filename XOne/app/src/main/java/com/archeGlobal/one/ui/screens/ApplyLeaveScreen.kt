@@ -830,10 +830,78 @@ fun ApplyLeaveScreen(
                             isSubmitting = true
                             scope.launch {
                                 try {
+                                    val userEmail = userData?.email ?: ""
+                                    
+                                    // Special logic for Casual and Sick Leave
+                                    if (selectedLeaveType == "Casual Leave" || selectedLeaveType == "Sick Leave") {
+                                        if (fromDate != toDate) {
+                                            Toast.makeText(context, "You can only apply one $selectedLeaveType per month.", Toast.LENGTH_SHORT).show()
+                                            isSubmitting = false
+                                            return@launch
+                                        }
+
+                                        // 1. Pre-check for the whole month
+                                        val monthStart = fromDate.withDayOfMonth(1).toString()
+                                        val monthEnd = fromDate.withDayOfMonth(fromDate.lengthOfMonth()).toString()
+                                        
+                                        val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
+                                            email = userEmail,
+                                            startDate = monthStart,
+                                            endDate = monthEnd
+                                        )
+                                        val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
+                                        
+                                        if (checkResponse.isSuccessful) {
+                                            val breakdown = checkResponse.body()?.data?.breakdown ?: emptyList()
+                                            
+                                            // Rule 1: One Casual/Sick leave per month
+                                            val monthlyConflict = breakdown.any { 
+                                                it.requestType.equals(selectedLeaveType, ignoreCase = true) && 
+                                                (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
+                                            }
+                                            
+                                            if (monthlyConflict) {
+                                                Toast.makeText(context, "Leave for this date has already been applied.", Toast.LENGTH_LONG).show()
+                                                isSubmitting = false
+                                                return@launch
+                                            }
+                                            
+                                            // Rule 2: Any leave on the specific date
+                                            val dateConflict = breakdown.any {
+                                                it.requestDate == fromDate.toString() &&
+                                                (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
+                                            }
+                                            
+                                            if (dateConflict) {
+                                                Toast.makeText(context, "A leave request already exists for this date.", Toast.LENGTH_LONG).show()
+                                                isSubmitting = false
+                                                return@launch
+                                            }
+                                        }
+                                    } else {
+                                        // Standard check for other leave types
+                                        val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
+                                            email = userEmail,
+                                            startDate = fromDate.toString(),
+                                            endDate = toDate.toString()
+                                        )
+                                        val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
+                                        
+                                        val conflicts = checkResponse.body()?.data?.breakdown?.filter { 
+                                            it.status.lowercase() == "pending" || it.status.lowercase() == "approved"
+                                        } ?: emptyList()
+
+                                        if (checkResponse.isSuccessful && conflicts.isNotEmpty()) {
+                                            Toast.makeText(context, "A request already exists for these dates. Please change the date.", Toast.LENGTH_LONG).show()
+                                            isSubmitting = false
+                                            return@launch
+                                        }
+                                    }
+
+                                    // 2. Proceed with creation if all checks pass
                                     val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
                                     if (response.isSuccessful && response.body()?.success == true) {
                                         Toast.makeText(context, response.body()?.message ?: "Request created successfully", Toast.LENGTH_LONG).show()
-                                        // Refresh balances in controller before going back
                                         attendanceController?.fetchLeaveBalances()
                                         onBack()
                                     } else {

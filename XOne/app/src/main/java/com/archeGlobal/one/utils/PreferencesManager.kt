@@ -347,7 +347,50 @@ class PreferencesManager(
         private const val KEY_SEEN_SERVICES = "seen_services"
         private const val KEY_INSTALL_TYPE = "install_type"
         private const val KEY_SMART_COLLATERAL_DATA = "smart_collateral_data"
+        
+        // Punch state keys
+        private const val KEY_IS_PUNCHED_IN = "is_punched_in"
+        private const val KEY_PUNCH_IN_TIME = "punch_in_time"
+        private const val KEY_PUNCH_IN_DATE_TIME = "punch_in_date_time"
+        private const val KEY_PUNCH_ID = "punch_id"
+        private const val KEY_PUNCH_OUT_TIME = "punch_out_time"
+        private const val KEY_LAST_PUNCH_DATE = "last_punch_date"
+        private const val KEY_TIME_SPENT = "punch_time_spent"
     }
+
+    fun savePunchState(isPunchedIn: Boolean, punchInTime: String, punchInDateTime: Long, punchId: Int, punchOutTime: String, lastPunchDate: String, timeSpent: String) {
+        sharedPreferences.edit().apply {
+            putBoolean(KEY_IS_PUNCHED_IN, isPunchedIn)
+            putString(KEY_PUNCH_IN_TIME, punchInTime)
+            putLong(KEY_PUNCH_IN_DATE_TIME, punchInDateTime)
+            putInt(KEY_PUNCH_ID, punchId)
+            putString(KEY_PUNCH_OUT_TIME, punchOutTime)
+            putString(KEY_LAST_PUNCH_DATE, lastPunchDate)
+            putString(KEY_TIME_SPENT, timeSpent)
+        }.apply()
+    }
+
+    fun getPunchState(): PunchState {
+        return PunchState(
+            isPunchedIn = sharedPreferences.getBoolean(KEY_IS_PUNCHED_IN, false),
+            punchInTime = sharedPreferences.getString(KEY_PUNCH_IN_TIME, "") ?: "",
+            punchInDateTime = sharedPreferences.getLong(KEY_PUNCH_IN_DATE_TIME, 0),
+            punchId = sharedPreferences.getInt(KEY_PUNCH_ID, -1),
+            punchOutTime = sharedPreferences.getString(KEY_PUNCH_OUT_TIME, "") ?: "",
+            lastPunchDate = sharedPreferences.getString(KEY_LAST_PUNCH_DATE, "") ?: "",
+            timeSpent = sharedPreferences.getString(KEY_TIME_SPENT, "00:00") ?: "00:00"
+        )
+    }
+
+    data class PunchState(
+        val isPunchedIn: Boolean,
+        val punchInTime: String,
+        val punchInDateTime: Long,
+        val punchId: Int,
+        val punchOutTime: String,
+        val lastPunchDate: String,
+        val timeSpent: String
+    )
 
     fun setBoolean(
         key: String,

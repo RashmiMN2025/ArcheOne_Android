@@ -130,6 +130,7 @@ class HomeController(
                         }
                         
                         android.widget.Toast.makeText(context, response.body()?.message, android.widget.Toast.LENGTH_SHORT).show()
+                        savePunchState()
                         startTimer()
                     } else {
                         android.widget.Toast.makeText(context, "Punch in failed: ${response.body()?.message ?: "Unknown error"}", android.widget.Toast.LENGTH_SHORT).show()
@@ -154,6 +155,7 @@ class HomeController(
                 
                 withContext(Dispatchers.Main) {
                     timeSpent = String.format("%02d:%02d", hours, minutes)
+                    savePunchState()
                 }
                 kotlinx.coroutines.delay(60000) // Update every minute
             }
@@ -186,6 +188,13 @@ class HomeController(
                         timerJob?.cancel()
                         timerJob = null
                         
+                        // Calculate final time spent
+                        val now = Date()
+                        val diff = now.time - (punchInDateTime?.time ?: now.time)
+                        val hours = diff / (1000 * 60 * 60)
+                        val minutes = (diff / (1000 * 60)) % 60
+                        timeSpent = String.format("%02d:%02d", hours, minutes)
+                        
                         // Parse punchOut time for display
                         val apiFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
                         val displayFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
@@ -207,6 +216,7 @@ class HomeController(
                         }
                         
                         android.widget.Toast.makeText(context, response.body()?.message, android.widget.Toast.LENGTH_SHORT).show()
+                        savePunchState()
                     } else {
                         android.widget.Toast.makeText(context, "Punch out failed: ${response.body()?.message ?: "Unknown error"}", android.widget.Toast.LENGTH_SHORT).show()
                     }
@@ -325,8 +335,8 @@ class HomeController(
         Log.d("EventController", "Initializing HomeController and fetching daily event")
         Log.d("EventController", "UserDataManager instance: ${UserDataManager.getInstance(context)}")
 
-        // Check if current month is June (Pride Month)
-        checkIfPrideMonth()
+        // Load persisted punch state
+        loadPunchState()
 
         if (_isPrideMonth.value) {
             // Don't automatically show Pride Month dialog - only show when pinned message is clicked
@@ -348,6 +358,50 @@ class HomeController(
 
         // Check if WhatsNew dialog should be shown
         checkWhatsNewDialog()
+    }
+
+    // Add these methods for punch state persistence
+    fun loadPunchState() {
+        val state = preferencesManager.getPunchState()
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        if (state.lastPunchDate != today) {
+            // Day changed, reset state
+            isPunchedIn = false
+            punchInTime = ""
+            punchOutTime = ""
+            timeSpent = "00:00"
+            punchId = -1
+            punchInDateTime = null
+            savePunchState()
+        } else {
+            // Load persisted state
+            isPunchedIn = state.isPunchedIn
+            punchInTime = state.punchInTime
+            punchOutTime = state.punchOutTime
+            timeSpent = state.timeSpent
+            punchId = state.punchId
+            if (state.punchInDateTime > 0) {
+                punchInDateTime = Date(state.punchInDateTime)
+            }
+
+            if (isPunchedIn) {
+                startTimer()
+            }
+        }
+    }
+
+    fun savePunchState() {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        preferencesManager.savePunchState(
+            isPunchedIn = isPunchedIn,
+            punchInTime = punchInTime,
+            punchInDateTime = punchInDateTime?.time ?: 0L,
+            punchId = punchId,
+            punchOutTime = punchOutTime,
+            lastPunchDate = today,
+            timeSpent = timeSpent
+        )
     }
 
     init {

@@ -112,3 +112,37 @@ data class LeaveRequestItem(
     @SerializedName("createdAt") val createdAt: String,
     @SerializedName("updatedAt") val updatedAt: String
 )
+
+data class LeaveCheckRequest(
+    @SerializedName("email") val email: String,
+    @SerializedName("startDate") val startDate: String,
+    @SerializedName("endDate") val endDate: String
+)
+
+data class LeaveCheckResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("message") val message: String,
+    @SerializedName("status") val status: Int,
+    @SerializedName("data") val data: LeaveCheckData? = null
+)
+
+data class LeaveCheckData(
+    @SerializedName("employeeCode") val employeeCode: String,
+    @SerializedName("startDate") val startDate: String,
+    @SerializedName("endDate") val endDate: String,
+    @SerializedName("totalConflicts") val totalConflicts: Int,
+    @SerializedName("breakdown") val breakdown: List<ConflictBreakdown>
+)
+
+data class ConflictBreakdown(
+    @SerializedName("requestId") val requestId: String,
+    @SerializedName("eventId") val eventId: String,
+    @SerializedName("requestDate") val requestDate: String,
+    @SerializedName("requestType") val requestType: String,
+    @SerializedName("leaveDuration") val leaveDuration: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("reason") val reason: String,
+    @SerializedName("description") val description: String,
+    @SerializedName("punchIn") val punchIn: String? = null,
+    @SerializedName("punchOut") val punchOut: String? = null
+)
