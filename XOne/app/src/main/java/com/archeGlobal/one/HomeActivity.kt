@@ -1160,7 +1160,11 @@ class HomeActivity : AppCompatActivity() {
                             SOSScreen(
                                 controller = sosController,
                                 onNavigateToRaiseConcern = { showRaiseConcern = true },
-                                onBackPressed = { navigator.navigateToHome() },
+                                onBackPressed = if (showHeader) {
+                                    { /* footer tab – back disabled */ }
+                                } else {
+                                    { navController.popBackStack() }
+                                },
                                 onSOSBlogClick = { blogId ->
                                     // Convert blog object to JSON and pass it as a parameter
                                     val blogJson = Uri.encode(Gson().toJson(blogId))

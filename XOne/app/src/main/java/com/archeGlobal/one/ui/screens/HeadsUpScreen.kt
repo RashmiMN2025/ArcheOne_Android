@@ -81,7 +81,9 @@ fun HeadsUpScreen(
     var refreshTrigger by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
 
-    // Handle back press when dialog is open - close dialog instead of leaving screen
+    // Disable back navigation - this is a footer tab destination
+    BackHandler(enabled = true) { /* do nothing */ }
+    // Close new post dialog on back when it is open (takes priority over the above)
     BackHandler(enabled = showNewPostDialog) {
         showNewPostDialog = false
     }
