@@ -37,11 +37,14 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
+import com.archeGlobal.one.controller.AttendanceController
+
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ApplyOutdoorDutyScreen(
     initialDate: LocalDate = LocalDate.now(),
+    attendanceController: AttendanceController? = null,
     onBack: () -> Unit,
 ) {
     val primaryRed = Color(0xFFDD3825)
@@ -482,7 +485,7 @@ fun ApplyOutdoorDutyScreen(
                                 requestType = "Outdoor",
                                 leaveDuration = "Full",
                                 description = description,
-                                reason = "Outdoor Duty",
+                                reason = description,
                                 punchIn = inTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
                                 punchOut = outTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
                             )
@@ -493,6 +496,7 @@ fun ApplyOutdoorDutyScreen(
                                     val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
                                     if (response.isSuccessful && response.body()?.success == true) {
                                         Toast.makeText(context, response.body()?.message ?: "Outdoor duty request submitted successfully", Toast.LENGTH_LONG).show()
+                                        attendanceController?.fetchLeaveBalances()
                                         onBack()
                                     } else {
                                         Toast.makeText(context, response.body()?.message ?: "Failed to submit request", Toast.LENGTH_SHORT).show()

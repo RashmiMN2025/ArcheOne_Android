@@ -21,6 +21,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.archeGlobal.one.model.CreateLeaveRequest
+import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.launch
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -29,14 +36,20 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+import com.archeGlobal.one.controller.AttendanceController
+
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ApplyWfhScreen(
     initialDate: LocalDate = LocalDate.now(),
+    attendanceController: AttendanceController? = null,
     onBack: () -> Unit,
 ) {
     val primaryRed = Color(0xFFDD3825)
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var isSubmitting by remember { mutableStateOf(false) }
 
     var fromDate by remember { mutableStateOf(initialDate) }
     var toDate by remember { mutableStateOf(initialDate) }
@@ -332,21 +345,54 @@ fun ApplyWfhScreen(
 
                     // Submit button
                     Button(
-                        onClick = { /* TODO: submit */ },
+                        onClick = {
+                            val userData = UserDataManager.getInstance(context).getUserData()
+                            val employeeName = userData?.name ?: ""
+                            val employeeCode = userData?.employeeId ?: ""
+
+                            val apiRequest = CreateLeaveRequest(
+                                employeeName = employeeName,
+                                employeeCode = employeeCode,
+                                startDate = fromDate.toString(), // YYYY-MM-DD
+                                endDate = toDate.toString(), // YYYY-MM-DD
+                                requestType = "WFH",
+                                leaveDuration = "Full",
+                                description = description,
+                                reason = description
+                            )
+
+                            isSubmitting = true
+                            scope.launch {
+                                try {
+                                    val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
+                                    if (response.isSuccessful && response.body()?.success == true) {
+                                        Toast.makeText(context, response.body()?.message ?: "WFH request submitted successfully", Toast.LENGTH_LONG).show()
+                                        attendanceController?.fetchLeaveBalances()
+                                        onBack()
+                                    } else {
+                                        Toast.makeText(context, response.body()?.message ?: "Failed to submit request", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                } finally {
+                                    isSubmitting = false
+                                }
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
                     ) {
-                        Text(
-                            text = "Submit Work From Home Request",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            color = Color.White,
-                        )
-                    }
+                            Text(
+                                text = "Submit Work From Home Request",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 16.sp,
+                                color = Color.White,
+                            )
+                        }
 
                     Spacer(modifier = Modifier.height(8.dp))
                 }

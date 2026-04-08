@@ -2061,6 +2061,7 @@ class HomeActivity : AppCompatActivity() {
                         } else java.time.LocalDate.now()
                         ApplyRegularizationScreen(
                             date = initialDate,
+                            attendanceController = controller.attendanceController,
                             onBack = { navController.popBackStack() },
                         )
                     }
@@ -2082,6 +2083,7 @@ class HomeActivity : AppCompatActivity() {
                         } else java.time.LocalDate.now()
                         ApplyWfhScreen(
                             initialDate = initialDate,
+                            attendanceController = controller.attendanceController,
                             onBack = { navController.popBackStack() },
                         )
                     }
@@ -2103,6 +2105,7 @@ class HomeActivity : AppCompatActivity() {
                         } else java.time.LocalDate.now()
                         ApplyOutdoorDutyScreen(
                             initialDate = initialDate,
+                            attendanceController = controller.attendanceController,
                             onBack = { navController.popBackStack() },
                         )
                     }

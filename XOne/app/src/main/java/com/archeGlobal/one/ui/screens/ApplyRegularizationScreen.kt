@@ -1,6 +1,7 @@
 package com.archeGlobal.one.ui.screens
 
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,25 +19,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.controller.AttendanceController
 import com.archeGlobal.one.controller.OtpVerificationController
+import com.archeGlobal.one.model.CreateLeaveRequest
+import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 private val regularizationActions = listOf(
-    "Regularization",
-    "Forgot to Punch",
-    "Early Leave",
-    "Late Arrival",
-    "Work from Home",
+    "Regularisation"
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,9 +54,14 @@ fun ApplyRegularizationScreen(
     prePostTime: String = "",
     shiftName: String = "",
     totalHours: String = "",
+    attendanceController: AttendanceController? = null,
     onBack: () -> Unit,
 ) {
     val primaryRed = Color(0xFFDD3825)
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var isSubmitting by remember { mutableStateOf(false) }
+
     val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
     var selectedAction by remember { mutableStateOf("") }
@@ -160,7 +168,7 @@ fun ApplyRegularizationScreen(
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    text = if (scheduledIn.isNotEmpty() && scheduledOut.isNotEmpty()) "$scheduledIn to $scheduledOut" else "—",
+                                    text = if (scheduledIn.isNotEmpty() && scheduledOut.isNotEmpty()) "$scheduledIn to $scheduledOut" else "09:30:00 to 18:30:00",
                                     modifier = Modifier.weight(1f),
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 13.sp,
@@ -200,14 +208,14 @@ fun ApplyRegularizationScreen(
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    text = prePostTime.ifEmpty { "—" },
+                                    text = prePostTime.ifEmpty { "07:00 to 21:30" },
                                     modifier = Modifier.weight(1f),
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 13.sp,
                                     color = Color.Black,
                                 )
                                 Text(
-                                    text = shiftName.ifEmpty { "—" },
+                                    text = shiftName.ifEmpty { "9:30 AM to 6:30 PM" },
                                     modifier = Modifier.weight(1f),
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 13.sp,
@@ -232,7 +240,7 @@ fun ApplyRegularizationScreen(
                                     color = Color(0xFF888888),
                                 )
                                 Text(
-                                    text = totalHours.ifEmpty { "—" },
+                                    text = totalHours.ifEmpty { "9 hrs" },
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 15.sp,
@@ -502,20 +510,60 @@ fun ApplyRegularizationScreen(
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
                     Button(
-                        onClick = { /* TODO: submit */ },
+                        onClick = {
+                            if (selectedAction.isEmpty()) {
+                                Toast.makeText(context, "Please select an action", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+
+                            val userData = UserDataManager.getInstance(context).getUserData()
+                            val employeeName = userData?.name ?: ""
+                            val employeeCode = userData?.employeeId ?: ""
+
+                            val apiRequest = CreateLeaveRequest(
+                                employeeName = employeeName,
+                                employeeCode = employeeCode,
+                                startDate = date.toString(),
+                                endDate = date.toString(),
+                                requestType = selectedAction,
+                                leaveDuration = "Full",
+                                description = description,
+                                reason = description,
+                                punchIn = inTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+                                punchOut = outTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                            )
+
+                            isSubmitting = true
+                            scope.launch {
+                                try {
+                                    val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
+                                    if (response.isSuccessful && response.body()?.success == true) {
+                                        Toast.makeText(context, response.body()?.message ?: "Regularization request submitted successfully", Toast.LENGTH_LONG).show()
+                                        attendanceController?.fetchLeaveBalances()
+                                        onBack()
+                                    } else {
+                                        Toast.makeText(context, response.body()?.message ?: "Failed to submit request", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                } finally {
+                                    isSubmitting = false
+                                }
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
                     ) {
-                        Text(
-                            text = "Submit Regularization",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            color = Color.White,
-                        )
+                            Text(
+                                text = "Submit Regularization",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 16.sp,
+                                color = Color.White,
+                            )
                     }
                 }
             }
