@@ -34,6 +34,10 @@ class AttendanceController(private val context: Context) {
     var attendanceTypeMap by mutableStateOf<Map<Int, String>>(emptyMap())
         private set
 
+    // Resolved request status per day ("approved" / "pending" / "rejected" / "")
+    var attendanceRequestStatusMap by mutableStateOf<Map<Int, String>>(emptyMap())
+        private set
+
     var leaveBalances by mutableStateOf<List<LeaveBalance>>(emptyList())
         private set
 
@@ -105,6 +109,7 @@ class AttendanceController(private val context: Context) {
                     val records = response.body()?.data ?: emptyList()
                     val apiMap = mutableMapOf<Int, AttendanceDayStatus>()
                     val typeMap = mutableMapOf<Int, String>()
+                    val requestStatusMap = mutableMapOf<Int, String>()
                     for (record in records) {
                         val day = record.date.split("-").last().toIntOrNull() ?: continue
                         val dow = currentMonth.atDay(day).dayOfWeek
@@ -112,10 +117,12 @@ class AttendanceController(private val context: Context) {
                         val status = resolveStatus(record.attendanceStatus, record.requests)
                         apiMap[day] = status
                         typeMap[day] = resolveRawType(record.attendanceStatus, record.requests)
+                        requestStatusMap[day] = resolveRequestStatus(record.requests)
                     }
                     val weekends = attendanceMap
                     attendanceMap = weekends + apiMap
                     attendanceTypeMap = typeMap
+                    attendanceRequestStatusMap = requestStatusMap
                 }
             } catch (e: Exception) {
                 // Keep weekend seeds on error
@@ -145,6 +152,16 @@ class AttendanceController(private val context: Context) {
             requests?.any { it.requestType != "Regularisation" } == true -> AttendanceDayStatus.LEAVE
             else -> AttendanceDayStatus.ABSENT
         }
+    }
+
+    private fun resolveRequestStatus(
+        requests: List<com.archeGlobal.one.model.AttendanceDayRequest>?,
+    ): String {
+        if (requests.isNullOrEmpty()) return ""
+        if (requests.any { it.status.equals("approved", ignoreCase = true) }) return "approved"
+        if (requests.any { it.status.equals("pending", ignoreCase = true) }) return "pending"
+        if (requests.all { it.status.equals("rejected", ignoreCase = true) }) return "rejected"
+        return ""
     }
 
     private fun resolveRawType(

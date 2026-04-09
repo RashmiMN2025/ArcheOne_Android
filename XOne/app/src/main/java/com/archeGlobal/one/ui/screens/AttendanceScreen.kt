@@ -47,22 +47,31 @@ import java.time.YearMonth
 
 private val primaryRed = Color(0xFFDD3825)
 
-private fun typeColor(type: String): Color {
+private fun typeColor(type: String, requestStatus: String = ""): Color {
     val t = type.lowercase()
+    val s = requestStatus.lowercase()
+
+    // attendanceStatus overrides — checked first regardless of request status
+    if (t.contains("present")) return Color(0xFF4CAF50)                   // green
+    if (t.contains("absent") || t.contains("late")) return Color(0xFFDD3825) // red
+
+    // request status gates
+    if (s == "rejected") return Color.Transparent
+    if (s == "pending")  return Color(0xFFAAAAAA)                          // grey
+
+    // approved (or no request) — colour by type
     return when {
-        t.contains("outdoor")                                              -> Color(0xFFFF9800) // orange
+        t.contains("outdoor")                                                  -> Color(0xFFFF9800) // orange
         t.contains("regularisation") || t.contains("regularize") ||
-            t.contains("regularised")                                      -> Color(0xFF9C27B0) // purple
-        t.contains("wfh") || t.contains("work from home")                 -> Color(0xFF26C6B0) // mint
-        t.contains("privilege")                                            -> Color(0xFFEC407A) // pink
-        t.contains("paternity") || t.contains("maternity")                -> Color(0xFF8D6E63) // brown
-        t.contains("casual")                                               -> Color(0xFF26A69A) // teal
-        t.contains("sick")                                                 -> Color(0xFF5C6BC0) // indigo
-        t.contains("optional")                                             -> Color(0xFF2196F3) // blue
-        t.contains("probationary")                                         -> Color(0xFFFFCA28) // yellow
-        t.contains("present")                                              -> Color(0xFF4CAF50) // green
-        t.contains("absent") || t.contains("late")                        -> Color(0xFFDD3825) // red
-        else                                                               -> Color(0xFF888888) // grey
+            t.contains("regularised")                                          -> Color(0xFF4CAF50) // green
+        t.contains("wfh") || t.contains("work from home")                     -> Color(0xFF26C6B0) // mint
+        t.contains("privilege")                                                -> Color(0xFFEC407A) // pink
+        t.contains("paternity") || t.contains("maternity")                    -> Color(0xFF8D6E63) // brown
+        t.contains("casual")                                                   -> Color(0xFF26A69A) // teal
+        t.contains("sick")                                                     -> Color(0xFF5C6BC0) // indigo
+        t.contains("optional")                                                 -> Color(0xFF2196F3) // blue
+        t.contains("probationary")                                             -> Color(0xFFFFCA28) // yellow
+        else                                                                   -> Color(0xFFAAAAAA) // grey
     }
 }
 
@@ -229,6 +238,7 @@ fun AttendanceScreen(
                                     today = today,
                                     attendanceMap = controller.attendanceMap,
                                     attendanceTypeMap = controller.attendanceTypeMap,
+                                    attendanceRequestStatusMap = controller.attendanceRequestStatusMap,
                                     selectedDate = selectedDate,
                                     onDateClick = { date -> selectedDate = date },
                                     onDateLongClick = { date ->
@@ -528,6 +538,7 @@ private fun CalendarGrid(
     today: LocalDate,
     attendanceMap: Map<Int, AttendanceDayStatus>,
     attendanceTypeMap: Map<Int, String>,
+    attendanceRequestStatusMap: Map<Int, String>,
     selectedDate: LocalDate?,
     onDateClick: (LocalDate) -> Unit,
     onDateLongClick: (LocalDate) -> Unit,
@@ -570,6 +581,7 @@ private fun CalendarGrid(
                                 isSelected = isSelected,
                                 status = status,
                                 rawType = attendanceTypeMap[day],
+                                requestStatus = attendanceRequestStatusMap[day] ?: "",
                                 onClick = { onDateClick(date) },
                                 onLongClick = { onDateLongClick(date) }
                             )
@@ -589,6 +601,7 @@ private fun DayCell(
     isSelected: Boolean,
     status: AttendanceDayStatus?,
     rawType: String? = null,
+    requestStatus: String = "",
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -597,7 +610,7 @@ private fun DayCell(
     val dotColor = when {
         status == AttendanceDayStatus.WEEKEND -> Color(0xFFCCCCCC)
         status == null -> Color.Transparent
-        !rawType.isNullOrEmpty() -> typeColor(rawType)
+        !rawType.isNullOrEmpty() -> typeColor(rawType, requestStatus)
         status == AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
         status == AttendanceDayStatus.ABSENT  -> primaryRed
         status == AttendanceDayStatus.HOLIDAY -> Color(0xFFFF9800)
