@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.archeGlobal.one.model.AttendanceDayData
 import com.archeGlobal.one.model.AttendanceDayStatus
 import com.archeGlobal.one.model.AttendanceRequest
 import com.archeGlobal.one.model.LeaveBalance
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
@@ -52,6 +54,12 @@ class AttendanceController(private val context: Context) {
         private set
 
     var approvalsErrorMessage by mutableStateOf<String?>(null)
+        private set
+
+    var selectedDateRecords by mutableStateOf<List<AttendanceDayData>>(emptyList())
+        private set
+
+    var isDetailLoading by mutableStateOf(false)
         private set
 
     init {
@@ -177,6 +185,32 @@ class AttendanceController(private val context: Context) {
                 // Handle error or keep existing balances
             } finally {
                 isLoading = false
+            }
+        }
+    }
+
+    fun fetchAttendanceForDate(date: LocalDate) {
+        val userData = UserDataManager.getInstance(context).getUserData()
+        val userEmail = userData?.email ?: return
+
+        val dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        selectedDateRecords = emptyList()
+        isDetailLoading = true
+
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitClient.apiService.getAttendanceRecords(
+                        AttendanceRequest(userEmail, dateStr, dateStr)
+                    )
+                }
+                if (response.isSuccessful && response.body()?.success == true) {
+                    selectedDateRecords = response.body()?.data ?: emptyList()
+                }
+            } catch (e: Exception) {
+                // keep empty
+            } finally {
+                isDetailLoading = false
             }
         }
     }

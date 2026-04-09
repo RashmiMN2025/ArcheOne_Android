@@ -647,6 +647,8 @@ data class VerifyOtpResponse(
     val faqList: List<FAQCategory>? = null,
     val whatsNew: List<WhatsNewItem>? = null,
     val smartCollateral: List<SmartCollateralCategory>? = emptyList(),
+    val hasReportees: Boolean = false,
+    val attendance: LoginAttendance? = null,
 )
 
 data class LoginAttendance(
@@ -664,8 +666,6 @@ data class User(
     val location: String,
     val state: String? = null,
     val userDetails: UserDetails? = null,
-    val hasReportees: Boolean = false,
-    val attendance: LoginAttendance? = null,
 )
 
 data class UserDetails(

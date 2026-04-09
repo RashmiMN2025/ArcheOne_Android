@@ -251,9 +251,9 @@ class UserDataManager private constructor(
                     sosContact = response.sos,
                     userDetails = it.userDetails,
                     greetings = fullGreetingsData,
-                    hasReportees = it.hasReportees,
-                    loginPunchIn = it.attendance?.punchin,
-                    loginPunchOut = it.attendance?.punchout?.lastOrNull(),
+                    hasReportees = response.hasReportees,
+                    loginPunchIn = response.attendance?.punchin,
+                    loginPunchOut = response.attendance?.punchout?.lastOrNull(),
                 )
             }
 

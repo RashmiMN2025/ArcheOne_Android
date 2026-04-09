@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.AttendanceController
+import com.archeGlobal.one.model.AttendanceDayData
 import com.archeGlobal.one.model.AttendanceDayStatus
 import com.archeGlobal.one.model.LeaveBalance
 import com.archeGlobal.one.ui.components.UniversalLoader
@@ -232,6 +233,7 @@ fun AttendanceScreen(
                                     onDateClick = { date -> selectedDate = date },
                                     onDateLongClick = { date ->
                                         longPressedDate = date
+                                        controller.fetchAttendanceForDate(date)
                                         showAttendanceDialog = true
                                     },
                                 )
@@ -292,24 +294,36 @@ fun AttendanceScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             OutlinedButton(
-                                onClick = { onRegularizeClick(selectedDate ?: today) },
+                                onClick = { onWfhClick(selectedDate ?: today) },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(48.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 border = BorderStroke(1.dp, primaryRed),
+                                contentPadding = PaddingValues(0.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = Color.White,
                                     contentColor = primaryRed,
                                 ),
                             ) {
-                                Text(
-                                    text = "Regularize",
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 15.sp,
-                                    color = primaryRed,
-                                )
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    Text(
+                                        text = "Work From Home",
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 15.sp,
+                                        color = primaryRed,
+                                        modifier = Modifier.align(Alignment.Center),
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(top = 8.dp, end = 10.dp)
+                                            .size(10.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF26C6B0)),
+                                    )
+                                }
                             }
                             OutlinedButton(
                                 onClick = { onOutdoorDutyClick(selectedDate ?: today) },
@@ -318,18 +332,30 @@ fun AttendanceScreen(
                                     .height(48.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 border = BorderStroke(1.dp, primaryRed),
+                                contentPadding = PaddingValues(0.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = Color.White,
                                     contentColor = primaryRed,
                                 ),
                             ) {
-                                Text(
-                                    text = "Outdoor Duty",
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 15.sp,
-                                    color = primaryRed,
-                                )
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    Text(
+                                        text = "Outdoor Duty",
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 15.sp,
+                                        color = primaryRed,
+                                        modifier = Modifier.align(Alignment.Center),
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(top = 8.dp, end = 10.dp)
+                                            .size(10.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFFF9800)),
+                                    )
+                                }
                             }
                         }
                     }
@@ -337,7 +363,7 @@ fun AttendanceScreen(
                     item {
                         Spacer(modifier = Modifier.height(20.dp))
                         Button(
-                            onClick = { onWfhClick(selectedDate ?: today) },
+                            onClick = { onRegularizeClick(selectedDate ?: today) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(48.dp),
@@ -345,7 +371,7 @@ fun AttendanceScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
                         ) {
                             Text(
-                                text = "Work From Home",
+                                text = "Apply For Regularization",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 15.sp,
@@ -361,16 +387,21 @@ fun AttendanceScreen(
         if (showAttendanceDialog && longPressedDate != null) {
             AttendanceDetailsDialog(
                 date = longPressedDate!!,
+                records = controller.selectedDateRecords,
+                isLoading = controller.isDetailLoading,
                 onDismiss = { showAttendanceDialog = false }
             )
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun AttendanceDetailsDialog(
     date: LocalDate,
-    onDismiss: () -> Unit
+    records: List<AttendanceDayData>,
+    isLoading: Boolean,
+    onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -388,7 +419,7 @@ private fun AttendanceDetailsDialog(
                     color = Color.White,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
                 )
             }
         },
@@ -401,43 +432,72 @@ private fun AttendanceDetailsDialog(
                     fontSize = 16.sp,
                     color = Color.Black,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
             }
         },
         text = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                // Column 1
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    AttendanceDetailRow(label = "Shift", value = "none")
-                    AttendanceDetailRow(label = "Regularised", value = "none")
-                    AttendanceDetailRow(label = "Deficit", value = "none")
-                    AttendanceDetailRow(label = "Reason", value = "none")
-                    AttendanceDetailRow(label = "Raw Swipes", value = "none")
+                    CircularProgressIndicator(
+                        color = primaryRed,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(32.dp),
+                    )
                 }
+            } else {
+                val allRequests = records.flatMap { it.requests ?: emptyList() }.distinctBy { it.id }
+                val punchRecords = records.filter { !it.punchIn.isNullOrEmpty() }.sortedBy { it.punchIn }
+                val firstIn = punchRecords.firstOrNull()?.punchIn ?: "-"
+                val lastOut = punchRecords.lastOrNull { !it.punchOut.isNullOrEmpty() }?.punchOut?.lastOrNull() ?: "-"
+                val workingHours = records.firstOrNull { it.workingHours != null && it.workingHours != "00:00" }?.workingHours
+                    ?: records.firstOrNull()?.workingHours ?: "-"
+                val primaryRequest = allRequests.firstOrNull()
+                val leaveType = primaryRequest?.requestType ?: "-"
+                val leaveStatus = primaryRequest?.status ?: "-"
+                val regularisation = allRequests.firstOrNull { it.requestType.contains("Regularisation", ignoreCase = true) }
+                val reason = allRequests.mapNotNull { it.reason.ifEmpty { null } }.distinct().joinToString(", ").ifEmpty { "-" }
+                val rawSwipes = punchRecords.flatMap { record ->
+                    listOfNotNull(record.punchIn) + (record.punchOut ?: emptyList())
+                }.joinToString(", ").ifEmpty { "-" }
 
-                // Column 2
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
-                    AttendanceDetailRow(label = "Actual", value = "none")
-                    AttendanceDetailRow(label = "Hours", value = "00:00 hrs(00:00 hrs extra)")
-                    AttendanceDetailRow(label = "Leave status", value = "none")
-                    AttendanceDetailRow(label = "Application", value = "none")
+                    // Column 1
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        AttendanceDetailRow(label = "Shift", value = "9:30 am to 6:30 pm")
+                        AttendanceDetailRow(label = "Regularised", value = regularisation?.status ?: "-")
+                        AttendanceDetailRow(label = "Reason", value = reason)
+                        AttendanceDetailRow(label = "Raw Swipes", value = rawSwipes)
+                    }
+
+                    // Column 2
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        AttendanceDetailRow(label = "Actual", value = if (firstIn != "-") "$firstIn → $lastOut" else "-")
+                        AttendanceDetailRow(label = "Hours", value = workingHours)
+                        AttendanceDetailRow(label = "Leave type", value = leaveType)
+                        AttendanceDetailRow(label = "Leave status", value = leaveStatus)
+                    }
                 }
             }
         },
         shape = RoundedCornerShape(16.dp),
-        containerColor = Color.White
+        containerColor = Color.White,
     )
 }
 
@@ -454,7 +514,7 @@ private fun AttendanceDetailRow(label: String, value: String) {
         Text(
             text = value,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp,
             color = Color.Black
         )

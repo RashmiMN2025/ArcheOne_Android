@@ -30,6 +30,10 @@ data class AttendanceResponse(
 )
 
 data class AttendanceDayData(
+    @SerializedName("id") val id: Int?,
+    @SerializedName("employeeCode") val employeeCode: String?,
+    @SerializedName("employeeName") val employeeName: String?,
+    @SerializedName("employeeEmail") val employeeEmail: String?,
     @SerializedName("date") val date: String,
     @SerializedName("day") val day: String,
     @SerializedName("punchIn") val punchIn: String?,
