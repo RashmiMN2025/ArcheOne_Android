@@ -516,6 +516,21 @@ fun ApplyRegularizationScreen(
                                 return@Button
                             }
 
+                            // 1. Check In Time is not after 9:30 AM
+                            val maxInTime = LocalTime.of(9, 30)
+                            if (inTime.isAfter(maxInTime)) {
+                                Toast.makeText(context, "In Time cannot be after 9:30 AM", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+
+                            // 2. Check Total Hours must be at least 9 hours
+                            val duration = java.time.Duration.between(inTime, outTime)
+                            val totalWorkedHours = duration.toMinutes() / 60.0
+                            if (totalWorkedHours < 9.0) {
+                                Toast.makeText(context, "Total hours must be at least 9 hours", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+
                             val userData = UserDataManager.getInstance(context).getUserData()
                             val employeeName = userData?.name ?: ""
                             val employeeCode = userData?.employeeId ?: ""

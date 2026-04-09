@@ -473,6 +473,14 @@ fun ApplyOutdoorDutyScreen(
                     // Submit button
                     Button(
                         onClick = {
+                            // Validation: Total hours must be at least 9 hours
+                            val duration = java.time.Duration.between(inTime, outTime)
+                            val totalHours = duration.toMinutes() / 60.0
+                            if (totalHours < 9.0) {
+                                Toast.makeText(context, "Total hours must be at least 9 hours", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+
                             val userData = UserDataManager.getInstance(context).getUserData()
                             val employeeName = userData?.name ?: ""
                             val employeeCode = userData?.employeeId ?: ""

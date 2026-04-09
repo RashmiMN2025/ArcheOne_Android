@@ -1000,12 +1000,12 @@ class HomeController(
                     navigate("apply_leave")
                 }
                 "regularize" -> {
-                    Log.d("HomeController", "Navigating to Apply Regularization screen")
-                    navigate("regularize")
+                    Log.d("HomeController", "Navigating to Attendance screen for regularization")
+                    navigate("attendance")
                 }
                 "apply outdoor" -> {
-                    Log.d("HomeController", "Navigating to Apply Outdoor Duty screen")
-                    navigate("apply_outdoor_duty")
+                    Log.d("HomeController", "Navigating to Attendance screen for outdoor duty")
+                    navigate("attendance")
                 }
                 "manager approvals" -> {
                     Log.d("HomeController", "Navigating to Approval Requests screen")

@@ -261,4 +261,92 @@ class AttendanceController(private val context: Context) {
             }
         }
     }
+
+    /**
+     * Performs validation for regularization logic.
+     * Returns a pair of (Boolean, String?) indicating (isValid, errorMessage).
+     */
+    suspend fun validateRegularization(date: LocalDate): Pair<Boolean, String?> {
+        val today = LocalDate.now()
+        
+        // 1. Past dates only
+        if (!date.isBefore(today)) {
+            return Pair(false, "Regularization can only be applied for past dates.")
+        }
+
+        val userData = UserDataManager.getInstance(context).getUserData()
+        val userEmail = userData?.email ?: return Pair(false, "User email not found.")
+        val dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
+        // 2. Fetch record for the date
+        val response = withContext(Dispatchers.IO) {
+            try {
+                RetrofitClient.apiService.getAttendanceRecords(
+                    AttendanceRequest(userEmail, dateStr, dateStr)
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        if (response == null || !response.isSuccessful || response.body()?.success != true) {
+            return Pair(false, "Failed to fetch attendance record for this date.")
+        }
+
+        val records = response.body()?.data ?: emptyList()
+        if (records.isEmpty()) {
+            return Pair(false, "No attendance record found for this date.")
+        }
+
+        val record = records.first()
+
+        // 3. Must have Punch In
+        if (record.punchIn.isNullOrEmpty()) {
+            return Pair(false, "Can't regularise. No punch in record found.")
+        }
+
+        // 4. Check monthly limit (max 3)
+        // To check monthly limit accurately, we need to fetch all records for that month
+        val monthStart = date.withDayOfMonth(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val monthEnd = date.withDayOfMonth(date.lengthOfMonth()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        
+        val monthResponse = withContext(Dispatchers.IO) {
+            try {
+                RetrofitClient.apiService.getAttendanceRecords(
+                    AttendanceRequest(userEmail, monthStart, monthEnd)
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        if (monthResponse != null && monthResponse.isSuccessful && monthResponse.body()?.success == true) {
+            val monthRecords = monthResponse.body()?.data ?: emptyList()
+            var count = 0
+            for (rec in monthRecords) {
+                val hasRegularization = rec.requests?.any {
+                    val type = it.requestType.lowercase()
+                    val status = it.status.lowercase()
+                    (type.contains("regularisation") || type.contains("regularize") || type.contains("regularised")) &&
+                    (status == "approved" || status == "pending")
+                } ?: false
+                if (hasRegularization) count++
+            }
+            
+            if (count >= 3) {
+                return Pair(false, "You have already reached the maximum limit of 3 regularizations for this month.")
+            }
+        }
+
+        // 5. No existing request on this day (especially regularisation)
+        val hasExistingRequest = record.requests?.any {
+            it.status.lowercase() == "pending" || it.status.lowercase() == "approved"
+        } ?: false
+        
+        if (hasExistingRequest) {
+            return Pair(false, "A request already exists for this date.")
+        }
+
+        return Pair(true, null)
+    }
 }

@@ -1964,9 +1964,19 @@ class HomeActivity : AppCompatActivity() {
                                 navController.navigate("apply_leave?leaveType=${java.net.URLEncoder.encode(leaveType, "UTF-8")}&date=${date}")
                             },
                             onRegularizeClick = { date ->
-                                navController.navigate("regularize?date=${date}")
-                            },
-                            onOutdoorDutyClick = { date ->
+                                lifecycleScope.launch {
+                                    val validation = controller.attendanceController.validateRegularization(date)
+                                    if (validation.first) {
+                                        navController.navigate("regularize?date=${date}")
+                                    } else {
+                                        android.widget.Toast.makeText(
+                                            this@HomeActivity,
+                                            validation.second ?: "Cannot apply regularization.",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
+                            },                            onOutdoorDutyClick = { date ->
                                 navController.navigate("apply_outdoor_duty?date=${date}")
                             },
                             onWfhClick = { date ->
