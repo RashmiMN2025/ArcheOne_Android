@@ -2205,7 +2205,7 @@ fun TimeAttendanceCard(
                 colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
             ) {
                 Icon(
-                    imageVector = Icons.Default.CheckCircle,
+                    painter = painterResource(id = R.drawable.manager_approver),
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(20.dp),

@@ -716,17 +716,17 @@ fun ApplyLeaveScreen(
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(
-                                                painter = painterResource(id = R.drawable.ic_calendar),
+                                                painter = painterResource(id = R.drawable.calender22),
                                                 contentDescription = null,
                                                 tint = Color(0xFF555555),
-                                                modifier = Modifier.size(16.dp),
+                                                modifier = Modifier.size(20.dp),
                                             )
                                             Spacer(modifier = Modifier.width(4.dp))
                                             Text(
                                                 text = leaveBalance.toInt().toString(),
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.SemiBold,
-                                                fontSize = 18.sp,
+                                                fontSize = 20.sp,
                                                 color = Color.Black,
                                             )
                                         }
