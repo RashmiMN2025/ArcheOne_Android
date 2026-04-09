@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -79,7 +80,7 @@ private fun leaveColor(type: String): Color {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AttendanceScreen(
@@ -93,6 +94,8 @@ fun AttendanceScreen(
 ) {
     val today = LocalDate.now()
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    var showAttendanceDialog by remember { mutableStateOf(false) }
+    var longPressedDate by remember { mutableStateOf<LocalDate?>(null) }
 
     Box(
         modifier = Modifier
@@ -227,6 +230,10 @@ fun AttendanceScreen(
                                     attendanceTypeMap = controller.attendanceTypeMap,
                                     selectedDate = selectedDate,
                                     onDateClick = { date -> selectedDate = date },
+                                    onDateLongClick = { date ->
+                                        longPressedDate = date
+                                        showAttendanceDialog = true
+                                    },
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
@@ -350,6 +357,107 @@ fun AttendanceScreen(
             }
         }
         UniversalLoader(isLoading = controller.isPageLoading)
+
+        if (showAttendanceDialog && longPressedDate != null) {
+            AttendanceDetailsDialog(
+                date = longPressedDate!!,
+                onDismiss = { showAttendanceDialog = false }
+            )
+        }
+    }
+}
+
+@Composable
+private fun AttendanceDetailsDialog(
+    date: LocalDate,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
+            ) {
+                Text(
+                    text = "Okay",
+                    color = Color.White,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp
+                )
+            }
+        },
+        title = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Attendance details",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
+            }
+        },
+        text = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // Column 1
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    AttendanceDetailRow(label = "Shift", value = "none")
+                    AttendanceDetailRow(label = "Regularised", value = "none")
+                    AttendanceDetailRow(label = "Deficit", value = "none")
+                    AttendanceDetailRow(label = "Reason", value = "none")
+                    AttendanceDetailRow(label = "Raw Swipes", value = "none")
+                }
+
+                // Column 2
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    AttendanceDetailRow(label = "Actual", value = "none")
+                    AttendanceDetailRow(label = "Hours", value = "00:00 hrs(00:00 hrs extra)")
+                    AttendanceDetailRow(label = "Leave status", value = "none")
+                    AttendanceDetailRow(label = "Application", value = "none")
+                }
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color.White
+    )
+}
+
+@Composable
+private fun AttendanceDetailRow(label: String, value: String) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 12.sp,
+            color = Color.Gray
+        )
+        Text(
+            text = value,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            color = Color.Black
+        )
     }
 }
 
@@ -362,6 +470,7 @@ private fun CalendarGrid(
     attendanceTypeMap: Map<Int, String>,
     selectedDate: LocalDate?,
     onDateClick: (LocalDate) -> Unit,
+    onDateLongClick: (LocalDate) -> Unit,
 ) {
     val daysInMonth = yearMonth.lengthOfMonth()
     val firstDayOfMonth = yearMonth.atDay(1).dayOfWeek
@@ -402,6 +511,7 @@ private fun CalendarGrid(
                                 status = status,
                                 rawType = attendanceTypeMap[day],
                                 onClick = { onDateClick(date) },
+                                onLongClick = { onDateLongClick(date) }
                             )
                         }
                     }
@@ -411,6 +521,7 @@ private fun CalendarGrid(
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun DayCell(
     day: Int,
@@ -419,6 +530,7 @@ private fun DayCell(
     status: AttendanceDayStatus?,
     rawType: String? = null,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     val todayBg = Color(0xFF64B5F6).copy(alpha = 0.5f)
     val selectedBg = Color(0xFFDD3825)
@@ -448,7 +560,10 @@ private fun DayCell(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .padding(vertical = 4.dp)
-            .clickable(onClick = onClick),
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
     ) {
         Box(
             contentAlignment = Alignment.Center,
