@@ -179,7 +179,7 @@ private fun ApprovalRequestCard(request: ApprovalRequestItem, onClick: () -> Uni
             // Date row
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_calendar),
+                    painter = painterResource(id = R.drawable.calender22),
                     contentDescription = null,
                     tint = Color(0xFF888888),
                     modifier = Modifier.size(18.dp),
@@ -201,7 +201,7 @@ private fun ApprovalRequestCard(request: ApprovalRequestItem, onClick: () -> Uni
                 if (!request.leaveDuration.isNullOrEmpty()) {
                     Spacer(modifier = Modifier.width(16.dp))
                     Icon(
-                        imageVector = Icons.Default.AccessTime,
+                        painter = painterResource(id = R.drawable.meettime),
                         contentDescription = null,
                         tint = Color(0xFF888888),
                         modifier = Modifier.size(16.dp),
@@ -223,11 +223,11 @@ private fun ApprovalRequestCard(request: ApprovalRequestItem, onClick: () -> Uni
             Text(
                 text = "Reason",
                 fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Normal,
                 fontSize = 12.sp,
-                color = Color(0xFFDD3825),
+                color = Color(0xFF888888),
             )
-            Spacer(modifier = Modifier.height(2.dp))
+//            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = request.reason ?: "No reason provided",
                 fontFamily = GraphikFontFamily,

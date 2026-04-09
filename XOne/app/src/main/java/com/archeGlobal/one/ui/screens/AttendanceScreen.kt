@@ -79,11 +79,11 @@ private fun typeColor(type: String, requestStatus: String = ""): Color {
 private fun leaveColor(type: String): Color {
     val t = type.lowercase()
     return when {
-        t.contains("privilege")                        -> Color(0xFFEC407A) // pink
+        t.contains("privilege")                        -> Color(0xFF4CAF50) // green
         t.contains("casual")                           -> Color(0xFF26A69A) // teal
-        t.contains("sick")                             -> Color(0xFF5C6BC0) // indigo
+        t.contains("sick")                             -> Color(0xFF9C27B0) // purple
         t.contains("optional")                         -> Color(0xFF2196F3) // blue
-        t.contains("paternity") || t.contains("maternity") -> Color(0xFF8D6E63) // brown
+        t.contains("paternity") || t.contains("maternity") -> Color(0xFFFF9800) // orange
         t.contains("wfh") || t.contains("work from home")  -> Color(0xFF26C6B0) // mint
         t.contains("probationary")                     -> Color(0xFFFFCA28) // yellow
         else                                           -> Color(0xFF2196F3) // blue default
@@ -681,11 +681,11 @@ private fun LeaveBalanceCard(
         ) {
             Box(modifier = Modifier.size(44.dp)) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_calendar),
+                    painter = painterResource(id = R.drawable.calender22),
                     contentDescription = null,
                     tint = primaryRed,
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(34.dp)
                         .align(Alignment.BottomStart),
                 )
                 Box(

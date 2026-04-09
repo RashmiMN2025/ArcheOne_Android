@@ -159,24 +159,24 @@ fun ApprovalRequestDetailScreen(
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Info rows
-                        InfoRow(label = "Employee Code", value = employeeCode)
+                        InfoRow(iconRes = R.drawable.hashh, label = "Employee Code", value = employeeCode)
                         Spacer(modifier = Modifier.height(12.dp))
-                        InfoRow(iconRes = R.drawable.ic_calendar, label = "Date", value = date)
+                        InfoRow(iconRes = R.drawable.calender22, label = "Date", value = date)
                         Spacer(modifier = Modifier.height(12.dp))
-                        InfoRow(imageVector = Icons.Default.AccessTime, label = "Duration", value = duration)
+                        InfoRow(iconRes = R.drawable.meettime, label = "Duration", value = duration)
                         
                         if (!punchIn.isNullOrEmpty()) {
                             Spacer(modifier = Modifier.height(12.dp))
-                            InfoRow(imageVector = Icons.Default.AccessTime, label = "Punch In", value = punchIn)
+                            InfoRow(iconRes = R.drawable.punchin, label = "Punch In", value = punchIn)
                         }
                         
                         if (!punchOut.isNullOrEmpty()) {
                             Spacer(modifier = Modifier.height(12.dp))
-                            InfoRow(imageVector = Icons.Default.AccessTime, label = "Punch Out", value = punchOut)
+                            InfoRow(iconRes = R.drawable.punchout, label = "Punch Out", value = punchOut)
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
-                        InfoRow(iconRes = R.drawable.ic_file, label = "Reason", value = reason)
+                        InfoRow(iconRes = R.drawable.justification, label = "Reason", value = reason)
 
                         Spacer(modifier = Modifier.height(16.dp))
                         HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)
@@ -187,10 +187,10 @@ fun ApprovalRequestDetailScreen(
                             text = "Description",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             color = Color(0xFF888888),
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = description.ifEmpty { "—" },
                             fontFamily = GraphikFontFamily,
