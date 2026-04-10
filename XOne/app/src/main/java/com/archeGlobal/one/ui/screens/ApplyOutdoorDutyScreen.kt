@@ -448,7 +448,7 @@ fun ApplyOutdoorDutyScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color(0xFFDDDDDD),
-                                    focusedBorderColor = primaryRed,
+                                    focusedBorderColor = Color(0xFFDDDDDD),
                                     unfocusedTextColor = Color.Black,
                                     focusedTextColor = Color.Black,
                                     unfocusedContainerColor = Color.White,

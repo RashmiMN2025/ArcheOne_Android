@@ -8,7 +8,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -112,7 +111,7 @@ fun UserApprovalHistoryScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFCFCF9)),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
@@ -156,17 +155,21 @@ fun UserApprovalHistoryScreen(
 
                             Spacer(modifier = Modifier.height(20.dp))
 
-                            DetailInfoRow(label = "Employee Code", value = item.employeeCode)
+                            DetailInfoRow(iconRes = R.drawable.hashh, label = "Employee Code", value = item.employeeCode)
                             Spacer(modifier = Modifier.height(12.dp))
-                            DetailInfoRow(iconRes = R.drawable.ic_calendar, label = "Date", value = dateDisplay)
+                            DetailInfoRow(iconRes = R.drawable.calender22, label = "Date", value = dateDisplay)
                             Spacer(modifier = Modifier.height(12.dp))
-                            DetailInfoRow(
-                                imageVector = Icons.Default.AccessTime,
-                                label = "Duration",
-                                value = "${item.leaveDuration} · ${item.totalDays} day(s)",
-                            )
+                            DetailInfoRow(iconRes = R.drawable.meettime, label = "Duration", value = item.leaveDuration)
+                            if (!item.punchIn.isNullOrEmpty()) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                DetailInfoRow(iconRes = R.drawable.punchin, label = "Punch In", value = item.punchIn)
+                            }
+                            if (!item.punchOut.isNullOrEmpty()) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                DetailInfoRow(iconRes = R.drawable.punchout, label = "Punch Out", value = item.punchOut)
+                            }
                             Spacer(modifier = Modifier.height(12.dp))
-                            DetailInfoRow(iconRes = R.drawable.ic_file, label = "Reason", value = item.reason)
+                            DetailInfoRow(iconRes = R.drawable.justification, label = "Reason", value = item.reason)
 
                             if (!item.description.isNullOrEmpty()) {
                                 Spacer(modifier = Modifier.height(16.dp))

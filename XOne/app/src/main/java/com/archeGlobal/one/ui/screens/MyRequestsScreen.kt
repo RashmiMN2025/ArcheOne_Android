@@ -151,7 +151,7 @@ private fun MyRequestCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -225,7 +225,7 @@ private fun MyRequestCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "${request.leaveDuration} · ${request.totalDays} day(s)",
+                    text = request.leaveDuration,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 14.sp,

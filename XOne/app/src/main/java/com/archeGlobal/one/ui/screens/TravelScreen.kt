@@ -310,7 +310,9 @@ fun TravelScreen(controller: TravelController) {
                                 Spacer(modifier = Modifier.height(20.dp))
                             }
 
+                            // TODO: Booking Mode Selection (Self / On Behalf) — hidden until feature is implemented
                             // Booking Mode Selection (Self / On Behalf)
+                            /*
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -349,6 +351,7 @@ fun TravelScreen(controller: TravelController) {
                                     )
                                 }
                             }
+                            */
 
                             // Search Bar for On Behalf
                             if (!controller.isBookingForSelf) {

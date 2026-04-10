@@ -1951,12 +1951,7 @@ class HomeActivity : AppCompatActivity() {
                         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
                         popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
-                    ) { backStackEntry ->
-                        LaunchedEffect(backStackEntry) {
-                            backStackEntry.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                                controller.attendanceController.fetchLeaveBalances()
-                            }
-                        }
+                    ) {
                         AttendanceScreen(
                             controller = controller.attendanceController,
                             onBack = { navController.popBackStack() },
@@ -1983,6 +1978,7 @@ class HomeActivity : AppCompatActivity() {
                                 navController.navigate("apply_wfh?date=${date}")
                             },
                             onHistoryClick = {
+                                myRequestsController.fetchRequests()
                                 navController.navigate("my_requests")
                             },
                         )
@@ -1995,25 +1991,13 @@ class HomeActivity : AppCompatActivity() {
                         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
                         popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
-                    ) { backStackEntry ->
-                        val scope = rememberCoroutineScope()
-                        var isNavigatingBack by remember { mutableStateOf(false) }
-                        LaunchedEffect(backStackEntry) {
-                            backStackEntry.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                                myRequestsController.fetchRequests()
-                            }
+                    ) {
+                        LaunchedEffect(Unit) {
+                            myRequestsController.fetchRequests()
                         }
                         com.archeGlobal.one.ui.screens.MyRequestsScreen(
                             controller = myRequestsController,
-                            onBack = {
-                                if (!isNavigatingBack) {
-                                    isNavigatingBack = true
-                                    scope.launch {
-                                        delay(2000)
-                                        navController.popBackStack()
-                                    }
-                                }
-                            },
+                            onBack = { navController.popBackStack() },
                             onRequestClick = { eventId ->
                                 val item = myRequestsController.requests.find { it.eventId == eventId }
                                 if (item != null) {
@@ -2022,7 +2006,6 @@ class HomeActivity : AppCompatActivity() {
                                 }
                             },
                         )
-                        UniversalLoader(isLoading = isNavigatingBack)
                     }
 
                     // User Approval History detail screen
@@ -2043,6 +2026,8 @@ class HomeActivity : AppCompatActivity() {
                                         eventId = item.eventId,
                                         onSuccess = {
                                             onDone()
+                                            myRequestsController.fetchRequests()
+                                            controller.attendanceController.fetchLeaveBalances()
                                             navController.popBackStack()
                                         },
                                         onError = { onDone() },

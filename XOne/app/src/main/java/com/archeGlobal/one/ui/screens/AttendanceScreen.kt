@@ -61,17 +61,17 @@ private fun typeColor(type: String, requestStatus: String = ""): Color {
 
     // approved (or no request) — colour by type
     return when {
-        t.contains("outdoor")                                                  -> Color(0xFFFF9800) // orange
+        t.contains("outdoor")                                                  -> Color(0xFFFFA500) // #FFA500
         t.contains("regularisation") || t.contains("regularize") ||
             t.contains("regularised")                                          -> Color(0xFF4CAF50) // green
-        t.contains("wfh") || t.contains("work from home")                     -> Color(0xFF26C6B0) // mint
-        t.contains("privilege")                                                -> Color(0xFFEC407A) // pink
-        t.contains("paternity") || t.contains("maternity")                    -> Color(0xFF8D6E63) // brown
-        t.contains("casual")                                                   -> Color(0xFF26A69A) // teal
-        t.contains("sick")                                                     -> Color(0xFF5C6BC0) // indigo
-        t.contains("optional")                                                 -> Color(0xFF2196F3) // blue
-        t.contains("probationary")                                             -> Color(0xFFFFCA28) // yellow
-        else                                                                   -> Color(0xFFAAAAAA) // grey
+        t.contains("wfh") || t.contains("work from home")                     -> Color(0xFF3EB489) // #3EB489
+        t.contains("privilege")                                                -> Color(0xFFC7EA46) // #C7EA46
+        t.contains("paternity") || t.contains("maternity")                    -> Color(0xFF8B4513) // #8B4513
+        t.contains("casual")                                                   -> Color(0xFF20C997) // #20C997
+        t.contains("sick")                                                     -> Color(0xFF4B0082) // #4B0082
+        t.contains("optional")                                                 -> Color(0xFF007BFF) // #007BFF
+        t.contains("probationary")                                             -> Color(0xFFFFD700) // #FFD700
+        else                                                                   -> Color(0xFFA0A0A0) // #A0A0A0
     }
 }
 
@@ -79,14 +79,14 @@ private fun typeColor(type: String, requestStatus: String = ""): Color {
 private fun leaveColor(type: String): Color {
     val t = type.lowercase()
     return when {
-        t.contains("privilege")                        -> Color(0xFFEC407A) // pink
-        t.contains("casual")                           -> Color(0xFF26A69A) // teal
-        t.contains("sick")                             -> Color(0xFF5C6BC0) // indigo
-        t.contains("optional")                         -> Color(0xFF2196F3) // blue
-        t.contains("paternity") || t.contains("maternity") -> Color(0xFF8D6E63) // brown
-        t.contains("wfh") || t.contains("work from home")  -> Color(0xFF26C6B0) // mint
-        t.contains("probationary")                     -> Color(0xFFFFCA28) // yellow
-        else                                           -> Color(0xFF2196F3) // blue default
+        t.contains("privilege")                             -> Color(0xFFC7EA46) // #C7EA46
+        t.contains("casual")                               -> Color(0xFF20C997) // #20C997
+        t.contains("sick")                                 -> Color(0xFF4B0082) // #4B0082
+        t.contains("optional")                             -> Color(0xFF007BFF) // #007BFF
+        t.contains("paternity") || t.contains("maternity") -> Color(0xFF8B4513) // #8B4513
+        t.contains("wfh") || t.contains("work from home")  -> Color(0xFF3EB489) // #3EB489
+        t.contains("probationary")                         -> Color(0xFFFFD700) // #FFD700
+        else                                               -> Color(0xFF007BFF) // #007BFF
     }
 }
 
@@ -184,7 +184,7 @@ fun AttendanceScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                         ) {
                             Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
@@ -465,18 +465,18 @@ private fun AttendanceDetailsDialog(
             } else {
                 val allRequests = records.flatMap { it.requests ?: emptyList() }.distinctBy { it.id }
                 val punchRecords = records.filter { !it.punchIn.isNullOrEmpty() }.sortedBy { it.punchIn }
-                val firstIn = punchRecords.firstOrNull()?.punchIn ?: "-"
-                val lastOut = punchRecords.lastOrNull { !it.punchOut.isNullOrEmpty() }?.punchOut?.lastOrNull() ?: "-"
+                val firstIn = punchRecords.firstOrNull()?.punchIn ?: "None"
+                val lastOut = punchRecords.lastOrNull { !it.punchOut.isNullOrEmpty() }?.punchOut?.lastOrNull() ?: "None"
                 val workingHours = records.firstOrNull { it.workingHours != null && it.workingHours != "00:00" }?.workingHours
-                    ?: records.firstOrNull()?.workingHours ?: "-"
+                    ?: records.firstOrNull()?.workingHours ?: "None"
                 val primaryRequest = allRequests.firstOrNull()
-                val leaveType = primaryRequest?.requestType ?: "-"
-                val leaveStatus = primaryRequest?.status ?: "-"
+                val leaveType = primaryRequest?.requestType ?: "None"
+                val leaveStatus = primaryRequest?.status ?: "None"
                 val regularisation = allRequests.firstOrNull { it.requestType.contains("Regularisation", ignoreCase = true) }
-                val reason = allRequests.mapNotNull { it.reason.ifEmpty { null } }.distinct().joinToString(", ").ifEmpty { "-" }
+                val reason = allRequests.mapNotNull { it.reason.ifEmpty { null } }.distinct().joinToString(", ").ifEmpty { "None" }
                 val rawSwipes = punchRecords.flatMap { record ->
                     listOfNotNull(record.punchIn) + (record.punchOut ?: emptyList())
-                }.joinToString(", ").ifEmpty { "-" }
+                }.joinToString(", ").ifEmpty { "None" }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -487,8 +487,9 @@ private fun AttendanceDetailsDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        AttendanceDetailRow(label = "Shift", value = "9:30 am to 6:30 pm")
-                        AttendanceDetailRow(label = "Regularised", value = regularisation?.status ?: "-")
+                        AttendanceDetailRow(label = "Shift", value = if (date.dayOfWeek == java.time.DayOfWeek.SATURDAY || date.dayOfWeek == java.time.DayOfWeek.SUNDAY) "None" else "9:30 am to 6:30 pm")
+                        AttendanceDetailRow(label = "Regularised", value = regularisation?.status ?: "None")
+                        AttendanceDetailRow(label = "Attendance Status", value = records.firstOrNull()?.attendanceStatus ?: "None")
                         AttendanceDetailRow(label = "Reason", value = reason)
                         AttendanceDetailRow(label = "Raw Swipes", value = rawSwipes)
                     }
@@ -498,7 +499,7 @@ private fun AttendanceDetailsDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        AttendanceDetailRow(label = "Actual", value = if (firstIn != "-") "$firstIn → $lastOut" else "-")
+                        AttendanceDetailRow(label = "Actual", value = if (firstIn != "None") "$firstIn - $lastOut" else "None")
                         AttendanceDetailRow(label = "Hours", value = workingHours)
                         AttendanceDetailRow(label = "Leave type", value = leaveType)
                         AttendanceDetailRow(label = "Leave status", value = leaveStatus)
@@ -672,7 +673,7 @@ private fun LeaveBalanceCard(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Row(

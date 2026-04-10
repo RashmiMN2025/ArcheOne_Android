@@ -114,7 +114,7 @@ fun ApprovalRequestDetailScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFCFCF9)),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
