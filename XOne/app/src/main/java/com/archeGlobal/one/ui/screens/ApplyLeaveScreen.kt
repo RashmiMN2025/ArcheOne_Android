@@ -340,11 +340,14 @@ fun ApplyLeaveScreen(
                                 }
                             }
 
-                            // Available Holiday dropdown (only for Optional Holiday)
+                            // Optional Holiday dropdown (only for Optional Holiday)
                             if (selectedLeaveType == "Optional Holiday") {
+                                LaunchedEffect(Unit) {
+                                    attendanceController?.fetchOptionalHolidays()
+                                }
                                 Spacer(modifier = Modifier.height(14.dp))
                                 Text(
-                                    text = "Available Holiday",
+                                    text = "Select Holidays",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 14.sp,
@@ -356,7 +359,7 @@ fun ApplyLeaveScreen(
                                     onExpandedChange = { holidayExpanded = it },
                                 ) {
                                     OutlinedTextField(
-                                        value = selectedHoliday.ifEmpty { "Select Holiday" },
+                                        value = selectedHoliday.ifEmpty { "Select Optional Holiday" },
                                         onValueChange = {},
                                         readOnly = true,
                                         trailingIcon = {
@@ -402,6 +405,16 @@ fun ApplyLeaveScreen(
                                                 onClick = {
                                                     selectedHoliday = holiday
                                                     holidayExpanded = false
+                                                    // Parse date from "Name (DD-MM-YYYY)" and set from/to
+                                                    val dateStr = holiday.substringAfterLast("(").removeSuffix(")")
+                                                    try {
+                                                        val holidayDate = java.time.LocalDate.parse(
+                                                            dateStr,
+                                                            java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                                                        )
+                                                        fromDate = holidayDate
+                                                        toDate = holidayDate
+                                                    } catch (_: Exception) { }
                                                 },
                                             )
                                         }
@@ -805,6 +818,10 @@ fun ApplyLeaveScreen(
                                 Toast.makeText(context, "Please select leave type", Toast.LENGTH_SHORT).show()
                                 return@Button
                             }
+                            if (selectedLeaveType == "Optional Holiday" && selectedHoliday.isEmpty()) {
+                                Toast.makeText(context, "Please select an optional holiday", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
                             if (selectedReason.isEmpty()) {
                                 Toast.makeText(context, "Please select leave reason", Toast.LENGTH_SHORT).show()
                                 return@Button
@@ -835,9 +852,9 @@ fun ApplyLeaveScreen(
                                     val userEmail = userData?.email ?: ""
                                     
                                     // Special logic for Casual and Sick Leave
-                                    if (selectedLeaveType == "Casual Leave" || selectedLeaveType == "Sick Leave") {
+                                    if (selectedLeaveType == "Casual Leave" || selectedLeaveType == "Sick Leave" || selectedLeaveType == "Probationary Leave") {
                                         if (fromDate != toDate) {
-                                            Toast.makeText(context, "You can only apply one $selectedLeaveType per month.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "You can only apply one $selectedLeaveType per month.", Toast.LENGTH_LONG).show()
                                             isSubmitting = false
                                             return@launch
                                         }
@@ -845,35 +862,35 @@ fun ApplyLeaveScreen(
                                         // 1. Pre-check for the whole month
                                         val monthStart = fromDate.withDayOfMonth(1).toString()
                                         val monthEnd = fromDate.withDayOfMonth(fromDate.lengthOfMonth()).toString()
-                                        
+
                                         val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
                                             email = userEmail,
                                             startDate = monthStart,
                                             endDate = monthEnd
                                         )
                                         val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
-                                        
+
                                         if (checkResponse.isSuccessful) {
                                             val breakdown = checkResponse.body()?.data?.breakdown ?: emptyList()
-                                            
-                                            // Rule 1: One Casual/Sick leave per month
-                                            val monthlyConflict = breakdown.any { 
-                                                it.requestType.equals(selectedLeaveType, ignoreCase = true) && 
+
+                                            // Rule 1: Only one Casual/Sick leave allowed per month
+                                            val monthlyConflict = breakdown.any {
+                                                it.requestType.equals(selectedLeaveType, ignoreCase = true) &&
                                                 (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
                                             }
-                                            
+
                                             if (monthlyConflict) {
-                                                Toast.makeText(context, "Leave for this date has already been applied.", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(context, "$selectedLeaveType limit reached for this month.", Toast.LENGTH_LONG).show()
                                                 isSubmitting = false
                                                 return@launch
                                             }
-                                            
+
                                             // Rule 2: Any leave on the specific date
                                             val dateConflict = breakdown.any {
                                                 it.requestDate == fromDate.toString() &&
                                                 (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
                                             }
-                                            
+
                                             if (dateConflict) {
                                                 Toast.makeText(context, "A leave request already exists for this date.", Toast.LENGTH_LONG).show()
                                                 isSubmitting = false
@@ -990,7 +1007,7 @@ fun ApproverCard(
                             text = email,
                             fontFamily = GraphikFontFamily,
                             fontSize = 12.sp,
-                            color = Color(0xFF2196F3),
+                            color = Color(0xFF888888),
                         )
                     }
                 }

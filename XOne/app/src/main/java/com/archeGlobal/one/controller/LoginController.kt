@@ -122,6 +122,9 @@ class LoginController(
                                 } else {
                                     // MPIN already set, go directly to home
                                     Log.d("LoginController", "Navigating to home screen")
+                                    // Clear punch state before saving new user data so the
+                                    // incoming user gets their own punch times from the login API.
+                                    com.archeGlobal.one.utils.PreferencesManager(context).clearPunchState()
                                     UserDataManager.getInstance(context).saveUserDataFromResponse(responseBody, token)
                                     UserDataManager.getInstance(context).setIsLoggedIn(true)
                                     UserDataManager.getInstance(context).setHasLoggedIn(true)

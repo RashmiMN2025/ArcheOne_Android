@@ -25,15 +25,13 @@ class ApprovalRequestsController(private val context: Context) {
         private set
 
     fun fetchManagerApprovals() {
-        val approverEmail = "brindha.a@arche.global"
+        val userData = UserDataManager.getInstance(context).getUserData()
+        val approverEmail = userData?.email ?: ""
 
-//        val userData = UserDataManager.getInstance(context).getUserData()
-//        val approverEmail = userData?.email ?: ""
-//
-//        if (approverEmail.isEmpty()) {
-//            errorMessage = "Approver email not found"
-//            return
-//        }
+        if (approverEmail.isEmpty()) {
+            errorMessage = "Approver email not found"
+            return
+        }
 
         isLoading = true
         errorMessage = null

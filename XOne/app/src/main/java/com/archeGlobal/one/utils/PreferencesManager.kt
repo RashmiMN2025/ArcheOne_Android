@@ -231,6 +231,14 @@ class PreferencesManager(
                 remove(KEY_BIOMETRIC_EMAIL)
                 remove(KEY_BIOMETRIC_MOBILE)
                 remove(KEY_BIOMETRIC_EMPLOYEE_ID)
+                // Clear punch state so a new user gets their own data from login API
+                remove(KEY_IS_PUNCHED_IN)
+                remove(KEY_PUNCH_IN_TIME)
+                remove(KEY_PUNCH_IN_DATE_TIME)
+                remove(KEY_PUNCH_ID)
+                remove(KEY_PUNCH_OUT_TIME)
+                remove(KEY_LAST_PUNCH_DATE)
+                remove(KEY_TIME_SPENT)
             }.apply()
 
         // Update the locked state flow
@@ -254,6 +262,14 @@ class PreferencesManager(
                 remove(KEY_APP_LOCKED) // Clear app lock state when session expires
                 remove(KEY_SEEN_SERVICES) // Clear seen services so New stickers can appear again
                 remove(KEY_INSTALL_TYPE) // Clear install type so it can be determined fresh on next login
+                // Clear punch state so a new user gets their own data from login API
+                remove(KEY_IS_PUNCHED_IN)
+                remove(KEY_PUNCH_IN_TIME)
+                remove(KEY_PUNCH_IN_DATE_TIME)
+                remove(KEY_PUNCH_ID)
+                remove(KEY_PUNCH_OUT_TIME)
+                remove(KEY_LAST_PUNCH_DATE)
+                remove(KEY_TIME_SPENT)
                 // Keep MPIN and biometric data for re-authentication
                 // remove(KEY_BIOMETRIC_ENABLED) - Keep this
                 // remove(KEY_BIOMETRIC_EMAIL) - Keep this
@@ -358,6 +374,18 @@ class PreferencesManager(
         private const val KEY_TIME_SPENT = "punch_time_spent"
     }
 
+    fun clearPunchState() {
+        sharedPreferences.edit().apply {
+            remove(KEY_IS_PUNCHED_IN)
+            remove(KEY_PUNCH_IN_TIME)
+            remove(KEY_PUNCH_IN_DATE_TIME)
+            remove(KEY_PUNCH_ID)
+            remove(KEY_PUNCH_OUT_TIME)
+            remove(KEY_LAST_PUNCH_DATE)
+            remove(KEY_TIME_SPENT)
+        }.apply()
+    }
+
     fun savePunchState(isPunchedIn: Boolean, punchInTime: String, punchInDateTime: Long, punchId: Int, punchOutTime: String, lastPunchDate: String, timeSpent: String) {
         sharedPreferences.edit().apply {
             putBoolean(KEY_IS_PUNCHED_IN, isPunchedIn)
@@ -378,7 +406,7 @@ class PreferencesManager(
             punchId = sharedPreferences.getInt(KEY_PUNCH_ID, -1),
             punchOutTime = sharedPreferences.getString(KEY_PUNCH_OUT_TIME, "") ?: "",
             lastPunchDate = sharedPreferences.getString(KEY_LAST_PUNCH_DATE, "") ?: "",
-            timeSpent = sharedPreferences.getString(KEY_TIME_SPENT, "00:00") ?: "00:00"
+            timeSpent = sharedPreferences.getString(KEY_TIME_SPENT, "00 h 00 m") ?: "00 h 00 m"
         )
     }
 

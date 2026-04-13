@@ -842,7 +842,7 @@ fun HomeScreenContent(
                 title = "Punch In",
                 locationText = controller.currentLocationText,
                 confirmText = "Punch In",
-                confirmColor = Color(0xFF4CAF50),
+                confirmColor = Color(0xFFCC1F1F),
                 onCancel = { controller.dismissPunchInDialog() },
                 onConfirm = { controller.onPunchInConfirmed() },
             )
@@ -853,7 +853,7 @@ fun HomeScreenContent(
                 title = "Punch Out",
                 locationText = controller.currentLocationText,
                 confirmText = "Punch Out",
-                confirmColor = Color(0xFFF5A623),
+                confirmColor = Color(0xFFCC1F1F),
                 onCancel = { controller.dismissPunchOutDialog() },
                 onConfirm = { controller.onPunchOutConfirmed() },
             )
@@ -1109,7 +1109,7 @@ fun HomeScreenContent(
                                                     onItemClick(HomeItem(title = "Timesheet", icon = "timesheet", category = ""))
                                                 },
                                                 onPunchInClick = {
-                                                    val title = if (controller.isPunchedIn) "Punch Out" else "Punch In"
+                                                    val title = if (controller.punchInTime.isNotEmpty()) "Punch Out" else "Punch In"
                                                     onItemClick(HomeItem(title = title, icon = "punch_in", category = ""))
                                                 },
                                                 onApplyLeaveClick = {
@@ -2032,19 +2032,31 @@ fun TimeAttendanceCard(
                 thickness = 0.5.dp,
             )
 
-            // Time Spent Row
+            // Time Spent + Punch status — label and value on the same line
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Bottom,
             ) {
-                Text(
-                    text = "Time Spent",
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
-                    color = Color(0xFF888888),
-                )
+                // Left: label + value
+                Column {
+                    Text(
+                        text = "Time Spent",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp,
+                        color = Color(0xFF888888),
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = timeSpent,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 20.sp,
+                        color = Color.Black,
+                    )
+                }
+                // Right: punch status label + time
                 if (isPunchedIn) {
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
@@ -2054,12 +2066,13 @@ fun TimeAttendanceCard(
                             fontSize = 13.sp,
                             color = punchGreen,
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = punchInTime,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
-                            color = Color(0xFF555555),
+                            fontSize = 14.sp,
+                            color = Color(0xFF888888),
                         )
                     }
                 } else if (punchOutTime.isNotEmpty()) {
@@ -2071,47 +2084,25 @@ fun TimeAttendanceCard(
                             fontSize = 13.sp,
                             color = primaryRed,
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = punchOutTime,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
-                            color = Color(0xFF555555),
+                            fontSize = 14.sp,
+                            color = Color(0xFF888888),
                         )
                     }
                 } else {
-                    Text(
-                        text = punchStatus,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 13.sp,
-                        color = punchStatusColor,
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Time Display Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = timeSpent,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 24.sp,
-                    color = Color.Black,
-                )
-                if (!isPunchedIn) {
-                    Text(
-                        text = "—",
-                        fontFamily = GraphikFontFamily,
-                        fontSize = 18.sp,
-                        color = Color(0xFFAAAAAA),
-                    )
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = punchStatus,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 13.sp,
+                            color = punchStatusColor,
+                        )
+                    }
                 }
             }
 
@@ -2130,7 +2121,7 @@ fun TimeAttendanceCard(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
                 ) {
                     Text(
-                        text = if (isPunchedIn) "Punch Out" else "Punch In",
+                        text = if (punchInTime.isNotEmpty()) "Punch Out" else "Punch In",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
@@ -2262,6 +2253,7 @@ private fun PunchActionDialog(
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = locationText,
+                    modifier = Modifier.fillMaxWidth(),
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 15.sp,

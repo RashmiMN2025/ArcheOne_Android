@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.MyRequestItem
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
@@ -191,39 +192,32 @@ fun UserApprovalHistoryScreen(
                                     color = Color.Black,
                                 )
                             }
-                        }
-                    }
 
-                    // Cancel button — only for pending
-                    if (status.lowercase() == "pending" && onCancelRequest != null) {
-                        Button(
-                            onClick = {
-                            if (!isCancelling) {
-                                isCancelling = true
-                                onCancelRequest { isCancelling = false }
-                            }
-                        },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                            enabled = !isCancelling,
-                        ) {
-                            if (isCancelling) {
-                                CircularProgressIndicator(
-                                    color = Color.White,
-                                    modifier = Modifier.size(22.dp),
-                                    strokeWidth = 2.dp,
-                                )
-                            } else {
-                                Text(
-                                    text = "Cancel Request",
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 16.sp,
-                                    color = Color.White,
-                                )
+                            // Cancel button — only for pending, inside the card
+                            if (status.lowercase() == "pending" && onCancelRequest != null) {
+                                Spacer(modifier = Modifier.height(20.dp))
+                                Button(
+                                    onClick = {
+                                        if (!isCancelling) {
+                                            isCancelling = true
+                                            onCancelRequest { isCancelling = false }
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                                    enabled = !isCancelling,
+                                ) {
+                                    Text(
+                                        text = "Cancel Request",
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 16.sp,
+                                        color = Color.White,
+                                    )
+                                }
                             }
                         }
                     }
@@ -233,6 +227,8 @@ fun UserApprovalHistoryScreen(
             }
         }
     }
+
+    UniversalLoader(isLoading = isCancelling)
 }
 
 @Composable

@@ -19,4 +19,5 @@ data class UserData(
     val hasReportees: Boolean = false,
     val loginPunchIn: String? = null,
     val loginPunchOut: String? = null,
+    val loginPunchId: Int? = null,
 )

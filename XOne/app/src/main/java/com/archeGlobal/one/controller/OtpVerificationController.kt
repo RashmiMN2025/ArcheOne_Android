@@ -201,6 +201,9 @@ class OtpVerificationController(
             } else if (response != null && response.status == 200) {
                 Log.d("LoginProcess", "Login successful")
 
+                // Clear punch state before saving new user data so the
+                // incoming user gets their own punch times from the login API.
+                com.archeGlobal.one.utils.PreferencesManager(context).clearPunchState()
                 // Save user data from the response
                 userDataManager.saveUserDataFromResponse(response, token)
                 userDataManager.setIsLoggedIn(true)

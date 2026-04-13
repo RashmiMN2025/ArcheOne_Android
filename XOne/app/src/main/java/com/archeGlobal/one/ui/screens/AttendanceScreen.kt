@@ -103,7 +103,6 @@ fun AttendanceScreen(
     onHistoryClick: () -> Unit = {},
 ) {
     val today = LocalDate.now()
-    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var showAttendanceDialog by remember { mutableStateOf(false) }
     var longPressedDate by remember { mutableStateOf<LocalDate?>(null) }
 
@@ -198,14 +197,14 @@ fun AttendanceScreen(
                                             imageVector = Icons.Default.KeyboardArrowLeft,
                                             contentDescription = "Previous Month",
                                             tint = Color.Black,
-                                            modifier = Modifier.size(28.dp),
+                                            modifier = Modifier.size(32.dp),
                                         )
                                     }
                                     Text(
                                         text = "${controller.currentMonth.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())} ${controller.currentMonth.year}",
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 17.sp,
+                                        fontSize = 21.sp,
                                         color = Color.Black,
                                     )
                                     IconButton(onClick = controller::nextMonth) {
@@ -213,10 +212,12 @@ fun AttendanceScreen(
                                             imageVector = Icons.Default.KeyboardArrowRight,
                                             contentDescription = "Next Month",
                                             tint = Color.Black,
-                                            modifier = Modifier.size(28.dp),
+                                            modifier = Modifier.size(32.dp),
                                         )
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.height(8.dp))
 
                                 Row(modifier = Modifier.fillMaxWidth()) {
                                     listOf("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT").forEach { label ->
@@ -226,7 +227,7 @@ fun AttendanceScreen(
                                             textAlign = TextAlign.Center,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Medium,
-                                            fontSize = 11.sp,
+                                            fontSize = 13.sp,
                                             color = Color(0xFF888888),
                                         )
                                     }
@@ -239,8 +240,18 @@ fun AttendanceScreen(
                                     attendanceMap = controller.attendanceMap,
                                     attendanceTypeMap = controller.attendanceTypeMap,
                                     attendanceRequestStatusMap = controller.attendanceRequestStatusMap,
-                                    selectedDate = selectedDate,
-                                    onDateClick = { date -> selectedDate = date },
+                                    selectedDate = controller.selectedDate,
+                                    onDateClick = { date ->
+                                        if (date == controller.selectedDate) {
+                                            // Second tap on the already-selected date → open details
+                                            longPressedDate = date
+                                            controller.fetchAttendanceForDate(date)
+                                            showAttendanceDialog = true
+                                        } else {
+                                            // First tap on a new date → just select it
+                                            controller.selectedDate = date
+                                        }
+                                    },
                                     onDateLongClick = { date ->
                                         longPressedDate = date
                                         controller.fetchAttendanceForDate(date)
@@ -268,7 +279,7 @@ fun AttendanceScreen(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 13.sp,
-                            color = Color(0xFF555555),
+                            color = Color.Black,
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -285,7 +296,7 @@ fun AttendanceScreen(
                                         dotColor = leaveColor(leave.type),
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clickable { onLeaveCardClick(leave.type, selectedDate ?: today) },
+                                            .clickable { onLeaveCardClick(leave.type, controller.selectedDate ?: today) },
                                     )
                                 }
                                 if (row.size == 1) {
@@ -304,7 +315,7 @@ fun AttendanceScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             OutlinedButton(
-                                onClick = { onWfhClick(selectedDate ?: today) },
+                                onClick = { onWfhClick(controller.selectedDate ?: today) },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(48.dp),
@@ -336,7 +347,7 @@ fun AttendanceScreen(
                                 }
                             }
                             OutlinedButton(
-                                onClick = { onOutdoorDutyClick(selectedDate ?: today) },
+                                onClick = { onOutdoorDutyClick(controller.selectedDate ?: today) },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(48.dp),
@@ -373,7 +384,7 @@ fun AttendanceScreen(
                     item {
                         Spacer(modifier = Modifier.height(20.dp))
                         Button(
-                            onClick = { onRegularizeClick(selectedDate ?: today) },
+                            onClick = { onRegularizeClick(controller.selectedDate ?: today) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(48.dp),
@@ -489,7 +500,7 @@ private fun AttendanceDetailsDialog(
                     ) {
                         AttendanceDetailRow(label = "Shift", value = if (date.dayOfWeek == java.time.DayOfWeek.SATURDAY || date.dayOfWeek == java.time.DayOfWeek.SUNDAY) "None" else "9:30 am to 6:30 pm")
                         AttendanceDetailRow(label = "Regularised", value = regularisation?.status ?: "None")
-                        AttendanceDetailRow(label = "Attendance Status", value = records.firstOrNull()?.attendanceStatus ?: "None")
+                        AttendanceDetailRow(label = "Attendance Status", value = if (date == java.time.LocalDate.now()) "None" else records.firstOrNull()?.attendanceStatus ?: "None")
                         AttendanceDetailRow(label = "Reason", value = reason)
                         AttendanceDetailRow(label = "Raw Swipes", value = rawSwipes)
                     }
@@ -633,7 +644,7 @@ private fun DayCell(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.8.dp)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
@@ -642,7 +653,7 @@ private fun DayCell(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(32.dp)
+                .size(38.dp)
                 .clip(CircleShape)
                 .background(circleBg),
         ) {
@@ -650,14 +661,14 @@ private fun DayCell(
                 text = day.toString(),
                 fontFamily = GraphikFontFamily,
                 fontWeight = textWeight,
-                fontSize = 14.sp,
+                fontSize = 17.sp,
                 color = textColor,
             )
         }
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(9.6.dp))
         Box(
             modifier = Modifier
-                .size(8.dp)
+                .size(11.dp)
                 .clip(CircleShape)
                 .background(dotColor),
         )

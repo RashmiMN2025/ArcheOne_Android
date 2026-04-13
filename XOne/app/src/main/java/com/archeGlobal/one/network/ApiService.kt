@@ -652,8 +652,9 @@ data class VerifyOtpResponse(
 )
 
 data class LoginAttendance(
-    val punchin: String? = null,
-    val punchout: List<String>? = null,
+    @SerializedName("attendanceId") val id: Int? = null,
+    @SerializedName("punchIn") val punchin: String? = null,
+    @SerializedName("punchOut") val punchout: List<String>? = null,
 )
 
 data class User(

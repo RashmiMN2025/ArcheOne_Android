@@ -57,8 +57,8 @@ fun ApplyOutdoorDutyScreen(
     var showFromDatePicker by remember { mutableStateOf(false) }
     var showToDatePicker by remember { mutableStateOf(false) }
 
-    var inTime by remember { mutableStateOf(LocalTime.now()) }
-    var outTime by remember { mutableStateOf(LocalTime.now()) }
+    var inTime by remember { mutableStateOf(LocalTime.of(9, 0)) }
+    var outTime by remember { mutableStateOf(LocalTime.of(18, 0)) }
     var showInTimePicker by remember { mutableStateOf(false) }
     var showOutTimePicker by remember { mutableStateOf(false) }
 

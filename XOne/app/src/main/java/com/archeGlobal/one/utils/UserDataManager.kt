@@ -254,7 +254,11 @@ class UserDataManager private constructor(
                     hasReportees = response.hasReportees,
                     loginPunchIn = response.attendance?.punchin,
                     loginPunchOut = response.attendance?.punchout?.lastOrNull(),
-                )
+                    loginPunchId = response.attendance?.id,
+                ).also {
+                    Log.d("PunchState", "Login API raw attendance | attendanceId=${response.attendance?.id} | punchin=${response.attendance?.punchin} | punchout=${response.attendance?.punchout}")
+                    Log.d("PunchState", "Mapped to UserData | loginPunchIn=${it.loginPunchIn} | loginPunchOut=${it.loginPunchOut} | loginPunchId=${it.loginPunchId}")
+                }
             }
 
         // Update in-memory cache

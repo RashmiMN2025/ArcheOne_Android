@@ -11,6 +11,7 @@ import com.archeGlobal.one.model.LeaveBalance
 import com.archeGlobal.one.model.LeaveRequest
 import com.archeGlobal.one.model.ManagerDashboardRequest
 import com.archeGlobal.one.model.ApprovalRequestItem
+import com.archeGlobal.one.network.CalendarRequest
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.CoroutineScope
@@ -27,6 +28,12 @@ class AttendanceController(private val context: Context) {
     var currentMonth by mutableStateOf(YearMonth.now())
         private set
 
+    var selectedDate by mutableStateOf<LocalDate?>(LocalDate.now())
+
+    fun resetSelectedDate() {
+        selectedDate = LocalDate.now()
+    }
+
     var attendanceMap by mutableStateOf<Map<Int, AttendanceDayStatus>>(emptyMap())
         private set
 
@@ -42,6 +49,8 @@ class AttendanceController(private val context: Context) {
         private set
 
     var optionalHolidays by mutableStateOf<List<String>>(emptyList())
+    var isOptionalHolidaysLoading by mutableStateOf(false)
+        private set
 
     var isLoading by mutableStateOf(false)
         private set
@@ -229,6 +238,43 @@ class AttendanceController(private val context: Context) {
             } finally {
                 isDetailLoading = false
             }
+        }
+    }
+
+    fun fetchOptionalHolidays() {
+        if (optionalHolidays.isNotEmpty()) {
+            android.util.Log.d("OptionalHoliday", "Already loaded ${optionalHolidays.size} holidays, skipping fetch")
+            return
+        }
+        val userState = com.archeGlobal.one.repository.UserRepository(context).getUserState() ?: "Karnataka"
+        android.util.Log.d("OptionalHoliday", "Fetching optional holidays for state: $userState")
+        isOptionalHolidaysLoading = true
+        val encryptedAPIHelper = com.archeGlobal.one.utils.EncryptedAPIHelper(context)
+        encryptedAPIHelper.makeEncryptedCall(
+            endpoint = "calendar",
+            method = "POST",
+            request = CalendarRequest(state = userState),
+            responseClass = com.archeGlobal.one.model.CalendarResponse::class.java,
+            withAuthHeader = true,
+        ) { response, error ->
+            if (error != null) {
+                android.util.Log.e("OptionalHoliday", "Encrypted call error: ${error.errorMessage}")
+                isOptionalHolidaysLoading = false
+                return@makeEncryptedCall
+            }
+            if (response == null) {
+                android.util.Log.e("OptionalHoliday", "Null response received")
+                isOptionalHolidaysLoading = false
+                return@makeEncryptedCall
+            }
+            android.util.Log.d("OptionalHoliday", "Response status: ${response.status}, total holidays: ${response.holidays.size}")
+            val allHolidays = response.holidays
+            android.util.Log.d("OptionalHoliday", "All holiday types: ${allHolidays.map { it.holidayType }.distinct()}")
+            val rhHolidays = allHolidays.filter { it.holidayType == "RH" }
+            android.util.Log.d("OptionalHoliday", "RH holidays count: ${rhHolidays.size}")
+            rhHolidays.forEach { android.util.Log.d("OptionalHoliday", "  RH: ${it.name} (${it.date})") }
+            optionalHolidays = rhHolidays.map { "${it.name} (${it.date})" }
+            isOptionalHolidaysLoading = false
         }
     }
 

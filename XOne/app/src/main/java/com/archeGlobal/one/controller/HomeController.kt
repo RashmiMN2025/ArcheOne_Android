@@ -62,7 +62,7 @@ class HomeController(
     var isPunchedIn by mutableStateOf(false)
     var punchInTime by mutableStateOf("")
     var punchOutTime by mutableStateOf("")
-    var timeSpent by mutableStateOf("00:00")
+    var timeSpent by mutableStateOf("00 h 00 m")
     private var punchId by mutableIntStateOf(-1)
     private var timerJob: kotlinx.coroutines.Job? = null
     private var punchInDateTime: Date? = null
@@ -70,35 +70,6 @@ class HomeController(
     val hasReportees: Boolean
         get() = UserDataManager.getInstance(context).getUserData()?.hasReportees ?: false
 
-    init {
-        // Pre-fill punch state from login response attendance data
-        val userData = UserDataManager.getInstance(context).getUserData()
-        val loginPunchIn = userData?.loginPunchIn
-        val loginPunchOut = userData?.loginPunchOut
-        if (!loginPunchIn.isNullOrEmpty()) {
-            isPunchedIn = loginPunchOut.isNullOrEmpty()
-            punchInTime = loginPunchIn
-            if (isPunchedIn) {
-                // Start timer from the login punch-in time
-                try {
-                    val fmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-                    val parsed = fmt.parse(loginPunchIn)
-                    if (parsed != null) {
-                        val cal = java.util.Calendar.getInstance()
-                        val timeCal = java.util.Calendar.getInstance()
-                        timeCal.time = parsed
-                        cal.set(java.util.Calendar.HOUR_OF_DAY, timeCal.get(java.util.Calendar.HOUR_OF_DAY))
-                        cal.set(java.util.Calendar.MINUTE, timeCal.get(java.util.Calendar.MINUTE))
-                        cal.set(java.util.Calendar.SECOND, timeCal.get(java.util.Calendar.SECOND))
-                        punchInDateTime = cal.time
-                        startTimer()
-                    }
-                } catch (_: Exception) {}
-            } else {
-                punchOutTime = loginPunchOut ?: ""
-            }
-        }
-    }
 
     fun showPunchIn() {
         showPunchInDialog = true
@@ -187,7 +158,7 @@ class HomeController(
                 val minutes = (diff / (1000 * 60)) % 60
                 
                 withContext(Dispatchers.Main) {
-                    timeSpent = String.format("%02d:%02d", hours, minutes)
+                    timeSpent = String.format("%02d h %02d m", hours, minutes)
                     savePunchState()
                 }
                 kotlinx.coroutines.delay(60000) // Update every minute
@@ -220,34 +191,38 @@ class HomeController(
                         isPunchedIn = false
                         timerJob?.cancel()
                         timerJob = null
-                        
-                        // Calculate final time spent
-                        val now = Date()
-                        val diff = now.time - (punchInDateTime?.time ?: now.time)
-                        val hours = diff / (1000 * 60 * 60)
-                        val minutes = (diff / (1000 * 60)) % 60
-                        timeSpent = String.format("%02d:%02d", hours, minutes)
-                        
-                        // Parse punchOut time for display
-                        val apiFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-                        val displayFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
-                        try {
-                             val lastPunchOut = data?.punchOut?.lastOrNull()
-                             if (lastPunchOut != null) {
-                                 val parsedDate = apiFormat.parse(lastPunchOut)
-                                 if (parsedDate != null) {
-                                     punchOutTime = displayFormat.format(parsedDate)
-                                 } else {
-                                     punchOutTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-                                 }
-                             } else {
-                                 punchOutTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-                             }
-                        } catch (e: Exception) {
-                            punchOutTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+                        val fmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                        val lastPunchOut = data?.punchOut?.lastOrNull()
+                        val punchInFromApi = data?.punchIn ?: punchInTime
+
+                        // Update punchOutTime from API response
+                        punchOutTime = lastPunchOut ?: fmt.format(Date())
+
+                        // Calculate timeSpent as punchIn → latest punchOut using server times
+                        timeSpent = if (!punchInFromApi.isNullOrEmpty() && !lastPunchOut.isNullOrEmpty()) {
+                            try {
+                                val inTime = fmt.parse(punchInFromApi)
+                                val outTime = fmt.parse(lastPunchOut)
+                                if (inTime != null && outTime != null) {
+                                    val diff = outTime.time - inTime.time
+                                    if (diff > 0) {
+                                        val hours = diff / (1000 * 60 * 60)
+                                        val minutes = (diff / (1000 * 60)) % 60
+                                        String.format("%02d h %02d m", hours, minutes)
+                                    } else timeSpent
+                                } else timeSpent
+                            } catch (_: Exception) { timeSpent }
+                        } else {
+                            // Fallback: use punchInDateTime if server times unavailable
+                            val diff = Date().time - (punchInDateTime?.time ?: Date().time)
+                            if (diff > 0) {
+                                val hours = diff / (1000 * 60 * 60)
+                                val minutes = (diff / (1000 * 60)) % 60
+                                String.format("%02d h %02d m", hours, minutes)
+                            } else timeSpent
                         }
-                        
+
                         android.widget.Toast.makeText(context, response.body()?.message, android.widget.Toast.LENGTH_SHORT).show()
                         savePunchState()
                     } else {
@@ -298,14 +273,13 @@ class HomeController(
 
                 val address = addresses?.firstOrNull()
                 val locationStr = if (address != null) {
-                    val city = address.locality ?: address.subAdminArea ?: ""
-                    val state = address.adminArea ?: ""
-                    val place = address.subLocality?.let { "($it)" } ?: ""
-                    buildString {
-                        if (city.isNotEmpty()) append(city)
-                        if (state.isNotEmpty()) append(", $state")
-                        if (place.isNotEmpty()) append(" $place")
-                    }.trim()
+                    listOfNotNull(
+                        address.subLocality,
+                        address.locality ?: address.subAdminArea,
+                        address.adminArea,
+                        address.countryName,
+                        address.postalCode,
+                    ).filter { it.isNotBlank() }.joinToString(", ")
                 } else {
                     "${location.latitude}, ${location.longitude}"
                 }
@@ -398,17 +372,88 @@ class HomeController(
         val state = preferencesManager.getPunchState()
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
+        Log.d("PunchState", "loadPunchState() called | today=$today | savedDate=${state.lastPunchDate}")
+        Log.d("PunchState", "Saved state | isPunchedIn=${state.isPunchedIn} | punchIn=${state.punchInTime} | punchOut=${state.punchOutTime} | punchId=${state.punchId} | timeSpent=${state.timeSpent}")
+
         if (state.lastPunchDate != today) {
-            // Day changed, reset state
-            isPunchedIn = false
-            punchInTime = ""
-            punchOutTime = ""
-            timeSpent = "00:00"
-            punchId = -1
-            punchInDateTime = null
+            Log.d("PunchState", "No valid saved state for today — seeding from login API response")
+
+            // No saved state for today (new day, fresh login, or user switched) —
+            // seed punch state from the login API response for the current user.
+            val userData = UserDataManager.getInstance(context).getUserData()
+            val loginPunchIn = userData?.loginPunchIn
+            val loginPunchOut = userData?.loginPunchOut
+            val loginPunchId = userData?.loginPunchId ?: -1
+
+            Log.d("PunchState", "Login API attendance | punchIn=$loginPunchIn | punchOut=$loginPunchOut | attendanceId=$loginPunchId")
+
+            if (!loginPunchIn.isNullOrEmpty()) {
+                isPunchedIn = loginPunchOut.isNullOrEmpty()
+                punchInTime = loginPunchIn
+                punchOutTime = loginPunchOut ?: ""
+                punchId = loginPunchId
+                punchInDateTime = null
+
+                Log.d("PunchState", "Seeded from login API | isPunchedIn=$isPunchedIn | punchInTime=$punchInTime | punchOutTime=$punchOutTime | punchId=$punchId")
+
+                val fmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
+                if (!isPunchedIn && !loginPunchOut.isNullOrEmpty()) {
+                    // Already punched out — calculate final timeSpent from punchIn → punchOut
+                    timeSpent = try {
+                        val inTime = fmt.parse(loginPunchIn)
+                        val outTime = fmt.parse(loginPunchOut)
+                        if (inTime != null && outTime != null) {
+                            val diff = outTime.time - inTime.time
+                            if (diff > 0) {
+                                val hours = diff / (1000 * 60 * 60)
+                                val minutes = (diff / (1000 * 60)) % 60
+                                String.format("%02d h %02d m", hours, minutes)
+                            } else "00 h 00 m"
+                        } else "00 h 00 m"
+                    } catch (_: Exception) { "00 h 00 m" }
+                    Log.d("PunchState", "Already punched out | timeSpent=$timeSpent (punchIn=$loginPunchIn → punchOut=$loginPunchOut)")
+                } else {
+                    // Still punched in — set punchInDateTime and show elapsed time immediately
+                    timeSpent = "00 h 00 m"
+                    try {
+                        val parsed = fmt.parse(loginPunchIn)
+                        if (parsed != null) {
+                            val cal = java.util.Calendar.getInstance()
+                            val timeCal = java.util.Calendar.getInstance()
+                            timeCal.time = parsed
+                            cal.set(java.util.Calendar.HOUR_OF_DAY, timeCal.get(java.util.Calendar.HOUR_OF_DAY))
+                            cal.set(java.util.Calendar.MINUTE, timeCal.get(java.util.Calendar.MINUTE))
+                            cal.set(java.util.Calendar.SECOND, timeCal.get(java.util.Calendar.SECOND))
+                            punchInDateTime = cal.time
+                            // Show elapsed time right away instead of waiting for timer tick
+                            val diff = Date().time - cal.timeInMillis
+                            if (diff > 0) {
+                                val hours = diff / (1000 * 60 * 60)
+                                val minutes = (diff / (1000 * 60)) % 60
+                                timeSpent = String.format("%02d h %02d m", hours, minutes)
+                            }
+                            Log.d("PunchState", "Still punched in | punchInDateTime=${punchInDateTime} | initial timeSpent=$timeSpent | starting timer")
+                            startTimer()
+                        }
+                    } catch (e: Exception) {
+                        Log.e("PunchState", "Failed to parse loginPunchIn time: $loginPunchIn | error=${e.message}")
+                    }
+                }
+            } else {
+                Log.d("PunchState", "No loginPunchIn in login API response — resetting to clean state")
+                isPunchedIn = false
+                punchInTime = ""
+                punchOutTime = ""
+                timeSpent = "00 h 00 m"
+                punchId = -1
+                punchInDateTime = null
+            }
             savePunchState()
+            Log.d("PunchState", "Saved seeded state to prefs")
         } else {
-            // Load persisted state
+            // Load persisted state for today (belongs to the current user since we clear on logout)
+            Log.d("PunchState", "Loading persisted state for today")
             isPunchedIn = state.isPunchedIn
             punchInTime = state.punchInTime
             punchOutTime = state.punchOutTime
@@ -417,8 +462,10 @@ class HomeController(
             if (state.punchInDateTime > 0) {
                 punchInDateTime = Date(state.punchInDateTime)
             }
+            Log.d("PunchState", "Restored | isPunchedIn=$isPunchedIn | punchIn=$punchInTime | punchOut=$punchOutTime | punchId=$punchId | timeSpent=$timeSpent | punchInDateTime=$punchInDateTime")
 
             if (isPunchedIn) {
+                Log.d("PunchState", "Resuming timer from persisted state")
                 startTimer()
             }
         }
@@ -992,6 +1039,7 @@ class HomeController(
                 "id" -> navigator.navigateToID()
                 "timesheet" -> {
                     Log.d("HomeController", "Navigating to Attendance screen")
+                    attendanceController.resetSelectedDate()
                     attendanceController.fetchLeaveBalances()
                     navigate("attendance")
                 }
@@ -1004,8 +1052,9 @@ class HomeController(
                     navigate("attendance")
                 }
                 "apply outdoor" -> {
-                    Log.d("HomeController", "Navigating to Attendance screen for outdoor duty")
-                    navigate("attendance")
+                    Log.d("HomeController", "Navigating directly to Apply Outdoor Duty screen")
+                    val today = java.time.LocalDate.now().toString()
+                    navigate("apply_outdoor_duty?date=$today")
                 }
                 "manager approvals" -> {
                     Log.d("HomeController", "Navigating to Approval Requests screen")
