@@ -57,7 +57,7 @@ private fun typeColor(type: String, requestStatus: String = ""): Color {
 
     // request status gates
     if (s == "rejected") return Color.Transparent
-    if (s == "pending")  return Color(0xFFAAAAAA)                          // grey
+    if (s == "pending")  return Color(0xFFCCCCCC)                          // light grey (weekend shade)
 
     // approved (or no request) — colour by type
     return when {
@@ -620,7 +620,7 @@ private fun DayCell(
     val todayBg = Color(0xFF64B5F6).copy(alpha = 0.5f)
     val selectedBg = Color(0xFFDD3825)
     val dotColor = when {
-        status == AttendanceDayStatus.WEEKEND -> Color(0xFFCCCCCC)
+        status == AttendanceDayStatus.WEEKEND -> Color(0xFFAAAAAA)
         status == null -> Color.Transparent
         !rawType.isNullOrEmpty() -> typeColor(rawType, requestStatus)
         status == AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
@@ -636,7 +636,7 @@ private fun DayCell(
     }
     val textColor = when {
         isToday || isSelected -> Color.White
-        status == AttendanceDayStatus.WEEKEND -> Color(0xFF999999)
+        status == AttendanceDayStatus.WEEKEND -> Color(0xFFAAAAAA)
         else -> Color.Black
     }
     val textWeight = FontWeight.SemiBold

@@ -1039,7 +1039,7 @@ class HomeController(
                 "id" -> navigator.navigateToID()
                 "timesheet" -> {
                     Log.d("HomeController", "Navigating to Attendance screen")
-                    attendanceController.resetSelectedDate()
+                    attendanceController.resetToCurrentMonth()
                     attendanceController.fetchLeaveBalances()
                     navigate("attendance")
                 }
@@ -1049,6 +1049,7 @@ class HomeController(
                 }
                 "regularize" -> {
                     Log.d("HomeController", "Navigating to Attendance screen for regularization")
+                    attendanceController.resetToCurrentMonth()
                     navigate("attendance")
                 }
                 "apply outdoor" -> {

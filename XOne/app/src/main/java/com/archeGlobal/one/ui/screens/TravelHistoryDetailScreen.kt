@@ -583,7 +583,7 @@ fun TravelDetailRowWithDrawableIcon(
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
         Icon(
             painter = painterResource(id = iconRes),
@@ -598,7 +598,6 @@ fun TravelDetailRowWithDrawableIcon(
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f),
         )
         Text(
             text = value,
@@ -607,6 +606,7 @@ fun TravelDetailRowWithDrawableIcon(
             fontWeight = FontWeight.Normal,
             color = Color.Black,
             textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
         )
     }
 }

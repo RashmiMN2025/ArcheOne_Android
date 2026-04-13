@@ -30,7 +30,8 @@ class AttendanceController(private val context: Context) {
 
     var selectedDate by mutableStateOf<LocalDate?>(LocalDate.now())
 
-    fun resetSelectedDate() {
+    fun resetToCurrentMonth() {
+        currentMonth = YearMonth.now()
         selectedDate = LocalDate.now()
     }
 
@@ -183,6 +184,9 @@ class AttendanceController(private val context: Context) {
         // Pending request next
         val pending = requests?.firstOrNull { it.status.equals("pending", ignoreCase = true) }
         if (pending != null) return pending.requestType
+        // Rejected request — return its type so typeColor can render it transparent
+        val rejected = requests?.firstOrNull { it.status.equals("rejected", ignoreCase = true) }
+        if (rejected != null) return rejected.requestType
         // Fall back to raw attendance status
         return attendanceStatus ?: ""
     }

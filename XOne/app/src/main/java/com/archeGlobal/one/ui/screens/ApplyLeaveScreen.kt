@@ -939,7 +939,7 @@ fun ApplyLeaveScreen(
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
                     ) {
-                            val buttonText = if (selectedLeaveType.isNotEmpty()) "Apply $selectedLeaveType Request" else "Apply Leave"
+                            val buttonText = if (selectedLeaveType.isNotEmpty()) "Submit $selectedLeaveType Request" else "Submit Leave"
                             Text(
                                 text = buttonText,
                                 fontFamily = GraphikFontFamily,

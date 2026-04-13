@@ -133,16 +133,16 @@ private fun MyRequestCard(
     onClick: () -> Unit,
 ) {
     val statusColor = when (request.status.lowercase()) {
-        "approved" -> Color(0xFF4CAF50)
-        "rejected" -> Color(0xFFDD3825)
-        "pending" -> Color(0xFFE6A817)
-        else -> Color(0xFF888888)
+        "approved" -> Color(0xFF008000)
+        "rejected" -> Color(0xFFFF0000)
+        "pending" -> Color(0xFFFFA500)
+        else -> Color.Gray
     }
     val statusBgColor = when (request.status.lowercase()) {
-        "approved" -> Color(0xFFE8F5E9)
-        "rejected" -> Color(0xFFFFEBEE)
-        "pending" -> Color(0xFFFFF8E1)
-        else -> Color(0xFFF5F5F5)
+        "approved" -> Color(0xFF008000).copy(alpha = 0.15f)
+        "rejected" -> Color(0xFFFF0000).copy(alpha = 0.15f)
+        "pending" -> Color(0xFFFFA500).copy(alpha = 0.15f)
+        else -> Color.Gray.copy(alpha = 0.15f)
     }
     val displayStatus = request.status.replaceFirstChar { it.uppercase() }
 
@@ -181,7 +181,7 @@ private fun MyRequestCard(
                 Box(
                     modifier = Modifier
                         .background(statusBgColor, RoundedCornerShape(6.dp))
-                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
                 ) {
                     Text(
                         text = displayStatus,
