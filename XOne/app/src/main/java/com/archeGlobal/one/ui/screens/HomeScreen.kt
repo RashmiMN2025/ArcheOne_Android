@@ -723,7 +723,7 @@ fun HomeScreenContent(
                             },
                             modifier =
                                 Modifier
-                                    .width(140.dp)
+                                    .width(160.dp)
                                     .height(38.dp),
                             colors =
                                 ButtonDefaults.buttonColors(

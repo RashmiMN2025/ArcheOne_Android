@@ -359,6 +359,7 @@ class HomeController(
         if (preferencesManager.getAuthToken() != null) {
             Log.d("CelebrationController", "Auth token exists, fetching celebration data immediately")
             fetchCelebrationData()
+            fetchHeadsUpCount()
         } else {
             Log.d("CelebrationController", "No auth token found, will fetch celebration data after login")
         }
@@ -796,6 +797,32 @@ class HomeController(
             } catch (e: Exception) {
                 Log.e("CelebrationController", "Exception while fetching celebration data: ${e.message}")
                 e.printStackTrace()
+            }
+        }
+    }
+
+    private fun fetchHeadsUpCount() {
+        val userDataManager = UserDataManager.getInstance(context)
+        val userData = userDataManager.getUserData()
+        val email = userData?.email ?: return
+        val department = userData.department ?: ""
+        val location = userData.location ?: ""
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val request = com.archeGlobal.one.network.HeadsUpPostsRequest(
+                    department = department,
+                    location = location,
+                    email = email,
+                )
+                val response = RetrofitClient.apiService.getHeadsUpPosts(request)
+                if (response.isSuccessful && response.body()?.status == 200) {
+                    val count = response.body()?.posts?.size ?: 0
+                    userDataManager.saveHeadsUpCount(count)
+                    Log.d("HomeController", "HeadsUp count fetched on load: $count")
+                }
+            } catch (e: Exception) {
+                Log.d("HomeController", "fetchHeadsUpCount failed silently: ${e.message}")
             }
         }
     }
