@@ -483,6 +483,7 @@ private fun AttendanceDetailsDialog(
                 val primaryRequest = allRequests.firstOrNull()
                 val leaveType = primaryRequest?.requestType ?: "None"
                 val leaveStatus = primaryRequest?.status ?: "None"
+                val hasPendingRequest = allRequests.any { it.status.equals("pending", ignoreCase = true) }
                 val regularisation = allRequests.firstOrNull { it.requestType.contains("Regularisation", ignoreCase = true) }
                 val reason = allRequests.mapNotNull { it.reason.ifEmpty { null } }.distinct().joinToString(", ").ifEmpty { "None" }
                 val rawSwipes = punchRecords.flatMap { record ->
@@ -500,7 +501,7 @@ private fun AttendanceDetailsDialog(
                     ) {
                         AttendanceDetailRow(label = "Shift", value = if (date.dayOfWeek == java.time.DayOfWeek.SATURDAY || date.dayOfWeek == java.time.DayOfWeek.SUNDAY) "None" else "9:30 am to 6:30 pm")
                         AttendanceDetailRow(label = "Regularised", value = regularisation?.status ?: "None")
-                        AttendanceDetailRow(label = "Attendance Status", value = if (date == java.time.LocalDate.now()) "None" else records.firstOrNull()?.attendanceStatus ?: "None")
+                        AttendanceDetailRow(label = "Attendance Status", value = if (date == java.time.LocalDate.now() || hasPendingRequest) "None" else records.firstOrNull()?.attendanceStatus ?: "None")
                         AttendanceDetailRow(label = "Reason", value = reason)
                         AttendanceDetailRow(label = "Raw Swipes", value = rawSwipes)
                     }
@@ -620,6 +621,7 @@ private fun DayCell(
     val todayBg = Color(0xFF64B5F6).copy(alpha = 0.5f)
     val selectedBg = Color(0xFFDD3825)
     val dotColor = when {
+        isToday -> Color.Transparent
         status == AttendanceDayStatus.WEEKEND -> Color(0xFFAAAAAA)
         status == null -> Color.Transparent
         !rawType.isNullOrEmpty() -> typeColor(rawType, requestStatus)

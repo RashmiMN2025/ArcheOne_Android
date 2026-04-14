@@ -72,22 +72,18 @@ fun AssetScreen(
                         ),
                     ),
         ) {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            modifier = Modifier.offset(x = 27.dp),
-                            text = "Asset Information",
-                            color = Color.Black,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        )
-                    }
+                    Text(
+                        text = "Asset Information",
+                        color = Color.Black,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = { onBackPressed() }) {
@@ -108,14 +104,13 @@ fun AssetScreen(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             color = Color(0xFFDD3825),
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
                         )
                     }
                 },
-                colors =
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                    ),
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent,
+                ),
             )
 
             Box(

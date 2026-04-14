@@ -343,6 +343,7 @@ fun HomeScreenContent(
         // Initialize UserDataManager and OtpVerificationController for refresh functionality
         val userDataManager = remember { UserDataManager.getInstance(context) }
         val otpVerificationController = remember { navigator?.let { OtpVerificationController(it, context) } }
+        val headsUpCount by userDataManager.headsUpCountFlow.collectAsState()
 
         // Observe the locked state
         val lockedState =
@@ -868,7 +869,7 @@ fun HomeScreenContent(
             onFooterHeadsUpClick = onFooterHeadsUpClick,
             onFooterSOSClick = onFooterSOSClick,
             onFooterProfileClick = onFooterProfileClick,
-            headsUpCount = userDataManager.getHeadsUpCount(),
+            headsUpCount = headsUpCount,
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 // Main content with conditional blur and pull-to-refresh
@@ -2118,6 +2119,7 @@ fun TimeAttendanceCard(
                     modifier = Modifier.weight(1f).height(44.dp),
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primaryRed),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
                 ) {
                     Text(
@@ -2126,6 +2128,8 @@ fun TimeAttendanceCard(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = primaryRed,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 OutlinedButton(
@@ -2133,6 +2137,7 @@ fun TimeAttendanceCard(
                     modifier = Modifier.weight(1f).height(44.dp),
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primaryRed),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
                 ) {
                     Text(
@@ -2141,6 +2146,8 @@ fun TimeAttendanceCard(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = primaryRed,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -2157,6 +2164,7 @@ fun TimeAttendanceCard(
                     modifier = Modifier.weight(1f).height(44.dp),
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primaryRed),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
                 ) {
                     Text(
@@ -2165,6 +2173,8 @@ fun TimeAttendanceCard(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = primaryRed,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 OutlinedButton(
@@ -2172,6 +2182,7 @@ fun TimeAttendanceCard(
                     modifier = Modifier.weight(1f).height(44.dp),
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primaryRed),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
                 ) {
                     Text(
@@ -2180,6 +2191,8 @@ fun TimeAttendanceCard(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = primaryRed,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }

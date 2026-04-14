@@ -3,6 +3,9 @@ package com.archeGlobal.one.utils
 import android.content.Context
 import android.util.Log
 import com.archeGlobal.one.model.ApiGreetingCategory
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.PolicyModel
@@ -44,7 +47,8 @@ class UserDataManager private constructor(
     // private var hasLoggedIn: Boolean = false
 
     // HeadsUp count management
-    private var headsUpCount: Int = 0
+    private val _headsUpCount = MutableStateFlow(0)
+    val headsUpCountFlow: StateFlow<Int> = _headsUpCount.asStateFlow()
 
     // Callback for when user data becomes ready
     private var onUserDataReadyCallbacks: MutableList<() -> Unit> = mutableListOf()
@@ -72,17 +76,12 @@ class UserDataManager private constructor(
 
     // HeadsUp count management
     fun saveHeadsUpCount(count: Int) {
-        headsUpCount = count
+        _headsUpCount.value = count
         preferencesManager.setInt("headsup_count", count)
         Log.d(TAG, "HeadsUp count saved: $count")
     }
 
-    fun getHeadsUpCount(): Int {
-        if (headsUpCount == 0) {
-            headsUpCount = preferencesManager.getInt("headsup_count", 0)
-        }
-        return headsUpCount
-    }
+    fun getHeadsUpCount(): Int = _headsUpCount.value
 
     private val PREF_LAST_LOGIN_TIME = "last_login_time"
 
@@ -101,6 +100,7 @@ class UserDataManager private constructor(
     init {
         // Load data from SharedPreferences on initialization
         loadDataFromPreferences()
+        _headsUpCount.value = preferencesManager.getInt("headsup_count", 0)
         Log.d(TAG, "UserDataManager initialized with data: ${userData?.name}")
     }
 
