@@ -476,8 +476,8 @@ private fun AttendanceDetailsDialog(
             } else {
                 val allRequests = records.flatMap { it.requests ?: emptyList() }.distinctBy { it.id }
                 val punchRecords = records.filter { !it.punchIn.isNullOrEmpty() }.sortedBy { it.punchIn }
-                val firstIn = punchRecords.firstOrNull()?.punchIn ?: "None"
-                val lastOut = punchRecords.lastOrNull { !it.punchOut.isNullOrEmpty() }?.punchOut?.lastOrNull() ?: "None"
+                val firstIn = formatTo12h(punchRecords.firstOrNull()?.punchIn ?: "None")
+                val lastOut = formatTo12h(punchRecords.lastOrNull { !it.punchOut.isNullOrEmpty() }?.punchOut?.lastOrNull() ?: "None")
                 val workingHours = records.firstOrNull { it.workingHours != null && it.workingHours != "00:00" }?.workingHours
                     ?: records.firstOrNull()?.workingHours ?: "None"
                 val primaryRequest = allRequests.firstOrNull()
@@ -522,6 +522,19 @@ private fun AttendanceDetailsDialog(
         shape = RoundedCornerShape(16.dp),
         containerColor = Color.White,
     )
+}
+
+private fun formatTo12h(time: String): String {
+    if (time == "None" || time.isBlank()) return time
+    val formats = listOf("HH:mm:ss", "HH:mm", "yyyy-MM-dd HH:mm:ss")
+    val out = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
+    for (pattern in formats) {
+        try {
+            val parsed = java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault()).parse(time)
+            if (parsed != null) return out.format(parsed)
+        } catch (_: Exception) {}
+    }
+    return time
 }
 
 @Composable
