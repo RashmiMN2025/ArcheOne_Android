@@ -70,6 +70,9 @@ class HomeController(
     val hasReportees: Boolean
         get() = UserDataManager.getInstance(context).getUserData()?.hasReportees ?: false
 
+    val showAttendance: Boolean
+        get() = OtpVerificationController.getUserData()?.location?.equals("Bangalore", ignoreCase = true) == true
+
 
     fun showPunchIn() {
         showPunchInDialog = true
@@ -389,18 +392,19 @@ class HomeController(
             Log.d("PunchState", "Login API attendance | punchIn=$loginPunchIn | punchOut=$loginPunchOut | attendanceId=$loginPunchId")
 
             if (!loginPunchIn.isNullOrEmpty()) {
-                isPunchedIn = loginPunchOut.isNullOrEmpty()
-                punchInTime = loginPunchIn
-                punchOutTime = loginPunchOut ?: ""
-                punchId = loginPunchId
-                punchInDateTime = null
-
-                Log.d("PunchState", "Seeded from login API | isPunchedIn=$isPunchedIn | punchInTime=$punchInTime | punchOutTime=$punchOutTime | punchId=$punchId")
-
                 val fmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
-                if (!isPunchedIn && !loginPunchOut.isNullOrEmpty()) {
-                    // Already punched out — calculate final timeSpent from punchIn → punchOut
+                if (!loginPunchOut.isNullOrEmpty()) {
+                    // Completed session from login API — punch-in and punch-out both present
+                    isPunchedIn = false
+                    punchInTime = loginPunchIn
+                    punchOutTime = loginPunchOut
+                    punchId = loginPunchId
+                    punchInDateTime = null
+
+                    Log.d("PunchState", "Seeded from login API | isPunchedIn=$isPunchedIn | punchInTime=$punchInTime | punchOutTime=$punchOutTime | punchId=$punchId")
+
+                    // Calculate final timeSpent from punchIn → punchOut
                     timeSpent = try {
                         val inTime = fmt.parse(loginPunchIn)
                         val outTime = fmt.parse(loginPunchOut)
@@ -415,31 +419,15 @@ class HomeController(
                     } catch (_: Exception) { "00 h 00 m" }
                     Log.d("PunchState", "Already punched out | timeSpent=$timeSpent (punchIn=$loginPunchIn → punchOut=$loginPunchOut)")
                 } else {
-                    // Still punched in — set punchInDateTime and show elapsed time immediately
+                    // Punch-in with no punch-out on a new day = previous day's unclosed session.
+                    // Reset to "Not Punched" — the user hasn't punched in today.
+                    Log.d("PunchState", "New day with unclosed previous session (punchIn=$loginPunchIn, no punchOut) — resetting to Not Punched")
+                    isPunchedIn = false
+                    punchInTime = ""
+                    punchOutTime = ""
                     timeSpent = "00 h 00 m"
-                    try {
-                        val parsed = fmt.parse(loginPunchIn)
-                        if (parsed != null) {
-                            val cal = java.util.Calendar.getInstance()
-                            val timeCal = java.util.Calendar.getInstance()
-                            timeCal.time = parsed
-                            cal.set(java.util.Calendar.HOUR_OF_DAY, timeCal.get(java.util.Calendar.HOUR_OF_DAY))
-                            cal.set(java.util.Calendar.MINUTE, timeCal.get(java.util.Calendar.MINUTE))
-                            cal.set(java.util.Calendar.SECOND, timeCal.get(java.util.Calendar.SECOND))
-                            punchInDateTime = cal.time
-                            // Show elapsed time right away instead of waiting for timer tick
-                            val diff = Date().time - cal.timeInMillis
-                            if (diff > 0) {
-                                val hours = diff / (1000 * 60 * 60)
-                                val minutes = (diff / (1000 * 60)) % 60
-                                timeSpent = String.format("%02d h %02d m", hours, minutes)
-                            }
-                            Log.d("PunchState", "Still punched in | punchInDateTime=${punchInDateTime} | initial timeSpent=$timeSpent | starting timer")
-                            startTimer()
-                        }
-                    } catch (e: Exception) {
-                        Log.e("PunchState", "Failed to parse loginPunchIn time: $loginPunchIn | error=${e.message}")
-                    }
+                    punchId = -1
+                    punchInDateTime = null
                 }
             } else {
                 Log.d("PunchState", "No loginPunchIn in login API response — resetting to clean state")

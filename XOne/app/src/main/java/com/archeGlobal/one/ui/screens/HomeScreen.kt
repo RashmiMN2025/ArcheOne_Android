@@ -1100,34 +1100,36 @@ fun HomeScreenContent(
                                         modifier = Modifier.fillMaxSize(),
                                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
                                     ) {
-                                        item {
-                                            TimeAttendanceCard(
-                                                isPunchedIn = controller.isPunchedIn,
-                                                punchInTime = controller.punchInTime,
-                                                punchOutTime = controller.punchOutTime,
-                                                timeSpent = controller.timeSpent,
-                                                onViewAllClick = {
-                                                    onItemClick(HomeItem(title = "Timesheet", icon = "timesheet", category = ""))
-                                                },
-                                                onPunchInClick = {
-                                                    val title = if (controller.punchInTime.isNotEmpty()) "Punch Out" else "Punch In"
-                                                    onItemClick(HomeItem(title = title, icon = "punch_in", category = ""))
-                                                },
-                                                onApplyLeaveClick = {
-                                                    onItemClick(HomeItem(title = "Apply Leave", icon = "apply_leave", category = ""))
-                                                },
-                                                onApplyOutDoorClick = {
-                                                    onItemClick(HomeItem(title = "Apply OutDoor", icon = "apply_outdoor", category = ""))
-                                                },
-                                                onRegularizeClick = {
-                                                    onItemClick(HomeItem(title = "Regularize", icon = "regularize", category = ""))
-                                                },
-                                                onManagerApprovalsClick = {
-                                                    onItemClick(HomeItem(title = "Manager Approvals", icon = "manager_approvals", category = ""))
-                                                },
-                                                showManagerApprovals = controller.hasReportees,
-                                            )
-                                            Spacer(modifier = Modifier.height(16.dp))
+                                        if (controller.showAttendance) {
+                                            item {
+                                                TimeAttendanceCard(
+                                                    isPunchedIn = controller.isPunchedIn,
+                                                    punchInTime = controller.punchInTime,
+                                                    punchOutTime = controller.punchOutTime,
+                                                    timeSpent = controller.timeSpent,
+                                                    onViewAllClick = {
+                                                        onItemClick(HomeItem(title = "Timesheet", icon = "timesheet", category = ""))
+                                                    },
+                                                    onPunchInClick = {
+                                                        val title = if (controller.punchInTime.isNotEmpty()) "Punch Out" else "Punch In"
+                                                        onItemClick(HomeItem(title = title, icon = "punch_in", category = ""))
+                                                    },
+                                                    onApplyLeaveClick = {
+                                                        onItemClick(HomeItem(title = "Apply Leave", icon = "apply_leave", category = ""))
+                                                    },
+                                                    onApplyOutDoorClick = {
+                                                        onItemClick(HomeItem(title = "Apply OutDoor", icon = "apply_outdoor", category = ""))
+                                                    },
+                                                    onRegularizeClick = {
+                                                        onItemClick(HomeItem(title = "Regularize", icon = "regularize", category = ""))
+                                                    },
+                                                    onManagerApprovalsClick = {
+                                                        onItemClick(HomeItem(title = "Manager Approvals", icon = "manager_approvals", category = ""))
+                                                    },
+                                                    showManagerApprovals = controller.hasReportees,
+                                                )
+                                                Spacer(modifier = Modifier.height(16.dp))
+                                            }
                                         }
 
                                         model.categories.forEach { (category, items) ->

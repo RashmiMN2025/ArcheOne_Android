@@ -45,14 +45,14 @@ fun TicketTrackingScreen(controller: HelpDeskController) {
     var isRefreshing by remember { mutableStateOf(false) }
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
+    // Sync isRefreshing with model.isLoading
+    LaunchedEffect(model.isLoading) {
+        isRefreshing = model.isLoading
+    }
+
     // Handle back press gesture to navigate to proper source screen
     BackHandler {
         controller.navigateBack()
-    }
-
-    // Update isRefreshing based on model.isLoading
-    LaunchedEffect(model.isLoading) {
-        isRefreshing = model.isLoading
     }
 
     // Auto-refresh tickets when navigation trigger changes (when screen becomes active)
@@ -135,7 +135,7 @@ fun TicketTrackingScreen(controller: HelpDeskController) {
                     Text(
                         text = statusText,
                         fontSize = 16.sp,
-                        color = Color.Gray,
+                        color = Color(0xFF555555),
                         fontFamily = GraphikFontFamily,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
@@ -147,6 +147,7 @@ fun TicketTrackingScreen(controller: HelpDeskController) {
                         state = swipeRefreshState,
                         onRefresh = { controller.refreshTickets() },
                         modifier = Modifier.fillMaxSize(),
+                        indicator = { _, _ -> }, // Empty indicator - UniversalLoader is used instead
                     ) {
                         when {
                             model.error != null -> {
@@ -197,9 +198,8 @@ fun TicketTrackingScreen(controller: HelpDeskController) {
             }
         }
 
-        // Show UniversalLoader for programmatic refresh (not swipe refresh)
-        if (model.isLoading && !swipeRefreshState.isRefreshing) {
-            UniversalLoader(isLoading = true)
+        if (isRefreshing) {
+            UniversalLoader(isLoading = isRefreshing)
         }
     }
 }
@@ -502,7 +502,46 @@ fun TicketCard(
                             }
                         }
                     } else {
-                        // For open tickets, show Created and Issue
+                        // For open tickets, show Sub-Category, Created and Issue
+
+                        // Sub-Category
+                        ticket.subCategory?.let { subCategory ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Start,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .size(18.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.sub),
+                                        contentDescription = "Sub-Category",
+                                        modifier = Modifier.size(14.dp),
+                                        colorFilter = ColorFilter.tint(Color.Black),
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Sub-Category:",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Black,
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = subCategory,
+                                    fontSize = 13.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Gray,
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
 
                         // Created Date
                         Row(
@@ -653,9 +692,8 @@ fun StatusChip(status: TicketStatus) {
             Modifier
                 .clip(RoundedCornerShape(16.dp))
                 .background(backgroundColor)
-                .padding(horizontal = 10.dp, vertical = 2.dp)
-                .width(70.dp),
-        contentAlignment = Alignment.Center
+                .padding(horizontal = 10.dp, vertical = 1.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = statusText,

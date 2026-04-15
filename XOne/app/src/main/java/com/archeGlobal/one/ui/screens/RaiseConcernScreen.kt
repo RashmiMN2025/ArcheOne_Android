@@ -546,7 +546,7 @@ fun RaiseConcernScreen(
                                 when (exception) {
                                     is APIError.Unauthorized -> "Authentication error. Please login again."
                                     is APIError.BadRequest -> "Invalid request. Please check your information."
-                                    is APIError.ServerError -> "Server error. Please try again later."
+                                    is APIError.ServerError -> exception.message?.takeIf { it.isNotBlank() } ?: "Server error. Please try again later."
                                     is APIError.EncryptionFailed -> "Security error. Please try again."
                                     is APIError.DecryptionFailed -> "Security error. Please try again."
                                     is APIError.SSLPinningFailed -> "Network security error. Please try again."
@@ -1411,7 +1411,7 @@ fun RaiseConcernScreen(
                                 modifier = Modifier.padding(bottom = 24.dp),
                             )
 
-                            // Timer circle - Remove grey background
+                            // Timer circle
                             Box(
                                 modifier =
                                     Modifier
@@ -1419,13 +1419,13 @@ fun RaiseConcernScreen(
                                         .padding(bottom = 16.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                // Red circular progress indicator
+                                // Red circular progress indicator (remaining time drains away)
                                 CircularProgressIndicator(
-                                    progress = (20 - timerSeconds) / 20f,
+                                    progress = { timerSeconds / 20f },
                                     modifier = Modifier.size(96.dp),
                                     color = Color(0xFFD32F2F),
                                     strokeWidth = 4.dp,
-                                    trackColor = Color.Transparent,
+                                    trackColor = Color(0xFFE0E0E0),
                                 )
 
                                 // Timer text in center

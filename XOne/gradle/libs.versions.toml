@@ -1,6 +1,6 @@
 [versions]
 accompanistPager = "0.30.1"
-agp = "8.12.0"
+agp = "8.13.2"
 androidPdfViewer = "3.2.0-beta.1"
 androidxComposeMaterial3Material3 = "1.3.2"
 androidxComposeUiUi = "1.8.2"
