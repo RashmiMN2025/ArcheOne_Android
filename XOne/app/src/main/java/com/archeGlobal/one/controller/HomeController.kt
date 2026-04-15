@@ -418,16 +418,50 @@ class HomeController(
                         } else "00 h 00 m"
                     } catch (_: Exception) { "00 h 00 m" }
                     Log.d("PunchState", "Already punched out | timeSpent=$timeSpent (punchIn=$loginPunchIn → punchOut=$loginPunchOut)")
-                } else {
-                    // Punch-in with no punch-out on a new day = previous day's unclosed session.
+                } else if (state.lastPunchDate.isNotEmpty()) {
+                    // Known previous date exists → this is a genuine day change.
+                    // Punch-in with no punch-out = previous day's unclosed session.
                     // Reset to "Not Punched" — the user hasn't punched in today.
-                    Log.d("PunchState", "New day with unclosed previous session (punchIn=$loginPunchIn, no punchOut) — resetting to Not Punched")
+                    Log.d("PunchState", "Day change with unclosed previous session (punchIn=$loginPunchIn, no punchOut) — resetting to Not Punched")
                     isPunchedIn = false
                     punchInTime = ""
                     punchOutTime = ""
                     timeSpent = "00 h 00 m"
                     punchId = -1
                     punchInDateTime = null
+                } else {
+                    // No previous punch date (fresh install or app data cleared) — trust the login API.
+                    // Punch-in with no punch-out means the user is currently punched in.
+                    isPunchedIn = true
+                    punchInTime = loginPunchIn
+                    punchOutTime = ""
+                    punchId = loginPunchId
+                    punchInDateTime = null
+
+                    Log.d("PunchState", "Fresh state with active punch-in (punchIn=$loginPunchIn) — seeded as Punched In")
+
+                    val fmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                    try {
+                        val parsed = fmt.parse(loginPunchIn)
+                        if (parsed != null) {
+                            val cal = java.util.Calendar.getInstance()
+                            val timeCal = java.util.Calendar.getInstance()
+                            timeCal.time = parsed
+                            cal.set(java.util.Calendar.HOUR_OF_DAY, timeCal.get(java.util.Calendar.HOUR_OF_DAY))
+                            cal.set(java.util.Calendar.MINUTE, timeCal.get(java.util.Calendar.MINUTE))
+                            cal.set(java.util.Calendar.SECOND, timeCal.get(java.util.Calendar.SECOND))
+                            punchInDateTime = cal.time
+                            val diff = Date().time - cal.timeInMillis
+                            if (diff > 0) {
+                                val hours = diff / (1000 * 60 * 60)
+                                val minutes = (diff / (1000 * 60)) % 60
+                                timeSpent = String.format("%02d h %02d m", hours, minutes)
+                            }
+                            startTimer()
+                        }
+                    } catch (e: Exception) {
+                        Log.e("PunchState", "Failed to parse loginPunchIn: $loginPunchIn | ${e.message}")
+                    }
                 }
             } else {
                 Log.d("PunchState", "No loginPunchIn in login API response — resetting to clean state")
