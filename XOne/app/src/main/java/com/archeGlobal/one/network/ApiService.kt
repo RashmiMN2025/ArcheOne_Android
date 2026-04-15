@@ -23,6 +23,8 @@ import com.archeGlobal.one.model.CabHistoryRequest
 import com.archeGlobal.one.model.CabHistoryResponse
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.CelebrationResponse
+import com.archeGlobal.one.model.ChatbotRequest
+import com.archeGlobal.one.model.ChatbotResponse
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.DeleteAssetResponse
 import com.archeGlobal.one.model.DeleteTagAssetRequest
@@ -205,6 +207,11 @@ interface ApiService {
     suspend fun rejectRequest(
         @Query("event_id") id: String
     ): Response<RejectActionResponse>
+
+    @POST("/api/v1/chatbot/chat")
+    suspend fun getChatbotResponse(
+        @Body request: ChatbotRequest
+    ): Response<ChatbotResponse>
 
     @HTTP(method = "DELETE", path = "/delete_doc", hasBody = true)
     fun deleteDoc(

@@ -6,6 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.model.FAQItem
 import com.archeGlobal.one.model.Message
+import com.archeGlobal.one.model.ChatbotRequest
+import com.archeGlobal.one.model.ChatbotResponse
+import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.ChatData
 import com.archeGlobal.one.utils.ChatModel
 import kotlinx.coroutines.delay
@@ -49,24 +52,56 @@ class ChatViewModel : ViewModel() {
         // Show typing indicator
         isTyping.value = true
 
-        // Simulate typing delay
         viewModelScope.launch {
-            delay(1000) // Simulate typing delay
-
-            // Process the message and get a response with FAQ flag
-            val (response, shouldShowFAQs) = processMessageWithFAQFlag(text)
-
-            if (shouldShowFAQs) {
-                // Send two separate messages: one for text, one for FAQ categories
-                addBotMessage(response, showFAQs = false, includeUserQuestion = false)
-                addBotMessage("", showFAQs = true, includeUserQuestion = false)
-            } else {
-                // Send single message as before
-                addBotMessage(response, showFAQs = false, includeUserQuestion = true)
+            // 1. Check local FAQs/Greetings first
+            val (localResponse, shouldShowFAQs) = processMessageWithFAQFlag(text)
+            
+            // If it's NOT the default "not sure" message, we found a local match
+            if (localResponse != FAQ_MESSAGE) {
+                delay(500) // Small delay for natural feel
+                if (shouldShowFAQs) {
+                    addBotMessage(localResponse, showFAQs = false, includeUserQuestion = false)
+                    addBotMessage("", showFAQs = true, includeUserQuestion = false)
+                } else {
+                    addBotMessage(localResponse, showFAQs = false, includeUserQuestion = true)
+                }
+                isTyping.value = false
+                return@launch
             }
 
-            // Hide typing indicator
-            isTyping.value = false
+            // 2. If no local match, call the Chatbot API
+            try {
+                val response = RetrofitClient.apiService.getChatbotResponse(ChatbotRequest(text))
+                if (response.isSuccessful && response.body() != null) {
+                    val answer = response.body()?.answer ?: ""
+                    if (answer.trim().isNotEmpty()) {
+                        addBotMessage(answer, showFAQs = false, includeUserQuestion = false)
+                    } else {
+                        handleLocalFallback(text)
+                    }
+                } else {
+                    handleLocalFallback(text)
+                }
+            } catch (e: Exception) {
+                handleLocalFallback(text)
+            } finally {
+                // Hide typing indicator
+                isTyping.value = false
+            }
+        }
+    }
+
+    private fun handleLocalFallback(text: String) {
+        // Process the message and get a response with FAQ flag
+        val (response, shouldShowFAQs) = processMessageWithFAQFlag(text)
+
+        if (shouldShowFAQs) {
+            // Send two separate messages: one for text, one for FAQ categories
+            addBotMessage(response, showFAQs = false, includeUserQuestion = false)
+            addBotMessage("", showFAQs = true, includeUserQuestion = false)
+        } else {
+            // Send single message as before
+            addBotMessage(response, showFAQs = false, includeUserQuestion = true)
         }
     }
 
