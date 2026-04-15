@@ -10,22 +10,17 @@ import com.archeGlobal.one.model.ChatbotRequest
 import com.archeGlobal.one.model.ChatbotResponse
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.ChatData
-import com.archeGlobal.one.utils.ChatModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Date
 
 class ChatViewModel : ViewModel() {
     private val chatData = ChatData.shared
-    private val chatModel = ChatModel.shared
 
     val messages = mutableStateListOf<Message>()
     val inputText = mutableStateOf("")
     val isTyping = mutableStateOf(false)
     private var lastUserQuestion: String = ""
-
-    // Define the FAQ message as a constant to ensure exact matching
-    private val FAQ_MESSAGE = "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."
 
     init {
         loadMessages()
@@ -53,23 +48,7 @@ class ChatViewModel : ViewModel() {
         isTyping.value = true
 
         viewModelScope.launch {
-            // 1. Check local FAQs/Greetings first
-            val (localResponse, shouldShowFAQs) = processMessageWithFAQFlag(text)
-            
-            // If it's NOT the default "not sure" message, we found a local match
-            if (localResponse != FAQ_MESSAGE) {
-                delay(500) // Small delay for natural feel
-                if (shouldShowFAQs) {
-                    addBotMessage(localResponse, showFAQs = false, includeUserQuestion = false)
-                    addBotMessage("", showFAQs = true, includeUserQuestion = false)
-                } else {
-                    addBotMessage(localResponse, showFAQs = false, includeUserQuestion = true)
-                }
-                isTyping.value = false
-                return@launch
-            }
-
-            // 2. If no local match, call the Chatbot API
+            // Directly call the Chatbot API
             try {
                 val response = RetrofitClient.apiService.getChatbotResponse(ChatbotRequest(text))
                 if (response.isSuccessful && response.body() != null) {
@@ -77,31 +56,17 @@ class ChatViewModel : ViewModel() {
                     if (answer.trim().isNotEmpty()) {
                         addBotMessage(answer, showFAQs = false, includeUserQuestion = false)
                     } else {
-                        handleLocalFallback(text)
+                        addBotMessage("I'm sorry, I couldn't find an answer for that.", includeUserQuestion = false)
                     }
                 } else {
-                    handleLocalFallback(text)
+                    addBotMessage("Sorry, I'm having trouble responding right now. Please try again later.", includeUserQuestion = false)
                 }
             } catch (e: Exception) {
-                handleLocalFallback(text)
+                addBotMessage("An error occurred. Please check your connection.", includeUserQuestion = false)
             } finally {
                 // Hide typing indicator
                 isTyping.value = false
             }
-        }
-    }
-
-    private fun handleLocalFallback(text: String) {
-        // Process the message and get a response with FAQ flag
-        val (response, shouldShowFAQs) = processMessageWithFAQFlag(text)
-
-        if (shouldShowFAQs) {
-            // Send two separate messages: one for text, one for FAQ categories
-            addBotMessage(response, showFAQs = false, includeUserQuestion = false)
-            addBotMessage("", showFAQs = true, includeUserQuestion = false)
-        } else {
-            // Send single message as before
-            addBotMessage(response, showFAQs = false, includeUserQuestion = true)
         }
     }
 
@@ -157,129 +122,6 @@ class ChatViewModel : ViewModel() {
         }
 
         return null
-    }
-
-    private fun processMessageWithFAQFlag(text: String): Pair<String, Boolean> {
-        // First check if it's a greeting to match iOS behavior exactly
-        if (chatModel.isGreeting(text)) {
-            return Pair(chatModel.getGreetingResponse(), false)
-        }
-
-        // Count words in the query
-        val queryWords = text.lowercase().split(Regex("\\s+")).filter { it.length > 2 }
-
-        // If query has 2-4 words, treat it like random text (skip all FAQ logic)
-        if (queryWords.size in 2..4) {
-            return Pair(FAQ_MESSAGE, true)
-        }
-
-        // Search for FAQs related to the query
-        val relatedFAQs = chatData.searchFAQs(text)
-
-        if (relatedFAQs.isNotEmpty()) {
-            // Check if there's an exact match where the question equals the input text
-            val exactMatch = relatedFAQs.find { it.question.equals(text, ignoreCase = true) }
-
-            if (exactMatch != null) {
-                // If there's an exact match, return the answer directly
-                return Pair(exactMatch.answer, false)
-            }
-
-            // Check if we have 5+ words matching overall
-            val overallMatchingWords =
-                relatedFAQs.maxOfOrNull { faq ->
-                    val questionWords =
-                        faq.question
-                            .lowercase()
-                            .split(Regex("\\s+"))
-                            .filter { it.length > 2 }
-                    var matchingWordsCount = 0
-                    queryWords.forEach { queryWord ->
-                        questionWords.forEach { questionWord ->
-                            if (questionWord == queryWord || questionWord.contains(queryWord) || queryWord.contains(questionWord)) {
-                                matchingWordsCount++
-                            }
-                        }
-                    }
-                    matchingWordsCount
-                } ?: 0
-
-            // Check for high-quality matches (when 5+ words match)
-            val highQualityMatches =
-                relatedFAQs.filter { faq ->
-                    val questionWords =
-                        faq.question
-                            .lowercase()
-                            .split(Regex("\\s+"))
-                            .filter { it.length > 2 }
-
-                    var matchingWordsCount = 0
-                    queryWords.forEach { queryWord ->
-                        questionWords.forEach { questionWord ->
-                            if (questionWord == queryWord || questionWord.contains(queryWord) || queryWord.contains(questionWord)) {
-                                matchingWordsCount++
-                            }
-                        }
-                    }
-                    matchingWordsCount >= 5
-                }
-
-            // If we have exactly 1 word in the query AND it matches, keep current logic
-            if (queryWords.size == 1 && overallMatchingWords >= 1) {
-                // Original logic for single word queries
-                if (relatedFAQs.size > 2) {
-                    val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
-                    relatedFAQs.take(8).forEach { faq ->
-                        faqList.append("• ${faq.question}\n")
-                    }
-                    return Pair(faqList.toString(), false)
-                }
-                val response =
-                    relatedFAQs.joinToString("\n\n") { faq ->
-                        "${faq.question}\n\n\n${faq.answer}"
-                    }
-                return Pair(response, false)
-            }
-
-            // If we have 5+ words matching, keep current logic
-            if (highQualityMatches.isNotEmpty()) {
-                if (highQualityMatches.size == 1) {
-                    // If there's only one high-quality match, show question and answer
-                    val faq = highQualityMatches.first()
-                    return Pair("${faq.question}\n\n\n${faq.answer}", false)
-                } else {
-                    // If there are multiple high-quality matches, show them as options
-                    val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
-                    highQualityMatches.take(8).forEach { faq ->
-                        faqList.append("• ${faq.question}\n")
-                    }
-                    return Pair(faqList.toString(), false)
-                }
-            }
-
-            // If there are more than 2 related FAQs (but no high-quality matches), show the "multiple relevant questions" message
-            if (relatedFAQs.size > 2) {
-                val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
-
-                // Take at most 8 FAQs to match iOS behavior
-                relatedFAQs.take(8).forEach { faq ->
-                    faqList.append("• ${faq.question}\n")
-                }
-
-                return Pair(faqList.toString(), false)
-            }
-
-            // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
-            // Add proper spacing (two blank lines) between question and answer
-            val response =
-                relatedFAQs.joinToString("\n\n") { faq ->
-                    "${faq.question}\n\n\n${faq.answer}"
-                }
-            return Pair(response, false)
-        }
-
-        // Default response for no FAQs match (same as random text)
-        return Pair(FAQ_MESSAGE, true)
     }
 
     private fun addBotMessage(
