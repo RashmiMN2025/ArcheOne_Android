@@ -637,6 +637,13 @@ private fun DayCell(
         isToday -> Color.Transparent
         status == AttendanceDayStatus.WEEKEND -> Color(0xFFAAAAAA)
         status == null -> Color.Transparent
+        // Rejected request: ignore the request type and show the actual attendance status colour
+        requestStatus.lowercase() == "rejected" -> when (status) {
+            AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
+            AttendanceDayStatus.ABSENT  -> primaryRed
+            AttendanceDayStatus.HOLIDAY -> Color(0xFFFF9800)
+            else -> primaryRed // LEAVE/LATE with rejected request → still absent
+        }
         !rawType.isNullOrEmpty() -> typeColor(rawType, requestStatus)
         status == AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
         status == AttendanceDayStatus.ABSENT  -> primaryRed
