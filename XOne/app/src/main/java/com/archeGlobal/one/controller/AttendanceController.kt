@@ -146,12 +146,14 @@ class AttendanceController(private val context: Context) {
         attendanceStatus: String?,
         requests: List<com.archeGlobal.one.model.AttendanceDayRequest>?,
     ): AttendanceDayStatus {
-        // Approved leave request → LEAVE
-        val hasApprovedLeave = requests?.any {
-            it.status.equals("approved", ignoreCase = true) &&
-                it.requestType != "Regularisation"
-        } ?: false
-        if (hasApprovedLeave) return AttendanceDayStatus.LEAVE
+        // PRIORITIZE FIRST REQUEST: If there's at least one request, use its status
+        val firstRequest = requests?.firstOrNull()
+        if (firstRequest != null) {
+            val isApproved = firstRequest.status?.equals("approved", ignoreCase = true) ?: false
+            if (isApproved && firstRequest.requestType != "Regularisation") {
+                return AttendanceDayStatus.LEAVE
+            }
+        }
 
         val status = attendanceStatus?.lowercase() ?: ""
         return when {
@@ -159,7 +161,7 @@ class AttendanceController(private val context: Context) {
             status.contains("present") -> AttendanceDayStatus.PRESENT
             status.contains("late")    -> AttendanceDayStatus.ABSENT
             status.contains("absent")  -> AttendanceDayStatus.ABSENT
-            requests?.any { it.requestType != "Regularisation" } == true -> AttendanceDayStatus.LEAVE
+            firstRequest != null && firstRequest.requestType != "Regularisation" -> AttendanceDayStatus.LEAVE
             else -> AttendanceDayStatus.ABSENT
         }
     }
@@ -167,26 +169,19 @@ class AttendanceController(private val context: Context) {
     private fun resolveRequestStatus(
         requests: List<com.archeGlobal.one.model.AttendanceDayRequest>?,
     ): String {
-        if (requests.isNullOrEmpty()) return ""
-        if (requests.any { it.status.equals("approved", ignoreCase = true) }) return "approved"
-        if (requests.any { it.status.equals("pending", ignoreCase = true) }) return "pending"
-        if (requests.all { it.status.equals("rejected", ignoreCase = true) }) return "rejected"
-        return ""
+        // PRIORITIZE FIRST REQUEST: Return the status of the first request if it exists
+        val firstRequest = requests?.firstOrNull() ?: return ""
+        return firstRequest.status?.lowercase() ?: ""
     }
 
     private fun resolveRawType(
         attendanceStatus: String?,
         requests: List<com.archeGlobal.one.model.AttendanceDayRequest>?,
     ): String {
-        // Approved request takes priority
-        val approved = requests?.firstOrNull { it.status.equals("approved", ignoreCase = true) }
-        if (approved != null) return approved.requestType
-        // Pending request next
-        val pending = requests?.firstOrNull { it.status.equals("pending", ignoreCase = true) }
-        if (pending != null) return pending.requestType
-        // Rejected request — return its type so typeColor can render it transparent
-        val rejected = requests?.firstOrNull { it.status.equals("rejected", ignoreCase = true) }
-        if (rejected != null) return rejected.requestType
+        // PRIORITIZE FIRST REQUEST: Return the type of the first request if it exists
+        val firstRequest = requests?.firstOrNull()
+        if (firstRequest != null) return firstRequest.requestType ?: "None"
+        
         // Fall back to raw attendance status
         return attendanceStatus ?: ""
     }
@@ -375,8 +370,8 @@ class AttendanceController(private val context: Context) {
             var count = 0
             for (rec in monthRecords) {
                 val hasRegularization = rec.requests?.any {
-                    val type = it.requestType.lowercase()
-                    val status = it.status.lowercase()
+                    val type = it.requestType ?: "None".lowercase()
+                    val status = it.status ?: "None".lowercase()
                     (type.contains("regularisation") || type.contains("regularize") || type.contains("regularised")) &&
                     (status == "approved" || status == "pending")
                 } ?: false
@@ -390,7 +385,7 @@ class AttendanceController(private val context: Context) {
 
         // 5. No existing request on this day (especially regularisation)
         val hasExistingRequest = record.requests?.any {
-            it.status.lowercase() == "pending" || it.status.lowercase() == "approved"
+            it.status ?: "None".lowercase() == "pending" || it.status ?: "None".lowercase() == "approved"
         } ?: false
         
         if (hasExistingRequest) {

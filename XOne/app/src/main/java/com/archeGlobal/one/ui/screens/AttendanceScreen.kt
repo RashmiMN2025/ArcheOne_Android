@@ -71,6 +71,7 @@ private fun typeColor(type: String, requestStatus: String = ""): Color {
         t.contains("sick")                                                     -> Color(0xFF4B0082) // #4B0082
         t.contains("optional")                                                 -> Color(0xFF007BFF) // #007BFF
         t.contains("probationary")                                             -> Color(0xFFFFD700) // #FFD700
+        t.contains("knt women wellness leave")             -> Color(0xFFFF69B4) // #FF69B4
         else                                                                   -> Color(0xFFA0A0A0) // #A0A0A0
     }
 }
@@ -86,6 +87,7 @@ private fun leaveColor(type: String): Color {
         t.contains("paternity") || t.contains("maternity") -> Color(0xFF8B4513) // #8B4513
         t.contains("wfh") || t.contains("work from home")  -> Color(0xFF3EB489) // #3EB489
         t.contains("probationary")                         -> Color(0xFFFFD700) // #FFD700
+        t.contains("knt women wellness leave")             -> Color(0xFFFF69B4) // #FF69B4
         else                                               -> Color(0xFF007BFF) // #007BFF
     }
 }
@@ -483,9 +485,9 @@ private fun AttendanceDetailsDialog(
                 val primaryRequest = allRequests.firstOrNull()
                 val leaveType = primaryRequest?.requestType ?: "None"
                 val leaveStatus = primaryRequest?.status ?: "None"
-                val hasPendingRequest = allRequests.any { it.status.equals("pending", ignoreCase = true) }
-                val regularisation = allRequests.firstOrNull { it.requestType.contains("Regularisation", ignoreCase = true) }
-                val reason = allRequests.mapNotNull { it.reason.ifEmpty { null } }.distinct().joinToString(", ").ifEmpty { "None" }
+                val hasPendingRequest = allRequests.any { it.status?.equals("pending", ignoreCase = true) == true }
+                val regularisation = allRequests.firstOrNull { it.requestType?.contains("Regularisation", ignoreCase = true) == true }
+                val reason = allRequests.firstNotNullOfOrNull { it.reason?.ifEmpty { null } } ?: "None"
                 val rawSwipes = punchRecords.flatMap { record ->
                     listOfNotNull(record.punchIn) + (record.punchOut ?: emptyList())
                 }.joinToString(", ").ifEmpty { "None" }

@@ -181,7 +181,7 @@ fun SelfTagRequestCard(
 
                 Column {
                     Text(
-                        text = item.username,
+                        text = item.username ?: " ",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 20.sp,
@@ -192,14 +192,14 @@ fun SelfTagRequestCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Empl ID: ${item.employeeCode}",
+                            text = "Empl ID: ${item.employeeCode ?: "N/A"}",
                             fontSize = 14.sp,
                             color = Color.Gray,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal
                         )
                         Text(
-                            text = "Location: ${item.location}",
+                            text = "Location: ${item.location ?: "N/A"}",
                             fontSize = 14.sp,
                             color = Color.Gray,
                             fontFamily = GraphikFontFamily,
@@ -279,7 +279,9 @@ fun SelfTagRequestCard(
                 ) {
                     Button(
                         onClick = {
-                            controller.approveTag(item.employeeCode, item.serialNumber)
+                            if (item.employeeCode != null && item.serialNumber != null) {
+                                controller.approveTag(item.employeeCode, item.serialNumber)
+                            }
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -298,7 +300,9 @@ fun SelfTagRequestCard(
 
                     Button(
                         onClick = {
-                            controller.rejectTag(item.employeeCode, item.serialNumber)
+                            if (item.employeeCode != null && item.serialNumber != null) {
+                                controller.rejectTag(item.employeeCode, item.serialNumber)
+                            }
                         },
                         modifier = Modifier
                             .weight(1f)

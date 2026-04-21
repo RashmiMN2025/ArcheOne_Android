@@ -349,40 +349,65 @@ fun ApplyWfhScreen(
                             val userData = UserDataManager.getInstance(context).getUserData()
                             val employeeName = userData?.name ?: ""
                             val employeeCode = userData?.employeeId ?: ""
+                            val userEmail = userData?.email ?: ""
 
-                            val apiRequest = CreateLeaveRequest(
-                                employeeName = employeeName,
-                                employeeCode = employeeCode,
-                                startDate = fromDate.toString(), // YYYY-MM-DD
-                                endDate = toDate.toString(), // YYYY-MM-DD
-                                requestType = "WFH",
-                                leaveDuration = "Full",
-                                description = description,
-                                reason = description
-                            )
+                            // 1. Day of Week Validations
+                            val fromDayOfWeek = fromDate.dayOfWeek
+                            val toDayOfWeek = toDate.dayOfWeek
+                            val isWeekend = fromDayOfWeek == java.time.DayOfWeek.SATURDAY || fromDayOfWeek == java.time.DayOfWeek.SUNDAY ||
+                                            toDayOfWeek == java.time.DayOfWeek.SATURDAY || toDayOfWeek == java.time.DayOfWeek.SUNDAY
 
+                            if (isWeekend) {
+                                Toast.makeText(context, "Work From Home cannot be applied on weekends.", Toast.LENGTH_LONG).show()
+                                return@Button
+                            }
+
+                            val allowedWfhDays = listOf(java.time.DayOfWeek.TUESDAY, java.time.DayOfWeek.WEDNESDAY, java.time.DayOfWeek.THURSDAY)
+                            if (fromDayOfWeek !in allowedWfhDays || toDayOfWeek !in allowedWfhDays) {
+                                Toast.makeText(context, "Work From Home can only be applied on Tuesday, Wednesday, or Thursday.", Toast.LENGTH_LONG).show()
+                                return@Button
+                            }
+
+                            // 2. Complex Async Validations
                             isSubmitting = true
                             scope.launch {
                                 try {
-                                    // 1. Pre-check for conflicts
+                                    // WFH Weekly Limit Check
+                                    val weekStart = fromDate.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).toString()
+                                    val weekEnd = fromDate.with(java.time.temporal.TemporalAdjusters.nextOrSame(java.time.DayOfWeek.SUNDAY)).toString()
+                                    
                                     val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
-                                        email = userData?.email ?: "",
-                                        startDate = fromDate.toString(),
-                                        endDate = toDate.toString()
+                                        email = userEmail,
+                                        startDate = weekStart,
+                                        endDate = weekEnd
                                     )
                                     val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
-                                    
-                                    val conflicts = checkResponse.body()?.data?.breakdown?.filter { 
-                                        it.status.lowercase() == "pending" || it.status.lowercase() == "approved"
-                                    } ?: emptyList()
-
-                                    if (checkResponse.isSuccessful && conflicts.isNotEmpty()) {
-                                        Toast.makeText(context, "A request already exists for these dates. Please change the date.", Toast.LENGTH_LONG).show()
-                                        isSubmitting = false
-                                        return@launch
+                                    if (checkResponse.isSuccessful) {
+                                        val breakdown = checkResponse.body()?.data?.breakdown ?: emptyList()
+                                        val wfhCount = breakdown.count {
+                                            (it.requestType.contains("Work From Home", ignoreCase = true) ||
+                                             it.requestType.contains("WFH", ignoreCase = true)) &&
+                                            (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
+                                        }
+                                        if (wfhCount >= 1) {
+                                            Toast.makeText(context, "You can apply only one Work From Home per week.", Toast.LENGTH_LONG).show()
+                                            isSubmitting = false
+                                            return@launch
+                                        }
                                     }
 
-                                    // 2. Proceed with creation if no conflicts
+                                    // 3. Final Submission
+                                    val apiRequest = CreateLeaveRequest(
+                                        employeeName = employeeName,
+                                        employeeCode = employeeCode,
+                                        startDate = fromDate.toString(), // YYYY-MM-DD
+                                        endDate = toDate.toString(), // YYYY-MM-DD
+                                        requestType = "WFH",
+                                        leaveDuration = "Full",
+                                        description = description,
+                                        reason = description
+                                    )
+
                                     val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
                                     if (response.isSuccessful && response.body()?.success == true) {
                                         Toast.makeText(context, response.body()?.message ?: "WFH request submitted successfully", Toast.LENGTH_LONG).show()

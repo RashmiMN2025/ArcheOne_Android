@@ -38,6 +38,8 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -814,6 +816,12 @@ fun ApplyLeaveScreen(
                 ) {
                     Button(
                         onClick = {
+                            val userData = UserDataManager.getInstance(context).getUserData()
+                            val employeeName = userData?.name ?: ""
+                            val employeeCode = userData?.employeeId ?: ""
+                            val userEmail = userData?.email ?: ""
+
+                            // 1. Basic Selection Validations
                             if (selectedLeaveType.isEmpty()) {
                                 Toast.makeText(context, "Please select leave type", Toast.LENGTH_SHORT).show()
                                 return@Button
@@ -827,39 +835,76 @@ fun ApplyLeaveScreen(
                                 return@Button
                             }
 
-                            val userData = UserDataManager.getInstance(context).getUserData()
-                            val employeeName = userData?.name ?: ""
-                            val employeeCode = userData?.employeeId ?: ""
+                            // 2. Day of Week Validations
+                            val fromDayOfWeek = fromDate.dayOfWeek
+                            val toDayOfWeek = toDate.dayOfWeek
+                            val isWeekend = fromDayOfWeek == java.time.DayOfWeek.SATURDAY || fromDayOfWeek == java.time.DayOfWeek.SUNDAY ||
+                                            toDayOfWeek == java.time.DayOfWeek.SATURDAY || toDayOfWeek == java.time.DayOfWeek.SUNDAY
 
-                            val apiRequest = com.archeGlobal.one.model.CreateLeaveRequest(
-                                employeeName = employeeName,
-                                employeeCode = employeeCode,
-                                startDate = fromDate.toString(), // YYYY-MM-DD
-                                endDate = toDate.toString(), // YYYY-MM-DD
-                                requestType = selectedLeaveType,
-                                leaveDuration = when (startDay) {
-                                    "First Half" -> "First Half"
-                                    "Second Half" -> "Second Half"
-                                    else -> "Full"
-                                },
-                                description = description,
-                                reason = selectedReason
-                            )
+                            // Weekend Restriction (except Outdoor)
+                            if (!selectedLeaveType.contains("Outdoor", ignoreCase = true)) {
+                                if (isWeekend) {
+                                    Toast.makeText(context, "Leaves cannot be applied on weekends.", Toast.LENGTH_LONG).show()
+                                    return@Button
+                                }
+                            }
 
+                            // 3. Single Day Validation for restricted leaves
+                            val restrictedSingleDayTypes = listOf("Casual Leave", "Sick Leave", "Probationary Leave", "KNT Women Wellness Leave")
+                            if (restrictedSingleDayTypes.any { it.equals(selectedLeaveType, ignoreCase = true) } || 
+                                selectedLeaveType.contains("Women Wellness", ignoreCase = true)) {
+                                if (fromDate != toDate) {
+                                    Toast.makeText(context, "$selectedLeaveType can only be applied for a single day.", Toast.LENGTH_LONG).show()
+                                    return@Button
+                                }
+                            }
+
+                            // 4. WFH Specific Day Restriction (Only Tue/Wed/Thu)
+                            if (selectedLeaveType.contains("Work From Home", ignoreCase = true) || 
+                                selectedLeaveType.contains("WFH", ignoreCase = true)) {
+                                val allowedWfhDays = listOf(java.time.DayOfWeek.TUESDAY, java.time.DayOfWeek.WEDNESDAY, java.time.DayOfWeek.THURSDAY)
+                                if (fromDayOfWeek !in allowedWfhDays || toDayOfWeek !in allowedWfhDays) {
+                                    Toast.makeText(context, "Work From Home can only be applied on Tuesday, Wednesday, or Thursday.", Toast.LENGTH_LONG).show()
+                                    return@Button
+                                }
+                            }
+
+                            // 5. Complex Async Validations
                             isSubmitting = true
                             scope.launch {
                                 try {
-                                    val userEmail = userData?.email ?: ""
-                                    
-                                    // Special logic for Casual and Sick Leave
-                                    if (selectedLeaveType == "Casual Leave" || selectedLeaveType == "Sick Leave" || selectedLeaveType == "Probationary Leave") {
-                                        if (fromDate != toDate) {
-                                            Toast.makeText(context, "You can only apply one $selectedLeaveType per month.", Toast.LENGTH_LONG).show()
-                                            isSubmitting = false
-                                            return@launch
+                                    // A. WFH Weekly Limit Check
+                                    if (selectedLeaveType.contains("Work From Home", ignoreCase = true) || 
+                                        selectedLeaveType.contains("WFH", ignoreCase = true)) {
+                                        
+                                        val weekStart = fromDate.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).toString()
+                                        val weekEnd = fromDate.with(java.time.temporal.TemporalAdjusters.nextOrSame(java.time.DayOfWeek.SUNDAY)).toString()
+                                        
+                                        val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
+                                            email = userEmail,
+                                            startDate = weekStart,
+                                            endDate = weekEnd
+                                        )
+                                        val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
+                                        if (checkResponse.isSuccessful) {
+                                            val breakdown = checkResponse.body()?.data?.breakdown ?: emptyList()
+                                            val wfhCount = breakdown.count {
+                                                (it.requestType.contains("Work From Home", ignoreCase = true) ||
+                                                 it.requestType.contains("WFH", ignoreCase = true)) &&
+                                                (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
+                                            }
+                                            if (wfhCount >= 1) {
+                                                Toast.makeText(context, "You can apply only one Work From Home per week.", Toast.LENGTH_LONG).show()
+                                                isSubmitting = false
+                                                return@launch
+                                            }
                                         }
+                                    }
 
-                                        // 1. Pre-check for the whole month
+                                    // B. Women Wellness Monthly Limit Check
+                                    if (selectedLeaveType.contains("KNT Women Wellness Leave", ignoreCase = true) ||
+                                        selectedLeaveType.contains("Women Wellness", ignoreCase = true)) {
+                                        
                                         val monthStart = fromDate.withDayOfMonth(1).toString()
                                         val monthEnd = fromDate.withDayOfMonth(fromDate.lengthOfMonth()).toString()
 
@@ -869,43 +914,65 @@ fun ApplyLeaveScreen(
                                             endDate = monthEnd
                                         )
                                         val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
-
                                         if (checkResponse.isSuccessful) {
                                             val breakdown = checkResponse.body()?.data?.breakdown ?: emptyList()
+                                            val wellnessConflict = breakdown.any {
+                                                (it.requestType.contains("KNT Women Wellness Leave", ignoreCase = true) ||
+                                                 it.requestType.contains("Women Wellness", ignoreCase = true)) &&
+                                                (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
+                                            }
+                                            if (wellnessConflict) {
+                                                Toast.makeText(context, "You can apply only one KNT Women Wellness Leave per month.", Toast.LENGTH_LONG).show()
+                                                isSubmitting = false
+                                                return@launch
+                                            }
+                                        }
+                                    }
 
-                                            // Rule 1: Only one Casual/Sick leave allowed per month
+                                    // C. Casual/Sick Leave Monthly Limit Check
+                                    if (selectedLeaveType == "Casual Leave" || selectedLeaveType == "Sick Leave" || selectedLeaveType == "Probationary Leave") {
+                                        val monthStart = fromDate.withDayOfMonth(1).toString()
+                                        val monthEnd = fromDate.withDayOfMonth(fromDate.lengthOfMonth()).toString()
+
+                                        val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
+                                            email = userEmail,
+                                            startDate = monthStart,
+                                            endDate = monthEnd
+                                        )
+                                        val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
+                                        if (checkResponse.isSuccessful) {
+                                            val breakdown = checkResponse.body()?.data?.breakdown ?: emptyList()
                                             val monthlyConflict = breakdown.any {
                                                 it.requestType.equals(selectedLeaveType, ignoreCase = true) &&
                                                 (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
                                             }
-
                                             if (monthlyConflict) {
                                                 Toast.makeText(context, "$selectedLeaveType limit reached for this month.", Toast.LENGTH_LONG).show()
                                                 isSubmitting = false
                                                 return@launch
                                             }
-
-                                            // Rule 2: Any leave on the specific date
+                                            
                                             val dateConflict = breakdown.any {
                                                 it.requestDate == fromDate.toString() &&
                                                 (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
                                             }
-
                                             if (dateConflict) {
                                                 Toast.makeText(context, "A leave request already exists for this date.", Toast.LENGTH_LONG).show()
                                                 isSubmitting = false
                                                 return@launch
                                             }
                                         }
-                                    } else {
-                                        // Standard check for other leave types
+                                    } else if (!selectedLeaveType.contains("Work From Home", ignoreCase = true) && 
+                                               !selectedLeaveType.contains("WFH", ignoreCase = true) &&
+                                               !selectedLeaveType.contains("Women Wellness", ignoreCase = true)) {
+                                        
+                                        // Standard check for other leave types (not already checked above)
                                         val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
                                             email = userEmail,
                                             startDate = fromDate.toString(),
                                             endDate = toDate.toString()
                                         )
                                         val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
-                                        
                                         val conflicts = checkResponse.body()?.data?.breakdown?.filter { 
                                             it.status.lowercase() == "pending" || it.status.lowercase() == "approved"
                                         } ?: emptyList()
@@ -917,7 +984,22 @@ fun ApplyLeaveScreen(
                                         }
                                     }
 
-                                    // 2. Proceed with creation if all checks pass
+                                    // 6. Final Submission
+                                    val apiRequest = com.archeGlobal.one.model.CreateLeaveRequest(
+                                        employeeName = employeeName,
+                                        employeeCode = employeeCode,
+                                        startDate = fromDate.toString(),
+                                        endDate = toDate.toString(),
+                                        requestType = selectedLeaveType,
+                                        leaveDuration = when (startDay) {
+                                            "First Half" -> "First Half"
+                                            "Second Half" -> "Second Half"
+                                            else -> "Full"
+                                        },
+                                        description = description,
+                                        reason = selectedReason
+                                    )
+
                                     val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
                                     if (response.isSuccessful && response.body()?.success == true) {
                                         Toast.makeText(context, response.body()?.message ?: "Request created successfully", Toast.LENGTH_LONG).show()
@@ -939,14 +1021,14 @@ fun ApplyLeaveScreen(
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
                     ) {
-                            val buttonText = if (selectedLeaveType.isNotEmpty()) "Submit $selectedLeaveType Request" else "Submit Leave"
-                            Text(
-                                text = buttonText,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 16.sp,
-                                color = Color.White,
-                            )
+                        val buttonText = if (selectedLeaveType.isNotEmpty()) "Submit $selectedLeaveType Request" else "Submit Leave"
+                        Text(
+                            text = buttonText,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp,
+                            color = Color.White,
+                        )
                     }
                 }
             }

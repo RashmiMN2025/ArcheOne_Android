@@ -251,27 +251,27 @@ data class SelfTagResponse(
 )
 
 data class SelfTagItem(
-    val employeeCode: String,
-    val serialNumber: String,
-    val username: String,
-    val dateOfIssue: String,
-    val location: String,
-    val designation: String,
-    val division: String,
-    val department: String,
-    val mobileNumber: String,
-    val mailId: String,
-    val assetType: String,
+    val employeeCode: String?,
+    val serialNumber: String?,
+    val username: String?,
+    val dateOfIssue: String?,
+    val location: String?,
+    val designation: String?,
+    val division: String?,
+    val department: String?,
+    val mobileNumber: String?,
+    val mailId: String?,
+    val assetType: String?,
     val oldAssetId: String?,
     val newAssetId: String?,
-    val purchaseDate: String,
-    val modelNumber: String,
-    val configuration: String,
-    val reportingTo: String,
-    val divisionalHead: String,
-    val warrantyStart: String,
-    val warrantyEnd: String,
-    val isTagged: Int
+    val purchaseDate: String?,
+    val modelNumber: String?,
+    val configuration: String?,
+    val reportingTo: String?,
+    val divisionalHead: String?,
+    val warrantyStart: String?,
+    val warrantyEnd: String?,
+    val isTagged: Int?
 )
 
 data class TagActionRequest(

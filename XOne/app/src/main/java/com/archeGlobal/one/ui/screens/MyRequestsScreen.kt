@@ -132,19 +132,20 @@ private fun MyRequestCard(
     request: MyRequestItem,
     onClick: () -> Unit,
 ) {
-    val statusColor = when (request.status.lowercase()) {
+    val status = request.status?.lowercase() ?: "pending"
+    val statusColor = when (status) {
         "approved" -> Color(0xFF008000)
         "rejected" -> Color(0xFFFF0000)
         "pending" -> Color(0xFFFFA500)
         else -> Color.Gray
     }
-    val statusBgColor = when (request.status.lowercase()) {
+    val statusBgColor = when (status) {
         "approved" -> Color(0xFF008000).copy(alpha = 0.15f)
         "rejected" -> Color(0xFFFF0000).copy(alpha = 0.15f)
         "pending" -> Color(0xFFFFA500).copy(alpha = 0.15f)
         else -> Color.Gray.copy(alpha = 0.15f)
     }
-    val displayStatus = request.status.replaceFirstChar { it.uppercase() }
+    val displayStatus = status.replaceFirstChar { it.uppercase() }
 
     Card(
         modifier = Modifier
@@ -163,7 +164,7 @@ private fun MyRequestCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = request.employeeName,
+                        text = request.employeeName ?: "Unknown",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
@@ -171,7 +172,7 @@ private fun MyRequestCard(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = request.requestType,
+                        text = request.requestType ?: "N/A",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 13.sp,
@@ -204,10 +205,12 @@ private fun MyRequestCard(
                     modifier = Modifier.size(16.dp),
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                val dateDisplay = if (request.startDate == request.endDate) {
+                val dateDisplay = if (request.startDate != null && request.startDate == request.endDate) {
                     request.startDate
-                } else {
+                } else if (request.startDate != null && request.endDate != null) {
                     "${request.startDate} – ${request.endDate}"
+                } else {
+                    request.startDate ?: request.endDate ?: "N/A"
                 }
                 Text(
                     text = dateDisplay,
@@ -225,7 +228,7 @@ private fun MyRequestCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = request.leaveDuration,
+                    text = request.leaveDuration ?: "N/A",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 14.sp,
@@ -245,7 +248,7 @@ private fun MyRequestCard(
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = request.reason,
+                text = request.reason ?: "N/A",
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,

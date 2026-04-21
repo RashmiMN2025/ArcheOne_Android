@@ -38,14 +38,14 @@ fun UserApprovalHistoryScreen(
     onCancelRequest: ((onDone: () -> Unit) -> Unit)? = null,
 ) {
     var isCancelling by remember { mutableStateOf(false) }
-    val status = item.status
-    val statusColor = when (status.lowercase()) {
+    val status = item.status?.lowercase() ?: "pending"
+    val statusColor = when (status) {
         "approved" -> Color(0xFF008000)
         "rejected" -> Color(0xFFFF0000)
         "pending" -> Color(0xFFFFA500)
         else -> Color.Gray
     }
-    val statusBgColor = when (status.lowercase()) {
+    val statusBgColor = when (status) {
         "approved" -> Color(0xFF008000).copy(alpha = 0.15f)
         "rejected" -> Color(0xFFFF0000).copy(alpha = 0.15f)
         "pending" -> Color(0xFFFFA500).copy(alpha = 0.15f)
@@ -53,8 +53,9 @@ fun UserApprovalHistoryScreen(
     }
     val displayStatus = status.replaceFirstChar { it.uppercase() }
 
-    val dateDisplay = if (item.startDate == item.endDate) item.startDate
-    else "${item.startDate} – ${item.endDate}"
+    val dateDisplay = if (item.startDate != null && item.startDate == item.endDate) item.startDate!!
+    else if (item.startDate != null && item.endDate != null) "${item.startDate} – ${item.endDate}"
+    else item.startDate ?: item.endDate ?: "N/A"
 
     Box(
         modifier = Modifier
@@ -124,7 +125,7 @@ fun UserApprovalHistoryScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = item.employeeName,
+                                        text = item.employeeName ?: "Unknown",
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 20.sp,
@@ -132,7 +133,7 @@ fun UserApprovalHistoryScreen(
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = item.requestType,
+                                        text = item.requestType ?: "N/A",
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 14.sp,
@@ -156,21 +157,21 @@ fun UserApprovalHistoryScreen(
 
                             Spacer(modifier = Modifier.height(20.dp))
 
-                            DetailInfoRow(iconRes = R.drawable.hashh, label = "Employee Code", value = item.employeeCode)
+                            DetailInfoRow(iconRes = R.drawable.hashh, label = "Employee Code", value = item.employeeCode ?: "N/A")
                             Spacer(modifier = Modifier.height(12.dp))
                             DetailInfoRow(iconRes = R.drawable.calender22, label = "Date", value = dateDisplay)
                             Spacer(modifier = Modifier.height(12.dp))
-                            DetailInfoRow(iconRes = R.drawable.meettime, label = "Duration", value = item.leaveDuration)
+                            DetailInfoRow(iconRes = R.drawable.meettime, label = "Duration", value = item.leaveDuration ?: "N/A")
                             if (!item.punchIn.isNullOrEmpty()) {
                                 Spacer(modifier = Modifier.height(12.dp))
-                                DetailInfoRow(iconRes = R.drawable.punchin, label = "Punch In", value = item.punchIn)
+                                DetailInfoRow(iconRes = R.drawable.punchin, label = "Punch In", value = item.punchIn ?: "N/A")
                             }
                             if (!item.punchOut.isNullOrEmpty()) {
                                 Spacer(modifier = Modifier.height(12.dp))
-                                DetailInfoRow(iconRes = R.drawable.punchout, label = "Punch Out", value = item.punchOut)
+                                DetailInfoRow(iconRes = R.drawable.punchout, label = "Punch Out", value = item.punchOut ?: "N/A")
                             }
                             Spacer(modifier = Modifier.height(12.dp))
-                            DetailInfoRow(iconRes = R.drawable.justification, label = "Reason", value = item.reason)
+                            DetailInfoRow(iconRes = R.drawable.justification, label = "Reason", value = item.reason ?: "N/A")
 
                             if (!item.description.isNullOrEmpty()) {
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -185,7 +186,7 @@ fun UserApprovalHistoryScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = item.description,
+                                    text = item.description ?: "N/A",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     fontSize = 16.sp,
@@ -194,7 +195,7 @@ fun UserApprovalHistoryScreen(
                             }
 
                             // Cancel button — only for pending, inside the card
-                            if (status.lowercase() == "pending" && onCancelRequest != null) {
+                            if (status == "pending" && onCancelRequest != null) {
                                 Spacer(modifier = Modifier.height(20.dp))
                                 Button(
                                     onClick = {
@@ -208,7 +209,6 @@ fun UserApprovalHistoryScreen(
                                         .height(52.dp),
                                     shape = RoundedCornerShape(12.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                                    enabled = !isCancelling,
                                 ) {
                                     Text(
                                         text = "Cancel Request",

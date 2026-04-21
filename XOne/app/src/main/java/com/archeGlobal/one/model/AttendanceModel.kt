@@ -46,12 +46,12 @@ data class AttendanceDayData(
 )
 
 data class AttendanceDayRequest(
-    @SerializedName("id") val id: String,
-    @SerializedName("reason") val reason: String,
-    @SerializedName("status") val status: String,
+    @SerializedName("id") val id: String?,
+    @SerializedName("reason") val reason: String?,
+    @SerializedName("status") val status: String?,
     @SerializedName("punchIn") val punchIn: String?,
     @SerializedName("punchOut") val punchOut: String?,
-    @SerializedName("createdAt") val createdAt: String,
-    @SerializedName("requestType") val requestType: String,
-    @SerializedName("leaveDuration") val leaveDuration: String,
+    @SerializedName("createdAt") val createdAt: String?,
+    @SerializedName("requestType") val requestType: String?,
+    @SerializedName("leaveDuration") val leaveDuration: String?,
 )
