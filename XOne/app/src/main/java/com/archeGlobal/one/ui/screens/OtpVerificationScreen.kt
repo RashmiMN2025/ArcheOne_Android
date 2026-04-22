@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.OtpVerificationController
+import com.archeGlobal.one.service.OtpNotificationListenerService
 import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -70,6 +71,19 @@ fun OtpVerificationScreen(
 
     // Format time into MM:SS
     val formattedTime = String.format("%02d:%02d", timeLeft / 60, timeLeft % 60)
+
+    // Auto-fill OTP from Outlook notification
+    val autoOtp by OtpNotificationListenerService.otpFlow.collectAsState()
+    LaunchedEffect(autoOtp) {
+        autoOtp?.let { otp ->
+            if (otp.length == 6 && otp.all { it.isDigit() }) {
+                otp.forEachIndexed { i, c ->
+                    if (i < otpDigits.size) otpDigits[i] = c.toString()
+                }
+                OtpNotificationListenerService.clearOtp()
+            }
+        }
+    }
 
     // Show Toast message for errors
     LaunchedEffect(errorMessage) {

@@ -363,7 +363,8 @@ class PreferencesManager(
         private const val KEY_SEEN_SERVICES = "seen_services"
         private const val KEY_INSTALL_TYPE = "install_type"
         private const val KEY_SMART_COLLATERAL_DATA = "smart_collateral_data"
-        
+        private const val KEY_NOTIFICATION_ACCESS_ASKED = "notification_access_asked"
+
         // Punch state keys
         private const val KEY_IS_PUNCHED_IN = "is_punched_in"
         private const val KEY_PUNCH_IN_TIME = "punch_in_time"
@@ -459,6 +460,13 @@ class PreferencesManager(
     // Mark that the app has been launched before
     fun setFirstLaunchComplete() {
         sharedPreferences.edit().putBoolean(KEY_IS_FIRST_LAUNCH, false).apply()
+    }
+
+    fun hasAskedNotificationAccess(): Boolean =
+        sharedPreferences.getBoolean(KEY_NOTIFICATION_ACCESS_ASKED, false)
+
+    fun setNotificationAccessAsked() {
+        sharedPreferences.edit().putBoolean(KEY_NOTIFICATION_ACCESS_ASKED, true).apply()
     }
 
     // Store profile update timestamp

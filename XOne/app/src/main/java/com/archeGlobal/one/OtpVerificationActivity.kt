@@ -3,6 +3,7 @@ package com.archeGlobal.one
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -15,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.navigation.AndroidNavigator
+import com.archeGlobal.one.service.OtpNotificationListenerService
+import com.archeGlobal.one.ui.components.NotificationAccessDialog
 import com.archeGlobal.one.ui.screens.OtpVerificationScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.utils.CustomToast
@@ -23,6 +26,7 @@ import com.archeGlobal.one.utils.UserDataManager
 
 class OtpVerificationActivity : AppCompatActivity() {
     private var showUpdateDialog by mutableStateOf(false)
+    private var showNotificationAccessDialog by mutableStateOf(false)
     private var shouldNavigateToLogin = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +39,12 @@ class OtpVerificationActivity : AppCompatActivity() {
         val navigator = AndroidNavigator(this)
         val loginController = LoginController(this, navigator)
         val controller = OtpVerificationController(navigator, this)
+        val prefs = PreferencesManager(this)
+
+        if (!prefs.hasAskedNotificationAccess() && !isNotificationListenerEnabled()) {
+            showNotificationAccessDialog = true
+            prefs.setNotificationAccessAsked()
+        }
 
         enableEdgeToEdge()
         window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -75,6 +85,22 @@ class OtpVerificationActivity : AppCompatActivity() {
                     employeeId = employeeId,
                     stayLoggedIn = stayLoggedIn,
                 )
+
+                // Notification Access Dialog (shown once on first launch)
+                if (showNotificationAccessDialog) {
+                    NotificationAccessDialog(
+                        onAllow = {
+                            showNotificationAccessDialog = false
+                            startActivity(
+                                Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                            )
+                        },
+                        onSkip = {
+                            showNotificationAccessDialog = false
+                        },
+                    )
+                }
 
                 // Update Required Dialog
                 if (showUpdateDialog) {
@@ -153,6 +179,16 @@ class OtpVerificationActivity : AppCompatActivity() {
             Log.e("OtpVerificationActivity", "Failed to open web Play Store: ${e.message}")
             CustomToast.show(this, "Unable to open Play Store. Please try again.", android.widget.Toast.LENGTH_SHORT)
         }
+    }
+
+    private fun isNotificationListenerEnabled(): Boolean {
+        val enabled = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
+        return enabled?.contains(packageName) == true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        OtpNotificationListenerService.clearOtp()
     }
 
     fun showUpdateDialog() {
