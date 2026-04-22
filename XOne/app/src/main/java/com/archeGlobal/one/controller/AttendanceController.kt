@@ -406,8 +406,8 @@ class AttendanceController(private val context: Context) {
             var count = 0
             for (rec in monthRecords) {
                 val hasRegularization = rec.requests?.any {
-                    val type = it.requestType ?: "None".lowercase()
-                    val status = it.status ?: "None".lowercase()
+                    val type = (it.requestType ?: "None").lowercase()
+                    val status = (it.status ?: "None").lowercase()
                     (type.contains("regularisation") || type.contains("regularize") || type.contains("regularised")) &&
                     (status == "approved" || status == "pending")
                 } ?: false
@@ -421,7 +421,8 @@ class AttendanceController(private val context: Context) {
 
         // 5. No existing request on this day (especially regularisation)
         val hasExistingRequest = record.requests?.any {
-            it.status ?: "None".lowercase() == "pending" || it.status ?: "None".lowercase() == "approved"
+            val status = (it.status ?: "None").lowercase()
+            status == "pending" || status == "approved"
         } ?: false
         
         if (hasExistingRequest) {

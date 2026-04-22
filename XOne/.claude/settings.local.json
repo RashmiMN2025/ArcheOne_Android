@@ -18,7 +18,16 @@
       "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" diff stash@{0}^1 stash@{0} -- \"XOne/app/src/main/java/com/archeGlobal/one/controller/AttendanceController.kt\")",
       "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" diff stash@{0}~ stash@{0} -- \"XOne/app/src/main/java/com/archeGlobal/one/controller/AttendanceController.kt\")",
       "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" show stash@{0})",
-      "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" stash apply stash@{0})"
+      "Bash(git -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" stash apply stash@{0})",
+      "Read(//c/Program Files/Git/**)",
+      "Read(//c/Users/User/AppData/Local/Programs/Git/bin//**)",
+      "Bash(find /c -name \"git.exe\" -maxdepth 6)",
+      "Bash(/c/Program Files/Git/bin/git.exe *)",
+      "Bash(/c/Users/User/AppData/Local/Programs/Git/bin/git.exe *)",
+      "Bash(\"/c/Users/User/AppData/Local/Programs/Git/bin/git.exe\" -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne/XOne\" show 586ea479494ef3aefd9cc71bb8c51b51c147e71a --name-only)",
+      "Bash(\"/c/Users/User/AppData/Local/Programs/Git/bin/git.exe\" -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" show 586ea479494ef3aefd9cc71bb8c51b51c147e71a -- \"XOne/app/src/main/java/com/archeGlobal/one/controller/AttendanceController.kt\")",
+      "Bash(\"/c/Users/User/AppData/Local/Programs/Git/bin/git.exe\" -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" diff 586ea479494ef3aefd9cc71bb8c51b51c147e71a~1 586ea479494ef3aefd9cc71bb8c51b51c147e71a)",
+      "Bash(\"/c/Users/User/AppData/Local/Programs/Git/bin/git.exe\" -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" diff 586ea479494ef3aefd9cc71bb8c51b51c147e71a~1 586ea479494ef3aefd9cc71bb8c51b51c147e71a -- \"XOne/app/src/main/java/com/archeGlobal/one/ui/screens/ApplyLeaveScreen.kt\")"
     ],
     "deny": [],
     "ask": []
