@@ -66,12 +66,31 @@ fun ApplyRegularizationScreen(
 
     var selectedAction by remember { mutableStateOf("") }
     var actionExpanded by remember { mutableStateOf(false) }
-    var inTime by remember { mutableStateOf(LocalTime.now()) }
-    var outTime by remember { mutableStateOf(LocalTime.now()) }
+    var inTime by remember { mutableStateOf(LocalTime.of(9, 30)) }
+    var outTime by remember { mutableStateOf(LocalTime.of(18, 30)) }
     var showInTimePicker by remember { mutableStateOf(false) }
     var showOutTimePicker by remember { mutableStateOf(false) }
     val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
     var description by remember { mutableStateOf("") }
+
+    LaunchedEffect(date) {
+        attendanceController?.fetchAttendanceForDate(date)
+    }
+
+    val records = attendanceController?.selectedDateRecords ?: emptyList()
+    val rawSwipes = if (records.isNotEmpty()) {
+        val allSwipes = records.flatMap { record ->
+            listOfNotNull(record.punchIn) + (record.punchOut ?: emptyList())
+        }.filter { it.isNotEmpty() && it != "None" }
+        
+        if (allSwipes.isNotEmpty()) {
+            val first = allSwipes.first()
+            val last = allSwipes.last()
+            if (first == last) first else "$first - $last"
+        } else {
+            "None"
+        }
+    } else "None"
 
     val reportingManagerName = OtpVerificationController.getUserData()?.userDetails?.reporting_manager ?: ""
     val reportingManagerEmail = OtpVerificationController.getUserData()?.userDetails?.reporting_manager_mail ?: ""
@@ -175,7 +194,7 @@ fun ApplyRegularizationScreen(
                                     color = Color.Black,
                                 )
                                 Text(
-                                    text = if (actualIn.isNotEmpty() && actualOut.isNotEmpty()) "$actualIn to $actualOut" else "—",
+                                    text = rawSwipes,
                                     modifier = Modifier.weight(1f),
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 13.sp,

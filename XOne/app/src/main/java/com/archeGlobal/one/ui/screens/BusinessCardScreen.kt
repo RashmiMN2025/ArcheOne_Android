@@ -435,7 +435,7 @@ fun BusinessCardScreen(
                                             contentDescription = "QR Code",
                                             modifier =
                                                 Modifier
-                                                    .size(75.dp),
+                                                    .size(120.dp),
                                         )
                                     }
                                 }

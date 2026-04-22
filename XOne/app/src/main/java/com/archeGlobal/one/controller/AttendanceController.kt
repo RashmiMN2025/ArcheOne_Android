@@ -120,15 +120,39 @@ class AttendanceController(private val context: Context) {
                     val apiMap = mutableMapOf<Int, AttendanceDayStatus>()
                     val typeMap = mutableMapOf<Int, String>()
                     val requestStatusMap = mutableMapOf<Int, String>()
+                    
+                    // Create a set of days that have records
+                    val recordDays = records.mapNotNull { it.date.split("-").last().toIntOrNull() }.toSet()
+                    
+                    // 1. Process existing records
                     for (record in records) {
                         val day = record.date.split("-").last().toIntOrNull() ?: continue
                         val dow = currentMonth.atDay(day).dayOfWeek
                         if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) continue
-                        val status = resolveStatus(record.attendanceStatus, record.requests)
+                        
+                        val status = resolveStatus(record.attendanceStatus, record.requests, record.punchIn, record.punchOut)
                         apiMap[day] = status
                         typeMap[day] = resolveRawType(record.attendanceStatus, record.requests)
                         requestStatusMap[day] = resolveRequestStatus(record.requests)
                     }
+
+                    // 2. For past dates in the current month that have NO records/swipes/requests, mark as ABSENT
+                    val today = LocalDate.now()
+                    val daysInMonth = currentMonth.lengthOfMonth()
+                    for (day in 1..daysInMonth) {
+                        val date = currentMonth.atDay(day)
+                        if (date.isBefore(today) && !recordDays.contains(day)) {
+                            val dow = date.dayOfWeek
+                            if (dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY) {
+                                // Only override if not already set by an API record (though recordDays check handles that)
+                                if (!apiMap.containsKey(day)) {
+                                    apiMap[day] = AttendanceDayStatus.ABSENT
+                                    typeMap[day] = "absent"
+                                }
+                            }
+                        }
+                    }
+
                     val weekends = attendanceMap
                     attendanceMap = weekends + apiMap
                     attendanceTypeMap = typeMap
@@ -145,24 +169,36 @@ class AttendanceController(private val context: Context) {
     private fun resolveStatus(
         attendanceStatus: String?,
         requests: List<com.archeGlobal.one.model.AttendanceDayRequest>?,
+        punchIn: String? = null,
+        punchOut: List<String>? = null
     ): AttendanceDayStatus {
         // PRIORITIZE FIRST REQUEST: If there's at least one request, use its status
         val firstRequest = requests?.firstOrNull()
         if (firstRequest != null) {
-            val isApproved = firstRequest.status?.equals("approved", ignoreCase = true) ?: false
-            if (isApproved && firstRequest.requestType != "Regularisation") {
+            val isApprovedOrPending = firstRequest.status?.let { 
+                it.equals("approved", ignoreCase = true) || it.equals("pending", ignoreCase = true) 
+            } ?: false
+            
+            if (isApprovedOrPending && firstRequest.requestType != "Regularisation") {
                 return AttendanceDayStatus.LEAVE
             }
         }
 
         val status = attendanceStatus?.lowercase() ?: ""
+        
+        // If it's a holiday, show holiday status
+        if (status.contains("holiday")) return AttendanceDayStatus.HOLIDAY
+        
+        // Check for swipes
+        val hasSwipes = !punchIn.isNullOrEmpty() || !punchOut.isNullOrEmpty()
+        
         return when {
-            status.contains("holiday") -> AttendanceDayStatus.HOLIDAY
             status.contains("present") -> AttendanceDayStatus.PRESENT
             status.contains("late")    -> AttendanceDayStatus.ABSENT
             status.contains("absent")  -> AttendanceDayStatus.ABSENT
+            !hasSwipes && firstRequest == null -> AttendanceDayStatus.ABSENT
             firstRequest != null && firstRequest.requestType != "Regularisation" -> AttendanceDayStatus.LEAVE
-            else -> AttendanceDayStatus.ABSENT
+            else -> if (hasSwipes) AttendanceDayStatus.PRESENT else AttendanceDayStatus.ABSENT
         }
     }
 
