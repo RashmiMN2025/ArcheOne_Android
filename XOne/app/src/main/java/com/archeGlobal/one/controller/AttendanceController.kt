@@ -53,6 +53,29 @@ class AttendanceController(private val context: Context) {
     var isOptionalHolidaysLoading by mutableStateOf(false)
         private set
 
+    // Maps "DD-MM-YYYY" → holiday name for all applicable holidays from the calendar API
+    private var allHolidayMap by mutableStateOf<Map<String, String>>(emptyMap())
+
+    // Holiday day numbers for the currently displayed month, derived from allHolidayMap + currentMonth
+    val calendarHolidayDays: Set<Int>
+        get() = allHolidayMap.keys.mapNotNull { dateStr ->
+            try {
+                val parts = dateStr.split("-")
+                if (parts.size < 3) return@mapNotNull null
+                val day = parts[0].toInt()
+                val month = parts[1].toInt()
+                val year = parts[2].toInt()
+                if (month == currentMonth.monthValue && year == currentMonth.year) day else null
+            } catch (e: Exception) {
+                null
+            }
+        }.toSet()
+
+    fun getHolidayNameForDate(date: LocalDate): String? {
+        val dateStr = date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+        return allHolidayMap[dateStr]
+    }
+
     var isLoading by mutableStateOf(false)
         private set
 
@@ -222,8 +245,27 @@ class AttendanceController(private val context: Context) {
         return attendanceStatus ?: ""
     }
 
+    fun fetchHolidaysForCalendar() {
+        if (allHolidayMap.isNotEmpty()) return
+        val userState = com.archeGlobal.one.repository.UserRepository(context).getUserState() ?: "Karnataka"
+        val encryptedAPIHelper = com.archeGlobal.one.utils.EncryptedAPIHelper(context)
+        encryptedAPIHelper.makeEncryptedCall(
+            endpoint = "calendar",
+            method = "POST",
+            request = CalendarRequest(state = userState),
+            responseClass = com.archeGlobal.one.model.CalendarResponse::class.java,
+            withAuthHeader = true,
+        ) { response, error ->
+            if (error != null || response == null) return@makeEncryptedCall
+            allHolidayMap = response.holidays
+                .filter { it.holidayType == "Yes" || it.holidayType == "RH" }
+                .associate { it.date to it.name }
+        }
+    }
+
     fun fetchLeaveBalances() {
         fetchAttendance()
+        fetchHolidaysForCalendar()
         val userData = UserDataManager.getInstance(context).getUserData()
         val userEmail = userData?.email ?: ""
 

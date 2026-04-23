@@ -10,11 +10,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import android.widget.Toast
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.PersonOff
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -105,8 +112,12 @@ fun AttendanceScreen(
     onHistoryClick: () -> Unit = {},
 ) {
     val today = LocalDate.now()
+    val context = LocalContext.current
     var showAttendanceDialog by remember { mutableStateOf(false) }
     var longPressedDate by remember { mutableStateOf<LocalDate?>(null) }
+    val isSelectedDateHoliday = controller.selectedDate?.let {
+        controller.getHolidayNameForDate(it)
+    } != null
 
     Box(
         modifier = Modifier
@@ -178,8 +189,17 @@ fun AttendanceScreen(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 32.dp),
                 ) {
+                    // Attendance Summary
+                    item {
+                        AttendanceSummarySection(
+                            attendanceMap = controller.attendanceMap,
+                            attendanceTypeMap = controller.attendanceTypeMap,
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
                     // Calendar card
                     item {
                         Card(
@@ -242,6 +262,7 @@ fun AttendanceScreen(
                                     attendanceMap = controller.attendanceMap,
                                     attendanceTypeMap = controller.attendanceTypeMap,
                                     attendanceRequestStatusMap = controller.attendanceRequestStatusMap,
+                                    calendarHolidayDays = controller.calendarHolidayDays,
                                     selectedDate = controller.selectedDate,
                                     onDateClick = { date ->
                                         if (date == controller.selectedDate) {
@@ -298,7 +319,13 @@ fun AttendanceScreen(
                                         dotColor = leaveColor(leave.type),
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clickable { onLeaveCardClick(leave.type, controller.selectedDate ?: today) },
+                                            .clickable {
+                                                if (isSelectedDateHoliday) {
+                                                    Toast.makeText(context, "Cannot apply leave on a holiday", Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    onLeaveCardClick(leave.type, controller.selectedDate ?: today)
+                                                }
+                                            },
                                     )
                                 }
                                 if (row.size == 1) {
@@ -317,7 +344,13 @@ fun AttendanceScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             OutlinedButton(
-                                onClick = { onWfhClick(controller.selectedDate ?: today) },
+                                onClick = {
+                                    if (isSelectedDateHoliday) {
+                                        Toast.makeText(context, "Cannot apply leave on a holiday", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        onWfhClick(controller.selectedDate ?: today)
+                                    }
+                                },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(48.dp),
@@ -386,7 +419,13 @@ fun AttendanceScreen(
                     item {
                         Spacer(modifier = Modifier.height(20.dp))
                         Button(
-                            onClick = { onRegularizeClick(controller.selectedDate ?: today) },
+                            onClick = {
+                                if (isSelectedDateHoliday) {
+                                    Toast.makeText(context, "Cannot apply regularization on a holiday", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    onRegularizeClick(controller.selectedDate ?: today)
+                                }
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(48.dp),
@@ -412,6 +451,7 @@ fun AttendanceScreen(
                 date = longPressedDate!!,
                 records = controller.selectedDateRecords,
                 isLoading = controller.isDetailLoading,
+                holidayName = controller.getHolidayNameForDate(longPressedDate!!),
                 onDismiss = { showAttendanceDialog = false }
             )
         }
@@ -424,6 +464,7 @@ private fun AttendanceDetailsDialog(
     date: LocalDate,
     records: List<AttendanceDayData>,
     isLoading: Boolean,
+    holidayName: String? = null,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
@@ -458,7 +499,7 @@ private fun AttendanceDetailsDialog(
                     textAlign = TextAlign.Center,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
+                HorizontalDivider(color = Color(0xFFCCCCCC), thickness = 1.dp)
             }
         },
         text = {
@@ -492,10 +533,7 @@ private fun AttendanceDetailsDialog(
                     listOfNotNull(record.punchIn) + (record.punchOut ?: emptyList())
                 }.joinToString(", ").ifEmpty { "None" }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                ) {
+                Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
                     // Column 1
                     Column(
                         modifier = Modifier.weight(1f),
@@ -508,6 +546,15 @@ private fun AttendanceDetailsDialog(
                         AttendanceDetailRow(label = "Raw Swipes", value = rawSwipes)
                     }
 
+                    // Vertical divider
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp)
+                            .width(1.dp)
+                            .fillMaxHeight()
+                            .background(Color(0xFFCCCCCC)),
+                    )
+
                     // Column 2
                     Column(
                         modifier = Modifier.weight(1f),
@@ -517,6 +564,9 @@ private fun AttendanceDetailsDialog(
                         AttendanceDetailRow(label = "Hours", value = workingHours)
                         AttendanceDetailRow(label = "Leave type", value = leaveType)
                         AttendanceDetailRow(label = "Leave status", value = leaveStatus)
+                        if (holidayName != null) {
+                            AttendanceDetailRow(label = "Holiday", value = holidayName)
+                        }
                     }
                 }
             }
@@ -567,6 +617,7 @@ private fun CalendarGrid(
     attendanceMap: Map<Int, AttendanceDayStatus>,
     attendanceTypeMap: Map<Int, String>,
     attendanceRequestStatusMap: Map<Int, String>,
+    calendarHolidayDays: Set<Int>,
     selectedDate: LocalDate?,
     onDateClick: (LocalDate) -> Unit,
     onDateLongClick: (LocalDate) -> Unit,
@@ -610,6 +661,7 @@ private fun CalendarGrid(
                                 status = status,
                                 rawType = attendanceTypeMap[day],
                                 requestStatus = attendanceRequestStatusMap[day] ?: "",
+                                isCalendarHoliday = day in calendarHolidayDays,
                                 onClick = { onDateClick(date) },
                                 onLongClick = { onDateLongClick(date) }
                             )
@@ -630,26 +682,30 @@ private fun DayCell(
     status: AttendanceDayStatus?,
     rawType: String? = null,
     requestStatus: String = "",
+    isCalendarHoliday: Boolean = false,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
     val todayBg = Color(0xFF64B5F6).copy(alpha = 0.5f)
     val selectedBg = Color(0xFFDD3825)
+    val holidayBlue = Color(0xFF007BFF)
     val dotColor = when {
         isToday -> Color.Transparent
         status == AttendanceDayStatus.WEEKEND -> Color(0xFFAAAAAA)
+        // Calendar holiday: blue unless the employee actually worked (PRESENT) or took leave (LEAVE)
+        isCalendarHoliday && status != AttendanceDayStatus.PRESENT && status != AttendanceDayStatus.LEAVE -> holidayBlue
         status == null -> Color.Transparent
         // Rejected request: ignore the request type and show the actual attendance status colour
         requestStatus.lowercase() == "rejected" -> when (status) {
             AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
             AttendanceDayStatus.ABSENT  -> primaryRed
-            AttendanceDayStatus.HOLIDAY -> Color(0xFFFF9800)
+            AttendanceDayStatus.HOLIDAY -> holidayBlue
             else -> primaryRed // LEAVE/LATE with rejected request → still absent
         }
         !rawType.isNullOrEmpty() -> typeColor(rawType, requestStatus)
         status == AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
         status == AttendanceDayStatus.ABSENT  -> primaryRed
-        status == AttendanceDayStatus.HOLIDAY -> Color(0xFFFF9800)
+        status == AttendanceDayStatus.HOLIDAY -> holidayBlue
         else -> Color.Transparent
     }
     val circleBg = when {
@@ -696,6 +752,136 @@ private fun DayCell(
                 .clip(CircleShape)
                 .background(dotColor),
         )
+    }
+}
+
+@Composable
+private fun AttendanceSummarySection(
+    attendanceMap: Map<Int, AttendanceDayStatus>,
+    attendanceTypeMap: Map<Int, String>,
+) {
+    val absentsCount = attendanceMap.count { (day, status) ->
+        status == AttendanceDayStatus.ABSENT &&
+            attendanceTypeMap[day]?.lowercase()?.contains("late") != true
+    }
+    val lateInCount = attendanceTypeMap.count { (_, type) ->
+        type.lowercase().contains("late")
+    }
+    val onLeaveCount = attendanceMap.count { (_, status) ->
+        status == AttendanceDayStatus.LEAVE
+    }
+    val workDaysCount = attendanceMap.count { (_, status) ->
+        status == AttendanceDayStatus.PRESENT
+    }
+
+    Column {
+        Text(
+            text = "Attendance Summary",
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 18.sp,
+            color = Color.Black,
+        )
+        Text(
+            text = "Monthly overview",
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 13.sp,
+            color = Color.Black,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            SummaryCard(
+                icon = Icons.Filled.Cancel,
+                iconTint = Color(0xFFDD3825),
+                iconBg = Color(0xFFFFEBEE),
+                count = absentsCount,
+                label = "Absents",
+                modifier = Modifier.weight(1f),
+            )
+            SummaryCard(
+                icon = Icons.Filled.Schedule,
+                iconTint = Color(0xFFFF9800),
+                iconBg = Color(0xFFFFF3E0),
+                count = lateInCount,
+                label = "Late In",
+                modifier = Modifier.weight(1f),
+            )
+            SummaryCard(
+                icon = Icons.Filled.PersonOff,
+                iconTint = Color(0xFF26A69A),
+                iconBg = Color(0xFFE0F2F1),
+                count = onLeaveCount,
+                label = "On Leave",
+                modifier = Modifier.weight(1f),
+            )
+            SummaryCard(
+                icon = Icons.Filled.Work,
+                iconTint = Color(0xFF388E3C),
+                iconBg = Color(0xFFE8F5E9),
+                count = workDaysCount,
+                label = "Work Days",
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummaryCard(
+    icon: ImageVector,
+    iconTint: Color,
+    iconBg: Color,
+    count: Int,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(iconBg),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = iconTint,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = count.toString(),
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+                color = Color.Black,
+            )
+            Text(
+                text = label,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 11.sp,
+                color = Color(0xFF888888),
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
