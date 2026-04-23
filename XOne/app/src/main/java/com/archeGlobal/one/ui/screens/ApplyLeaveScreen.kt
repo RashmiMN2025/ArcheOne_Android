@@ -1009,6 +1009,10 @@ fun ApplyLeaveScreen(
                             val isShortLeaveSubmit = selectedLeaveType.contains("Short Leave", ignoreCase = true)
 
                             if (isShortLeaveSubmit) {
+                                if (fromDate == LocalDate.now()) {
+                                    Toast.makeText(context, "Short Leave cannot be applied for today.", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
                                 if (startTime == null || endTime == null) {
                                     Toast.makeText(context, "Please select start and end time for Short Leave.", Toast.LENGTH_SHORT).show()
                                     return@Button

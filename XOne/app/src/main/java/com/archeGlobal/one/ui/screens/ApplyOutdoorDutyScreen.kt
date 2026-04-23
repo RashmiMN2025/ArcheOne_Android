@@ -569,6 +569,10 @@ fun ApplyOutdoorDutyScreen(
                                     return@Button
                                 }
                             } else if (workType == "Short Leave") {
+                                if (fromDate == java.time.LocalDate.now()) {
+                                    Toast.makeText(context, "Short Leave cannot be applied for today.", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
                                 // Validation: Max 2 hours
                                 if (totalHours > 2.0 || totalHours <= 0) {
                                     Toast.makeText(context, "Short Leave can be applied for a maximum of 2 hours only", Toast.LENGTH_LONG).show()
