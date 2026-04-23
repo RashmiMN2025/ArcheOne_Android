@@ -49,13 +49,15 @@ import java.time.YearMonth
 
 private val primaryRed = Color(0xFFDD3825)
 
-private fun typeColor(type: String, requestStatus: String = ""): Color {
+private fun typeColor(type: String, requestStatus: String = "", isFuture: Boolean = false): Color {
     val t = type.lowercase()
     val s = requestStatus.lowercase()
 
     // attendanceStatus overrides — checked first regardless of request status
     if (t.contains("present")) return Color(0xFF4CAF50)                   // green
-    if (t.contains("absent") || t.contains("late")) return Color(0xFFDD3825) // red
+    if (t.contains("absent") || t.contains("late")) {
+        return if (isFuture) Color.Transparent else Color(0xFFDD3825) // red for past, transparent for future
+    }
 
     // request status gates
     if (s == "rejected") return Color.Transparent
@@ -188,11 +190,7 @@ fun AttendanceScreen(
                 ) {
                     // Attendance Summary
                     item {
-                        AttendanceSummarySection(
-                            attendanceMap = controller.attendanceMap,
-                            attendanceTypeMap = controller.attendanceTypeMap,
-                            holidayFileUrl = controller.holidayFileUrl,
-                        )
+                        AttendanceSummarySection(controller = controller)
                         Spacer(modifier = Modifier.height(16.dp))
                     }
 
@@ -514,9 +512,12 @@ private fun AttendanceDetailsDialog(
                 }
             } else {
                 val allRequests = records.flatMap { it.requests ?: emptyList() }.distinctBy { it.id }
+                // Prefer the "present" record when duplicates exist for the same day
+                val presentRecord = records.firstOrNull { it.attendanceStatus?.lowercase() == "present" }
                 val punchRecords = records.filter { !it.punchIn.isNullOrEmpty() }.sortedBy { it.punchIn }
-                val firstIn = formatTo12h(punchRecords.firstOrNull()?.punchIn ?: "None")
-                val lastOut = formatTo12h(punchRecords.lastOrNull { !it.punchOut.isNullOrEmpty() }?.punchOut?.lastOrNull() ?: "None")
+                val swipeSourceRecords = if (presentRecord != null) listOf(presentRecord) else punchRecords
+                val firstIn = formatTo12h(swipeSourceRecords.firstOrNull()?.punchIn ?: "None")
+                val lastOut = formatTo12h(swipeSourceRecords.lastOrNull { !it.punchOut.isNullOrEmpty() }?.punchOut?.lastOrNull() ?: "None")
                 val isWorkingDay = date.dayOfWeek != java.time.DayOfWeek.SATURDAY &&
                     date.dayOfWeek != java.time.DayOfWeek.SUNDAY
                 val apiWorkingHours = records.firstOrNull { it.workingHours != null && it.workingHours != "00:00" }?.workingHours
@@ -532,7 +533,7 @@ private fun AttendanceDetailsDialog(
                 val hasPendingRequest = allRequests.any { it.status?.equals("pending", ignoreCase = true) == true }
                 val regularisation = allRequests.firstOrNull { it.requestType?.contains("Regularisation", ignoreCase = true) == true }
                 val reason = allRequests.firstNotNullOfOrNull { it.reason?.ifEmpty { null } } ?: "None"
-                val rawSwipes = punchRecords.flatMap { record ->
+                val rawSwipes = swipeSourceRecords.flatMap { record ->
                     listOfNotNull(record.punchIn) + (record.punchOut ?: emptyList())
                 }.joinToString(", ").ifEmpty { "None" }
 
@@ -544,11 +545,14 @@ private fun AttendanceDetailsDialog(
                     ) {
                         AttendanceDetailRow(label = "Shift", value = if (date.dayOfWeek == java.time.DayOfWeek.SATURDAY || date.dayOfWeek == java.time.DayOfWeek.SUNDAY) "None" else "9:30 am to 6:30 pm")
                         AttendanceDetailRow(label = "Regularised", value = regularisation?.status ?: "None")
+                        val bestRecord = presentRecord ?: records.firstOrNull()
+                        val hasApprovedRequest = allRequests.any { it.status?.lowercase() == "approved" }
                         val attendanceStatusValue = when {
-                            date == java.time.LocalDate.now() || hasPendingRequest -> "None"
+                            date.isAfter(java.time.LocalDate.now()) -> "None"
+                            (date == java.time.LocalDate.now() || hasPendingRequest) && !hasApprovedRequest -> "None"
                             isWorkingDay && holidayName == null && rawSwipes == "None" &&
-                                (records.isEmpty() || records.firstOrNull()?.attendanceStatus.isNullOrBlank()) -> "Absent"
-                            else -> records.firstOrNull()?.attendanceStatus?.takeIf { it.isNotBlank() } ?: "None"
+                                (records.isEmpty() || bestRecord?.attendanceStatus.isNullOrBlank()) -> "Absent"
+                            else -> bestRecord?.attendanceStatus?.takeIf { it.isNotBlank() } ?: "None"
                         }
                         AttendanceDetailRow(label = "Attendance Status", value = attendanceStatusValue)
                         AttendanceDetailRow(label = "Reason", value = reason)
@@ -663,6 +667,7 @@ private fun CalendarGrid(
                                     date.dayOfWeek == DayOfWeek.SUNDAY
                             val status = attendanceMap[day]
                                 ?: if (isWeekend) AttendanceDayStatus.WEEKEND else null
+                            val isFuture = date.isAfter(today)
                             DayCell(
                                 day = day,
                                 isToday = isToday,
@@ -671,6 +676,7 @@ private fun CalendarGrid(
                                 rawType = attendanceTypeMap[day],
                                 requestStatus = attendanceRequestStatusMap[day] ?: "",
                                 isCalendarHoliday = day in calendarHolidayDays,
+                                isFuture = isFuture,
                                 onClick = { onDateClick(date) },
                                 onLongClick = { onDateLongClick(date) }
                             )
@@ -692,6 +698,7 @@ private fun DayCell(
     rawType: String? = null,
     requestStatus: String = "",
     isCalendarHoliday: Boolean = false,
+    isFuture: Boolean = false,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -699,11 +706,17 @@ private fun DayCell(
     val selectedBg = Color(0xFFDD3825)
     val holidayBlue = Color(0xFF007BFF)
     val dotColor = when {
-        isToday -> Color.Transparent
+        // Hide dot for today unless: approved request, OR WFH/Outdoor (pending or approved)
+        isToday && (rawType.isNullOrEmpty() ||
+            (requestStatus.lowercase() != "approved" &&
+             !rawType.contains("wfh", ignoreCase = true) &&
+             !rawType.contains("work from home", ignoreCase = true) &&
+             !rawType.contains("outdoor", ignoreCase = true))) -> Color.Transparent
         status == AttendanceDayStatus.WEEKEND -> Color(0xFFAAAAAA)
         // Calendar holiday: blue unless the employee actually worked (PRESENT) or took leave (LEAVE)
         isCalendarHoliday && status != AttendanceDayStatus.PRESENT && status != AttendanceDayStatus.LEAVE -> holidayBlue
-        status == null -> Color.Transparent
+        // Future date with rejected request: do not show absent/red dot
+        isFuture && requestStatus.lowercase() == "rejected" -> Color.Transparent
         // Rejected request: ignore the request type and show the actual attendance status colour
         requestStatus.lowercase() == "rejected" -> when (status) {
             AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
@@ -711,9 +724,12 @@ private fun DayCell(
             AttendanceDayStatus.HOLIDAY -> holidayBlue
             else -> primaryRed // LEAVE/LATE with rejected request → still absent
         }
-        !rawType.isNullOrEmpty() -> typeColor(rawType, requestStatus)
+        // WFH / Outdoor get their own dot even when there is no punch-in record (status == null).
+        // Short Leave is excluded — its dot follows actual attendance status below.
+        !rawType.isNullOrEmpty() && !rawType.contains("short leave", ignoreCase = true) -> typeColor(rawType, requestStatus, isFuture)
+        status == null -> Color.Transparent
         status == AttendanceDayStatus.PRESENT -> Color(0xFF4CAF50)
-        status == AttendanceDayStatus.ABSENT  -> primaryRed
+        status == AttendanceDayStatus.ABSENT && !isFuture -> primaryRed
         status == AttendanceDayStatus.HOLIDAY -> holidayBlue
         else -> Color.Transparent
     }
@@ -765,24 +781,70 @@ private fun DayCell(
 }
 
 @Composable
-private fun AttendanceSummarySection(
-    attendanceMap: Map<Int, AttendanceDayStatus>,
-    attendanceTypeMap: Map<Int, String>,
-    holidayFileUrl: String?,
-) {
-    val absentsCount = attendanceMap.count { (day, status) ->
-        status == AttendanceDayStatus.ABSENT &&
-            attendanceTypeMap[day]?.lowercase()?.contains("late") != true
+private fun AttendanceSummarySection(controller: AttendanceController) {
+    var absentsCount = 0
+    var lateInCount = 0
+    var onLeaveCount = 0
+    var workDaysCount = 0
+
+    val today = LocalDate.now()
+    val daysInMonth = controller.currentMonth.lengthOfMonth()
+
+    for (day in 1..daysInMonth) {
+        val date = controller.currentMonth.atDay(day)
+        val dow = date.dayOfWeek
+        if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) continue
+
+        val type = controller.attendanceTypeMap[day]?.lowercase() ?: ""
+        val reqStatus = controller.attendanceRequestStatusMap[day]?.lowercase() ?: ""
+        val status = controller.attendanceMap[day]
+
+        val isApproved = reqStatus == "approved"
+        val isActive = isApproved || reqStatus == "pending"
+
+        val hasWFH = isActive && (type.contains("wfh") || type.contains("work from home"))
+        val hasOutdoor = isActive && type.contains("outdoor")
+
+        val isRegularization = type.contains("regularisation") || type.contains("regularization") || type.contains("regularize") || type.contains("regularised")
+
+        val isLeaveType = type.contains("knt women wellness leave") || 
+            type.contains("maternity leaves") || 
+            type.contains("paternity leaves") || 
+            type.contains("sick leave") || 
+            type.contains("casual leave") || 
+            type.contains("privilege leave") || 
+            type.contains("probationary") || 
+            type.contains("optional holiday")
+            
+        val hasLeave = isApproved && isLeaveType && !isRegularization && !hasWFH && !hasOutdoor
+
+        if (controller.calendarHolidayDays.contains(day)) continue
+
+        if (hasLeave) {
+            onLeaveCount++
+            continue
+        }
+
+        if (!date.isBefore(today)) continue
+
+        if (hasWFH || hasOutdoor) {
+            workDaysCount++
+            continue
+        }
+
+        if (status != null && status != AttendanceDayStatus.WEEKEND) {
+            if (status == AttendanceDayStatus.PRESENT) {
+                workDaysCount++
+            } else if (type.contains("late coming rule violation") || type.contains("late")) {
+                lateInCount++
+            } else {
+                absentsCount++
+            }
+        } else {
+            absentsCount++
+        }
     }
-    val lateInCount = attendanceTypeMap.count { (_, type) ->
-        type.lowercase().contains("late")
-    }
-    val onLeaveCount = attendanceMap.count { (_, status) ->
-        status == AttendanceDayStatus.LEAVE
-    }
-    val workDaysCount = attendanceMap.count { (_, status) ->
-        status == AttendanceDayStatus.PRESENT
-    }
+
     val context = LocalContext.current
 
     Column {
@@ -806,7 +868,7 @@ private fun AttendanceSummarySection(
                 color = primaryRed,
                 textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
                 modifier = Modifier.clickable {
-                    val url = holidayFileUrl
+                    val url = controller.holidayFileUrl
                     if (url.isNullOrBlank()) {
                         Toast.makeText(context, "Holiday list not available", Toast.LENGTH_SHORT).show()
                     } else {
@@ -832,15 +894,15 @@ private fun AttendanceSummarySection(
         ) {
             SummaryCard(
                 iconRes = R.drawable.absents,
-                iconTint = Color(0xFFDD3825),
-                iconBg = Color(0xFFFFEBEE),
+                iconTint = Color(0xFFDC3545),
+                iconBg = Color(0xFFF8D7DA),
                 count = absentsCount,
                 label = "Absents",
                 modifier = Modifier.weight(1f),
             )
             SummaryCard(
                 iconRes = R.drawable.latein,
-                iconTint = Color(0xFFFF9800),
+                iconTint = Color(0xFFFF9500),
                 iconBg = Color(0xFFFFF3E0),
                 count = lateInCount,
                 label = "Late In",
@@ -848,16 +910,16 @@ private fun AttendanceSummarySection(
             )
             SummaryCard(
                 iconRes = R.drawable.onleave,
-                iconTint = Color(0xFF26A69A),
-                iconBg = Color(0xFFE0F2F1),
+                iconTint = Color(0xFF3EB489),
+                iconBg = Color(0xFFE2F4EE),
                 count = onLeaveCount,
                 label = "On Leave",
                 modifier = Modifier.weight(1f),
             )
             SummaryCard(
                 iconRes = R.drawable.workdays,
-                iconTint = Color(0xFF388E3C),
-                iconBg = Color(0xFFE8F5E9),
+                iconTint = Color(0xFF28A745),
+                iconBg = Color(0xFFDFF2E3),
                 count = workDaysCount,
                 label = "Work Days",
                 modifier = Modifier.weight(1f),

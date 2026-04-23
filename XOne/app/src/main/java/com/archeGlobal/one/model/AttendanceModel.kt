@@ -16,6 +16,13 @@ enum class AttendanceDayStatus {
     WEEKEND,
 }
 
+data class AttendanceSummary(
+    val absents: Int = 0,
+    val lateIn: Int = 0,
+    val onLeave: Int = 0,
+    val totalWorkDays: Int = 0
+)
+
 data class AttendanceRequest(
     @SerializedName("employeeEmail") val employeeEmail: String,
     @SerializedName("startDate") val startDate: String,

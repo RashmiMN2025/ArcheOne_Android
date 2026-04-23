@@ -161,13 +161,17 @@ class AttendanceController(private val context: Context) {
                     // Create a set of days that have records
                     val recordDays = records.mapNotNull { parseDayFromDate(it.date) }.toSet()
 
-                    // 1. Process existing records
+                    // 1. Process existing records — if a day has multiple entries prefer "present"
                     for (record in records) {
                         val day = parseDayFromDate(record.date) ?: continue
                         if (day !in 1..currentMonth.lengthOfMonth()) continue
                         val dow = currentMonth.atDay(day).dayOfWeek
                         if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) continue
-                        
+
+                        // Once a day is marked PRESENT, don't let a later duplicate overwrite it
+                        if (apiMap[day] == AttendanceDayStatus.PRESENT &&
+                            record.attendanceStatus?.lowercase() != "present") continue
+
                         val status = resolveStatus(record.attendanceStatus, record.requests, record.punchIn, record.punchOut)
                         apiMap[day] = status
                         typeMap[day] = resolveRawType(record.attendanceStatus, record.requests)
@@ -222,15 +226,27 @@ class AttendanceController(private val context: Context) {
         // PRIORITIZE FIRST REQUEST: If there's at least one request, use its status
         val firstRequest = requests?.firstOrNull()
         if (firstRequest != null) {
-            val isApprovedOrPending = firstRequest.status?.let { 
-                it.equals("approved", ignoreCase = true) || it.equals("pending", ignoreCase = true) 
-            } ?: false
-            
-            if (isApprovedOrPending && firstRequest.requestType != "Regularisation") {
+            val reqStatus = firstRequest.status?.lowercase() ?: ""
+            val isApprovedOrPending = reqStatus == "approved" || reqStatus == "pending"
+
+            val reqType = firstRequest.requestType?.lowercase() ?: ""
+            val isLeaveType = reqType.contains("knt women wellness leave") || 
+                reqType.contains("maternity") || 
+                reqType.contains("paternity") || 
+                reqType.contains("sick") || 
+                reqType.contains("casual") || 
+                reqType.contains("privilege") || 
+                reqType.contains("probationary") || 
+                reqType.contains("optional holiday")
+
+            if (isApprovedOrPending && isLeaveType) {
                 return AttendanceDayStatus.LEAVE
             }
-        }
 
+            if (reqStatus == "approved" && (reqType.contains("wfh") || reqType.contains("work from home") || reqType.contains("outdoor"))) {
+                return AttendanceDayStatus.PRESENT
+            }
+        }
         val status = attendanceStatus?.lowercase() ?: ""
 
         // If it's a holiday, show holiday status
@@ -244,10 +260,9 @@ class AttendanceController(private val context: Context) {
 
         return when {
             status.contains("present") -> AttendanceDayStatus.PRESENT
-            status.contains("late")    -> AttendanceDayStatus.ABSENT
+            status.contains("late") -> AttendanceDayStatus.LATE
             status.contains("absent")  -> AttendanceDayStatus.ABSENT
             !hasSwipes && firstRequest == null -> AttendanceDayStatus.ABSENT
-            firstRequest != null && firstRequest.requestType != "Regularisation" -> AttendanceDayStatus.LEAVE
             else -> if (hasSwipes) AttendanceDayStatus.PRESENT else AttendanceDayStatus.ABSENT
         }
     }
