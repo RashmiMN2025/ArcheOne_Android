@@ -57,8 +57,12 @@ fun ApplyOutdoorDutyScreen(
     var showFromDatePicker by remember { mutableStateOf(false) }
     var showToDatePicker by remember { mutableStateOf(false) }
 
-    var inTime by remember { mutableStateOf(LocalTime.of(9, 0)) }
-    var outTime by remember { mutableStateOf(LocalTime.of(18, 0)) }
+    var workType by remember { mutableStateOf("Outdoor Duty") }
+    var workTypeExpanded by remember { mutableStateOf(false) }
+    val workTypes = listOf("Outdoor Duty", "Short Leave")
+
+    var inTime by remember { mutableStateOf(LocalTime.of(9, 30)) }
+    var outTime by remember { mutableStateOf(LocalTime.of(18, 30)) }
     var showInTimePicker by remember { mutableStateOf(false) }
     var showOutTimePicker by remember { mutableStateOf(false) }
 
@@ -94,7 +98,7 @@ fun ApplyOutdoorDutyScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Apply for Outdoor Duty",
+                            text = if (workType == "Short Leave") "Apply for Short Leave" else "Apply for Outdoor Duty",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp,
@@ -124,7 +128,7 @@ fun ApplyOutdoorDutyScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    // Outdoor Details Card
+                    // Outdoor/Short Leave Details Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -140,6 +144,71 @@ fun ApplyOutdoorDutyScreen(
                                 color = Color.Black,
                             )
                             Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = "Work Type",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color.Black,
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            ExposedDropdownMenuBox(
+                                expanded = workTypeExpanded,
+                                onExpandedChange = { workTypeExpanded = it },
+                            ) {
+                                OutlinedTextField(
+                                    value = workType.ifEmpty { "Select Leave Type" },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = workTypeExpanded)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor(),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color(0xFFDDDDDD),
+                                        focusedBorderColor = primaryRed,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = Color.White,
+                                    ),
+                                    textStyle = LocalTextStyle.current.copy(
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.sp,
+                                    ),
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = workTypeExpanded,
+                                    onDismissRequest = { workTypeExpanded = false },
+                                    modifier = Modifier.background(Color.White),
+                                ) {
+                                    workTypes.forEach { type ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = type,
+                                                    fontFamily = GraphikFontFamily,
+                                                    color = Color.Black,
+                                                    fontSize = 14.sp,
+                                                )
+                                            },
+                                            onClick = {
+                                                workType = type
+                                                workTypeExpanded = false
+                                                if (type == "Short Leave") {
+                                                    toDate = fromDate
+                                                }
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
 
                             // From / To / Total Days row
                             Row(
@@ -229,9 +298,9 @@ fun ApplyOutdoorDutyScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Column(modifier = Modifier.width(130.dp)) {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "In Time",
+                                        text = if (workType == "Short Leave") "Start Time" else "In Time",
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 12.sp,
@@ -258,9 +327,9 @@ fun ApplyOutdoorDutyScreen(
                                         )
                                     }
                                 }
-                                Column(modifier = Modifier.width(130.dp)) {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Out Time",
+                                        text = if (workType == "Short Leave") "End Time" else "Out Time",
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 12.sp,
@@ -287,6 +356,17 @@ fun ApplyOutdoorDutyScreen(
                                         )
                                     }
                                 }
+                            }
+
+                            if (workType == "Short Leave") {
+                                Spacer(modifier = Modifier.height(14.dp))
+                                Text(
+                                    text = "Short leave allows maximum 2 hours and 2 requests per month.",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    color = Color.Black,
+                                    lineHeight = 14.sp
+                                )
                             }
                         }
                     }
@@ -347,7 +427,7 @@ fun ApplyOutdoorDutyScreen(
                     if (showFromDatePicker) {
                         val datePickerState = rememberDatePickerState(
                             initialDisplayMode = DisplayMode.Picker,
-                            initialSelectedDateMillis = System.currentTimeMillis(),
+                            initialSelectedDateMillis = fromDate.toEpochDay() * 86400000L,
                         )
                         DatePickerDialog(
                             onDismissRequest = { showFromDatePicker = false },
@@ -356,7 +436,9 @@ fun ApplyOutdoorDutyScreen(
                                     datePickerState.selectedDateMillis?.let { millis ->
                                         val selected = LocalDate.ofEpochDay(millis / 86400000L)
                                         fromDate = selected
-                                        if (toDate.isBefore(selected)) toDate = selected
+                                        if (toDate.isBefore(selected) || workType == "Short Leave") {
+                                            toDate = selected
+                                        }
                                     }
                                     showFromDatePicker = false
                                 }) {
@@ -377,7 +459,7 @@ fun ApplyOutdoorDutyScreen(
                     if (showToDatePicker) {
                         val datePickerState = rememberDatePickerState(
                             initialDisplayMode = DisplayMode.Picker,
-                            initialSelectedDateMillis = System.currentTimeMillis(),
+                            initialSelectedDateMillis = toDate.toEpochDay() * 86400000L,
                             selectableDates = object : SelectableDates {
                                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
                                     return utcTimeMillis >= fromDate.toEpochDay() * 86400000L
@@ -389,7 +471,12 @@ fun ApplyOutdoorDutyScreen(
                             confirmButton = {
                                 TextButton(onClick = {
                                     datePickerState.selectedDateMillis?.let { millis ->
-                                        toDate = LocalDate.ofEpochDay(millis / 86400000L)
+                                        val selected = LocalDate.ofEpochDay(millis / 86400000L)
+                                        if (workType == "Short Leave" && selected != fromDate) {
+                                            Toast.makeText(context, "Short leave can only be applied for a single day", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            toDate = selected
+                                        }
                                     }
                                     showToDatePicker = false
                                 }) {
@@ -427,7 +514,7 @@ fun ApplyOutdoorDutyScreen(
                                 text = "Description",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp,
+                                fontSize = 14.sp,
                                 color = Color(0xFF555555),
                             )
                             Spacer(modifier = Modifier.height(6.dp))
@@ -473,37 +560,61 @@ fun ApplyOutdoorDutyScreen(
                     // Submit button
                     Button(
                         onClick = {
-                            // Validation: Total hours must be at least 9 hours
                             val duration = java.time.Duration.between(inTime, outTime)
                             val totalHours = duration.toMinutes() / 60.0
-                            if (totalHours < 9.0) {
-                                Toast.makeText(context, "Total hours must be at least 9 hours", Toast.LENGTH_SHORT).show()
-                                return@Button
+
+                            if (workType == "Outdoor Duty") {
+                                // Validation: Total hours must be at least 9 hours
+                                if (totalHours < 9.0) {
+                                    Toast.makeText(context, "Total hours must be at least 9 hours for Outdoor Duty", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
+                            } else if (workType == "Short Leave") {
+                                // Validation: Max 2 hours
+                                if (totalHours > 2.0 || totalHours <= 0) {
+                                    Toast.makeText(context, "Short leave must be maximum 2 hours", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
                             }
 
                             val userData = UserDataManager.getInstance(context).getUserData()
                             val employeeName = userData?.name ?: ""
                             val employeeCode = userData?.employeeId ?: ""
-
-                            val apiRequest = CreateLeaveRequest(
-                                employeeName = employeeName,
-                                employeeCode = employeeCode,
-                                startDate = fromDate.toString(), // YYYY-MM-DD
-                                endDate = toDate.toString(), // YYYY-MM-DD
-                                requestType = "Outdoor",
-                                leaveDuration = "Full",
-                                description = description,
-                                reason = description,
-                                punchIn = inTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
-                                punchOut = outTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-                            )
+                            val userEmail = userData?.email ?: ""
 
                             isSubmitting = true
                             scope.launch {
                                 try {
-                                    // 1. Pre-check for conflicts
+                                    // 1. Monthly validation for Short Leave (max 2 requests)
+                                    if (workType == "Short Leave") {
+                                        val monthStart = fromDate.withDayOfMonth(1).toString()
+                                        val monthEnd = fromDate.withDayOfMonth(fromDate.lengthOfMonth()).toString()
+
+                                        val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
+                                            email = userEmail,
+                                            startDate = monthStart,
+                                            endDate = monthEnd
+                                        )
+                                        val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
+
+                                        if (checkResponse.isSuccessful) {
+                                            val breakdown = checkResponse.body()?.data?.breakdown ?: emptyList()
+                                            val shortLeaveCount = breakdown.count {
+                                                it.requestType.contains("Short Leave", ignoreCase = true) &&
+                                                (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
+                                            }
+
+                                            if (shortLeaveCount >= 2) {
+                                                Toast.makeText(context, "You have already reached the maximum limit of 2 Short Leaves for this month.", Toast.LENGTH_LONG).show()
+                                                isSubmitting = false
+                                                return@launch
+                                            }
+                                        }
+                                    }
+
+                                    // 2. Pre-check for conflicts on specific dates
                                     val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
-                                        email = userData?.email ?: "",
+                                        email = userEmail,
                                         startDate = fromDate.toString(),
                                         endDate = toDate.toString()
                                     )
@@ -519,10 +630,23 @@ fun ApplyOutdoorDutyScreen(
                                         return@launch
                                     }
 
-                                    // 2. Proceed with creation if no conflicts
+                                    // 3. Final Submission
+                                    val apiRequest = CreateLeaveRequest(
+                                        employeeName = employeeName,
+                                        employeeCode = employeeCode,
+                                        startDate = fromDate.toString(),
+                                        endDate = toDate.toString(),
+                                        requestType = if (workType == "Short Leave") "Short Leave" else "Outdoor",
+                                        leaveDuration = "Full",
+                                        description = description,
+                                        reason = description,
+                                        punchIn = inTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+                                        punchOut = outTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                                    )
+
                                     val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
                                     if (response.isSuccessful && response.body()?.success == true) {
-                                        Toast.makeText(context, response.body()?.message ?: "Outdoor duty request submitted successfully", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, response.body()?.message ?: "Request submitted successfully", Toast.LENGTH_LONG).show()
                                         attendanceController?.fetchLeaveBalances()
                                         onBack()
                                     } else {
@@ -542,7 +666,7 @@ fun ApplyOutdoorDutyScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
                     ) {
                             Text(
-                                text = "Submit Outdoor Duty Request",
+                                text = "Submit ${workType} Request",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 16.sp,
