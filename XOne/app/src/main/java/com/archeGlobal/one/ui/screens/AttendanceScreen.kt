@@ -14,14 +14,9 @@ import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.PersonOff
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Work
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -196,6 +191,7 @@ fun AttendanceScreen(
                         AttendanceSummarySection(
                             attendanceMap = controller.attendanceMap,
                             attendanceTypeMap = controller.attendanceTypeMap,
+                            holidayFileUrl = controller.holidayFileUrl,
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
@@ -521,8 +517,15 @@ private fun AttendanceDetailsDialog(
                 val punchRecords = records.filter { !it.punchIn.isNullOrEmpty() }.sortedBy { it.punchIn }
                 val firstIn = formatTo12h(punchRecords.firstOrNull()?.punchIn ?: "None")
                 val lastOut = formatTo12h(punchRecords.lastOrNull { !it.punchOut.isNullOrEmpty() }?.punchOut?.lastOrNull() ?: "None")
-                val workingHours = records.firstOrNull { it.workingHours != null && it.workingHours != "00:00" }?.workingHours
-                    ?: records.firstOrNull()?.workingHours ?: "None"
+                val isWorkingDay = date.dayOfWeek != java.time.DayOfWeek.SATURDAY &&
+                    date.dayOfWeek != java.time.DayOfWeek.SUNDAY
+                val apiWorkingHours = records.firstOrNull { it.workingHours != null && it.workingHours != "00:00" }?.workingHours
+                    ?: records.firstOrNull()?.workingHours
+                val workingHours = when {
+                    firstIn == "None" && isWorkingDay && holidayName == null -> "00:00 hrs"
+                    apiWorkingHours != null -> apiWorkingHours
+                    else -> "None"
+                }
                 val primaryRequest = allRequests.firstOrNull()
                 val leaveType = primaryRequest?.requestType ?: "None"
                 val leaveStatus = primaryRequest?.status ?: "None"
@@ -541,7 +544,13 @@ private fun AttendanceDetailsDialog(
                     ) {
                         AttendanceDetailRow(label = "Shift", value = if (date.dayOfWeek == java.time.DayOfWeek.SATURDAY || date.dayOfWeek == java.time.DayOfWeek.SUNDAY) "None" else "9:30 am to 6:30 pm")
                         AttendanceDetailRow(label = "Regularised", value = regularisation?.status ?: "None")
-                        AttendanceDetailRow(label = "Attendance Status", value = if (date == java.time.LocalDate.now() || hasPendingRequest) "None" else records.firstOrNull()?.attendanceStatus ?: "None")
+                        val attendanceStatusValue = when {
+                            date == java.time.LocalDate.now() || hasPendingRequest -> "None"
+                            isWorkingDay && holidayName == null && rawSwipes == "None" &&
+                                (records.isEmpty() || records.firstOrNull()?.attendanceStatus.isNullOrBlank()) -> "Absent"
+                            else -> records.firstOrNull()?.attendanceStatus?.takeIf { it.isNotBlank() } ?: "None"
+                        }
+                        AttendanceDetailRow(label = "Attendance Status", value = attendanceStatusValue)
                         AttendanceDetailRow(label = "Reason", value = reason)
                         AttendanceDetailRow(label = "Raw Swipes", value = rawSwipes)
                     }
@@ -759,6 +768,7 @@ private fun DayCell(
 private fun AttendanceSummarySection(
     attendanceMap: Map<Int, AttendanceDayStatus>,
     attendanceTypeMap: Map<Int, String>,
+    holidayFileUrl: String?,
 ) {
     val absentsCount = attendanceMap.count { (day, status) ->
         status == AttendanceDayStatus.ABSENT &&
@@ -773,15 +783,41 @@ private fun AttendanceSummarySection(
     val workDaysCount = attendanceMap.count { (_, status) ->
         status == AttendanceDayStatus.PRESENT
     }
+    val context = LocalContext.current
 
     Column {
-        Text(
-            text = "Attendance Summary",
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
-            color = Color.Black,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Attendance Summary",
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+                color = Color.Black,
+            )
+            Text(
+                text = "Holiday List",
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                color = primaryRed,
+                textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
+                modifier = Modifier.clickable {
+                    val url = holidayFileUrl
+                    if (url.isNullOrBlank()) {
+                        Toast.makeText(context, "Holiday list not available", Toast.LENGTH_SHORT).show()
+                    } else {
+                        val intent = android.content.Intent(context, com.archeGlobal.one.WebViewActivity::class.java)
+                        intent.putExtra("fileUrl", url)
+                        intent.putExtra("title", "Holiday List")
+                        context.startActivity(intent)
+                    }
+                },
+            )
+        }
         Text(
             text = "Monthly overview",
             fontFamily = GraphikFontFamily,
@@ -795,7 +831,7 @@ private fun AttendanceSummarySection(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             SummaryCard(
-                icon = Icons.Filled.Cancel,
+                iconRes = R.drawable.absents,
                 iconTint = Color(0xFFDD3825),
                 iconBg = Color(0xFFFFEBEE),
                 count = absentsCount,
@@ -803,7 +839,7 @@ private fun AttendanceSummarySection(
                 modifier = Modifier.weight(1f),
             )
             SummaryCard(
-                icon = Icons.Filled.Schedule,
+                iconRes = R.drawable.latein,
                 iconTint = Color(0xFFFF9800),
                 iconBg = Color(0xFFFFF3E0),
                 count = lateInCount,
@@ -811,7 +847,7 @@ private fun AttendanceSummarySection(
                 modifier = Modifier.weight(1f),
             )
             SummaryCard(
-                icon = Icons.Filled.PersonOff,
+                iconRes = R.drawable.onleave,
                 iconTint = Color(0xFF26A69A),
                 iconBg = Color(0xFFE0F2F1),
                 count = onLeaveCount,
@@ -819,7 +855,7 @@ private fun AttendanceSummarySection(
                 modifier = Modifier.weight(1f),
             )
             SummaryCard(
-                icon = Icons.Filled.Work,
+                iconRes = R.drawable.workdays,
                 iconTint = Color(0xFF388E3C),
                 iconBg = Color(0xFFE8F5E9),
                 count = workDaysCount,
@@ -832,7 +868,7 @@ private fun AttendanceSummarySection(
 
 @Composable
 private fun SummaryCard(
-    icon: ImageVector,
+    @androidx.annotation.DrawableRes iconRes: Int,
     iconTint: Color,
     iconBg: Color,
     count: Int,
@@ -859,7 +895,7 @@ private fun SummaryCard(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = icon,
+                    painter = painterResource(id = iconRes),
                     contentDescription = label,
                     tint = iconTint,
                     modifier = Modifier.size(24.dp),

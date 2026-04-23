@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.AttendanceDayData
 import com.archeGlobal.one.model.AttendanceDayStatus
 import com.archeGlobal.one.model.AttendanceRequest
+import com.archeGlobal.one.model.Holiday
 import com.archeGlobal.one.model.LeaveBalance
 import com.archeGlobal.one.model.LeaveRequest
 import com.archeGlobal.one.model.ManagerDashboardRequest
@@ -53,12 +54,25 @@ class AttendanceController(private val context: Context) {
     var isOptionalHolidaysLoading by mutableStateOf(false)
         private set
 
-    // Maps "DD-MM-YYYY" → holiday name for all applicable holidays from the calendar API
+    // All applicable holidays (Yes + RH) — used only for holiday name lookup in the detail dialog
     private var allHolidayMap by mutableStateOf<Map<String, String>>(emptyMap())
 
-    // Holiday day numbers for the currently displayed month, derived from allHolidayMap + currentMonth
+    // Mandatory holidays only (type "Yes") — drives the automatic blue dot on the calendar
+    private var mandatoryHolidayMap by mutableStateOf<Map<String, String>>(emptyMap())
+
+    // Full holiday list (Yes + RH) sorted by date
+    var allCalendarHolidays by mutableStateOf<List<Holiday>>(emptyList())
+        private set
+
+    // PDF/document URL for the holiday list, from the calendar API
+    var holidayFileUrl by mutableStateOf<String?>(null)
+        private set
+
+    // Day numbers in the current month that have a mandatory holiday → automatic blue dot
+    // Optional (RH) holidays are NOT included; they only turn blue when an approved optional-holiday
+    // leave appears in the attendance records (handled by typeColor("optional")).
     val calendarHolidayDays: Set<Int>
-        get() = allHolidayMap.keys.mapNotNull { dateStr ->
+        get() = mandatoryHolidayMap.keys.mapNotNull { dateStr ->
             try {
                 val parts = dateStr.split("-")
                 if (parts.size < 3) return@mapNotNull null
@@ -145,11 +159,12 @@ class AttendanceController(private val context: Context) {
                     val requestStatusMap = mutableMapOf<Int, String>()
                     
                     // Create a set of days that have records
-                    val recordDays = records.mapNotNull { it.date.split("-").last().toIntOrNull() }.toSet()
-                    
+                    val recordDays = records.mapNotNull { parseDayFromDate(it.date) }.toSet()
+
                     // 1. Process existing records
                     for (record in records) {
-                        val day = record.date.split("-").last().toIntOrNull() ?: continue
+                        val day = parseDayFromDate(record.date) ?: continue
+                        if (day !in 1..currentMonth.lengthOfMonth()) continue
                         val dow = currentMonth.atDay(day).dayOfWeek
                         if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) continue
                         
@@ -189,6 +204,15 @@ class AttendanceController(private val context: Context) {
         }
     }
 
+    private fun parseDayFromDate(date: String): Int? {
+        return try {
+            // Handles "YYYY-MM-DD" and "YYYY-MM-DDTHH:MM:SS" safely
+            LocalDate.parse(date.take(10)).dayOfMonth
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     private fun resolveStatus(
         attendanceStatus: String?,
         requests: List<com.archeGlobal.one.model.AttendanceDayRequest>?,
@@ -208,13 +232,16 @@ class AttendanceController(private val context: Context) {
         }
 
         val status = attendanceStatus?.lowercase() ?: ""
-        
+
         // If it's a holiday, show holiday status
         if (status.contains("holiday")) return AttendanceDayStatus.HOLIDAY
-        
-        // Check for swipes
-        val hasSwipes = !punchIn.isNullOrEmpty() || !punchOut.isNullOrEmpty()
-        
+
+        // Check for swipes — guard against API returning [""] instead of null/[]
+        val hasSwipes = !punchIn.isNullOrBlank() || punchOut?.any { it.isNotBlank() } == true
+
+        // Null/blank attendance status with no swipes and no request → definitely absent
+        if (status.isBlank() && !hasSwipes && firstRequest == null) return AttendanceDayStatus.ABSENT
+
         return when {
             status.contains("present") -> AttendanceDayStatus.PRESENT
             status.contains("late")    -> AttendanceDayStatus.ABSENT
@@ -257,9 +284,11 @@ class AttendanceController(private val context: Context) {
             withAuthHeader = true,
         ) { response, error ->
             if (error != null || response == null) return@makeEncryptedCall
-            allHolidayMap = response.holidays
-                .filter { it.holidayType == "Yes" || it.holidayType == "RH" }
-                .associate { it.date to it.name }
+            val applicable = response.holidays.filter { it.holidayType == "Yes" || it.holidayType == "RH" }
+            allHolidayMap = applicable.associate { it.date to it.name }
+            mandatoryHolidayMap = applicable.filter { it.holidayType == "Yes" }.associate { it.date to it.name }
+            allCalendarHolidays = applicable.sortedWith(compareBy({ it.month }, { it.day }))
+            holidayFileUrl = response.holidaysFile.ifBlank { null }
         }
     }
 
