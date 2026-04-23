@@ -485,8 +485,8 @@ class AttendanceController(private val context: Context) {
                 if (hasRegularization) count++
             }
             
-            if (count >= 3) {
-                return Pair(false, "You have already reached the maximum limit of 3 regularizations for this month.")
+            if (count >= 4) {
+                return Pair(false, "You have already reached the maximum limit of 4 regularizations for this month.")
             }
         }
 

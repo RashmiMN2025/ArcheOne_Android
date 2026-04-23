@@ -850,9 +850,17 @@ fun ApplyLeaveScreen(
                             }
 
                             // 3. Single Day Validation for restricted leaves
-                            val restrictedSingleDayTypes = listOf("Casual Leave", "Sick Leave", "Probationary Leave", "KNT Women Wellness Leave")
-                            if (restrictedSingleDayTypes.any { it.equals(selectedLeaveType, ignoreCase = true) } || 
-                                selectedLeaveType.contains("Women Wellness", ignoreCase = true)) {
+                            val isWellness = selectedLeaveType.contains("Women Wellness", ignoreCase = true)
+                            val isSickLeave = selectedLeaveType.equals("Sick Leave", ignoreCase = true)
+                            val isCasualLeave = selectedLeaveType.equals("Casual Leave", ignoreCase = true)
+                            val isProbationary = selectedLeaveType.equals("Probationary Leave", ignoreCase = true)
+
+                            if (isSickLeave) {
+                                if (totalDays > 2) {
+                                    Toast.makeText(context, "Sick Leave can only be applied for a maximum of 2 consecutive days.", Toast.LENGTH_LONG).show()
+                                    return@Button
+                                }
+                            } else if (isCasualLeave || isProbationary || isWellness) {
                                 if (fromDate != toDate) {
                                     Toast.makeText(context, "$selectedLeaveType can only be applied for a single day.", Toast.LENGTH_LONG).show()
                                     return@Button
@@ -929,8 +937,14 @@ fun ApplyLeaveScreen(
                                         }
                                     }
 
-                                    // C. Casual/Sick Leave Monthly Limit Check
-                                    if (selectedLeaveType == "Casual Leave" || selectedLeaveType == "Sick Leave" || selectedLeaveType == "Probationary Leave") {
+                                    // C. Monthly Limit and Adjacent Leave Check (No Clubbing)
+                                    val restrictedTypes = listOf(
+                                        "Casual Leave", "Sick Leave", "Privilege Leave", 
+                                        "Maternity Leaves", "Paternity Leaves", "Optional Holiday",
+                                        "Probationary Leave"
+                                    )
+                                    
+                                    if (restrictedTypes.any { it.equals(selectedLeaveType, ignoreCase = true) }) {
                                         val monthStart = fromDate.withDayOfMonth(1).toString()
                                         val monthEnd = fromDate.withDayOfMonth(fromDate.lengthOfMonth()).toString()
 
@@ -942,22 +956,66 @@ fun ApplyLeaveScreen(
                                         val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
                                         if (checkResponse.isSuccessful) {
                                             val breakdown = checkResponse.body()?.data?.breakdown ?: emptyList()
-                                            val monthlyConflict = breakdown.any {
-                                                it.requestType.equals(selectedLeaveType, ignoreCase = true) &&
-                                                (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
+                                            
+                                            // 1. Rule: Monthly Limits (2 CL and 2 SL allowed per month)
+                                            if (selectedLeaveType == "Casual Leave" || selectedLeaveType == "Sick Leave" || selectedLeaveType == "Probationary Leave") {
+                                                val monthlyCount = breakdown.count {
+                                                    it.requestType.equals(selectedLeaveType, ignoreCase = true) &&
+                                                    (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
+                                                }
+                                                
+                                                val limit = if (selectedLeaveType == "Probationary Leave") 1 else 2
+                                                
+                                                if (monthlyCount >= limit) {
+                                                    Toast.makeText(context, "$selectedLeaveType limit reached ($limit per month).", Toast.LENGTH_LONG).show()
+                                                    isSubmitting = false
+                                                    return@launch
+                                                }
                                             }
-                                            if (monthlyConflict) {
-                                                Toast.makeText(context, "$selectedLeaveType limit reached for this month.", Toast.LENGTH_LONG).show()
+
+                                            // 2. Rule: No Clubbing (Adjacent Leave Check)
+                                            val prevDay = fromDate.minusDays(1).toString()
+                                            val nextDay = toDate.plusDays(1).toString()
+                                            
+                                            val adjacentConflict = breakdown.any { entry ->
+                                                val entryStatus = entry.status.lowercase()
+                                                val entryType = entry.requestType ?: ""
+                                                val isRestrictedEntry = restrictedTypes.any { entryType.contains(it, ignoreCase = true) }
+                                                val isAdjacentDate = entry.requestDate == prevDay || entry.requestDate == nextDay
+                                                
+                                                val isApprovedOrPending = entryStatus == "pending" || entryStatus == "approved"
+                                                
+                                                if (isRestrictedEntry && isAdjacentDate && isApprovedOrPending) {
+                                                    // SPECIAL CASE: 2 consecutive SL are ALLOWED (SL + SL)
+                                                    val isCurrentSick = selectedLeaveType.contains("Sick", ignoreCase = true)
+                                                    val isEntrySick = entryType.contains("Sick", ignoreCase = true)
+                                                    
+                                                    if (isCurrentSick && isEntrySick) {
+                                                        false // Allowed
+                                                    } else {
+                                                        // All other restricted adjacencies are blocked
+                                                        // This includes CL + CL, CL + SL, PL + CL, etc.
+                                                        true // Conflict
+                                                    }
+                                                } else {
+                                                    false
+                                                }
+                                            }
+
+                                            if (adjacentConflict) {
+                                                Toast.makeText(context, "No clubbing allowed: $selectedLeaveType cannot be adjacent to another restricted leave.", Toast.LENGTH_LONG).show()
                                                 isSubmitting = false
                                                 return@launch
                                             }
-                                            
-                                            val dateConflict = breakdown.any {
-                                                it.requestDate == fromDate.toString() &&
-                                                (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
+
+                                            // 3. Rule: Check for existing request on same dates
+                                            val dateConflict = breakdown.any { entry ->
+                                                val entryDate = java.time.LocalDate.parse(entry.requestDate)
+                                                val isOverlap = !entryDate.isBefore(fromDate) && !entryDate.isAfter(toDate)
+                                                isOverlap && (entry.status.lowercase() == "pending" || entry.status.lowercase() == "approved")
                                             }
                                             if (dateConflict) {
-                                                Toast.makeText(context, "A leave request already exists for this date.", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(context, "A leave request already exists for these dates.", Toast.LENGTH_LONG).show()
                                                 isSubmitting = false
                                                 return@launch
                                             }
