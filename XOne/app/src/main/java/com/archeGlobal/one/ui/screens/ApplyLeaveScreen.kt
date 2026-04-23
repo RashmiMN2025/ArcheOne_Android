@@ -1019,7 +1019,7 @@ fun ApplyLeaveScreen(
                                 }
                                 val durationMinutes = java.time.Duration.between(startTime, endTime).toMinutes()
                                 if (durationMinutes > 120) {
-                                    Toast.makeText(context, "Short Leave cannot exceed 2 hours.", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, "Short Leave can be applied for a maximum of 2 hours only", Toast.LENGTH_LONG).show()
                                     return@Button
                                 }
                             } else if (isSickLeave) {
@@ -1065,7 +1065,7 @@ fun ApplyLeaveScreen(
                                                 it.requestType.contains("Short Leave", ignoreCase = true)
                                             }
                                             if (shortLeaveCount >= 2) {
-                                                Toast.makeText(context, "You can apply only 2 Short Leaves per day.", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(context, "You can apply only 2 Short Leaves per month.", Toast.LENGTH_LONG).show()
                                                 isSubmitting = false
                                                 return@launch
                                             }
@@ -1073,7 +1073,7 @@ fun ApplyLeaveScreen(
                                                 !it.requestType.contains("Short Leave", ignoreCase = true)
                                             }
                                             if (hasOtherRequest) {
-                                                Toast.makeText(context, "You already have a pending or approved request on this day. Short Leave cannot be applied.", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(context, "A request is already pending for the selected date.", Toast.LENGTH_LONG).show()
                                                 isSubmitting = false
                                                 return@launch
                                             }
@@ -1256,7 +1256,7 @@ fun ApplyLeaveScreen(
                                         val attendanceId = rangeResp?.body()?.data?.firstOrNull()?.id
                                         
                                         if (attendanceId == null) {
-                                            Toast.makeText(context, "Attendance record not found. Please punch in before applying Short Leave.", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(context, "Short Leave cannot be applied as attendance is not available for the selected date.", Toast.LENGTH_LONG).show()
                                             isSubmitting = false
                                             return@launch
                                         }
@@ -1270,7 +1270,7 @@ fun ApplyLeaveScreen(
                                         android.util.Log.d("ShortLeave", "Request: attendanceId=$attendanceId startTime=${shortRequest.startTime} endTime=${shortRequest.endTime} reason=${shortRequest.reason}")
                                         val response = RetrofitClient.apiService.createShortLeaveRequest(shortRequest)
                                         if (response.isSuccessful && response.body()?.success == true) {
-                                            Toast.makeText(context, response.body()?.message ?: "Short Leave request created successfully", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(context, response.body()?.message ?: "Short leave request submitted successfully!", Toast.LENGTH_LONG).show()
                                             attendanceController?.fetchLeaveBalances()
                                             onBack()
                                         } else {

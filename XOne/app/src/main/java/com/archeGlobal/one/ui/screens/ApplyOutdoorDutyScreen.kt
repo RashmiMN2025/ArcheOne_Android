@@ -571,7 +571,7 @@ fun ApplyOutdoorDutyScreen(
                             } else if (workType == "Short Leave") {
                                 // Validation: Max 2 hours
                                 if (totalHours > 2.0 || totalHours <= 0) {
-                                    Toast.makeText(context, "Short leave must be maximum 2 hours", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Short Leave can be applied for a maximum of 2 hours only", Toast.LENGTH_LONG).show()
                                     return@Button
                                 }
                             }
@@ -604,7 +604,7 @@ fun ApplyOutdoorDutyScreen(
                                             }
 
                                             if (shortLeaveCount >= 2) {
-                                                Toast.makeText(context, "You have already reached the maximum limit of 2 Short Leaves for this month.", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(context, "You can apply only 2 Short Leaves per month.", Toast.LENGTH_LONG).show()
                                                 isSubmitting = false
                                                 return@launch
                                             }
@@ -624,7 +624,7 @@ fun ApplyOutdoorDutyScreen(
                                     } ?: emptyList()
 
                                     if (checkResponse.isSuccessful && conflicts.isNotEmpty()) {
-                                        Toast.makeText(context, "A request already exists for these dates. Please change the date.", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, "A request is already pending for the selected date.", Toast.LENGTH_LONG).show()
                                         isSubmitting = false
                                         return@launch
                                     }
@@ -645,7 +645,7 @@ fun ApplyOutdoorDutyScreen(
                                         val attendanceId = rangeResp?.body()?.data?.firstOrNull()?.id
                                         
                                         if (attendanceId == null) {
-                                            Toast.makeText(context, "Attendance record not found. Please punch in before applying Short Leave.", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(context, "Short Leave cannot be applied as attendance is not available for the selected date.", Toast.LENGTH_LONG).show()
                                             isSubmitting = false
                                             return@launch
                                         }
@@ -657,7 +657,7 @@ fun ApplyOutdoorDutyScreen(
                                         )
                                         val response = RetrofitClient.apiService.createShortLeaveRequest(shortRequest)
                                         if (response.isSuccessful && response.body()?.success == true) {
-                                            Toast.makeText(context, response.body()?.message ?: "Short Leave request submitted successfully", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(context, response.body()?.message ?: "Short leave request submitted successfully!", Toast.LENGTH_LONG).show()
                                             attendanceController?.fetchLeaveBalances()
                                             onBack()
                                         } else {
