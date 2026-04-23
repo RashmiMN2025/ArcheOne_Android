@@ -161,9 +161,11 @@ fun UserApprovalHistoryScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             DetailInfoRow(iconRes = R.drawable.calender22, label = "Date", value = dateDisplay)
                             Spacer(modifier = Modifier.height(12.dp))
-                            DetailInfoRow(iconRes = R.drawable.meettime, label = "Duration", value = item.leaveDuration ?: "N/A")
-                            if (!item.punchIn.isNullOrEmpty()) {
+                            if (!item.leaveDuration.isNullOrEmpty()) {
+                                DetailInfoRow(iconRes = R.drawable.meettime, label = "Duration", value = item.leaveDuration)
                                 Spacer(modifier = Modifier.height(12.dp))
+                            }
+                            if (!item.punchIn.isNullOrEmpty()) {
                                 DetailInfoRow(iconRes = R.drawable.punchin, label = "Punch In", value = item.punchIn ?: "N/A")
                             }
                             if (!item.punchOut.isNullOrEmpty()) {

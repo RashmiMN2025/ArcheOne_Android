@@ -219,21 +219,23 @@ private fun MyRequestCard(
                     fontSize = 14.sp,
                     color = Color.Black,
                 )
-                Spacer(modifier = Modifier.width(16.dp))
-                Icon(
-                    imageVector = Icons.Default.AccessTime,
-                    contentDescription = null,
-                    tint = Color(0xFF888888),
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = request.leaveDuration ?: "N/A",
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                )
+                if (!request.leaveDuration.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Icon(
+                        imageVector = Icons.Default.AccessTime,
+                        contentDescription = null,
+                        tint = Color(0xFF888888),
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = request.leaveDuration,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))

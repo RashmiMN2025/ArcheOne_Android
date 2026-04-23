@@ -183,6 +183,11 @@ interface ApiService {
         @Body request: CreateLeaveRequest
     ): Response<CreateLeaveResponse>
 
+    @POST("/api/v1/timesheet/short-leave/create")
+    suspend fun createShortLeaveRequest(
+        @Body request: com.archeGlobal.one.model.ShortLeaveCreateRequest
+    ): Response<com.archeGlobal.one.model.ShortLeaveCreateResponse>
+
     @POST("/api/v1/timesheet/requests/get")
     suspend fun getMyRequests(
         @Body request: MyRequestsRequest

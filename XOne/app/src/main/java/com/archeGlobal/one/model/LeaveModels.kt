@@ -146,3 +146,30 @@ data class ConflictBreakdown(
     @SerializedName("punchIn") val punchIn: String? = null,
     @SerializedName("punchOut") val punchOut: String? = null
 )
+
+data class ShortLeaveCreateRequest(
+    @SerializedName("attendanceId") val attendanceId: Int,
+    @SerializedName("startTime") val startTime: String,
+    @SerializedName("endTime") val endTime: String,
+    @SerializedName("reason") val reason: String,
+)
+
+data class ShortLeaveCreateResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("message") val message: String,
+    @SerializedName("status") val status: Int,
+    @SerializedName("data") val data: ShortLeaveData? = null,
+)
+
+data class ShortLeaveData(
+    @SerializedName("id") val id: String,
+    @SerializedName("eventId") val eventId: String,
+    @SerializedName("employeeName") val employeeName: String,
+    @SerializedName("employeeCode") val employeeCode: String,
+    @SerializedName("requestDate") val requestDate: String,
+    @SerializedName("requestType") val requestType: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("reason") val reason: String,
+    @SerializedName("startTime") val startTime: String,
+    @SerializedName("endTime") val endTime: String,
+)

@@ -2156,7 +2156,7 @@ class HomeActivity : AppCompatActivity() {
                                         "&leaveType=${java.net.URLEncoder.encode(request.requestType ?: "", "UTF-8")}" +
                                         "&code=${java.net.URLEncoder.encode(request.employeeCode ?: "", "UTF-8")}" +
                                         "&date=${java.net.URLEncoder.encode(dateText, "UTF-8")}" +
-                                        "&duration=${java.net.URLEncoder.encode(request.leaveDuration ?: "Full", "UTF-8")}" +
+                                        "&duration=${java.net.URLEncoder.encode(request.leaveDuration ?: "", "UTF-8")}" +
                                         "&reason=${java.net.URLEncoder.encode(request.reason ?: "", "UTF-8")}" +
                                         "&description=${java.net.URLEncoder.encode(request.description ?: "", "UTF-8")}" +
                                         "&status=${java.net.URLEncoder.encode(request.status ?: "pending", "UTF-8")}" +

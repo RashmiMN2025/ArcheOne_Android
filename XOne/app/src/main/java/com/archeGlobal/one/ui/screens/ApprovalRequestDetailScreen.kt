@@ -162,8 +162,10 @@ fun ApprovalRequestDetailScreen(
                         InfoRow(iconRes = R.drawable.hashh, label = "Employee Code", value = employeeCode)
                         Spacer(modifier = Modifier.height(12.dp))
                         InfoRow(iconRes = R.drawable.calender22, label = "Date", value = date)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        InfoRow(iconRes = R.drawable.meettime, label = "Duration", value = duration)
+                        if (duration.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            InfoRow(iconRes = R.drawable.meettime, label = "Duration", value = duration)
+                        }
                         
                         if (!punchIn.isNullOrEmpty()) {
                             Spacer(modifier = Modifier.height(12.dp))

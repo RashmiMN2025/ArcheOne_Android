@@ -564,9 +564,8 @@ fun ApplyOutdoorDutyScreen(
                             val totalHours = duration.toMinutes() / 60.0
 
                             if (workType == "Outdoor Duty") {
-                                // Validation: Total hours must be at least 9 hours
-                                if (totalHours < 9.0) {
-                                    Toast.makeText(context, "Total hours must be at least 9 hours for Outdoor Duty", Toast.LENGTH_SHORT).show()
+                                if (!outTime.isAfter(inTime)) {
+                                    Toast.makeText(context, "Out time must be after in time.", Toast.LENGTH_SHORT).show()
                                     return@Button
                                 }
                             } else if (workType == "Short Leave") {
@@ -631,26 +630,65 @@ fun ApplyOutdoorDutyScreen(
                                     }
 
                                     // 3. Final Submission
-                                    val apiRequest = CreateLeaveRequest(
-                                        employeeName = employeeName,
-                                        employeeCode = employeeCode,
-                                        startDate = fromDate.toString(),
-                                        endDate = toDate.toString(),
-                                        requestType = if (workType == "Short Leave") "Short Leave" else "Outdoor",
-                                        leaveDuration = "Full",
-                                        description = description,
-                                        reason = description,
-                                        punchIn = inTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
-                                        punchOut = outTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-                                    )
-
-                                    val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
-                                    if (response.isSuccessful && response.body()?.success == true) {
-                                        Toast.makeText(context, response.body()?.message ?: "Request submitted successfully", Toast.LENGTH_LONG).show()
-                                        attendanceController?.fetchLeaveBalances()
-                                        onBack()
+                                    val timeFmt = DateTimeFormatter.ofPattern("HH:mm:ss")
+                                    if (workType == "Short Leave") {
+                                        val rangeReq = com.archeGlobal.one.model.AttendanceRequest(
+                                            employeeEmail = userEmail,
+                                            startDate = fromDate.toString(),
+                                            endDate = fromDate.toString()
+                                        )
+                                        val rangeResp = try {
+                                            RetrofitClient.apiService.getAttendanceRecords(rangeReq)
+                                        } catch (e: Exception) {
+                                            null
+                                        }
+                                        val attendanceId = rangeResp?.body()?.data?.firstOrNull()?.id
+                                        
+                                        if (attendanceId == null) {
+                                            Toast.makeText(context, "Attendance record not found. Please punch in before applying Short Leave.", Toast.LENGTH_LONG).show()
+                                            isSubmitting = false
+                                            return@launch
+                                        }
+                                        val shortRequest = com.archeGlobal.one.model.ShortLeaveCreateRequest(
+                                            attendanceId = attendanceId,
+                                            startTime = inTime.format(timeFmt),
+                                            endTime = outTime.format(timeFmt),
+                                            reason = description,
+                                        )
+                                        val response = RetrofitClient.apiService.createShortLeaveRequest(shortRequest)
+                                        if (response.isSuccessful && response.body()?.success == true) {
+                                            Toast.makeText(context, response.body()?.message ?: "Short Leave request submitted successfully", Toast.LENGTH_LONG).show()
+                                            attendanceController?.fetchLeaveBalances()
+                                            onBack()
+                                        } else {
+                                            val errorMsg = try {
+                                                response.errorBody()?.string()
+                                                    ?.let { org.json.JSONObject(it).optString("message") }
+                                                    ?.takeIf { it.isNotBlank() }
+                                            } catch (_: Exception) { null }
+                                            Toast.makeText(context, errorMsg ?: response.body()?.message ?: "Failed to submit Short Leave (${response.code()})", Toast.LENGTH_LONG).show()
+                                        }
                                     } else {
-                                        Toast.makeText(context, response.body()?.message ?: "Failed to submit request", Toast.LENGTH_SHORT).show()
+                                        val apiRequest = CreateLeaveRequest(
+                                            employeeName = employeeName,
+                                            employeeCode = employeeCode,
+                                            startDate = fromDate.toString(),
+                                            endDate = toDate.toString(),
+                                            requestType = "Outdoor",
+                                            leaveDuration = "Full",
+                                            description = description,
+                                            reason = description,
+                                            punchIn = inTime.format(timeFmt),
+                                            punchOut = outTime.format(timeFmt),
+                                        )
+                                        val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
+                                        if (response.isSuccessful && response.body()?.success == true) {
+                                            Toast.makeText(context, response.body()?.message ?: "Request submitted successfully", Toast.LENGTH_LONG).show()
+                                            attendanceController?.fetchLeaveBalances()
+                                            onBack()
+                                        } else {
+                                            Toast.makeText(context, response.body()?.message ?: "Failed to submit request", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 } catch (e: Exception) {
                                     Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()

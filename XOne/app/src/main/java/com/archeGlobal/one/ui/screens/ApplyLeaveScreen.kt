@@ -41,6 +41,7 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 private val leaveTypes = listOf(
@@ -96,8 +97,23 @@ fun ApplyLeaveScreen(
     val scope = rememberCoroutineScope()
     var isSubmitting by remember { mutableStateOf(false) }
 
+    var startTime by remember { mutableStateOf<LocalTime?>(null) }
+    var endTime by remember { mutableStateOf<LocalTime?>(null) }
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
+
     val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
+    val timeFormatter = DateTimeFormatter.ofPattern("hh:mm a")
     val totalDays = (toDate.toEpochDay() - fromDate.toEpochDay() + 1).coerceAtLeast(1)
+    val isShortLeave = selectedLeaveType.contains("Short Leave", ignoreCase = true)
+
+    LaunchedEffect(selectedLeaveType) {
+        if (isShortLeave) {
+            toDate = fromDate
+            startTime = null
+            endTime = null
+        }
+    }
 
     // Use available leave balances from controller if provided, otherwise fallback to default list
     val availableLeaveTypes = if (attendanceController != null && attendanceController.leaveBalances.isNotEmpty()) {
@@ -106,7 +122,8 @@ fun ApplyLeaveScreen(
         leaveTypes
     }
 
-    val showStartEndDay = selectedLeaveType != "Privilege Leave" &&
+    val showStartEndDay = !isShortLeave &&
+                         selectedLeaveType != "Privilege Leave" &&
                          selectedLeaveType != "Optional Holiday" &&
                          (selectedLeaveType in leaveTypesWithStartEndDay ||
                          (attendanceController?.leaveBalances?.any { it.type == selectedLeaveType } == true))
@@ -301,15 +318,21 @@ fun ApplyLeaveScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 12.sp,
-                                        color = Color.Black,
+                                        color = if (isShortLeave) Color(0xFF888888) else Color.Black,
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .border(1.dp, Color(0xFFDDDDDD), RoundedCornerShape(10.dp))
-                                            .background(Color.White, RoundedCornerShape(10.dp))
-                                            .clickable { showToDatePicker = true }
+                                            .background(
+                                                if (isShortLeave) Color(0xFFF0F0F0) else Color.White,
+                                                RoundedCornerShape(10.dp),
+                                            )
+                                            .then(
+                                                if (!isShortLeave) Modifier.clickable { showToDatePicker = true }
+                                                else Modifier
+                                            )
                                             .padding(horizontal = 16.dp, vertical = 16.dp),
                                     ) {
                                         Text(
@@ -317,7 +340,7 @@ fun ApplyLeaveScreen(
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Medium,
                                             fontSize = 14.sp,
-                                            color = Color.Black,
+                                            color = if (isShortLeave) Color(0xFF888888) else Color.Black,
                                             modifier = Modifier
                                                 .background(Color(0xFFF5F5F5), RoundedCornerShape(6.dp))
                                                 .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -573,6 +596,134 @@ fun ApplyLeaveScreen(
                                 }
                             }
                         }
+
+                        // Short Leave: time pickers
+                        if (isShortLeave) {
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Start Time",
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp,
+                                        color = Color.Black,
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .border(1.dp, Color(0xFFDDDDDD), RoundedCornerShape(10.dp))
+                                            .background(Color.White, RoundedCornerShape(10.dp))
+                                            .clickable { showStartTimePicker = true }
+                                            .padding(horizontal = 12.dp, vertical = 16.dp),
+                                    ) {
+                                        Text(
+                                            text = startTime?.format(timeFormatter) ?: "Select",
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 14.sp,
+                                            color = if (startTime == null) Color(0xFF888888) else Color.Black,
+                                        )
+                                    }
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "End Time",
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp,
+                                        color = Color.Black,
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .border(1.dp, Color(0xFFDDDDDD), RoundedCornerShape(10.dp))
+                                            .background(Color.White, RoundedCornerShape(10.dp))
+                                            .clickable { showEndTimePicker = true }
+                                            .padding(horizontal = 12.dp, vertical = 16.dp),
+                                    ) {
+                                        Text(
+                                            text = endTime?.format(timeFormatter) ?: "Select",
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 14.sp,
+                                            color = if (endTime == null) Color(0xFF888888) else Color.Black,
+                                        )
+                                    }
+                                }
+                            }
+                            Text(
+                                text = "Max duration: 2 hours",
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 11.sp,
+                                color = Color(0xFF888888),
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                    }
+
+                    // Start time picker dialog
+                    if (showStartTimePicker) {
+                        val timePickerState = rememberTimePickerState(
+                            initialHour = startTime?.hour ?: LocalTime.now().hour,
+                            initialMinute = startTime?.minute ?: 0,
+                            is24Hour = false,
+                        )
+                        AlertDialog(
+                            onDismissRequest = { showStartTimePicker = false },
+                            title = {
+                                Text("Select Start Time", fontFamily = GraphikFontFamily, fontWeight = FontWeight.SemiBold)
+                            },
+                            text = { TimePicker(state = timePickerState) },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    startTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                                    if (endTime != null && !endTime!!.isAfter(startTime)) endTime = null
+                                    showStartTimePicker = false
+                                }) {
+                                    Text("OK", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showStartTimePicker = false }) {
+                                    Text("Cancel", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                        )
+                    }
+
+                    // End time picker dialog
+                    if (showEndTimePicker) {
+                        val timePickerState = rememberTimePickerState(
+                            initialHour = endTime?.hour ?: (startTime?.hour?.plus(1) ?: LocalTime.now().hour),
+                            initialMinute = endTime?.minute ?: (startTime?.minute ?: 0),
+                            is24Hour = false,
+                        )
+                        AlertDialog(
+                            onDismissRequest = { showEndTimePicker = false },
+                            title = {
+                                Text("Select End Time", fontFamily = GraphikFontFamily, fontWeight = FontWeight.SemiBold)
+                            },
+                            text = { TimePicker(state = timePickerState) },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    endTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                                    showEndTimePicker = false
+                                }) {
+                                    Text("OK", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showEndTimePicker = false }) {
+                                    Text("Cancel", color = primaryRed, fontFamily = GraphikFontFamily)
+                                }
+                            },
+                        )
                     }
 
                     // From date picker dialog
@@ -588,7 +739,8 @@ fun ApplyLeaveScreen(
                                     datePickerState.selectedDateMillis?.let { millis ->
                                         val selected = LocalDate.ofEpochDay(millis / 86400000L)
                                         fromDate = selected
-                                        if (toDate.isBefore(selected)) toDate = selected
+                                        if (isShortLeave) toDate = selected
+                                        else if (toDate.isBefore(selected)) toDate = selected
                                     }
                                     showFromDatePicker = false
                                 }) {
@@ -854,8 +1006,23 @@ fun ApplyLeaveScreen(
                             val isSickLeave = selectedLeaveType.equals("Sick Leave", ignoreCase = true)
                             val isCasualLeave = selectedLeaveType.equals("Casual Leave", ignoreCase = true)
                             val isProbationary = selectedLeaveType.equals("Probationary Leave", ignoreCase = true)
+                            val isShortLeaveSubmit = selectedLeaveType.contains("Short Leave", ignoreCase = true)
 
-                            if (isSickLeave) {
+                            if (isShortLeaveSubmit) {
+                                if (startTime == null || endTime == null) {
+                                    Toast.makeText(context, "Please select start and end time for Short Leave.", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
+                                if (!endTime!!.isAfter(startTime)) {
+                                    Toast.makeText(context, "End time must be after start time.", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
+                                val durationMinutes = java.time.Duration.between(startTime, endTime).toMinutes()
+                                if (durationMinutes > 120) {
+                                    Toast.makeText(context, "Short Leave cannot exceed 2 hours.", Toast.LENGTH_LONG).show()
+                                    return@Button
+                                }
+                            } else if (isSickLeave) {
                                 if (totalDays > 2) {
                                     Toast.makeText(context, "Sick Leave can only be applied for a maximum of 2 consecutive days.", Toast.LENGTH_LONG).show()
                                     return@Button
@@ -881,7 +1048,39 @@ fun ApplyLeaveScreen(
                             isSubmitting = true
                             scope.launch {
                                 try {
-                                    // A. WFH Weekly Limit Check
+                                    // A. Short Leave Checks (2 per day, no other requests on same day)
+                                    if (isShortLeaveSubmit) {
+                                        val checkRequest = com.archeGlobal.one.model.LeaveCheckRequest(
+                                            email = userEmail,
+                                            startDate = fromDate.toString(),
+                                            endDate = fromDate.toString()
+                                        )
+                                        val checkResponse = RetrofitClient.apiService.leaveCheck(checkRequest)
+                                        if (checkResponse.isSuccessful) {
+                                            val breakdown = checkResponse.body()?.data?.breakdown ?: emptyList()
+                                            val activeEntries = breakdown.filter {
+                                                it.status.lowercase() == "pending" || it.status.lowercase() == "approved"
+                                            }
+                                            val shortLeaveCount = activeEntries.count {
+                                                it.requestType.contains("Short Leave", ignoreCase = true)
+                                            }
+                                            if (shortLeaveCount >= 2) {
+                                                Toast.makeText(context, "You can apply only 2 Short Leaves per day.", Toast.LENGTH_LONG).show()
+                                                isSubmitting = false
+                                                return@launch
+                                            }
+                                            val hasOtherRequest = activeEntries.any {
+                                                !it.requestType.contains("Short Leave", ignoreCase = true)
+                                            }
+                                            if (hasOtherRequest) {
+                                                Toast.makeText(context, "You already have a pending or approved request on this day. Short Leave cannot be applied.", Toast.LENGTH_LONG).show()
+                                                isSubmitting = false
+                                                return@launch
+                                            }
+                                        }
+                                    }
+
+                                    // B. WFH Weekly Limit Check
                                     if (selectedLeaveType.contains("Work From Home", ignoreCase = true) || 
                                         selectedLeaveType.contains("WFH", ignoreCase = true)) {
                                         
@@ -1043,30 +1242,71 @@ fun ApplyLeaveScreen(
                                     }
 
                                     // 6. Final Submission
-                                    val apiRequest = com.archeGlobal.one.model.CreateLeaveRequest(
-                                        employeeName = employeeName,
-                                        employeeCode = employeeCode,
-                                        startDate = fromDate.toString(),
-                                        endDate = toDate.toString(),
-                                        requestType = selectedLeaveType,
-                                        leaveDuration = when (startDay) {
-                                            "First Half" -> "First Half"
-                                            "Second Half" -> "Second Half"
-                                            else -> "Full"
-                                        },
-                                        description = description,
-                                        reason = selectedReason
-                                    )
-
-                                    val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
-                                    if (response.isSuccessful && response.body()?.success == true) {
-                                        Toast.makeText(context, response.body()?.message ?: "Request created successfully", Toast.LENGTH_LONG).show()
-                                        attendanceController?.fetchLeaveBalances()
-                                        onBack()
+                                    if (isShortLeaveSubmit) {
+                                        val rangeReq = com.archeGlobal.one.model.AttendanceRequest(
+                                            employeeEmail = userEmail,
+                                            startDate = fromDate.toString(),
+                                            endDate = fromDate.toString()
+                                        )
+                                        val rangeResp = try {
+                                            RetrofitClient.apiService.getAttendanceRecords(rangeReq)
+                                        } catch (e: Exception) {
+                                            null
+                                        }
+                                        val attendanceId = rangeResp?.body()?.data?.firstOrNull()?.id
+                                        
+                                        if (attendanceId == null) {
+                                            Toast.makeText(context, "Attendance record not found. Please punch in before applying Short Leave.", Toast.LENGTH_LONG).show()
+                                            isSubmitting = false
+                                            return@launch
+                                        }
+                                        val timeFmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")
+                                        val shortRequest = com.archeGlobal.one.model.ShortLeaveCreateRequest(
+                                            attendanceId = attendanceId,
+                                            startTime = startTime!!.format(timeFmt),
+                                            endTime = endTime!!.format(timeFmt),
+                                            reason = selectedReason,
+                                        )
+                                        android.util.Log.d("ShortLeave", "Request: attendanceId=$attendanceId startTime=${shortRequest.startTime} endTime=${shortRequest.endTime} reason=${shortRequest.reason}")
+                                        val response = RetrofitClient.apiService.createShortLeaveRequest(shortRequest)
+                                        if (response.isSuccessful && response.body()?.success == true) {
+                                            Toast.makeText(context, response.body()?.message ?: "Short Leave request created successfully", Toast.LENGTH_LONG).show()
+                                            attendanceController?.fetchLeaveBalances()
+                                            onBack()
+                                        } else {
+                                            val errorMsg = try {
+                                                response.errorBody()?.string()
+                                                    ?.let { org.json.JSONObject(it).optString("message") }
+                                                    ?.takeIf { it.isNotBlank() }
+                                            } catch (_: Exception) { null }
+                                            Toast.makeText(context, errorMsg ?: response.body()?.message ?: "Failed to create Short Leave request (${response.code()})", Toast.LENGTH_LONG).show()
+                                        }
                                     } else {
-                                        Toast.makeText(context, response.body()?.message ?: "Failed to create request", Toast.LENGTH_SHORT).show()
+                                        val apiRequest = com.archeGlobal.one.model.CreateLeaveRequest(
+                                            employeeName = employeeName,
+                                            employeeCode = employeeCode,
+                                            startDate = fromDate.toString(),
+                                            endDate = toDate.toString(),
+                                            requestType = selectedLeaveType,
+                                            leaveDuration = when (startDay) {
+                                                "First Half" -> "First Half"
+                                                "Second Half" -> "Second Half"
+                                                else -> "Full"
+                                            },
+                                            description = description,
+                                            reason = selectedReason,
+                                        )
+                                        val response = RetrofitClient.apiService.createLeaveRequest(apiRequest)
+                                        if (response.isSuccessful && response.body()?.success == true) {
+                                            Toast.makeText(context, response.body()?.message ?: "Request created successfully", Toast.LENGTH_LONG).show()
+                                            attendanceController?.fetchLeaveBalances()
+                                            onBack()
+                                        } else {
+                                            Toast.makeText(context, response.body()?.message ?: "Failed to create request", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 } catch (e: Exception) {
+                                    android.util.Log.e("ShortLeave", "Submit error", e)
                                     Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                                 } finally {
                                     isSubmitting = false
