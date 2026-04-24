@@ -350,6 +350,9 @@ fun ApplyWfhScreen(
                             val employeeName = userData?.name ?: ""
                             val employeeCode = userData?.employeeId ?: ""
                             val userEmail = userData?.email ?: ""
+                            val userLocation = userData?.location ?: ""
+                            val isBangalore = userLocation.contains("Bangalore", ignoreCase = true) ||
+                                userLocation.contains("Bengaluru", ignoreCase = true)
 
                             // 1. Day of Week Validations
                             val fromDayOfWeek = fromDate.dayOfWeek
@@ -362,9 +365,24 @@ fun ApplyWfhScreen(
                                 return@Button
                             }
 
-                            val allowedWfhDays = listOf(java.time.DayOfWeek.TUESDAY, java.time.DayOfWeek.WEDNESDAY, java.time.DayOfWeek.THURSDAY)
+                            val allowedWfhDays = if (isBangalore) {
+                                listOf(
+                                    java.time.DayOfWeek.MONDAY,
+                                    java.time.DayOfWeek.TUESDAY,
+                                    java.time.DayOfWeek.WEDNESDAY,
+                                    java.time.DayOfWeek.THURSDAY,
+                                    java.time.DayOfWeek.FRIDAY,
+                                )
+                            } else {
+                                listOf(java.time.DayOfWeek.TUESDAY, java.time.DayOfWeek.WEDNESDAY, java.time.DayOfWeek.THURSDAY)
+                            }
                             if (fromDayOfWeek !in allowedWfhDays || toDayOfWeek !in allowedWfhDays) {
-                                Toast.makeText(context, "Work From Home can only be applied on Tuesday, Wednesday, or Thursday.", Toast.LENGTH_LONG).show()
+                                val allowedDaysMsg = if (isBangalore) {
+                                    "Monday, Tuesday, Wednesday, Thursday, or Friday"
+                                } else {
+                                    "Tuesday, Wednesday, or Thursday"
+                                }
+                                Toast.makeText(context, "Work From Home can only be applied on $allowedDaysMsg.", Toast.LENGTH_LONG).show()
                                 return@Button
                             }
 

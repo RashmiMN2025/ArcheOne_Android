@@ -300,7 +300,9 @@ class AttendanceController(private val context: Context) {
         ) { response, error ->
             if (error != null || response == null) return@makeEncryptedCall
             val applicable = response.holidays.filter { it.holidayType == "Yes" || it.holidayType == "RH" }
-            allHolidayMap = applicable.associate { it.date to it.name }
+            allHolidayMap = applicable.associate { holiday ->
+                holiday.date to if (holiday.holidayType == "RH") "${holiday.name} - RH" else holiday.name
+            }
             mandatoryHolidayMap = applicable.filter { it.holidayType == "Yes" }.associate { it.date to it.name }
             allCalendarHolidays = applicable.sortedWith(compareBy({ it.month }, { it.day }))
             holidayFileUrl = response.holidaysFile.ifBlank { null }

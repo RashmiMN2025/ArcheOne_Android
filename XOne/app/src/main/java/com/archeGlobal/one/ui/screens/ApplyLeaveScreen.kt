@@ -1166,47 +1166,39 @@ fun ApplyLeaveScreen(
                                                     it.requestType.equals(selectedLeaveType, ignoreCase = true) &&
                                                     (it.status.lowercase() == "pending" || it.status.lowercase() == "approved")
                                                 }
-                                                
+                                                val newDaysCount = (toDate.toEpochDay() - fromDate.toEpochDay() + 1).toInt()
                                                 val limit = if (selectedLeaveType == "Probationary Leave") 1 else 2
-                                                
-                                                if (monthlyCount >= limit) {
+
+                                                if (monthlyCount + newDaysCount > limit) {
                                                     Toast.makeText(context, "$selectedLeaveType limit reached ($limit per month).", Toast.LENGTH_LONG).show()
                                                     isSubmitting = false
                                                     return@launch
                                                 }
                                             }
 
-                                            // 2. Rule: No Clubbing (Adjacent Leave Check)
+                                            // 2. Rule: Sick Leave cannot be adjacent to any other leave type (SL+SL consecutive is allowed)
                                             val prevDay = fromDate.minusDays(1).toString()
                                             val nextDay = toDate.plusDays(1).toString()
-                                            
+                                            val isCurrentSick = selectedLeaveType.contains("Sick", ignoreCase = true)
+
                                             val adjacentConflict = breakdown.any { entry ->
                                                 val entryStatus = entry.status.lowercase()
                                                 val entryType = entry.requestType ?: ""
                                                 val isRestrictedEntry = restrictedTypes.any { entryType.contains(it, ignoreCase = true) }
                                                 val isAdjacentDate = entry.requestDate == prevDay || entry.requestDate == nextDay
-                                                
                                                 val isApprovedOrPending = entryStatus == "pending" || entryStatus == "approved"
-                                                
+
                                                 if (isRestrictedEntry && isAdjacentDate && isApprovedOrPending) {
-                                                    // SPECIAL CASE: 2 consecutive SL are ALLOWED (SL + SL)
-                                                    val isCurrentSick = selectedLeaveType.contains("Sick", ignoreCase = true)
                                                     val isEntrySick = entryType.contains("Sick", ignoreCase = true)
-                                                    
-                                                    if (isCurrentSick && isEntrySick) {
-                                                        false // Allowed
-                                                    } else {
-                                                        // All other restricted adjacencies are blocked
-                                                        // This includes CL + CL, CL + SL, PL + CL, etc.
-                                                        true // Conflict
-                                                    }
+                                                    // Block when SL is adjacent to any other leave type; allow SL+SL
+                                                    (isCurrentSick || isEntrySick) && !(isCurrentSick && isEntrySick)
                                                 } else {
                                                     false
                                                 }
                                             }
 
                                             if (adjacentConflict) {
-                                                Toast.makeText(context, "No clubbing allowed: $selectedLeaveType cannot be adjacent to another restricted leave.", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(context, "Sick Leave cannot be taken on a day adjacent to another leave type.", Toast.LENGTH_LONG).show()
                                                 isSubmitting = false
                                                 return@launch
                                             }

@@ -512,6 +512,7 @@ private fun AttendanceDetailsDialog(
                 }
             } else {
                 val allRequests = records.flatMap { it.requests ?: emptyList() }.distinctBy { it.id }
+                    .sortedByDescending { it.createdAt ?: "" }
                 // Prefer the "present" record when duplicates exist for the same day
                 val presentRecord = records.firstOrNull { it.attendanceStatus?.lowercase() == "present" }
                 val punchRecords = records.filter { !it.punchIn.isNullOrEmpty() }.sortedBy { it.punchIn }
