@@ -17,7 +17,6 @@ import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.service.OtpNotificationListenerService
-import com.archeGlobal.one.ui.components.NotificationAccessDialog
 import com.archeGlobal.one.ui.screens.OtpVerificationScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.utils.CustomToast
@@ -26,7 +25,6 @@ import com.archeGlobal.one.utils.UserDataManager
 
 class OtpVerificationActivity : AppCompatActivity() {
     private var showUpdateDialog by mutableStateOf(false)
-    private var showNotificationAccessDialog by mutableStateOf(false)
     private var shouldNavigateToLogin = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,11 +38,6 @@ class OtpVerificationActivity : AppCompatActivity() {
         val loginController = LoginController(this, navigator)
         val controller = OtpVerificationController(navigator, this)
         val prefs = PreferencesManager(this)
-
-        if (!prefs.hasAskedNotificationAccess() && !isNotificationListenerEnabled()) {
-            showNotificationAccessDialog = true
-            prefs.setNotificationAccessAsked()
-        }
 
         enableEdgeToEdge()
         window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -85,22 +78,6 @@ class OtpVerificationActivity : AppCompatActivity() {
                     employeeId = employeeId,
                     stayLoggedIn = stayLoggedIn,
                 )
-
-                // Notification Access Dialog (shown once on first launch)
-                if (showNotificationAccessDialog) {
-                    NotificationAccessDialog(
-                        onAllow = {
-                            showNotificationAccessDialog = false
-                            startActivity(
-                                Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                            )
-                        },
-                        onSkip = {
-                            showNotificationAccessDialog = false
-                        },
-                    )
-                }
 
                 // Update Required Dialog
                 if (showUpdateDialog) {
