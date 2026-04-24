@@ -223,8 +223,8 @@ class AttendanceController(private val context: Context) {
         punchIn: String? = null,
         punchOut: List<String>? = null
     ): AttendanceDayStatus {
-        // PRIORITIZE FIRST REQUEST: If there's at least one request, use its status
-        val firstRequest = requests?.firstOrNull()
+        // Use the latest request by createdAt so newer requests take precedence
+        val firstRequest = requests?.maxByOrNull { it.createdAt ?: "" }
         if (firstRequest != null) {
             val reqStatus = firstRequest.status?.lowercase() ?: ""
             val isApprovedOrPending = reqStatus == "approved" || reqStatus == "pending"
@@ -270,18 +270,18 @@ class AttendanceController(private val context: Context) {
     private fun resolveRequestStatus(
         requests: List<com.archeGlobal.one.model.AttendanceDayRequest>?,
     ): String {
-        // PRIORITIZE FIRST REQUEST: Return the status of the first request if it exists
-        val firstRequest = requests?.firstOrNull() ?: return ""
-        return firstRequest.status?.lowercase() ?: ""
+        // Use the latest request by createdAt so newer requests take precedence
+        val latestRequest = requests?.maxByOrNull { it.createdAt ?: "" } ?: return ""
+        return latestRequest.status?.lowercase() ?: ""
     }
 
     private fun resolveRawType(
         attendanceStatus: String?,
         requests: List<com.archeGlobal.one.model.AttendanceDayRequest>?,
     ): String {
-        // PRIORITIZE FIRST REQUEST: Return the type of the first request if it exists
-        val firstRequest = requests?.firstOrNull()
-        if (firstRequest != null) return firstRequest.requestType ?: "None"
+        // Use the latest request by createdAt so newer requests take precedence
+        val latestRequest = requests?.maxByOrNull { it.createdAt ?: "" }
+        if (latestRequest != null) return latestRequest.requestType ?: "None"
         
         // Fall back to raw attendance status
         return attendanceStatus ?: ""

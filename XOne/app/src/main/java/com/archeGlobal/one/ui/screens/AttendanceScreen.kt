@@ -544,7 +544,8 @@ private fun AttendanceDetailsDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        AttendanceDetailRow(label = "Shift", value = if (date.dayOfWeek == java.time.DayOfWeek.SATURDAY || date.dayOfWeek == java.time.DayOfWeek.SUNDAY) "None" else "9:30 am to 6:30 pm")
+                        val isMandatoryHoliday = holidayName != null && !holidayName.contains("- RH", ignoreCase = true)
+                        AttendanceDetailRow(label = "Shift", value = if (date.dayOfWeek == java.time.DayOfWeek.SATURDAY || date.dayOfWeek == java.time.DayOfWeek.SUNDAY || isMandatoryHoliday) "None" else "9:30 am to 6:30 pm")
                         AttendanceDetailRow(label = "Regularised", value = regularisation?.status ?: "None")
                         val bestRecord = presentRecord ?: records.firstOrNull()
                         val hasApprovedRequest = allRequests.any { it.status?.lowercase() == "approved" }
