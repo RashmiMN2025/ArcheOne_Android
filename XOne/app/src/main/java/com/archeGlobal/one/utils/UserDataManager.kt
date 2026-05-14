@@ -206,6 +206,12 @@ class UserDataManager private constructor(
             preferencesManager.setString("last_user_name", user.name ?: "")
         }
 
+        // Office IP for punch-in gating (blank/whitespace = no restriction)
+        val officeIpFromApi = response.officeIP
+        val officeIpStored = officeIpFromApi?.trim() ?: ""
+        Log.d(TAG, "OfficeIP | raw='$officeIpFromApi' stored='$officeIpStored' (length=${officeIpStored.length})")
+        preferencesManager.setString("office_ip", officeIpStored)
+
         Log.d(TAG, "UserDataManager: Refreshing in-memory cache after data save")
 
         // Process the greeting categories with messages from the new API format

@@ -42,6 +42,9 @@ fun ApprovalRequestDetailScreen(
     status: String = "Pending",
     punchIn: String? = null,
     punchOut: String? = null,
+    category: String = "approval request",
+    secondApprover: String? = null,
+    secondApproverEmail: String? = null,
     onBack: () -> Unit,
     onReject: () -> Unit = {},
     onApprove: () -> Unit = {},
@@ -49,17 +52,20 @@ fun ApprovalRequestDetailScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var isProcessing by remember { mutableStateOf(false) }
+    val isDeletionRequest = category.equals("deletion request", ignoreCase = true)
+    val statusLower = status.lowercase()
+    val canAct = statusLower == "pending" || statusLower == "first level approved"
 
-    val statusColor = when (status.lowercase()) {
+    val statusColor = when (statusLower) {
         "approved" -> Color(0xFF008000)
         "rejected" -> Color(0xFFFF0000)
-        "pending" -> Color(0xFFFFA500)
+        "pending", "first level approved" -> Color(0xFFFFA500)
         else -> Color.Gray
     }
-    val statusBgColor = when (status.lowercase()) {
+    val statusBgColor = when (statusLower) {
         "approved" -> Color(0xFF008000).copy(alpha = 0.15f)
         "rejected" -> Color(0xFFFF0000).copy(alpha = 0.15f)
-        "pending" -> Color(0xFFFFA500).copy(alpha = 0.15f)
+        "pending", "first level approved" -> Color(0xFFFFA500).copy(alpha = 0.15f)
         else -> Color.Gray.copy(alpha = 0.15f)
     }
 
@@ -86,7 +92,7 @@ fun ApprovalRequestDetailScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Request Details",
+                            text = if (isDeletionRequest) "Deletion Request" else "Request Details",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp,
@@ -180,6 +186,36 @@ fun ApprovalRequestDetailScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         InfoRow(iconRes = R.drawable.justification, label = "Reason", value = reason)
 
+                        if (!secondApprover.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            InfoRow(
+                                iconRes = R.drawable.hashh,
+                                label = "Second Approver",
+                                value = secondApprover + (secondApproverEmail?.takeIf { it.isNotBlank() }?.let { " ($it)" } ?: ""),
+                            )
+                        }
+
+                        if (isDeletionRequest) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        Color(0xFFDD3825).copy(alpha = 0.1f),
+                                        RoundedCornerShape(8.dp),
+                                    )
+                                    .padding(12.dp),
+                            ) {
+                                Text(
+                                    text = "This is a request to DELETE a previously approved item. Approving will permanently remove it; rejecting keeps the original approval intact.",
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 13.sp,
+                                    color = Color(0xFFDD3825),
+                                )
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(16.dp))
                         HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)
                         Spacer(modifier = Modifier.height(16.dp))
@@ -201,8 +237,9 @@ fun ApprovalRequestDetailScreen(
                             color = Color.Black,
                         )
 
-                        // Buttons — only for pending
-                        if (status.lowercase() == "pending") {
+                        // Action buttons — show while the request still needs action
+                        // (pending = awaiting first approver, first level approved = awaiting second approver)
+                        if (canAct) {
                             Spacer(modifier = Modifier.height(24.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -214,15 +251,21 @@ fun ApprovalRequestDetailScreen(
                                             Toast.makeText(context, "Request ID is missing", Toast.LENGTH_SHORT).show()
                                             return@Button
                                         }
+                                        if (isProcessing) return@Button
+                                        isProcessing = true
                                         scope.launch {
                                             try {
-                                                val response = RetrofitClient.apiService.rejectRequest(eventId)
+                                                val response = if (isDeletionRequest) {
+                                                    RetrofitClient.apiService.rejectDeletionRequest(eventId)
+                                                } else {
+                                                    RetrofitClient.apiService.rejectRequest(eventId)
+                                                }
                                                 if (response.isSuccessful && response.body()?.success == true) {
                                                     Toast.makeText(context, response.body()?.message ?: "Rejected successfully", Toast.LENGTH_LONG).show()
-                                                    onApprove()
+                                                    onReject()
                                                     onBack()
                                                 } else {
-                                                    Toast.makeText(context, response.body()?.message ?: "Failed to approve", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, response.body()?.message ?: "Failed to reject", Toast.LENGTH_SHORT).show()
                                                 }
                                             } catch (e: Exception) {
                                                 Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -231,6 +274,7 @@ fun ApprovalRequestDetailScreen(
                                             }
                                         }
                                     },
+                                    enabled = !isProcessing,
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(52.dp),
@@ -251,9 +295,15 @@ fun ApprovalRequestDetailScreen(
                                             Toast.makeText(context, "Request ID is missing", Toast.LENGTH_SHORT).show()
                                             return@Button
                                         }
+                                        if (isProcessing) return@Button
+                                        isProcessing = true
                                         scope.launch {
                                             try {
-                                                val response = RetrofitClient.apiService.approveRequest(eventId)
+                                                val response = if (isDeletionRequest) {
+                                                    RetrofitClient.apiService.approveDeletionRequest(eventId)
+                                                } else {
+                                                    RetrofitClient.apiService.approveRequest(eventId)
+                                                }
                                                 if (response.isSuccessful && response.body()?.success == true) {
                                                     Toast.makeText(context, response.body()?.message ?: "Approved successfully", Toast.LENGTH_LONG).show()
                                                     onApprove()
@@ -268,6 +318,7 @@ fun ApprovalRequestDetailScreen(
                                             }
                                         }
                                     },
+                                    enabled = !isProcessing,
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(52.dp),

@@ -48,19 +48,7 @@ class LoginActivity : AppCompatActivity() {
         val sessionExpired = intent.getBooleanExtra("session_expired", false)
         val clearFields = intent.getBooleanExtra("clearFields", false)
 
-        val mpinController =
-            com.archeGlobal.one.controller
-                .MpinController(this)
-        val hasMpin = mpinController.isMpinSet()
-
-        // For session expiry, show quick login options if MPIN/biometric are available
-        val forceOriginalLoginFinal =
-            if (sessionExpired) {
-                // For session expiry, never force original login - always allow quick auth methods
-                false
-            } else {
-                !hasMpin || forceOriginalLogin
-            }
+        val forceOriginalLoginFinal = if (sessionExpired) false else forceOriginalLogin
 
         // Handle back press in login screen - exit app instead of going back
         onBackPressedDispatcher.addCallback(

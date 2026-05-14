@@ -27,6 +27,8 @@ import com.archeGlobal.one.model.ChatbotRequest
 import com.archeGlobal.one.model.ChatbotResponse
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.DeleteAssetResponse
+import com.archeGlobal.one.model.DeletionRequestCreateBody
+import com.archeGlobal.one.model.DeletionRequestCreateResponse
 import com.archeGlobal.one.model.DeleteTagAssetRequest
 import com.archeGlobal.one.model.DeleteTagAssetResponse
 import com.archeGlobal.one.model.DownloadAssetInventoryRequest
@@ -212,6 +214,22 @@ interface ApiService {
     suspend fun rejectRequest(
         @Query("event_id") id: String
     ): Response<RejectActionResponse>
+
+    @GET("/api/v1/timesheet/delete-approvals/approve-phone")
+    suspend fun approveDeletionRequest(
+        @Query("event_id") id: String
+    ): Response<ApprovalActionResponse>
+
+    @GET("/api/v1/timesheet/delete-approvals/reject-phone")
+    suspend fun rejectDeletionRequest(
+        @Query("event_id") id: String
+    ): Response<RejectActionResponse>
+
+    @POST("/api/v1/timesheet/delete-approvals/create")
+    suspend fun createDeletionRequest(
+        @Header("X-Employee-Code") employeeCode: String,
+        @Body request: DeletionRequestCreateBody
+    ): Response<DeletionRequestCreateResponse>
 
     @POST("/api/v1/chatbot/chat")
     suspend fun getChatbotResponse(
@@ -661,6 +679,8 @@ data class VerifyOtpResponse(
     val smartCollateral: List<SmartCollateralCategory>? = emptyList(),
     val hasReportees: Boolean = false,
     val attendance: LoginAttendance? = null,
+    @SerializedName(value = "officeIP", alternate = ["officeIp", "office_ip", "office_IP", "OFFICEIP"])
+    val officeIP: String? = null,
 )
 
 data class LoginAttendance(
@@ -685,6 +705,7 @@ data class UserDetails(
     val reporting_manager: String = "",
     val reporting_manager_mail: String = "",
     val divisional_head: String = "",
+    val divisional_head_mail: String = "",
     val pan: String = "",
     val uan: String = "",
     val grade: String = "",

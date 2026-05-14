@@ -33,7 +33,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
+
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
@@ -59,9 +59,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentActivity
+import com.archeGlobal.one.LoginActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.LoginController
-import com.archeGlobal.one.controller.MpinController
+
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.model.AuthResponse
 import com.archeGlobal.one.model.UserData
@@ -215,16 +216,8 @@ fun LoginScreen(
 
     // Removed policy WebView state variables - now using external browser
 
-    val mpinController = remember { MpinController(context) }
-    // Make hasMpin reactive to changes - don't use remember so it re-evaluates
-    val hasMpin = mpinController.isMpinSet()
     var selectedLoginMethod by remember { mutableStateOf("OTP") }
     var showOtpFields by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
-    var enteredMpin by remember { mutableStateOf("") }
-    var mpinError by remember { mutableStateOf<String?>(null) }
-    val focusRequesters = List(4) { remember { FocusRequester() } }
-    var focusedIndex by remember { mutableStateOf(-1) }
-    var isVerifyingMpin by remember { mutableStateOf(false) }
 
     var showOtpButton by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
 
@@ -232,8 +225,6 @@ fun LoginScreen(
     var showTermsDialog by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
-
-    var enteredMpinDigits by remember { mutableStateOf(List(4) { "" }) }
 
     val userData = userDataManager.getUserData()
 
@@ -341,11 +332,10 @@ fun LoginScreen(
         }
     }
 
-    // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
-    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, effectiveUserData, sessionExpired) {
+    LaunchedEffect(firstTimeLogin, isDifferentUserMode, showBiometricButton, effectiveUserData, sessionExpired) {
         Log.d(
             "LoginScreen",
-            "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn, sessionExpired=$sessionExpired, firstTimeLogin=$firstTimeLogin",
+            "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, isLoggedIn=$isLoggedIn, sessionExpired=$sessionExpired, firstTimeLogin=$firstTimeLogin",
         )
 
         // If we have preserved user data and user is not logged in (token expired/logout), prioritize MFA first
@@ -555,34 +545,6 @@ fun LoginScreen(
                                 maxLines = 1,
                                 softWrap = false,
                             )
-                        }
-
-                        // Show MPIN button for returning users (including session expired) who have MPIN set - second for returning users
-                        if (!isDifferentUserMode && hasMpin && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser)) {
-                            Button(
-                                onClick = { selectedLoginMethod = "MPIN" },
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .fillMaxHeight(),
-                                shape = MaterialTheme.shapes.medium,
-                                contentPadding = PaddingValues(0.dp),
-                                colors =
-                                    ButtonDefaults.buttonColors(
-                                        containerColor = if (selectedLoginMethod == "MPIN") Color(0xFFE0B4AA) else Color.White,
-                                        contentColor = if (selectedLoginMethod == "MPIN") Color(0xFFDD3825) else Color.Black,
-                                    ),
-                                border = BorderStroke(0.5.dp, Color(0xFFDD3825)),
-                            ) {
-                                Text(
-                                    "MPIN",
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                )
-                            }
                         }
 
                         // Show OTP button for returning users if needed
@@ -1355,7 +1317,7 @@ fun LoginScreen(
                                             if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
                                                 CustomToast.showErrorToast(
                                                     context,
-                                                    "Biometric credentials not found. Please login with MPIN or OTP.",
+                                                    "Biometric credentials not found. Please login with OTP.",
                                                 )
                                                 return@showBiometricPrompt
                                             }
@@ -1440,255 +1402,6 @@ fun LoginScreen(
                     }
                 }
 
-                if (selectedLoginMethod == "MPIN" && hasMpin) {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text(
-                        "Enter MPIN",
-                        fontSize = 16.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        modifier =
-                            Modifier
-                                .align(Alignment.Start)
-                                .padding(start = 12.dp),
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        for (i in 0 until 4) {
-                            OutlinedTextField(
-                                value = enteredMpinDigits[i],
-                                onValueChange = { value ->
-                                    if (value.length <= 1 && value.all { it.isDigit() }) {
-                                        enteredMpinDigits = enteredMpinDigits.toMutableList().also { it[i] = value }
-                                        if (value.isNotEmpty() && i < 3) {
-                                            focusRequesters[i + 1].requestFocus()
-                                        }
-                                    }
-                                    if (value.isEmpty() && i > 0) {
-                                        enteredMpinDigits = enteredMpinDigits.toMutableList().also { it[i] = "" }
-                                        focusRequesters[i - 1].requestFocus()
-                                    }
-                                },
-                                modifier =
-                                    Modifier
-                                        .width(65.dp)
-                                        .height(65.dp)
-                                        .focusRequester(focusRequesters[i])
-                                        .padding(horizontal = 4.dp)
-                                        .onFocusChanged { focusState ->
-                                            if (focusState.isFocused) focusedIndex = i
-                                        }.border(
-                                            width = 1.5.dp,
-                                            color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
-                                            shape = MaterialTheme.shapes.medium,
-                                        ),
-                                textStyle =
-                                    TextStyle(
-                                        fontSize = 28.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black,
-                                        textAlign = TextAlign.Center,
-                                    ),
-                                singleLine = true,
-                                keyboardOptions =
-                                    KeyboardOptions(
-                                        keyboardType = KeyboardType.Number,
-                                        imeAction = if (i == 3) ImeAction.Done else ImeAction.Next,
-                                    ),
-                                enabled = !isVerifyingMpin,
-                                shape = MaterialTheme.shapes.medium,
-                                colors =
-                                    TextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
-                                        disabledContainerColor = Color.White,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedTextColor = Color.Black,
-                                        disabledTextColor = Color.Black,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent,
-                                    ),
-                                visualTransformation = PasswordVisualTransformation(),
-                            )
-                            if (i < 3) Spacer(modifier = Modifier.width(8.dp))
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(
-                        onClick = {
-                            isVerifyingMpin = true
-                            mpinError = null
-                            val enteredMpin = enteredMpinDigits.joinToString("")
-                            if (enteredMpin.isEmpty()) {
-                                mpinError = "Please enter the MPIN"
-                                isVerifyingMpin = false
-                                Log.d("LoginScreen", "MPIN validation failed: Empty MPIN")
-                                return@Button
-                            }
-                            val mpinController = MpinController(context)
-                            if (!mpinController.validateMpin(enteredMpin)) {
-                                mpinError = "Invalid MPIN"
-                                Log.d("LoginScreen", "MPIN validation failed: Invalid MPIN")
-                                isVerifyingMpin = false
-                                return@Button
-                            }
-                            val otpController =
-                                OtpVerificationController(
-                                    navigator = navigator,
-                                    context = context,
-                                )
-                            // Get credentials with better fallback logic for session expiry
-                            val useEmail =
-                                when {
-                                    email.isNotEmpty() -> email
-                                    effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
-                                    sessionExpired ->
-                                        preferencesManager.getString("session_expired_email", "")
-                                            ?: preferencesManager.getString("last_user_email", "")
-                                            ?: ""
-                                    else -> preferencesManager.getString("last_user_email", "") ?: ""
-                                }
-
-                            val useMobile =
-                                when {
-                                    mobile.isNotEmpty() -> mobile
-                                    effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
-                                    sessionExpired ->
-                                        preferencesManager.getString("session_expired_mobile", "")
-                                            ?: preferencesManager.getString("last_user_mobile", "")
-                                            ?: ""
-                                    else -> preferencesManager.getString("last_user_mobile", "") ?: ""
-                                }
-
-                            val useEmployeeId =
-                                when {
-                                    employeeId.isNotEmpty() -> employeeId
-                                    effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
-                                    sessionExpired ->
-                                        preferencesManager.getString("session_expired_employee_id", "")
-                                            ?: preferencesManager.getString("last_user_employee_id", "")
-                                            ?: ""
-                                    else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
-                                }
-
-                            Log.d(
-                                "LoginScreen",
-                                "MPIN credentials: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId, sessionExpired=$sessionExpired",
-                            )
-
-                            if (useEmail.isBlank() || useMobile.isBlank() || useEmployeeId.isBlank()) {
-                                mpinError = "User credentials missing. Please use OTP login."
-                                isVerifyingMpin = false
-                                Log.e(
-                                    "LoginScreen",
-                                    "Missing credentials after fallback: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId",
-                                )
-                                return@Button
-                            }
-
-                            val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
-                            otpController.verifyOtp(
-                                email = useEmail,
-                                mobile = useMobile,
-                                employeeId = useEmployeeId,
-                                otpFromUser = "",
-                                isBiometric = true,
-                                backgroundRefresh = false,
-                                appVersion = deviceInfo.appVersion,
-                                deviceModel = deviceInfo.deviceModel,
-                                deviceId = deviceInfo.deviceId,
-                                platform = deviceInfo.platform,
-                                osVersion = deviceInfo.osVersion,
-                                stayLoggedIn = stayLoggedIn,
-                            ) { message, isError ->
-                                isVerifyingMpin = false
-                                if (isError) {
-                                    mpinError = message
-                                } else {
-                                    Log.d("LoginScreen", "MPIN authentication successful")
-                                }
-                            }
-                        },
-                        modifier =
-                            Modifier
-                                .fillMaxWidth(0.97f)
-                                .height(65.dp),
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDD3825),
-                                disabledContainerColor = Color(0xFFDD3825),
-                            ),
-                        shape = MaterialTheme.shapes.medium,
-                        enabled = !isVerifyingMpin,
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.lock),
-                            contentDescription = "Lock",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp),
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "Login with MPIN",
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                    if (mpinError != null) {
-                        Text(
-                            text = mpinError ?: "",
-                            color = Color.Red,
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(top = 8.dp),
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    // Reset MPIN
-                    ClickableText(
-                        text =
-                            buildAnnotatedString {
-                                append("Reset MPIN")
-                                addStyle(
-                                    style =
-                                        SpanStyle(
-                                            color = Color(0xFFDD3825),
-                                            textDecoration = TextDecoration.Underline,
-                                            fontWeight = FontWeight.Normal,
-                                        ),
-                                    start = 0,
-                                    end = "Reset MPIN".length,
-                                )
-                                addStringAnnotation(
-                                    tag = "reset_mpin",
-                                    annotation = "reset_mpin",
-                                    start = 0,
-                                    end = "Reset MPIN".length,
-                                )
-                            },
-                        style =
-                            TextStyle(
-                                fontSize = 16.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                color = Color(0xFFDD3825),
-                            ),
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                        onClick = { offset ->
-                            // Navigate to MPIN reset screen
-                            val intent = Intent(context, MpinActivity::class.java)
-                            intent.putExtra("resetMpin", true)
-                            context.startActivity(intent)
-                        },
-                    )
-                }
 
                 if (showWebView) {
                     Dialog(
@@ -1786,27 +1499,14 @@ fun LoginScreen(
                                                 setFirstTimeLogin(context, false)
                                                 firstTimeLogin = false
 
-                                                // Handle MPIN setup navigation like OTP flow
-                                                val mpinController = MpinController(context)
                                                 if (navigator is AndroidNavigator) {
-                                                    if (mpinController.isMpinSet()) {
-                                                        // MPIN already set, go directly to Home
-                                                        navigator.navigateToHome(
-                                                            true,
-                                                            true,
-                                                            response.email,
-                                                            response.mobilePhone,
-                                                            response.employeeId,
-                                                        )
-                                                    } else {
-                                                        // MPIN not set, go to MPIN setup
-                                                        navigator.navigateToMpinSetup(
-                                                            response.email,
-                                                            response.mobilePhone,
-                                                            response.employeeId,
-                                                            response.token,
-                                                        )
-                                                    }
+                                                    navigator.navigateToHome(
+                                                        true,
+                                                        true,
+                                                        response.email,
+                                                        response.mobilePhone,
+                                                        response.employeeId,
+                                                    )
                                                 }
                                             }
                                         }
@@ -1881,25 +1581,25 @@ fun LoginScreen(
                                     preferencesManager.setString("last_user_mobile", "")
                                     preferencesManager.setString("last_user_employee_id", "")
                                     preferencesManager.setString("last_user_name", "")
+                                    preferencesManager.setString("session_expired_email", "")
+                                    preferencesManager.setString("session_expired_mobile", "")
+                                    preferencesManager.setString("session_expired_employee_id", "")
+                                    preferencesManager.setString("session_expired_name", "")
+                                    preferencesManager.setString("office_ip", "")
 
-                                    // Reset all UI state
-                                    firstTimeLogin = true
-                                    showOtpButton = true
-                                    isDifferentUserMode = true
-                                    selectedLoginMethod = "OTP"
-                                    showOtpFields = true
-                                    showFingerprint = false
-                                    email = ""
-                                    mobile = ""
-                                    employeeId = ""
-                                    enteredMpin = ""
-                                    mpinError = null
-                                    showMfaTermsDialog = false
-                                    showOtpTermsDialog = false
-                                    termsAccepted = false
-
-                                    // Force a UI refresh
-                                    forceUpdate = !forceUpdate
+                                    // Restart LoginActivity with a clean back stack so HomeActivity
+                                    // (and anything else above it) is destroyed. Without this, the
+                                    // old user's HomeActivity stays in the task and the launcher
+                                    // can resume it when the app is reopened.
+                                    val intent = Intent(context, LoginActivity::class.java).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                                            Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                                            Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                        putExtra("forceDifferentUserMode", true)
+                                        putExtra("clearFields", true)
+                                    }
+                                    context.startActivity(intent)
+                                    (context as? Activity)?.finish()
                                 }
                         },
                         modifier = Modifier.padding(top = 8.dp),

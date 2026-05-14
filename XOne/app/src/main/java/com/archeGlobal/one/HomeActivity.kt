@@ -273,18 +273,6 @@ class HomeActivity : AppCompatActivity() {
         // Check if we're coming from login
         val fromLogin = intent.getBooleanExtra("fromLogin", false)
 
-        // If MPIN is not set and we're NOT coming from login, redirect to MPIN setup
-        // Users coming from login should not be forced to set up MPIN
-        if (!com.archeGlobal.one.utils.MpinManager
-                .checkMpinExists(this)
-        ) {
-            val loginIntent = android.content.Intent(this, com.archeGlobal.one.LoginActivity::class.java)
-            loginIntent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(loginIntent)
-            finish()
-            return
-        }
-
         // Set the class-level variable
         isFromLogin = fromLogin
 
@@ -2033,6 +2021,25 @@ class HomeActivity : AppCompatActivity() {
                                         onError = { onDone() },
                                     )
                                 },
+                                onRequestDeletion = { reason, onDone ->
+                                    myRequestsController.requestDeletion(
+                                        eventId = item.eventId,
+                                        reason = reason,
+                                        onSuccess = {
+                                            onDone()
+                                            myRequestsController.fetchRequests()
+                                            navController.popBackStack()
+                                        },
+                                        onError = { msg ->
+                                            android.widget.Toast.makeText(
+                                                this@HomeActivity,
+                                                msg,
+                                                android.widget.Toast.LENGTH_LONG,
+                                            ).show()
+                                            onDone()
+                                        },
+                                    )
+                                },
                             )
                         } else {
                             navController.popBackStack()
@@ -2161,7 +2168,10 @@ class HomeActivity : AppCompatActivity() {
                                         "&description=${java.net.URLEncoder.encode(request.description ?: "", "UTF-8")}" +
                                         "&status=${java.net.URLEncoder.encode(request.status ?: "pending", "UTF-8")}" +
                                         "&punchIn=${java.net.URLEncoder.encode(request.punchIn ?: "", "UTF-8")}" +
-                                        "&punchOut=${java.net.URLEncoder.encode(request.punchOut ?: "", "UTF-8")}",
+                                        "&punchOut=${java.net.URLEncoder.encode(request.punchOut ?: "", "UTF-8")}" +
+                                        "&category=${java.net.URLEncoder.encode(request.category ?: "approval request", "UTF-8")}" +
+                                        "&secondApprover=${java.net.URLEncoder.encode(request.secondApprover ?: "", "UTF-8")}" +
+                                        "&secondApproverEmail=${java.net.URLEncoder.encode(request.secondApproverEmail ?: "", "UTF-8")}",
                                 )
                             },
                         )
@@ -2169,7 +2179,7 @@ class HomeActivity : AppCompatActivity() {
 
                     // Approval Request Detail screen
                     composable(
-                        route = "approval_request_detail?id={id}&name={name}&leaveType={leaveType}&code={code}&date={date}&duration={duration}&reason={reason}&description={description}&status={status}&punchIn={punchIn}&punchOut={punchOut}",
+                        route = "approval_request_detail?id={id}&name={name}&leaveType={leaveType}&code={code}&date={date}&duration={duration}&reason={reason}&description={description}&status={status}&punchIn={punchIn}&punchOut={punchOut}&category={category}&secondApprover={secondApprover}&secondApproverEmail={secondApproverEmail}",
                         arguments = listOf(
                             androidx.navigation.navArgument("id") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
                             androidx.navigation.navArgument("name") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
@@ -2182,6 +2192,9 @@ class HomeActivity : AppCompatActivity() {
                             androidx.navigation.navArgument("status") { type = androidx.navigation.NavType.StringType; defaultValue = "Pending" },
                             androidx.navigation.navArgument("punchIn") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
                             androidx.navigation.navArgument("punchOut") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("category") { type = androidx.navigation.NavType.StringType; defaultValue = "approval request" },
+                            androidx.navigation.navArgument("secondApprover") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
+                            androidx.navigation.navArgument("secondApproverEmail") { type = androidx.navigation.NavType.StringType; defaultValue = "" },
                         ),
                         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
                         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
@@ -2201,6 +2214,9 @@ class HomeActivity : AppCompatActivity() {
                             status = java.net.URLDecoder.decode(args?.getString("status") ?: "Pending", "UTF-8"),
                             punchIn = java.net.URLDecoder.decode(args?.getString("punchIn") ?: "", "UTF-8"),
                             punchOut = java.net.URLDecoder.decode(args?.getString("punchOut") ?: "", "UTF-8"),
+                            category = java.net.URLDecoder.decode(args?.getString("category") ?: "approval request", "UTF-8"),
+                            secondApprover = java.net.URLDecoder.decode(args?.getString("secondApprover") ?: "", "UTF-8").ifEmpty { null },
+                            secondApproverEmail = java.net.URLDecoder.decode(args?.getString("secondApproverEmail") ?: "", "UTF-8").ifEmpty { null },
                             onBack = { navController.popBackStack() },
                             onApprove = { approvalRequestsController.fetchManagerApprovals() },
                             onReject = { approvalRequestsController.fetchManagerApprovals() }

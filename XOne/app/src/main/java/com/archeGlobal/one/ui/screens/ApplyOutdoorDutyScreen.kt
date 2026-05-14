@@ -74,6 +74,8 @@ fun ApplyOutdoorDutyScreen(
 
     val reportingManagerName = OtpVerificationController.getUserData()?.userDetails?.reporting_manager ?: ""
     val reportingManagerEmail = OtpVerificationController.getUserData()?.userDetails?.reporting_manager_mail ?: ""
+    val divisionalHeadName = OtpVerificationController.getUserData()?.userDetails?.divisional_head ?: ""
+    val divisionalHeadEmail = OtpVerificationController.getUserData()?.userDetails?.divisional_head_mail ?: ""
 
     Box(
         modifier = Modifier
@@ -551,10 +553,24 @@ fun ApplyOutdoorDutyScreen(
                         }
                     }
 
-                    // Approver Card
+                    // Approver 1 — Reporting Manager
                     ApproverCard(
                         name = reportingManagerName,
                         email = reportingManagerEmail,
+                        title = "Approver 1",
+                        roleLabel = "Reporting\nManager",
+                        roleBackground = Color(0xFFE8F5E9),
+                        roleTextColor = Color(0xFF2E7D32),
+                    )
+
+                    // Approver 2 — Divisional Head
+                    ApproverCard(
+                        name = divisionalHeadName,
+                        email = divisionalHeadEmail,
+                        title = "Approver 2",
+                        roleLabel = "Divisional\nHead",
+                        roleBackground = Color(0xFFE3F2FD),
+                        roleTextColor = Color(0xFF1565C0),
                     )
 
                     // Submit button

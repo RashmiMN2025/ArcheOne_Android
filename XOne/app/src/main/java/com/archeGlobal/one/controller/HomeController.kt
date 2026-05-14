@@ -74,6 +74,98 @@ class HomeController(
         get() = OtpVerificationController.getUserData()?.location?.equals("Bangalore", ignoreCase = true) == true
 
 
+    private suspend fun isOnOfficeNetwork(action: String): Boolean {
+        // 1. App-level permission (user granted location access to the app)
+        val hasCoarse = ActivityCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_COARSE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasFine = ActivityCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!hasCoarse && !hasFine) {
+            Log.d("PunchGate", "Location permission denied → blocking $action")
+            withContext(Dispatchers.Main) {
+                android.widget.Toast.makeText(
+                    context,
+                    "Location access is required to punch in/out. Please enable it in app settings.",
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
+            }
+            return false
+        }
+
+        // 2. System-level location services (device GPS / network location toggle in Settings)
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val locationEnabled = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            locationManager.isLocationEnabled
+        } else {
+            @Suppress("DEPRECATION")
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        }
+        if (!locationEnabled) {
+            Log.d("PunchGate", "Device location services are OFF → blocking $action")
+            withContext(Dispatchers.Main) {
+                android.widget.Toast.makeText(
+                    context,
+                    "Please turn on Location in your device settings to punch in/out.",
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
+            }
+            return false
+        }
+
+        val rawOfficeIp = PreferencesManager(context).getString("office_ip", "")
+        val officeIp = rawOfficeIp?.trim().orEmpty()
+        Log.d("PunchGate", "Gate check for $action | raw='$rawOfficeIp' trimmed='$officeIp' (length=${officeIp.length})")
+
+        if (officeIp.isEmpty()) {
+            Log.d("PunchGate", "officeIp is blank → blocking $action (no office network configured)")
+            withContext(Dispatchers.Main) {
+                android.widget.Toast.makeText(
+                    context,
+                    "Office network not configured. Please contact admin.",
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
+            }
+            return false
+        }
+
+        // Try every public-IP service; if ANY of them reports an IP equal to
+        // officeIp, treat the device as on the office network.
+        val match = com.archeGlobal.one.utils.NetworkUtils.matchesOfficeIp(officeIp)
+        Log.d("PunchGate", "matchesOfficeIp result=$match (office='$officeIp')")
+
+        return when (match) {
+            true -> {
+                Log.d("PunchGate", "IP MATCH — allowing $action")
+                true
+            }
+            false -> {
+                Log.d("PunchGate", "IP MISMATCH for $action — office='$officeIp'")
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "You can $action only from the office network.",
+                        android.widget.Toast.LENGTH_LONG,
+                    ).show()
+                }
+                false
+            }
+            null -> {
+                Log.w("PunchGate", "Could not reach any IP service — blocking $action")
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Unable to verify network. Please check your internet connection and try again.",
+                        android.widget.Toast.LENGTH_LONG,
+                    ).show()
+                }
+                false
+            }
+        }
+    }
+
     fun showPunchIn() {
         showPunchInDialog = true
         fetchCurrentLocation()
@@ -85,7 +177,7 @@ class HomeController(
 
     fun onPunchInConfirmed() {
         dismissPunchInDialog()
-        
+
         val userData = UserDataManager.getInstance(context).getUserData()
         val request = com.archeGlobal.one.model.PunchInRequest(
             employeeCode = userData?.employeeId ?: "",
@@ -96,6 +188,8 @@ class HomeController(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                if (!isOnOfficeNetwork("punch in")) return@launch
+
                 val response = RetrofitClient.apiService.punchIn(request)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
@@ -180,13 +274,15 @@ class HomeController(
 
     fun onPunchOutConfirmed() {
         dismissPunchOutDialog()
-        
+
         val request = com.archeGlobal.one.model.PunchOutRequest(
             id = punchId
         )
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                if (!isOnOfficeNetwork("punch out")) return@launch
+
                 val response = RetrofitClient.apiService.punchOut(request)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {

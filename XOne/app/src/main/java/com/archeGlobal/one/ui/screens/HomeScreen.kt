@@ -357,6 +357,16 @@ fun HomeScreenContent(
         val mpinController = remember { MpinController(appContext) }
         val biometricHelper = remember { BiometricHelper(appContext) }
         val isBiometricEnabled = remember { biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() }
+        val hasMpin = remember { mpinController.isMpinSet() }
+        val shouldShowMpinLock = lockedState && !isBiometricEnabled && hasMpin
+
+        // If the app is locked but the user has no MPIN and no biometric configured,
+        // there's nothing to authenticate against — just unlock and let them in.
+        LaunchedEffect(lockedState, isBiometricEnabled, hasMpin) {
+            if (lockedState && !isBiometricEnabled && !hasMpin) {
+                userDataManager.preferencesManager.setAppLockState(false)
+            }
+        }
         var enteredMpin by remember { mutableStateOf("") }
         var mpinError by remember { mutableStateOf<String?>(null) }
         val focusRequesters = List(4) { remember { FocusRequester() } }
@@ -494,8 +504,8 @@ fun HomeScreenContent(
             )
         }
 
-        // Always show MPIN prompt if locked and biometric is not enabled
-        if (lockedState && !isBiometricEnabled) {
+        // Show MPIN prompt only when app is locked, biometric is off, AND user has an MPIN set
+        if (shouldShowMpinLock) {
             // Overlay to block all interaction and blur background
             Box(
                 modifier =
@@ -879,7 +889,7 @@ fun HomeScreenContent(
                             .fillMaxSize()
                             .blur(
                                 radius =
-                                    if (lockedState && !isBiometricEnabled) {
+                                    if (shouldShowMpinLock) {
                                         12.dp
                                     } else if (isAuthenticating) {
                                         10.dp

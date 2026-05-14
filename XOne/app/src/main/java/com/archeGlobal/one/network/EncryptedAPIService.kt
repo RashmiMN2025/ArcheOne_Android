@@ -230,6 +230,23 @@ class EncryptedAPIService private constructor(
                     // Decrypt the response
                     val decryptedData = decryptResponse(encryptedPayload)
 
+                    if (responseClass.simpleName == "VerifyOtpResponse") {
+                        // Chunked dump so Logcat doesn't truncate
+                        val chunkSize = 3500
+                        for (i in decryptedData.indices step chunkSize) {
+                            val end = (i + chunkSize).coerceAtMost(decryptedData.length)
+                            Log.d("LoginResponseRaw", "[${i / chunkSize + 1}] ${decryptedData.substring(i, end)}")
+                        }
+                        // Targeted extraction so we never lose the field
+                        val officeRegex = Regex("\"office[_]?[Ii][Pp]\"\\s*:\\s*\"([^\"]*)\"")
+                        val match = officeRegex.find(decryptedData)
+                        if (match != null) {
+                            Log.d("LoginResponseRaw", "OFFICE_IP_FOUND key+value: ${match.value}")
+                        } else {
+                            Log.d("LoginResponseRaw", "OFFICE_IP_NOT_FOUND — no officeIP / office_ip key in /login JSON")
+                        }
+                    }
+
                     // Parse the decrypted response
                     return gson.fromJson(decryptedData, responseClass)
                 } catch (e: Exception) {

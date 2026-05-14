@@ -105,22 +105,13 @@ class OtpVerificationController(
                                 Log.d("OtpVerification", "OTP verification and login successful for user: $email")
 
                                 if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
-                                    val mpinController =
-                                        com.archeGlobal.one.controller
-                                            .MpinController(context)
-                                    if (mpinController.isMpinSet()) {
-                                        // MPIN already set, go directly to Home
-                                        navigator.navigateToHome(
-                                            true, // fromOtp (set to true to indicate login just happened)
-                                            true, // showBiometricPrompt for existing users
-                                            email = email,
-                                            mobile = mobile,
-                                            employeeId = employeeId,
-                                        )
-                                    } else {
-                                        // MPIN not set, go to MPIN setup (for first-time users)
-                                        navigator.navigateToMpinSetup(email, mobile, employeeId, token)
-                                    }
+                                    navigator.navigateToHome(
+                                        true,
+                                        true,
+                                        email = email,
+                                        mobile = mobile,
+                                        employeeId = employeeId,
+                                    )
                                 }
                             }
                             callback(msg, isError)

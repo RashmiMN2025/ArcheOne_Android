@@ -36,19 +36,22 @@ fun UserApprovalHistoryScreen(
     item: MyRequestItem,
     onBack: () -> Unit,
     onCancelRequest: ((onDone: () -> Unit) -> Unit)? = null,
+    onRequestDeletion: ((reason: String, onDone: () -> Unit) -> Unit)? = null,
 ) {
     var isCancelling by remember { mutableStateOf(false) }
+    var showDeletionDialog by remember { mutableStateOf(false) }
+    var deletionReason by remember { mutableStateOf("") }
     val status = item.status?.lowercase() ?: "pending"
     val statusColor = when (status) {
         "approved" -> Color(0xFF008000)
         "rejected" -> Color(0xFFFF0000)
-        "pending" -> Color(0xFFFFA500)
+        "pending", "first level approved" -> Color(0xFFFFA500)
         else -> Color.Gray
     }
     val statusBgColor = when (status) {
         "approved" -> Color(0xFF008000).copy(alpha = 0.15f)
         "rejected" -> Color(0xFFFF0000).copy(alpha = 0.15f)
-        "pending" -> Color(0xFFFFA500).copy(alpha = 0.15f)
+        "pending", "first level approved" -> Color(0xFFFFA500).copy(alpha = 0.15f)
         else -> Color.Gray.copy(alpha = 0.15f)
     }
     val displayStatus = status.replaceFirstChar { it.uppercase() }
@@ -196,14 +199,22 @@ fun UserApprovalHistoryScreen(
                                 )
                             }
 
-                            // Cancel button — only for pending, inside the card
-                            if (status == "pending" && onCancelRequest != null) {
+                            // Cancel button — for pending: direct delete; for approved: raise deletion request
+                            val isPending = status == "pending"
+                            val isApproved = status == "approved"
+                            val canCancelPending = isPending && onCancelRequest != null
+                            val canRequestDeletion = isApproved && onRequestDeletion != null
+                            if (canCancelPending || canRequestDeletion) {
                                 Spacer(modifier = Modifier.height(20.dp))
                                 Button(
                                     onClick = {
-                                        if (!isCancelling) {
+                                        if (isCancelling) return@Button
+                                        if (canCancelPending) {
                                             isCancelling = true
-                                            onCancelRequest { isCancelling = false }
+                                            onCancelRequest!! { isCancelling = false }
+                                        } else if (canRequestDeletion) {
+                                            deletionReason = ""
+                                            showDeletionDialog = true
                                         }
                                     },
                                     modifier = Modifier
@@ -213,11 +224,23 @@ fun UserApprovalHistoryScreen(
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                                 ) {
                                     Text(
-                                        text = "Cancel Request",
+                                        text = if (canRequestDeletion) "Cancel Request" else "Cancel Request",
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 16.sp,
                                         color = Color.White,
+                                    )
+                                }
+                                if (canRequestDeletion) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Your manager will need to approve the cancellation.",
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF888888),
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth(),
                                     )
                                 }
                             }
@@ -231,6 +254,101 @@ fun UserApprovalHistoryScreen(
     }
 
     UniversalLoader(isLoading = isCancelling)
+
+    if (showDeletionDialog) {
+        AlertDialog(
+            onDismissRequest = { if (!isCancelling) showDeletionDialog = false },
+            confirmButton = {
+                TextButton(
+                    enabled = !isCancelling && deletionReason.trim().isNotEmpty(),
+                    onClick = {
+                        val reason = deletionReason.trim()
+                        if (reason.isEmpty() || onRequestDeletion == null) return@TextButton
+                        isCancelling = true
+                        onRequestDeletion(reason) {
+                            isCancelling = false
+                            showDeletionDialog = false
+                        }
+                    },
+                ) {
+                    Text(
+                        text = "Submit",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFDD3825),
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    enabled = !isCancelling,
+                    onClick = { showDeletionDialog = false },
+                ) {
+                    Text(
+                        text = "Close",
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Gray,
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Cancel This Request",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 20.sp,
+                    color = Color(0xFFDD3825),
+                )
+            },
+            titleContentColor = Color(0xFFDD3825),
+            textContentColor = Color(0xFF333333),
+            text = {
+                Column {
+                    Text(
+                        text = "Tell your manager why you want this approved request cancelled. They will need to approve the cancellation.",
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 14.sp,
+                        color = Color(0xFF333333),
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = deletionReason,
+                        onValueChange = { deletionReason = it },
+                        placeholder = {
+                            Text(
+                                text = "Reason for cancellation",
+                                fontFamily = GraphikFontFamily,
+                                color = Color(0xFFAAAAAA),
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 100.dp),
+                        textStyle = LocalTextStyle.current.copy(
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        maxLines = 6,
+                        enabled = !isCancelling,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            disabledBorderColor = Color.Transparent,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            disabledContainerColor = Color.White,
+                            cursorColor = Color(0xFFDD3825),
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                        ),
+                    )
+                }
+            },
+            containerColor = Color(0xFFF6F4EE),
+        )
+    }
 }
 
 @Composable

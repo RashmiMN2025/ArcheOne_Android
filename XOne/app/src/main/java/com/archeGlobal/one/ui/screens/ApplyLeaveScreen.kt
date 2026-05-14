@@ -139,6 +139,11 @@ fun ApplyLeaveScreen(
 
     val reportingManagerName = OtpVerificationController.getUserData()?.userDetails?.reporting_manager ?: ""
     val reportingManagerEmail = OtpVerificationController.getUserData()?.userDetails?.reporting_manager_mail ?: ""
+    val divisionalHeadName = OtpVerificationController.getUserData()?.userDetails?.divisional_head ?: ""
+    val divisionalHeadEmail = OtpVerificationController.getUserData()?.userDetails?.divisional_head_mail ?: ""
+    val needsTwoLevelApproval =
+        selectedLeaveType.contains("Short Leave", ignoreCase = true) ||
+            selectedLeaveType.contains("Outdoor", ignoreCase = true)
 
     Box(
         modifier = Modifier
@@ -951,11 +956,31 @@ fun ApplyLeaveScreen(
                         }
                     }
 
-                    // Approver Card
-                    ApproverCard(
-                        name = reportingManagerName,
-                        email = reportingManagerEmail,
-                    )
+                    // Approver Card(s) — two-level approval for Short Leave & Outdoor
+                    if (needsTwoLevelApproval) {
+                        ApproverCard(
+                            name = reportingManagerName,
+                            email = reportingManagerEmail,
+                            title = "Approver 1",
+                            roleLabel = "Reporting\nManager",
+                            roleBackground = Color(0xFFE8F5E9),
+                            roleTextColor = Color(0xFF2E7D32),
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ApproverCard(
+                            name = divisionalHeadName,
+                            email = divisionalHeadEmail,
+                            title = "Approver 2",
+                            roleLabel = "Divisional\nHead",
+                            roleBackground = Color(0xFFE3F2FD),
+                            roleTextColor = Color(0xFF1565C0),
+                        )
+                    } else {
+                        ApproverCard(
+                            name = reportingManagerName,
+                            email = reportingManagerEmail,
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -1176,29 +1201,38 @@ fun ApplyLeaveScreen(
                                                 }
                                             }
 
-                                            // 2. Rule: Sick Leave cannot be adjacent to any other leave type (SL+SL consecutive is allowed)
+                                            // 2. Rule: Different leave types cannot be clubbed on adjacent days
+                                            //    (same-type adjacency, e.g. PL+PL or SL+SL, is allowed)
                                             val prevDay = fromDate.minusDays(1).toString()
                                             val nextDay = toDate.plusDays(1).toString()
-                                            val isCurrentSick = selectedLeaveType.contains("Sick", ignoreCase = true)
-
-                                            val adjacentConflict = breakdown.any { entry ->
-                                                val entryStatus = entry.status.lowercase()
-                                                val entryType = entry.requestType ?: ""
-                                                val isRestrictedEntry = restrictedTypes.any { entryType.contains(it, ignoreCase = true) }
-                                                val isAdjacentDate = entry.requestDate == prevDay || entry.requestDate == nextDay
-                                                val isApprovedOrPending = entryStatus == "pending" || entryStatus == "approved"
-
-                                                if (isRestrictedEntry && isAdjacentDate && isApprovedOrPending) {
-                                                    val isEntrySick = entryType.contains("Sick", ignoreCase = true)
-                                                    // Block when SL is adjacent to any other leave type; allow SL+SL
-                                                    (isCurrentSick || isEntrySick) && !(isCurrentSick && isEntrySick)
-                                                } else {
-                                                    false
-                                                }
+                                            val currentCanonical = restrictedTypes.firstOrNull {
+                                                selectedLeaveType.contains(it, ignoreCase = true)
                                             }
 
-                                            if (adjacentConflict) {
-                                                Toast.makeText(context, "Sick Leave cannot be taken on a day adjacent to another leave type.", Toast.LENGTH_LONG).show()
+                                            val adjacentConflict = breakdown.firstOrNull { entry ->
+                                                val entryStatus = entry.status.lowercase()
+                                                val entryType = entry.requestType ?: ""
+                                                val entryCanonical = restrictedTypes.firstOrNull {
+                                                    entryType.contains(it, ignoreCase = true)
+                                                }
+                                                val isAdjacentDate = entry.requestDate == prevDay || entry.requestDate == nextDay
+                                                val isApprovedOrPending = entryStatus == "pending" || entryStatus == "approved"
+                                                val isDifferentType = currentCanonical != null &&
+                                                    entryCanonical != null &&
+                                                    !currentCanonical.equals(entryCanonical, ignoreCase = true)
+
+                                                entryCanonical != null && isAdjacentDate && isApprovedOrPending && isDifferentType
+                                            }
+
+                                            if (adjacentConflict != null) {
+                                                val conflictType = restrictedTypes.firstOrNull {
+                                                    (adjacentConflict.requestType ?: "").contains(it, ignoreCase = true)
+                                                } ?: adjacentConflict.requestType
+                                                Toast.makeText(
+                                                    context,
+                                                    "$selectedLeaveType cannot be clubbed with $conflictType on adjacent days.",
+                                                    Toast.LENGTH_LONG,
+                                                ).show()
                                                 isSubmitting = false
                                                 return@launch
                                             }
@@ -1335,6 +1369,10 @@ fun ApplyLeaveScreen(
 fun ApproverCard(
     name: String,
     email: String,
+    title: String = "Approver",
+    roleLabel: String = "Reporting\nManager",
+    roleBackground: Color = Color(0xFFE8F5E9),
+    roleTextColor: Color = Color(0xFF2E7D32),
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1344,7 +1382,7 @@ fun ApproverCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Approver",
+                text = title,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
@@ -1390,15 +1428,15 @@ fun ApproverCard(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFFE8F5E9))
+                        .background(roleBackground)
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Text(
-                        text = "Reporting\nManager",
+                        text = roleLabel,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 12.sp,
-                        color = Color(0xFF2E7D32),
+                        color = roleTextColor,
                         textAlign = TextAlign.Center,
                         lineHeight = 13.sp,
                     )
