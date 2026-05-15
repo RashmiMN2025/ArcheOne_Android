@@ -1,7 +1,7 @@
 [versions]
 accompanistPager = "0.30.1"
 agp = "8.13.2"
-androidPdfViewer = "3.2.0-beta.1"
+androidPdfViewer = "3.2.0-beta.3"
 androidxComposeMaterial3Material3 = "1.3.2"
 androidxComposeUiUi = "1.8.2"
 androidxFoundation = "1.8.2"
@@ -67,7 +67,7 @@ roomKtx = "2.8.3"
 [libraries]
 accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
 accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistPager" }
-android-pdf-viewer = { module = "com.github.barteksc:android-pdf-viewer", version.ref = "androidPdfViewer" }
+android-pdf-viewer = { module = "com.github.mhiew:android-pdf-viewer", version.ref = "androidPdfViewer" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

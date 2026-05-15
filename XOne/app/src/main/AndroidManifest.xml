@@ -166,6 +166,24 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
+        <!-- Add AvatarMakerActivity -->
+        <activity
+            android:name=".AvatarMakerActivity"
+            android:exported="false"
+            android:hardwareAccelerated="true"
+            android:label="Create Avatar"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XOne.Transparent" />
+
+        <!-- Native PDF viewer (replaces PDF.js WebView for Communique) -->
+        <activity
+            android:name=".PdfViewerActivity"
+            android:exported="false"
+            android:hardwareAccelerated="true"
+            android:label="Document Viewer"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XOne" />
+
         <!-- Add XConnectActivity -->
         <activity
             android:name=".XConnectActivity"

@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.archeGlobal.one.ImageViewerActivity
+import com.archeGlobal.one.PdfViewerActivity
 import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.GlobalEvent
@@ -225,23 +226,32 @@ class HolidayCalendarController(
             return
         }
 
-        // Check if the file is an image based on extension
+        // Detect file type by extension; PDF urls may carry query strings, so
+        // strip those before checking the suffix.
+        val cleanPath = filePath.substringBefore('?')
         val isImage =
-            filePath.endsWith(".jpg", ignoreCase = true) ||
-                filePath.endsWith(".jpeg", ignoreCase = true) ||
-                filePath.endsWith(".png", ignoreCase = true) ||
-                filePath.endsWith(".webp", ignoreCase = true)
+            cleanPath.endsWith(".jpg", ignoreCase = true) ||
+                cleanPath.endsWith(".jpeg", ignoreCase = true) ||
+                cleanPath.endsWith(".png", ignoreCase = true) ||
+                cleanPath.endsWith(".webp", ignoreCase = true)
+        val isPdf = cleanPath.endsWith(".pdf", ignoreCase = true)
 
-        // Create appropriate intent based on file type
         val intent =
-            if (isImage) {
-                Intent(context, ImageViewerActivity::class.java)
-            } else {
-                Intent(context, WebViewActivity::class.java)
+            when {
+                isImage -> Intent(context, ImageViewerActivity::class.java).apply {
+                    putExtra("fileUrl", filePath)
+                    putExtra("title", documentName)
+                }
+                isPdf -> Intent(context, PdfViewerActivity::class.java).apply {
+                    putExtra(PdfViewerActivity.EXTRA_FILE_URL, filePath)
+                    putExtra(PdfViewerActivity.EXTRA_TITLE, documentName)
+                }
+                else -> Intent(context, WebViewActivity::class.java).apply {
+                    putExtra("fileUrl", filePath)
+                    putExtra("title", documentName)
+                }
             }
 
-        intent.putExtra("fileUrl", filePath)
-        intent.putExtra("title", documentName)
         context.startActivity(intent)
     }
 

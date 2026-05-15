@@ -30,7 +30,12 @@
       "Bash(\"/c/Users/User/AppData/Local/Programs/Git/bin/git.exe\" -C \"/c/Users/User/Documents/GitHub/XOne---Android/XOne\" diff 586ea479494ef3aefd9cc71bb8c51b51c147e71a~1 586ea479494ef3aefd9cc71bb8c51b51c147e71a -- \"XOne/app/src/main/java/com/archeGlobal/one/ui/screens/ApplyLeaveScreen.kt\")",
       "Bash(findstr /N \"Office\\\\|RegionalOffice\" app\\\\src\\\\main\\\\java\\\\com\\\\archeGlobal\\\\one\\\\network\\\\ApiService.kt)",
       "Bash(findstr /N \"data class Office\\\\|data class RegionalOffice\" app\\\\src\\\\main\\\\java\\\\com\\\\archeGlobal\\\\one\\\\network\\\\ApiService.kt)",
-      "Bash(powershell -Command \"Get-ChildItem -Recurse -Include '*.kt' -Path app\\\\src\\\\main\\\\java\\\\com\\\\archeGlobal\\\\one\\\\network | xargs findstr /N 'office\\\\|Office\\\\|IP\\\\|ip' | head -40\")"
+      "Bash(powershell -Command \"Get-ChildItem -Recurse -Include '*.kt' -Path app\\\\src\\\\main\\\\java\\\\com\\\\archeGlobal\\\\one\\\\network | xargs findstr /N 'office\\\\|Office\\\\|IP\\\\|ip' | head -40\")",
+      "PowerShell($env:JAVA_HOME=\"C:\\\\Program Files\\\\JetBrains\\\\IntelliJ IDEA 2025.3.1.1\\\\jbr\"; ./gradlew assembleDebug 2>&1 | Select-Object -Last 60)",
+      "Read(//c/Program Files/**)",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\JetBrains\" -Directory | Where-Object { $_.Name -match \"IntelliJ\" } | Select-Object Name)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr\\\\bin\\\\java.exe\" -version 2>&1)",
+      "PowerShell($env:JAVA_HOME=\"C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr\"; & \"$env:JAVA_HOME\\\\bin\\\\java.exe\" -version 2>&1)"
     ],
     "deny": [],
     "ask": []

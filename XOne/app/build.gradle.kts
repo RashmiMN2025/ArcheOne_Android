@@ -100,8 +100,10 @@ dependencies {
     implementation(libs.accompanist.swiperefresh)
     implementation(libs.lottie.compose)
 
-    // PDF Viewer - use web view based approach instead of PDF library
+    // WebView (used for non-PDF content in WebViewActivity, and the avatar maker)
     implementation(libs.androidx.webkit)
+    // Native PDF rendering for Communique (replaces PDF.js, faster cold load)
+    implementation(libs.android.pdf.viewer)
     implementation(libs.generativeai)
 
     // biometric

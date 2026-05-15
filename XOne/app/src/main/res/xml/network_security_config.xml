@@ -18,6 +18,14 @@
             <certificates src="@raw/star_arche_global"/>
         </trust-anchors>
     </domain-config>
+
+    <!-- Configuration for archelabs.com (avatar maker) - use system defaults -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">archelabs.com</domain>
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
     
     <!-- Configuration for archaeglobal.com with SSL pinning -->
     <!-- TODO: Add archaeglobal.com certificate to res/raw/archaeglobal_certificate.crt -->

@@ -7,7 +7,6 @@ import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.archeGlobal.one.CommuniqueActivity
-import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.navigation.Navigator
 import kotlinx.coroutines.*
@@ -54,16 +53,11 @@ class CommuniqueController(
     }
 
     fun onCommuniqueClick(communique: CommuniqueModel.Communique) {
-        // Use WebViewActivity for viewing PDFs with PDF.js
+        // Native PDF rendering - much faster than the previous PDF.js WebView path.
         val intent =
-            Intent(context, WebViewActivity::class.java).apply {
-                putExtra("fileUrl", communique.filePath)
-                putExtra("title", communique.communiqueName)
-                putExtra("isPdf", true)
-                putExtra("showSosButton", communique.showSosButton)
-                // Add flag to use PDF.js viewer
-                putExtra("usePdfJs", true)
-                putExtra("isFloorMap", true) // This will use the PDF.js viewer implementation
+            Intent(context, com.archeGlobal.one.PdfViewerActivity::class.java).apply {
+                putExtra(com.archeGlobal.one.PdfViewerActivity.EXTRA_FILE_URL, communique.filePath)
+                putExtra(com.archeGlobal.one.PdfViewerActivity.EXTRA_TITLE, communique.communiqueName)
             }
         context.startActivity(intent)
     }

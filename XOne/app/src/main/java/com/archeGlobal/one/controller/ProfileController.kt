@@ -572,6 +572,84 @@ class ProfileController(
         }
     }
 
+    /**
+     * Re-read the latest profile picture URL from [UserDataManager] and push it
+     * into [model] so the UI recomposes. Used after the avatar maker WebView
+     * returns - if the page uploaded server-side and updated user data, this
+     * surfaces the change without waiting for an app restart.
+     */
+    fun refreshProfilePicture() {
+        val latestUrl = userDataManager.getUserData()?.profilePic
+        Log.d("ProfileController", "refreshProfilePicture - latest URL: $latestUrl")
+
+        // Append a cache-buster so Coil treats the request as new even when the
+        // backend URL is unchanged (avatar maker may overwrite the image at the
+        // same path).
+        val busted = latestUrl?.let { url ->
+            val sep = if (url.contains("?")) "&" else "?"
+            "$url${sep}_r=${System.currentTimeMillis()}"
+        }
+        model = model.copy(profilePicture = busted ?: latestUrl)
+
+        try {
+            com.archeGlobal.one.utils.ImageCache
+                .invalidateProfileImageCache()
+        } catch (e: Exception) {
+            Log.e("ProfileController", "Error invalidating image cache: ${e.message}", e)
+        }
+        try {
+            homeController?.updateProfilePicture(busted ?: latestUrl)
+        } catch (e: Exception) {
+            Log.e("ProfileController", "Error updating HomeController: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Apply a profile picture URL returned by the external avatar maker WebView.
+     * The avatar maker already uploaded the image server-side, so we just need to
+     * propagate the new URL through the same channels used by [uploadProfilePicture].
+     */
+    fun updateProfilePictureFromUrl(profilePicUrl: String) {
+        if (profilePicUrl.isEmpty()) {
+            Log.w("ProfileController", "updateProfilePictureFromUrl called with empty URL")
+            return
+        }
+        Log.d("ProfileController", "Applying avatar maker profile picture URL: $profilePicUrl")
+
+        try {
+            model = model.copy(profilePicture = profilePicUrl)
+            userDataManager.updateProfilePicture(profilePicUrl)
+
+            val sharedPrefs = context.getSharedPreferences("profile_data", Context.MODE_PRIVATE)
+            sharedPrefs.edit().putString("profile_picture_url", profilePicUrl).apply()
+
+            try {
+                com.archeGlobal.one.utils.ImageCache
+                    .invalidateProfileImageCache()
+            } catch (e: Exception) {
+                Log.e("ProfileController", "Error invalidating image cache: ${e.message}", e)
+            }
+
+            try {
+                homeController?.updateProfilePicture(profilePicUrl)
+            } catch (e: Exception) {
+                Log.e("ProfileController", "Error updating HomeController: ${e.message}", e)
+            }
+
+            try {
+                val intent = android.content.Intent("com.archeGlobal.one.PROFILE_PICTURE_UPDATED")
+                intent.putExtra("profile_picture_url", profilePicUrl)
+                context.sendBroadcast(intent)
+            } catch (e: Exception) {
+                Log.e("ProfileController", "Error sending broadcast: ${e.message}", e)
+            }
+
+            Toast.makeText(context, "Profile picture updated successfully", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e("ProfileController", "Error applying avatar URL: ${e.message}", e)
+        }
+    }
+
     fun uploadProfilePhoto(bitmap: Bitmap) {
         Log.d("ProfileController", "Starting profile photo upload from bitmap")
 

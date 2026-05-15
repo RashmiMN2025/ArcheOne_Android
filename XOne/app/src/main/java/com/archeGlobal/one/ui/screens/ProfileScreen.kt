@@ -1,6 +1,8 @@
 package com.archeGlobal.one.ui.screens
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -20,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -123,6 +126,33 @@ fun ProfileScreen(
             }
         }
 
+    val avatarMakerLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.StartActivityForResult(),
+        ) { result ->
+            val data = result.data
+            val imagePath = data?.getStringExtra(
+                com.archeGlobal.one.AvatarMakerActivity.EXTRA_IMAGE_PATH,
+            )
+            val filePath = data?.getStringExtra(
+                com.archeGlobal.one.AvatarMakerActivity.EXTRA_FILE_PATH,
+            )
+            when {
+                result.resultCode == Activity.RESULT_OK && !imagePath.isNullOrEmpty() -> {
+                    controller.uploadProfilePhotoFromUri(Uri.fromFile(java.io.File(imagePath)))
+                }
+                result.resultCode == Activity.RESULT_OK && !filePath.isNullOrEmpty() -> {
+                    controller.updateProfilePictureFromUrl(filePath)
+                }
+                else -> {
+                    // Webview may have uploaded directly to the same backend URL.
+                    // Force-refresh so Coil re-fetches the image content.
+                    controller.refreshProfilePicture()
+                }
+            }
+            showUploadDialog = false
+        }
+
     Box(
         modifier =
             Modifier
@@ -172,6 +202,12 @@ fun ProfileScreen(
                         onDeleteProfilePhoto = {
                             controller.deleteProfilePhoto()
                             ImageCache.invalidateProfileImageCache() // Invalidate cache
+                        },
+                        onAvatarCreated = { filePath ->
+                            controller.updateProfilePictureFromUrl(filePath)
+                        },
+                        onAvatarMakerClosed = {
+                            controller.refreshProfilePicture()
                         },
                     )
 
@@ -248,6 +284,14 @@ fun ProfileScreen(
                             }
                         },
                         onGalleryClick = { galleryLauncher.launch("image/*") },
+                        onCreateAvatarClick = {
+                            val userData = userDataManager.getUserData()
+                            val intent = Intent(context, com.archeGlobal.one.AvatarMakerActivity::class.java).apply {
+                                putExtra("email", userData?.email.orEmpty())
+                                putExtra("employeeId", userData?.employeeId.orEmpty())
+                            }
+                            avatarMakerLauncher.launch(intent)
+                        },
                         onDeleteClick = {
                             controller.deleteProfilePhoto()
                             ImageCache.invalidateProfileImageCache() // Invalidate cache
@@ -382,9 +426,12 @@ private fun ProfileHeader(
     onProfilePictureClick: ((Uri) -> Unit)? = null,
     onCameraCapture: ((Bitmap) -> Unit)? = null,
     onDeleteProfilePhoto: (() -> Unit)? = null,
+    onAvatarCreated: ((String) -> Unit)? = null,
+    onAvatarMakerClosed: (() -> Unit)? = null,
 ) {
     var showUploadDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val userDataManager = com.archeGlobal.one.utils.UserDataManager.getInstance(context)
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -425,6 +472,36 @@ private fun ProfileHeader(
                 onProfilePictureClick(uri)
                 showUploadDialog = false
             }
+        }
+
+    val avatarMakerLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.StartActivityForResult(),
+        ) { result ->
+            val data = result.data
+            val imagePath = data?.getStringExtra(
+                com.archeGlobal.one.AvatarMakerActivity.EXTRA_IMAGE_PATH,
+            )
+            val filePath = data?.getStringExtra(
+                com.archeGlobal.one.AvatarMakerActivity.EXTRA_FILE_PATH,
+            )
+            when {
+                result.resultCode == Activity.RESULT_OK && !imagePath.isNullOrEmpty() -> {
+                    // Webview returned raw image bytes - upload through the same
+                    // /upload_profile endpoint Gallery/Camera use.
+                    onProfilePictureClick?.invoke(Uri.fromFile(java.io.File(imagePath)))
+                }
+                result.resultCode == Activity.RESULT_OK && !filePath.isNullOrEmpty() -> {
+                    // Webview already uploaded - just apply the resulting URL.
+                    onAvatarCreated?.invoke(filePath)
+                }
+                else -> {
+                    // Webview may have uploaded directly without notifying the bridge.
+                    // Invalidate the Coil cache so the (possibly same) URL is re-fetched.
+                    onAvatarMakerClosed?.invoke()
+                }
+            }
+            showUploadDialog = false
         }
 
     Box(
@@ -544,6 +621,14 @@ private fun ProfileHeader(
                 }
             },
             onGalleryClick = { galleryLauncher.launch("image/*") },
+            onCreateAvatarClick = {
+                val userData = userDataManager.getUserData()
+                val intent = Intent(context, com.archeGlobal.one.AvatarMakerActivity::class.java).apply {
+                    putExtra("email", userData?.email.orEmpty())
+                    putExtra("employeeId", userData?.employeeId.orEmpty())
+                }
+                avatarMakerLauncher.launch(intent)
+            },
             onDeleteClick = {
                 onDeleteProfilePhoto?.invoke()
                 ImageCache.invalidateProfileImageCache() // Invalidate cache
@@ -561,6 +646,7 @@ fun ProfilePictureUploadDialog(
     onGalleryClick: () -> Unit,
     onDeleteClick: (() -> Unit)?,
     onDismiss: () -> Unit,
+    onCreateAvatarClick: (() -> Unit)? = null,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -691,7 +777,7 @@ fun ProfilePictureUploadDialog(
                             )
                             Text(
                                 text = "Gallery",
-                                fontSize = 13.sp,
+                                fontSize = 11.sp,
                                 color = Color.White,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
@@ -715,7 +801,33 @@ fun ProfilePictureUploadDialog(
                             )
                             Text(
                                 text = "Camera",
-                                fontSize = 13.sp,
+                                fontSize = 11.sp,
+                                color = Color.White,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
+
+                    if (onCreateAvatarClick != null) {
+                        Button(
+                            onClick = onCreateAvatarClick,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Face,
+                                contentDescription = "Create Avatar",
+                                modifier = Modifier.padding(end = 8.dp),
+                                tint = Color.White,
+                            )
+                            Text(
+                                text = "Create Avatar",
+                                fontSize = 11.sp,
                                 color = Color.White,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
@@ -755,7 +867,7 @@ fun ProfilePictureUploadDialog(
                                 )
                                 Text(
                                     text = "Delete",
-                                    fontSize = 13.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     color = Color(0xFFDD3825),
