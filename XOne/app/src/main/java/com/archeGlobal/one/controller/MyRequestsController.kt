@@ -61,21 +61,43 @@ class MyRequestsController(private val context: Context) {
         }
     }
 
-    fun cancelRequest(eventId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun cancelRequest(
+        eventId: String,
+        category: String? = null,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        val isDeletionRequest = category?.equals("deletion request", ignoreCase = true) == true
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitClient.apiService.deleteRequest(eventId)
+                val response = if (isDeletionRequest) {
+                    // Withdraw a pending deletion request → reuses the manager's reject endpoint per backend.
+                    Log.d(TAG, "cancelRequest → GET /api/v1/timesheet/delete-approvals/reject-phone?event_id=$eventId")
+                    RetrofitClient.apiService.rejectDeletionRequest(eventId)
+                } else {
+                    Log.d(TAG, "cancelRequest → DELETE /api/v1/timesheet/requests/delete/$eventId")
+                    RetrofitClient.apiService.deleteRequest(eventId)
+                }
+                Log.d(TAG, "cancelRequest ← HTTP ${response.code()} successful=${response.isSuccessful}")
                 if (response.isSuccessful) {
+                    val msg = if (isDeletionRequest) {
+                        "Deletion request withdrawn"
+                    } else {
+                        "Request cancelled successfully"
+                    }
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Request cancelled successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                     }
                     delay(2000)
                     withContext(Dispatchers.Main) { onSuccess() }
                 } else {
+                    val errorBody = try { response.errorBody()?.string() } catch (_: Exception) { null }
+                    Log.e(TAG, "cancelRequest failed | code=${response.code()} | errorBody=$errorBody")
                     val msg = "Failed to cancel request (${response.code()})"
                     withContext(Dispatchers.Main) { onError(msg) }
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "cancelRequest exception | ${e.javaClass.simpleName}: ${e.message}", e)
                 val msg = e.message ?: "An error occurred"
                 withContext(Dispatchers.Main) { onError(msg) }
             }

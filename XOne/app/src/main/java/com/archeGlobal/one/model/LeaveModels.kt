@@ -39,6 +39,8 @@ data class MyRequestItem(
     @SerializedName("leaveDuration") val leaveDuration: String?,
     @SerializedName("approver") val approver: String?,
     @SerializedName("approverEmail") val approverEmail: String?,
+    @SerializedName("secondApprover") val secondApprover: String? = null,
+    @SerializedName("secondApproverEmail") val secondApproverEmail: String? = null,
     @SerializedName("status") val status: String?,
     @SerializedName("reason") val reason: String?,
     @SerializedName("description") val description: String?,
@@ -46,6 +48,7 @@ data class MyRequestItem(
     @SerializedName("punchOut") val punchOut: String?,
     @SerializedName("createdAt") val createdAt: String?,
     @SerializedName("updatedAt") val updatedAt: String?,
+    @SerializedName("category") val category: String? = "approval request",
 )
 
 data class LeaveResponse(

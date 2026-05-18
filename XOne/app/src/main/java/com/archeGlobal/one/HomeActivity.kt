@@ -2012,6 +2012,7 @@ class HomeActivity : AppCompatActivity() {
                                 onCancelRequest = { onDone ->
                                     myRequestsController.cancelRequest(
                                         eventId = item.eventId,
+                                        category = item.category,
                                         onSuccess = {
                                             onDone()
                                             myRequestsController.fetchRequests()

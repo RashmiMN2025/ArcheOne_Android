@@ -17,10 +17,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.border
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.MyRequestItem
 import com.archeGlobal.one.ui.components.UniversalLoader
@@ -256,81 +259,56 @@ fun UserApprovalHistoryScreen(
     UniversalLoader(isLoading = isCancelling)
 
     if (showDeletionDialog) {
-        AlertDialog(
+        Dialog(
             onDismissRequest = { if (!isCancelling) showDeletionDialog = false },
-            confirmButton = {
-                TextButton(
-                    enabled = !isCancelling && deletionReason.trim().isNotEmpty(),
-                    onClick = {
-                        val reason = deletionReason.trim()
-                        if (reason.isEmpty() || onRequestDeletion == null) return@TextButton
-                        isCancelling = true
-                        onRequestDeletion(reason) {
-                            isCancelling = false
-                            showDeletionDialog = false
-                        }
-                    },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = Color(0xFFF6F4EE),
+                shadowElevation = 8.dp,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        text = "Submit",
+                        text = "Cancel Request",
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFDD3825),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center,
                     )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    enabled = !isCancelling,
-                    onClick = { showDeletionDialog = false },
-                ) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Close",
+                        text = "Please provide a reason for cancellation",
                         fontFamily = GraphikFontFamily,
-                        color = Color.Gray,
-                    )
-                }
-            },
-            title = {
-                Text(
-                    text = "Cancel This Request",
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 20.sp,
-                    color = Color(0xFFDD3825),
-                )
-            },
-            titleContentColor = Color(0xFFDD3825),
-            textContentColor = Color(0xFF333333),
-            text = {
-                Column {
-                    Text(
-                        text = "Tell your manager why you want this approved request cancelled. They will need to approve the cancellation.",
-                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
-                        color = Color(0xFF333333),
+                        color = Color(0xFF888888),
+                        textAlign = TextAlign.Center,
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = deletionReason,
                         onValueChange = { deletionReason = it },
-                        placeholder = {
-                            Text(
-                                text = "Reason for cancellation",
-                                fontFamily = GraphikFontFamily,
-                                color = Color(0xFFAAAAAA),
-                            )
-                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 100.dp),
+                            .heightIn(min = 130.dp)
+                            .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(12.dp)),
                         textStyle = LocalTextStyle.current.copy(
                             fontFamily = GraphikFontFamily,
                             fontSize = 14.sp,
                             color = Color.Black,
                         ),
-                        shape = RoundedCornerShape(8.dp),
-                        maxLines = 6,
+                        shape = RoundedCornerShape(12.dp),
+                        maxLines = 8,
                         enabled = !isCancelling,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Transparent,
@@ -344,10 +322,67 @@ fun UserApprovalHistoryScreen(
                             unfocusedTextColor = Color.Black,
                         ),
                     )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Button(
+                            onClick = { if (!isCancelling) showDeletionDialog = false },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFE5E5E5),
+                                contentColor = Color.Black,
+                                disabledContainerColor = Color(0xFFE5E5E5),
+                                disabledContentColor = Color.Black,
+                            ),
+                            enabled = !isCancelling,
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = Color.Black,
+                            )
+                        }
+                        Button(
+                            onClick = {
+                                val reason = deletionReason.trim()
+                                if (reason.isEmpty() || onRequestDeletion == null) return@Button
+                                isCancelling = true
+                                onRequestDeletion(reason) {
+                                    isCancelling = false
+                                    showDeletionDialog = false
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                contentColor = Color.White,
+                                disabledContainerColor = Color(0xFFDD3825).copy(alpha = 0.5f),
+                                disabledContentColor = Color.White,
+                            ),
+                            enabled = !isCancelling && deletionReason.trim().isNotEmpty(),
+                        ) {
+                            Text(
+                                text = "Submit",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = Color.White,
+                            )
+                        }
+                    }
                 }
-            },
-            containerColor = Color(0xFFF6F4EE),
-        )
+            }
+        }
     }
 }
 

@@ -299,6 +299,13 @@ interface ApiService {
         @Body request: TravelRequestSubmission,
     ): Call<TravelRequestResponse>
 
+    @Multipart
+    @POST("travel/v2/admin/request")
+    fun submitAdminTravelRequest(
+        @Part("payload") payload: RequestBody,
+        @Part files: List<MultipartBody.Part>?,
+    ): Call<TravelRequestResponse>
+
     @POST("travel-request-one")
     fun getTravelHistory(
         @Body request: TravelHistoryRequest,

@@ -11,6 +11,7 @@ import com.archeGlobal.one.model.CabLocation
 import com.archeGlobal.one.model.EmployeeSearchRequest
 import com.archeGlobal.one.model.EmployeeSearchResponse
 import com.archeGlobal.one.model.EmployeeSearchResult
+import com.archeGlobal.one.model.SuggestedAssetUser
 import com.archeGlobal.one.model.SuggestedUser
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
@@ -23,6 +24,7 @@ import com.archeGlobal.one.model.TravelHistoryResponse
 import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelRequestResponse
+import com.archeGlobal.one.model.TravelRequestSubmission
 import com.archeGlobal.one.model.TravelStatus
 import com.archeGlobal.one.model.TravelV2AdminHistoryResponse
 import com.archeGlobal.one.model.TravelV2ApprovalHistoryResponse
@@ -35,6 +37,15 @@ import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.CustomToast
 import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -183,8 +194,8 @@ class TravelController(
     var isBookingForSelf by mutableStateOf(true)
         private set
 
-    // Selected employee for On Behalf booking
-    var selectedOnBehalfEmployee: EmployeeSearchResult? = null
+    // Selected employee for On Behalf booking — reactive so UI recomposes.
+    var selectedOnBehalfEmployee by mutableStateOf<SuggestedAssetUser?>(null)
         private set
 
     fun updateBookingMode(isSelf: Boolean) {
@@ -217,26 +228,15 @@ class TravelController(
         }
     }
 
-    fun selectOnBehalfEmployee(employee: EmployeeSearchResult) {
-        selectedOnBehalfEmployee = employee
-        employeeName = employee.name
-        employeeId = employee.employeeId
-        employeeEmail = employee.email
-        // Default values since search result doesn't have these
-        mobileNumber = "N/A"
-        employeeGrade = "N/A"
-        dateOfBirth = "N/A"
-        aadharNumber = "N/A"
-        reportingManagerName = "N/A"
-        reportingManagerEmail = "N/A"
-        
-        // Clear search results
-        employeeSearchResults = emptyList()
-        attendeeSearchQuery = "" 
-    }
-
     // UserDataManager instance
     private val userDataManager = UserDataManager.getInstance(context)
+
+    // Logged-in user's identity — independent of the form-target fields (employeeEmail, employeeId)
+    // which get repointed to the selected on-behalf employee when an admin picks someone else.
+    private val loggedInEmail: String
+        get() = userDataManager.getUserData()?.email.orEmpty()
+    private val loggedInEmployeeId: String
+        get() = userDataManager.getUserData()?.employeeId.orEmpty()
 
     // Data class for individual destination
     data class Destination(
@@ -497,11 +497,11 @@ class TravelController(
         // Set to loading state
         travelHistoryState = TravelHistoryState.Loading
 
-        // Create request with employee ID and email
+        // Create request with the LOGGED-IN admin's identity, not the form-target (which may be the on-behalf employee).
         val request =
             TravelHistoryRequest(
-                employeeId = employeeId,
-                employeeEmail = employeeEmail,
+                employeeId = loggedInEmployeeId,
+                employeeEmail = loggedInEmail,
             )
 
         // Make API call to get travel history
@@ -545,10 +545,10 @@ class TravelController(
         // Set to loading state
         travelHistoryState = TravelHistoryState.Loading
 
-        // Create request with employee email (v2 API only needs email)
-        val request = TravelV2Request(employeeEmail = employeeEmail)
+        // "Who am I" call — use the logged-in admin's email, not the form-target's (may be the on-behalf employee).
+        val request = TravelV2Request(employeeEmail = loggedInEmail)
 
-        Log.d("TravelController", "Loading travel history for: $employeeEmail")
+        Log.d("TravelController", "Loading travel history for: $loggedInEmail")
 
         // Make order history API call (only user's own travel requests)
         RetrofitClient.apiService.getTravelV2OrderHistory(request).enqueue(
@@ -697,8 +697,8 @@ class TravelController(
         // Set loading state
         isLoadingApprovalCount = true
 
-        // Create request with employee email
-        val request = TravelV2Request(employeeEmail = employeeEmail)
+        // "Who am I" call — use the logged-in admin's email, not the form-target's.
+        val request = TravelV2Request(employeeEmail = loggedInEmail)
 
         // Make the API call to get approval count
         RetrofitClient.apiService.getTravelV2ApprovalHistoryCount(request).enqueue(
@@ -879,8 +879,8 @@ class TravelController(
         // Debug logging
         android.util.Log.d("TravelController", "Making V2 Approval History API call")
 
-        // Create request with employee email
-        val approvalRequest = TravelV2Request(employeeEmail = employeeEmail)
+        // "Who am I" call — use the logged-in admin's email.
+        val approvalRequest = TravelV2Request(employeeEmail = loggedInEmail)
 
         // Make the API call using v2 approval history endpoint
         RetrofitClient.apiService.getTravelV2ApprovalHistory(approvalRequest).enqueue(
@@ -961,8 +961,8 @@ class TravelController(
         // Debug logging
         android.util.Log.d("TravelController", "Making V2 Admin History API call")
 
-        // Create request with employee email
-        val adminRequest = TravelV2Request(employeeEmail = employeeEmail)
+        // "Who am I" call — use the logged-in admin's email.
+        val adminRequest = TravelV2Request(employeeEmail = loggedInEmail)
 
         // Make the API call using v2 admin history endpoint
         RetrofitClient.apiService.getTravelV2AdminHistory(adminRequest).enqueue(
@@ -1760,6 +1760,12 @@ class TravelController(
             Log.e("TravelController", "Error serializing request to JSON", e)
         }
 
+        // Branch: admin on-behalf flow uses the multipart admin endpoint, regular flow uses /travel/v2/request
+        if (selectedOnBehalfEmployee != null) {
+            submitAdminMultipart(travelRequest)
+            return
+        }
+
         // Make API call
         RetrofitClient.apiService.submitTravelRequest(travelRequest).enqueue(
             object : Callback<TravelRequestResponse> {
@@ -2179,6 +2185,14 @@ class TravelController(
         employeeSearchResults = emptyList()
         suggestedUsers = emptyList()
         showAttendeeSearch = false
+
+        // On-behalf admin booking state — also flip back to self and restore the admin's own details.
+        selectedOnBehalfEmployee = null
+        isBookingForSelf = true
+        onBehalfSearchQuery = ""
+        onBehalfSearchResults = emptyList()
+        onBehalfAttachments = emptyList()
+        loadEmployeeDetails()
 
         // Dropdown states
         isTransportDropdownExpanded = false
@@ -2754,6 +2768,165 @@ class TravelController(
                 }
             },
         )
+    }
+
+    // ============================================================
+    // Admin "On Behalf Of" extensions — visible only when isAdmin
+    // ============================================================
+
+    var onBehalfSearchQuery by mutableStateOf("")
+        private set
+    var onBehalfSearchResults by mutableStateOf(listOf<SuggestedAssetUser>())
+        private set
+    var isOnBehalfSearching by mutableStateOf(false)
+        private set
+
+    var onBehalfAttachments by mutableStateOf(listOf<android.net.Uri>())
+        private set
+
+    fun updateOnBehalfSearchQuery(value: String) {
+        onBehalfSearchQuery = value
+        if (value.length < 2) {
+            onBehalfSearchResults = emptyList()
+        }
+    }
+
+    fun searchOnBehalfEmployees(query: String) {
+        if (query.length < 2) return
+        isOnBehalfSearching = true
+        // Rich employee lookup: /api/v1/itsm/users/suggest — returns employeeCode, mobile, manager, etc.
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.apiService.suggestAssetUsers(query)
+                withContext(Dispatchers.Main) {
+                    if (response.success) {
+                        onBehalfSearchResults = response.data
+                    } else {
+                        onBehalfSearchResults = emptyList()
+                        Log.e("TravelController", "On-behalf search API error: ${response.status} ${response.message}")
+                    }
+                    isOnBehalfSearching = false
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onBehalfSearchResults = emptyList()
+                    isOnBehalfSearching = false
+                    Log.e("TravelController", "On-behalf search network error", e)
+                }
+            }
+        }
+    }
+
+    fun pickOnBehalfEmployee(employee: SuggestedAssetUser) {
+        selectedOnBehalfEmployee = employee
+        isBookingForSelf = false
+        employeeName = employee.username
+        employeeId = employee.employeeCode
+        employeeEmail = employee.emailId.orEmpty()
+        mobileNumber = employee.mobileNumber.orEmpty()
+        // API doesn't return grade/DOB/Aadhar; admin endpoint accepts blanks.
+        employeeGrade = ""
+        dateOfBirth = ""
+        aadharNumber = ""
+        // Approval chain reflects the selected employee's manager so notifications go to the right person.
+        reportingManagerName = employee.reportingManager.orEmpty()
+        reportingManagerEmail = employee.reportingManagerEmail.orEmpty()
+        onBehalfSearchQuery = ""
+        onBehalfSearchResults = emptyList()
+    }
+
+    fun clearOnBehalfEmployee() {
+        selectedOnBehalfEmployee = null
+        isBookingForSelf = true
+        onBehalfSearchQuery = ""
+        onBehalfSearchResults = emptyList()
+        onBehalfAttachments = emptyList()
+        // Restore self details
+        loadEmployeeDetails()
+    }
+
+    fun addOnBehalfAttachment(uri: android.net.Uri) {
+        if (onBehalfAttachments.size < 3) {
+            onBehalfAttachments = onBehalfAttachments + uri
+        } else {
+            CustomToast.show(context, "Maximum 3 attachments allowed")
+        }
+    }
+
+    fun removeOnBehalfAttachment(index: Int) {
+        onBehalfAttachments = onBehalfAttachments.filterIndexed { i, _ -> i != index }
+    }
+
+    /**
+     * Submit the already-built TravelRequestSubmission via the admin multipart endpoint.
+     * Called by submitTravelRequest() when selectedOnBehalfEmployee != null.
+     */
+    private fun submitAdminMultipart(travelRequest: TravelRequestSubmission) {
+        val jsonString = com.google.gson.Gson().toJson(travelRequest)
+        Log.d("TravelController", "Admin booking payload: $jsonString")
+        val payloadBody: RequestBody = jsonString.toRequestBody("application/json".toMediaTypeOrNull())
+
+        val fileParts = onBehalfAttachments.mapNotNull { uri -> uriToMultipartPart(uri, "file") }
+
+        RetrofitClient.apiService.submitAdminTravelRequest(payloadBody, fileParts.ifEmpty { null }).enqueue(
+            object : Callback<TravelRequestResponse> {
+                override fun onResponse(
+                    call: Call<TravelRequestResponse>,
+                    response: Response<TravelRequestResponse>,
+                ) {
+                    isSubmitting = false
+                    if (response.isSuccessful && response.body() != null) {
+                        val body = response.body()!!
+                        if (body.status == 200) {
+                            val employeeName = selectedOnBehalfEmployee?.username ?: travelRequest.employeeName
+                            CustomToast.show(context, "Travel request submitted on behalf of $employeeName")
+                            submissionError = null
+                            // Admin on-behalf submit: refresh the admin dashboard and land there, not on the personal history screen.
+                            loadTravelAdminDashboard()
+                            clearOnBehalfEmployee()
+                            navigator.navigateToTravelAdminDashboard()
+                            resetTravelForm()
+                        } else {
+                            submissionError = body.message
+                            Log.e("TravelController", "Admin booking error: ${body.message}")
+                        }
+                    } else {
+                        val errorBody = try { response.errorBody()?.string() } catch (_: Exception) { null }
+                        submissionError = "Failed to submit travel request. Please try again."
+                        Log.e("TravelController", "Admin booking HTTP ${response.code()}: $errorBody")
+                    }
+                }
+
+                override fun onFailure(call: Call<TravelRequestResponse>, t: Throwable) {
+                    isSubmitting = false
+                    submissionError = "Network error. Please check your connection and try again."
+                    Log.e("TravelController", "Admin booking network error", t)
+                }
+            },
+        )
+    }
+
+    private fun uriToMultipartPart(uri: android.net.Uri, partName: String): MultipartBody.Part? {
+        return try {
+            val resolver = context.contentResolver
+            val mimeType = resolver.getType(uri) ?: "application/octet-stream"
+            var filename = "attachment_${System.currentTimeMillis()}"
+            resolver.query(uri, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (nameIndex >= 0 && cursor.moveToFirst()) {
+                    cursor.getString(nameIndex)?.let { filename = it }
+                }
+            }
+            val tempFile = java.io.File(context.cacheDir, "admin_attach_${System.currentTimeMillis()}_$filename")
+            resolver.openInputStream(uri)?.use { input ->
+                tempFile.outputStream().use { output -> input.copyTo(output) }
+            } ?: return null
+            val body = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
+            MultipartBody.Part.createFormData(partName, filename, body)
+        } catch (e: Exception) {
+            Log.e("TravelController", "Failed to convert URI to multipart part", e)
+            null
+        }
     }
 
     /**

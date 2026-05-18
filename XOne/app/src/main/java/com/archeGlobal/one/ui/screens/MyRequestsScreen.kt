@@ -256,6 +256,17 @@ private fun MyRequestCard(
                 fontSize = 14.sp,
                 color = Color.Black,
             )
+
+            if (request.category?.equals("deletion request", ignoreCase = true) == true) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "* This is a deletion request",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    color = Color(0xFFDD3825),
+                )
+            }
         }
     }
 }

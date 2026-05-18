@@ -348,7 +348,8 @@ data class SuggestedAssetUser(
     val mobileNumber: String? = "",
     val emailId: String? = "",
     val divisionalHead: String? = "",
-    val reportingManager: String? = ""
+    val reportingManager: String? = "",
+    val reportingManagerEmail: String? = "",
 )
 
 data class TagAssetCreateRequest(

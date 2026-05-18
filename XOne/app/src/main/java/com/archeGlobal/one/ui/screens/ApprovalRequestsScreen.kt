@@ -151,34 +151,13 @@ private fun ApprovalRequestCard(request: ApprovalRequestItem, onClick: () -> Uni
                         color = Color.Black,
                     )
                     Spacer(modifier = Modifier.height(2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = request.requestType ?: "Unknown Request",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 13.sp,
-                            color = Color(0xFF888888),
-                        )
-                        if (request.category?.equals("deletion request", ignoreCase = true) == true) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        Color(0xFFDD3825).copy(alpha = 0.12f),
-                                        RoundedCornerShape(4.dp),
-                                    )
-                                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                            ) {
-                                Text(
-                                    text = "Deletion",
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 11.sp,
-                                    color = Color(0xFFDD3825),
-                                )
-                            }
-                        }
-                    }
+                    Text(
+                        text = request.requestType ?: "Unknown Request",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 13.sp,
+                        color = Color(0xFF888888),
+                    )
                 }
                 Box(
                     modifier = Modifier
@@ -256,6 +235,17 @@ private fun ApprovalRequestCard(request: ApprovalRequestItem, onClick: () -> Uni
                 fontSize = 14.sp,
                 color = Color.Black,
             )
+
+            if (request.category?.equals("deletion request", ignoreCase = true) == true) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "* This is a deletion request",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    color = Color(0xFFDD3825),
+                )
+            }
         }
     }
 }

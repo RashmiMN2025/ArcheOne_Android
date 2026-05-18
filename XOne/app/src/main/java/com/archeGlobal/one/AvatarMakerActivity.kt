@@ -62,6 +62,62 @@ class AvatarMakerActivity : ComponentActivity() {
         const val EXTRA_MESSAGE = "message"
         private const val TAG = "AvatarMakerActivity"
         private const val BASE_URL = "https://archeforever.archelabs.com"
+
+        // Injected after page load to detect successful upload-style requests the page
+        // makes via fetch / XMLHttpRequest. On a 2xx response to a URL matching
+        // upload/avatar/profile/save, calls AndroidBridge.uploadSuccess() so the activity
+        // closes automatically — the page itself doesn't notify us today.
+        private val AVATAR_NETWORK_HOOK_JS = """
+            (function() {
+              if (window.__archeAvatarHook) return;
+              window.__archeAvatarHook = true;
+              function looksLikeUpload(url) {
+                if (!url) return false;
+                var u = String(url).toLowerCase();
+                return u.indexOf('upload') >= 0 ||
+                       u.indexOf('avatar') >= 0 ||
+                       u.indexOf('profile') >= 0 ||
+                       u.indexOf('save') >= 0;
+              }
+              function notifySuccess() {
+                try {
+                  if (window.AndroidBridge && window.AndroidBridge.uploadSuccess) {
+                    window.AndroidBridge.uploadSuccess();
+                  }
+                } catch (e) {}
+              }
+              if (window.fetch) {
+                var origFetch = window.fetch.bind(window);
+                window.fetch = function(input, init) {
+                  var url = (typeof input === 'string') ? input : (input && input.url) || '';
+                  var method = (init && init.method) || (input && input.method) || 'GET';
+                  var p = origFetch(input, init);
+                  if (looksLikeUpload(url) && String(method).toUpperCase() !== 'GET') {
+                    p.then(function(res) { if (res && res.ok) notifySuccess(); }).catch(function(){});
+                  }
+                  return p;
+                };
+              }
+              try {
+                var origOpen = XMLHttpRequest.prototype.open;
+                var origSend = XMLHttpRequest.prototype.send;
+                XMLHttpRequest.prototype.open = function(method, url) {
+                  this.__avMethod = method;
+                  this.__avUrl = url;
+                  return origOpen.apply(this, arguments);
+                };
+                XMLHttpRequest.prototype.send = function() {
+                  var xhr = this;
+                  if (looksLikeUpload(xhr.__avUrl) && String(xhr.__avMethod || 'GET').toUpperCase() !== 'GET') {
+                    xhr.addEventListener('load', function() {
+                      if (xhr.status >= 200 && xhr.status < 300) notifySuccess();
+                    });
+                  }
+                  return origSend.apply(this, arguments);
+                };
+              } catch (e) {}
+            })();
+        """.trimIndent()
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -194,6 +250,12 @@ class AvatarMakerActivity : ComponentActivity() {
                                         super.onPageFinished(view, url)
                                         Log.d(TAG, "onPageFinished: $url")
                                         isLoading = false
+                                        // Inject a network-hook that closes the activity when the
+                                        // page completes an upload-style POST/PUT. The avatar page
+                                        // uploads via its own fetch/XHR without notifying us, so we
+                                        // wrap both APIs and call AndroidBridge.uploadSuccess()
+                                        // on a 2xx response to an "upload/avatar/profile/save" URL.
+                                        view?.evaluateJavascript(AVATAR_NETWORK_HOOK_JS, null)
                                     }
 
                                     override fun onReceivedError(
@@ -327,10 +389,15 @@ class AvatarMakerActivity : ComponentActivity() {
         val status = json.optInt("status", 0)
         val message = json.optString("message")
         val filePath = json.optString("filePath").takeIf { it.isNotEmpty() }
-        if (status == 200 && !filePath.isNullOrEmpty()) {
-            handleAvatarResult(filePath, message)
-        } else {
-            Log.w(TAG, "Avatar response ignored - status=$status, filePath=$filePath")
+        // Match the lenient success detection used by the JS bridge.
+        val isSuccess = status == 200 ||
+            json.optBoolean("success", false) ||
+            message.contains("success", ignoreCase = true) ||
+            message.contains("uploaded", ignoreCase = true)
+        when {
+            !filePath.isNullOrEmpty() && isSuccess -> handleAvatarResult(filePath, message)
+            isSuccess -> runOnUiThread { finish() }
+            else -> Log.w(TAG, "Avatar response ignored - status=$status filePath=$filePath message=$message")
         }
     }
 
@@ -365,10 +432,17 @@ class AvatarMakerActivity : ComponentActivity() {
                     val status = obj.optInt("status", 0)
                     val filePath = obj.optString("filePath").takeIf { it.isNotEmpty() }
                     val message = obj.optString("message")
-                    if (status == 200 && !filePath.isNullOrEmpty()) {
-                        onResult(filePath, message)
-                    } else {
-                        Log.w(TAG, "Avatar bridge JSON ignored - status=$status filePath=$filePath")
+                    // Treat any truthy success signal as "upload done → close" — covers
+                    // {status:200}, {success:true}, {status:200,filePath:…}, and pages that
+                    // upload server-side and just notify with a success message.
+                    val isSuccess = status == 200 ||
+                        obj.optBoolean("success", false) ||
+                        message.contains("success", ignoreCase = true) ||
+                        message.contains("uploaded", ignoreCase = true)
+                    when {
+                        !filePath.isNullOrEmpty() && isSuccess -> onResult(filePath, message)
+                        isSuccess -> onClose()
+                        else -> Log.w(TAG, "Avatar bridge JSON ignored - status=$status success=${obj.optBoolean("success", false)} filePath=$filePath message=$message")
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse bridge JSON: ${e.message}")
@@ -391,6 +465,21 @@ class AvatarMakerActivity : ComponentActivity() {
         @JavascriptInterface
         fun close() {
             Log.d(TAG, "AndroidBridge.close called")
+            onClose()
+        }
+
+        /** Explicit "I just uploaded the avatar, close me" signal — pages can call this
+         *  after their own server upload completes. ProfileScreen's launcher refreshes
+         *  the picture from cache when no extras are attached. */
+        @JavascriptInterface
+        fun onUploadComplete() {
+            Log.d(TAG, "AndroidBridge.onUploadComplete called")
+            onClose()
+        }
+
+        @JavascriptInterface
+        fun uploadSuccess() {
+            Log.d(TAG, "AndroidBridge.uploadSuccess called")
             onClose()
         }
 

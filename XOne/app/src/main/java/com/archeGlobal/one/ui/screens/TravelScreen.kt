@@ -1,6 +1,9 @@
 package com.archeGlobal.one.ui.screens
 
+import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,10 +22,13 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -44,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -54,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import coil.compose.AsyncImage
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -353,92 +361,11 @@ fun TravelScreen(controller: TravelController) {
                             }
                             */
 
-                            // Search Bar for On Behalf
-                            if (!controller.isBookingForSelf) {
-                                var expanded by remember { mutableStateOf(false) }
-                                val focusRequester = remember { FocusRequester() }
-                                var isFocused by remember { mutableStateOf(false) }
-
-                                // Debounce search: wait 300ms after typing stops before searching
-                                LaunchedEffect(controller.attendeeSearchQuery) {
-                                    if (controller.attendeeSearchQuery.length >= 2) {
-                                        kotlinx.coroutines.delay(300)
-                                        controller.searchEmployees(controller.attendeeSearchQuery)
-                                    }
-                                }
-
-                                // Update expanded state based on results
-                                LaunchedEffect(controller.employeeSearchResults) {
-                                    if (controller.employeeSearchResults.isNotEmpty() && isFocused) {
-                                        expanded = true
-                                    }
-                                }
-
-                                androidx.compose.material3.ExposedDropdownMenuBox(
-                                    expanded = expanded,
-                                    onExpandedChange = {
-                                        if (isFocused) {
-                                            expanded = true
-                                        } else {
-                                            expanded = it
-                                        }
-                                    },
-                                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-                                ) {
-                                    OutlinedTextField(
-                                        value = controller.attendeeSearchQuery,
-                                        onValueChange = {
-                                            controller.updateAttendeeSearchQuery(it)
-                                        },
-                                        placeholder = { Text("Search Employee by Name", fontFamily = GraphikFontFamily) },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .menuAnchor()
-                                            .focusRequester(focusRequester)
-                                            .onFocusChanged { focusState ->
-                                                isFocused = focusState.isFocused
-                                                if (focusState.isFocused && controller.employeeSearchResults.isNotEmpty()) {
-                                                    expanded = true
-                                                }
-                                            },
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            unfocusedBorderColor = Color.LightGray,
-                                            focusedBorderColor = PrimaryRed,
-                                            unfocusedContainerColor = Color.White,
-                                            focusedContainerColor = Color.White
-                                        ),
-                                        shape = RoundedCornerShape(8.dp),
-                                        trailingIcon = {
-                                             androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                                        }
-                                    )
-
-                                    ExposedDropdownMenu(
-                                        expanded = expanded && controller.employeeSearchResults.isNotEmpty(),
-                                        onDismissRequest = { expanded = false },
-                                        modifier = Modifier.background(Color.White)
-                                    ) {
-                                        controller.employeeSearchResults.forEach { employee ->
-                                            DropdownMenuItem(
-                                                text = {
-                                                    Column {
-                                                        Text(employee.name, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Bold)
-                                                        Text(
-                                                            text = if (employee.employeeId.isNotEmpty()) "${employee.employeeId} - ${employee.email}" else employee.email,
-                                                            fontFamily = GraphikFontFamily,
-                                                            fontSize = 12.sp
-                                                        )
-                                                    }
-                                                },
-                                                onClick = {
-                                                    controller.selectOnBehalfEmployee(employee)
-                                                    expanded = false
-                                                    isFocused = false
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
+                            // Admin-only "Create Request On Behalf Of" search section.
+                            // When an employee is picked, Employee Details below renders that employee
+                            // and Submit routes through /travel/v2/admin/request (multipart).
+                            if (controller.isAdmin) {
+                                AdminOnBehalfSearchSection(controller = controller)
                             }
 
                             if (controller.isBookingForSelf || controller.selectedOnBehalfEmployee != null) {
@@ -453,16 +380,28 @@ fun TravelScreen(controller: TravelController) {
                             // Add space between Employee Details header and employee rows
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Employee Details with proper alignment
+                            // Employee Details with proper alignment.
+                            // For on-behalf admin bookings, only name/id/email come from the search API —
+                            // mobile/grade/dob/aadhar are blank and we skip those rows.
                             EmployeeDetailRow(label = "Name:", value = controller.employeeName)
-                            EmployeeDetailRow(label = "Employee ID:", value = controller.employeeId)
-                            EmployeeDetailRow(label = "Mobile No:", value = controller.mobileNumber)
-                            EmployeeDetailRow(
-                                label = "Employee Grade:",
-                                value = controller.employeeGrade,
-                            )
-                            EmployeeDetailRow(label = "Date of Birth:", value = controller.dateOfBirth)
-                            EmployeeDetailRow(label = "Aadhar Number:", value = controller.aadharNumber)
+                            if (controller.employeeId.isNotBlank()) {
+                                EmployeeDetailRow(label = "Employee ID:", value = controller.employeeId)
+                            }
+                            if (controller.mobileNumber.isNotBlank()) {
+                                EmployeeDetailRow(label = "Mobile No:", value = controller.mobileNumber)
+                            }
+                            if (controller.employeeGrade.isNotBlank()) {
+                                EmployeeDetailRow(
+                                    label = "Employee Grade:",
+                                    value = controller.employeeGrade,
+                                )
+                            }
+                            if (controller.dateOfBirth.isNotBlank()) {
+                                EmployeeDetailRow(label = "Date of Birth:", value = controller.dateOfBirth)
+                            }
+                            if (controller.aadharNumber.isNotBlank()) {
+                                EmployeeDetailRow(label = "Aadhar Number:", value = controller.aadharNumber)
+                            }
 
                             // Add space below Employee Details section
                             Spacer(modifier = Modifier.height(24.dp))
@@ -478,6 +417,20 @@ fun TravelScreen(controller: TravelController) {
 
                             // Add space between divider and Travel Details
                             Spacer(modifier = Modifier.height(16.dp))
+
+                            // Attachment Details — admin-only, when booking on behalf of someone
+                            if (controller.isAdmin && controller.selectedOnBehalfEmployee != null) {
+                                AttachmentDetailsSection(controller = controller)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Divider(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 20.dp),
+                                    color = Color.LightGray,
+                                    thickness = 1.dp,
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
 
                             // Travel Details Section
                             Text(
@@ -2971,4 +2924,289 @@ fun CabBookingSection(controller: TravelController) {
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         }
+}
+
+@Composable
+private fun AdminOnBehalfSearchSection(controller: TravelController) {
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+        Text(
+            text = "Create Request On Behalf Of",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = GraphikFontFamily,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+
+        OutlinedTextField(
+            value = controller.onBehalfSearchQuery,
+            onValueChange = {
+                controller.updateOnBehalfSearchQuery(it)
+                controller.searchOnBehalfEmployees(it)
+            },
+            placeholder = {
+                Text(
+                    "Search Employee by Name or ID",
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray,
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = Color.Gray,
+                )
+            },
+            trailingIcon = {
+                if (controller.onBehalfSearchQuery.isNotEmpty()) {
+                    IconButton(onClick = {
+                        controller.updateOnBehalfSearchQuery("")
+                    }) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Filled.Close,
+                            contentDescription = "Clear search",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = Color.LightGray,
+                focusedBorderColor = PrimaryRed,
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White,
+                unfocusedTextColor = Color.Black,
+                focusedTextColor = Color.Black,
+                cursorColor = Color.Black,
+            ),
+            shape = RoundedCornerShape(12.dp),
+            singleLine = true,
+        )
+
+        if (controller.isOnBehalfSearching) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = PrimaryRed,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Searching...",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                )
+            }
+        }
+
+        // Inline results card — same approach as the cab booking attendee dropdown.
+        if (controller.onBehalfSearchResults.isNotEmpty() && controller.selectedOnBehalfEmployee == null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                elevation = 4.dp,
+                backgroundColor = Color.White,
+            ) {
+                Column(modifier = Modifier.padding(4.dp)) {
+                    controller.onBehalfSearchResults.take(8).forEach { employee ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { controller.pickOnBehalfEmployee(employee) }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = employee.username,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 14.sp,
+                                    color = Color.Black,
+                                )
+                                if (!employee.emailId.isNullOrBlank()) {
+                                    Text(
+                                        text = employee.emailId,
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 12.sp,
+                                        color = Color.Gray,
+                                    )
+                                }
+                            }
+                            if (employee.employeeCode.isNotBlank()) {
+                                Text(
+                                    text = employee.employeeCode,
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        val selected = controller.selectedOnBehalfEmployee
+        if (selected != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Selected: ${selected.username}" +
+                        if (selected.employeeCode.isNotBlank()) " (${selected.employeeCode})" else "",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    color = Color.DarkGray,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = "Clear",
+                    color = PrimaryRed,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                    modifier = Modifier.clickable { controller.clearOnBehalfEmployee() },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AttachmentDetailsSection(controller: TravelController) {
+    val context = LocalContext.current
+    val attachmentPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents(),
+    ) { uris: List<Uri> ->
+        uris.forEach { controller.addOnBehalfAttachment(it) }
+    }
+    val attachments = controller.onBehalfAttachments
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "Attachment Details",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = GraphikFontFamily,
+            modifier = Modifier.padding(bottom = 12.dp),
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
+                .clickable {
+                    if (attachments.size < 3) {
+                        attachmentPicker.launch("*/*")
+                    }
+                }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = if (attachments.isEmpty()) "Add Attachment" else "Change Attachment",
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray,
+                    fontSize = 16.sp,
+                )
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Filled.AttachFile,
+                    contentDescription = "Attach",
+                    tint = PrimaryRed,
+                )
+            }
+        }
+
+        if (attachments.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            attachments.forEachIndexed { index, uri ->
+                AttachmentPreview(
+                    uri = uri,
+                    onRemove = { controller.removeOnBehalfAttachment(index) },
+                )
+                if (index < attachments.lastIndex) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AttachmentPreview(uri: Uri, onRemove: () -> Unit) {
+    val context = LocalContext.current
+    val mime = remember(uri) { context.contentResolver.getType(uri) ?: "" }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.LightGray.copy(alpha = 0.3f)),
+    ) {
+        if (mime.startsWith("image/")) {
+            AsyncImage(
+                model = uri,
+                contentDescription = "Attachment preview",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f),
+            )
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Filled.AttachFile,
+                    contentDescription = null,
+                    tint = Color.DarkGray,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = uri.lastPathSegment ?: "Attached file",
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(12.dp)
+                .size(32.dp)
+                .clip(RoundedCornerShape(50))
+                .background(PrimaryRed)
+                .clickable { onRemove() },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = androidx.compose.material.icons.Icons.Filled.Close,
+                contentDescription = "Remove",
+                tint = Color.White,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
 }

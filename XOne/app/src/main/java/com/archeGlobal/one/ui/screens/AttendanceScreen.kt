@@ -874,9 +874,20 @@ private fun AttendanceSummarySection(controller: AttendanceController) {
                     if (url.isNullOrBlank()) {
                         Toast.makeText(context, "Holiday list not available", Toast.LENGTH_SHORT).show()
                     } else {
-                        val intent = android.content.Intent(context, com.archeGlobal.one.WebViewActivity::class.java)
-                        intent.putExtra("fileUrl", url)
-                        intent.putExtra("title", "Holiday List")
+                        // Strip query string before extension check — download URLs carry ?fileName=…&v=…
+                        val cleanPath = url.substringBefore('?')
+                        val isPdf = cleanPath.endsWith(".pdf", ignoreCase = true)
+                        val intent = if (isPdf) {
+                            android.content.Intent(context, com.archeGlobal.one.PdfViewerActivity::class.java).apply {
+                                putExtra(com.archeGlobal.one.PdfViewerActivity.EXTRA_FILE_URL, url)
+                                putExtra(com.archeGlobal.one.PdfViewerActivity.EXTRA_TITLE, "Holiday List")
+                            }
+                        } else {
+                            android.content.Intent(context, com.archeGlobal.one.WebViewActivity::class.java).apply {
+                                putExtra("fileUrl", url)
+                                putExtra("title", "Holiday List")
+                            }
+                        }
                         context.startActivity(intent)
                     }
                 },
