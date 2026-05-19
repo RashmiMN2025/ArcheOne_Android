@@ -206,11 +206,15 @@ class UserDataManager private constructor(
             preferencesManager.setString("last_user_name", user.name ?: "")
         }
 
-        // Office IP for punch-in gating (blank/whitespace = no restriction)
-        val officeIpFromApi = response.officeIP
-        val officeIpStored = officeIpFromApi?.trim() ?: ""
-        Log.d(TAG, "OfficeIP | raw='$officeIpFromApi' stored='$officeIpStored' (length=${officeIpStored.length})")
-        preferencesManager.setString("office_ip", officeIpStored)
+        // Office IPs for punch-in gating (empty list = no restriction).
+        // Stored as comma-separated string in SharedPrefs; downstream readers split on ','.
+        val officeIpsFromApi = response.officeIP.orEmpty()
+        val officeIpsStored = officeIpsFromApi
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        val officeIpsJoined = officeIpsStored.joinToString(",")
+        Log.d(TAG, "OfficeIP | raw=$officeIpsFromApi stored='$officeIpsJoined' (count=${officeIpsStored.size})")
+        preferencesManager.setString("office_ip", officeIpsJoined)
 
         Log.d(TAG, "UserDataManager: Refreshing in-memory cache after data save")
 

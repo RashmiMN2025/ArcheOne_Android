@@ -687,7 +687,7 @@ data class VerifyOtpResponse(
     val hasReportees: Boolean = false,
     val attendance: LoginAttendance? = null,
     @SerializedName(value = "officeIP", alternate = ["officeIp", "office_ip", "office_IP", "OFFICEIP"])
-    val officeIP: String? = null,
+    val officeIP: List<String>? = null,
 )
 
 data class LoginAttendance(

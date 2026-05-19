@@ -33,20 +33,21 @@ object NetworkUtils {
 
     /**
      * Tries every service in [PUBLIC_IP_SERVICES] and returns true if ANY of them
-     * reports a public IP equal to [officeIp]. This is the gate used for punch-in /
-     * punch-out: the device is considered "on the office network" if any provider
-     * confirms a matching outgoing IP.
+     * reports a public IP equal to any entry in [officeIps]. This is the gate used
+     * for punch-in / punch-out: the device is considered "on the office network" if
+     * any provider confirms an outgoing IP that matches one of the configured
+     * office IPs.
      *
      * Returns:
-     *  - true  → matched at least one service
-     *  - false → reached at least one service but no match
+     *  - true  → matched at least one service against at least one office IP
+     *  - false → reached at least one service but nothing matched
      *  - null  → could not reach any service (network down). Caller should treat
      *            this as a hard failure and prompt the user, not silently allow.
      */
-    fun matchesOfficeIp(officeIp: String): Boolean? {
-        if (officeIp.isBlank()) return false
+    fun matchesOfficeIp(officeIps: List<String>): Boolean? {
+        val targets = officeIps.map { it.trim() }.filter { it.isNotEmpty() }
+        if (targets.isEmpty()) return false
 
-        val target = officeIp.trim()
         var anyServiceReached = false
 
         for (url in PUBLIC_IP_SERVICES) {
@@ -56,14 +57,14 @@ object NetworkUtils {
                 continue
             }
             anyServiceReached = true
-            Log.d(TAG, "matchesOfficeIp: $url → '$ip' (target='$target')")
-            if (ip.equals(target, ignoreCase = true)) {
-                Log.d(TAG, "matchesOfficeIp: MATCH via $url")
+            Log.d(TAG, "matchesOfficeIp: $url → '$ip' (targets=$targets)")
+            if (targets.any { it.equals(ip, ignoreCase = true) }) {
+                Log.d(TAG, "matchesOfficeIp: MATCH via $url (ip='$ip')")
                 return true
             }
         }
         return if (anyServiceReached) {
-            Log.d(TAG, "matchesOfficeIp: no service matched office IP")
+            Log.d(TAG, "matchesOfficeIp: no service matched office IPs")
             false
         } else {
             Log.w(TAG, "matchesOfficeIp: no service was reachable")

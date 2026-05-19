@@ -116,11 +116,14 @@ class HomeController(
         }
 
         val rawOfficeIp = PreferencesManager(context).getString("office_ip", "")
-        val officeIp = rawOfficeIp?.trim().orEmpty()
-        Log.d("PunchGate", "Gate check for $action | raw='$rawOfficeIp' trimmed='$officeIp' (length=${officeIp.length})")
+        val officeIps = rawOfficeIp.orEmpty()
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        Log.d("PunchGate", "Gate check for $action | raw='$rawOfficeIp' parsed=$officeIps (count=${officeIps.size})")
 
-        if (officeIp.isEmpty()) {
-            Log.d("PunchGate", "officeIp is blank → blocking $action (no office network configured)")
+        if (officeIps.isEmpty()) {
+            Log.d("PunchGate", "officeIps is empty → blocking $action (no office network configured)")
             withContext(Dispatchers.Main) {
                 android.widget.Toast.makeText(
                     context,
@@ -132,9 +135,9 @@ class HomeController(
         }
 
         // Try every public-IP service; if ANY of them reports an IP equal to
-        // officeIp, treat the device as on the office network.
-        val match = com.archeGlobal.one.utils.NetworkUtils.matchesOfficeIp(officeIp)
-        Log.d("PunchGate", "matchesOfficeIp result=$match (office='$officeIp')")
+        // any entry in officeIps, treat the device as on the office network.
+        val match = com.archeGlobal.one.utils.NetworkUtils.matchesOfficeIp(officeIps)
+        Log.d("PunchGate", "matchesOfficeIp result=$match (offices=$officeIps)")
 
         return when (match) {
             true -> {
@@ -142,7 +145,7 @@ class HomeController(
                 true
             }
             false -> {
-                Log.d("PunchGate", "IP MISMATCH for $action — office='$officeIp'")
+                Log.d("PunchGate", "IP MISMATCH for $action — offices=$officeIps")
                 withContext(Dispatchers.Main) {
                     android.widget.Toast.makeText(
                         context,
