@@ -5,6 +5,7 @@ import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.archeGlobal.one.ImageViewerActivity
+import com.archeGlobal.one.PdfViewerActivity
 import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.network.DocumentListResponse
 
@@ -136,7 +137,7 @@ class MyDocumentsController(
             }
         }
 
-        val isPdf = formattedUrl.endsWith(".pdf", ignoreCase = true)
+        val isPdf = formattedUrl.substringBefore('?').endsWith(".pdf", ignoreCase = true)
         Log.d("MyDocumentsController", "Validated URL: '$formattedUrl', isPdf: $isPdf")
         return formattedUrl to isPdf
     }
@@ -185,13 +186,14 @@ class MyDocumentsController(
             return
         }
 
+        val cleanPath = formattedUrl.substringBefore('?')
         val isImage =
             !isPdf &&
                 (
-                    formattedUrl.endsWith(".jpg", ignoreCase = true) ||
-                        formattedUrl.endsWith(".jpeg", ignoreCase = true) ||
-                        formattedUrl.endsWith(".png", ignoreCase = true) ||
-                        formattedUrl.endsWith(".webp", ignoreCase = true)
+                    cleanPath.endsWith(".jpg", ignoreCase = true) ||
+                        cleanPath.endsWith(".jpeg", ignoreCase = true) ||
+                        cleanPath.endsWith(".png", ignoreCase = true) ||
+                        cleanPath.endsWith(".webp", ignoreCase = true)
                 )
 
         Log.d(
@@ -200,18 +202,28 @@ class MyDocumentsController(
         )
 
         val intent =
-            if (isImage) {
-                Log.d("MyDocumentsController", "onViewClick: Opening '$documentName' in ImageViewerActivity.")
-                Intent(context, ImageViewerActivity::class.java).apply {
-                    putExtra("fileUrl", formattedUrl)
-                    putExtra("title", documentName)
+            when {
+                isImage -> {
+                    Log.d("MyDocumentsController", "onViewClick: Opening '$documentName' in ImageViewerActivity.")
+                    Intent(context, ImageViewerActivity::class.java).apply {
+                        putExtra("fileUrl", formattedUrl)
+                        putExtra("title", documentName)
+                    }
                 }
-            } else {
-                Log.d("MyDocumentsController", "onViewClick: Opening '$documentName' in WebViewActivity. isPdf: $isPdf")
-                Intent(context, WebViewActivity::class.java).apply {
-                    putExtra("fileUrl", formattedUrl)
-                    putExtra("title", documentName)
-                    putExtra("isPdf", isPdf)
+                isPdf -> {
+                    Log.d("MyDocumentsController", "onViewClick: Opening '$documentName' in PdfViewerActivity.")
+                    Intent(context, PdfViewerActivity::class.java).apply {
+                        putExtra(PdfViewerActivity.EXTRA_FILE_URL, formattedUrl)
+                        putExtra(PdfViewerActivity.EXTRA_TITLE, documentName)
+                    }
+                }
+                else -> {
+                    Log.d("MyDocumentsController", "onViewClick: Opening '$documentName' in WebViewActivity (fallback).")
+                    Intent(context, WebViewActivity::class.java).apply {
+                        putExtra("fileUrl", formattedUrl)
+                        putExtra("title", documentName)
+                        putExtra("isPdf", isPdf)
+                    }
                 }
             }
         context.startActivity(intent)

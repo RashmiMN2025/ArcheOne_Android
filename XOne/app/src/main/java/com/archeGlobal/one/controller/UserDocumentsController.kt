@@ -9,7 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.archeGlobal.one.WebViewActivity
+import com.archeGlobal.one.PdfViewerActivity
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.DocumentListResponse
@@ -281,11 +281,15 @@ class UserDocumentsController(
                                     checkDocumentUrl(filePath) { isPdf, htmlContent ->
                                         if (isPdf) {
                                             val intent =
-                                                Intent(context, WebViewActivity::class.java).apply {
-                                                    putExtra("fileUrl", filePath)
-                                                    putExtra("title", matchingDoc.document_name ?: document.document_name)
-                                                    putExtra("isPdf", true)
-                                                    putExtra("isPersonal", true)
+                                                Intent(context, PdfViewerActivity::class.java).apply {
+                                                    putExtra(
+                                                        PdfViewerActivity.EXTRA_FILE_URL,
+                                                        filePath,
+                                                    )
+                                                    putExtra(
+                                                        PdfViewerActivity.EXTRA_TITLE,
+                                                        matchingDoc.document_name ?: document.document_name,
+                                                    )
                                                 }
                                             context.startActivity(intent)
                                         } else {

@@ -40,6 +40,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.ui.theme.XOneTheme
 import com.github.barteksc.pdfviewer.PDFView
 import kotlinx.coroutines.Dispatchers
@@ -117,53 +120,63 @@ class PdfViewerActivity : ComponentActivity() {
                         .fillMaxSize()
                         .systemBarsPadding()
                         .clipToBounds()
-                        .background(Color(0xFFF5F5F5)),
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    WelcomeBackgroundTop,
+                                    WelcomeBackgroundMiddle,
+                                    WelcomeBackgroundBottom,
+                                ),
+                            ),
+                        ),
                 ) {
-                    // PDF takes the whole screen so content can scroll under the header.
-                    when {
-                        error != null -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = error ?: "",
-                                    color = Color.Black,
-                                    fontFamily = GraphikFontFamily,
-                                    fontSize = 14.sp,
-                                    modifier = Modifier.padding(24.dp),
+                    // PDF content area starts below the fixed header (TopAppBar is 64dp).
+                    // clipToBounds keeps PDFView's scroll over-draw from bleeding behind
+                    // the transparent header.
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 64.dp)
+                            .clipToBounds(),
+                    ) {
+                        when {
+                            error != null -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = error ?: "",
+                                        color = Color.Black,
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 14.sp,
+                                        modifier = Modifier.padding(24.dp),
+                                    )
+                                }
+                            }
+                            localFile != null -> {
+                                PdfRenderer(
+                                    file = localFile!!,
+                                    onError = { msg -> error = msg },
                                 )
                             }
-                        }
-                        localFile != null -> {
-                            PdfRenderer(
-                                file = localFile!!,
-                                onError = { msg -> error = msg },
-                            )
-                        }
-                        else -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                UniversalLoader(isLoading = true)
+                            else -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    UniversalLoader(isLoading = true)
+                                }
                             }
                         }
                     }
 
-                    // Fixed header overlay - PDF content scrolls under this.
+                    // Fixed header overlay drawn on top of the PDF area. Transparent so
+                    // the parent Box's 3-stop gradient flows continuously through it.
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .align(Alignment.TopCenter)
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color(0xFFE0DCD1),
-                                        Color(0xFFC8C8CA),
-                                    ),
-                                ),
-                            ),
+                            .align(Alignment.TopCenter),
                     ) {
                         TopAppBar(
                             title = {
@@ -244,7 +257,7 @@ private fun PdfRenderer(
         modifier = Modifier.fillMaxSize(),
         factory = { ctx ->
             PDFView(ctx, null).apply {
-                setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
+                setBackgroundColor(android.graphics.Color.TRANSPARENT)
                 fromFile(file)
                     .enableSwipe(true)
                     .swipeHorizontal(false)

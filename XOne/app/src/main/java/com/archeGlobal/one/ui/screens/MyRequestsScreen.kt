@@ -260,7 +260,7 @@ private fun MyRequestCard(
             if (request.category?.equals("deletion request", ignoreCase = true) == true) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "* This is a deletion request",
+                    text = "* This is a cancellation request",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 12.sp,
