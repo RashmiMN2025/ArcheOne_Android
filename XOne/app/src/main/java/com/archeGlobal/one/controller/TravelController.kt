@@ -267,9 +267,15 @@ class TravelController(
     var destinations by mutableStateOf(listOf<Destination>())
         private set
 
-    // Mode of transport options based on employee grade
+    // Mode of transport options based on employee grade.
+    // Exception: when an admin raises a request on behalf of another employee,
+    // the Flight option is always available regardless of that employee's grade.
     val transportOptions: List<String>
         get() {
+            if (isAdmin && selectedOnBehalfEmployee != null) {
+                return listOf("Flight", "Bus", "Train", "Cab")
+            }
+
             // Extract grade as a number if possible
             val gradeNumber = employeeGrade.replace("Grade ", "").toIntOrNull() ?: 0
 

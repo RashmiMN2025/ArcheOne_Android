@@ -70,6 +70,16 @@ class AuthInterceptor(
             )
         }
 
+        // 403 Forbidden — backend signals the client is on an outdated version.
+        // Skip /login (LoginController already handles 403 itself and shows the
+        // dialog via the navigator) and OTP endpoints (auth flow handles its own
+        // errors). Auth is still valid here, so we do NOT clear the session.
+        val isLoginEndpoint = url.contains("/login", ignoreCase = true)
+        if (response.code == 403 && !isOtpEndpoint && !isLoginEndpoint) {
+            Log.w("AuthInterceptor", "Received 403 Forbidden - App update required for URL: $url")
+            handleForceUpdate(context, preferencesManager)
+        }
+
         return response
     }
 
@@ -108,6 +118,30 @@ class AuthInterceptor(
         context.startActivity(intent)
 
         Log.i("AuthInterceptor", "Redirected to login due to token expiration, preserving MPIN and biometric credentials")
+    }
+
+    private fun handleForceUpdate(
+        context: Context,
+        preferencesManager: PreferencesManager,
+    ) {
+        // Dedup: parallel API calls all returning 403 would otherwise stack
+        // LoginActivity intents. The pref flag is set when we first start the
+        // intent and cleared when the user dismisses the dialog or logs out.
+        if (preferencesManager.getBoolean("showUpdateDialog", false)) {
+            Log.d("AuthInterceptor", "Update dialog already pending — skipping re-launch")
+            return
+        }
+
+        preferencesManager.setBoolean("showUpdateDialog", true)
+
+        val intent =
+            Intent(context, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("showUpdateDialog", true)
+            }
+        context.startActivity(intent)
+
+        Log.i("AuthInterceptor", "Redirected to LoginActivity for force update")
     }
 }
 
