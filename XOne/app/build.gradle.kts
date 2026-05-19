@@ -14,8 +14,8 @@ android {
         applicationId = "com.archeGlobal.one"
         minSdk = 26
         targetSdk = 35
-        versionCode = 25
-        versionName = "1.9"
+        versionCode = 27
+        versionName = "1.10"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters += listOf("armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64")
@@ -48,6 +48,15 @@ android {
     lint {
         abortOnError = true
         warningsAsErrors = false
+    }
+
+    // 16 KB page-size alignment: keep native libs uncompressed in the APK so the
+    // installer can mmap them directly with the system page size. Required for
+    // Play Store releases since Nov 2025 on Android 15+ 64-bit devices.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
     }
 }
 
@@ -102,8 +111,8 @@ dependencies {
 
     // WebView (used for non-PDF content in WebViewActivity, and the avatar maker)
     implementation(libs.androidx.webkit)
-    // Native PDF rendering for Communique (replaces PDF.js, faster cold load)
-    implementation(libs.android.pdf.viewer)
+    // PDF rendering uses Android's built-in android.graphics.pdf.PdfRenderer — no
+    // third-party native libs, so no extra .so files to keep 16 KB aligned.
     implementation(libs.generativeai)
 
     // biometric
