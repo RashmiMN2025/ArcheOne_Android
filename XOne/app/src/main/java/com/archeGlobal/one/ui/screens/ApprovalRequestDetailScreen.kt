@@ -92,7 +92,7 @@ fun ApprovalRequestDetailScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = if (isDeletionRequest) "Deletion Request" else "Request Details",
+                            text = if (isDeletionRequest) "Request Details" else "Request Details",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp,
@@ -196,24 +196,14 @@ fun ApprovalRequestDetailScreen(
                         }
 
                         if (isDeletionRequest) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(
-                                        Color(0xFFDD3825).copy(alpha = 0.1f),
-                                        RoundedCornerShape(8.dp),
-                                    )
-                                    .padding(12.dp),
-                            ) {
-                                Text(
-                                    text = "This is a request to DELETE a previously approved item. Approving will permanently remove it; rejecting keeps the original approval intact.",
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 13.sp,
-                                    color = Color(0xFFDD3825),
-                                )
-                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "* This is a cancellation request",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp,
+                                color = Color(0xFFDD3825),
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -351,7 +341,7 @@ private fun InfoRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
         if (iconRes != null) {
             Icon(
@@ -385,13 +375,15 @@ private fun InfoRow(
             fontSize = 15.sp,
             color = Color(0xFF888888),
         )
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = value,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 15.sp,
             color = Color.Black,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
         )
     }
 }

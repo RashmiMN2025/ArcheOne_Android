@@ -215,23 +215,13 @@ fun TravelScreen(controller: TravelController) {
                             // Add space above buttons
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Manager Approval and Admin Dashboard buttons with loading state
-                            if (controller.isLoadingApprovalCount) {
-                                // Show loader while fetching approval count
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(28.dp),
-                                        strokeWidth = 3.dp,
-                                        color = Color(0xFFD32F2F)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(20.dp))
-                            } else if (controller.totalApprovalCount > 0 || controller.isAdmin) {
+                            // When both Manager Approval and Admin Dashboard are visible, the
+                            // button row is rendered below the "Create Request On Behalf Of"
+                            // search bar instead of above it.
+                            val showButtonsBelowSearch =
+                                controller.totalApprovalCount > 0 && controller.isAdmin
+
+                            val approvalActionButtons: @Composable () -> Unit = {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -246,7 +236,7 @@ fun TravelScreen(controller: TravelController) {
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .height(48.dp),
-                                                shape = RoundedCornerShape(12.dp),
+                                                shape = RoundedCornerShape(16.dp),
                                                 colors = ButtonDefaults.buttonColors(
                                                     containerColor = PrimaryRed,
                                                     contentColor = Color.White
@@ -298,7 +288,7 @@ fun TravelScreen(controller: TravelController) {
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .height(48.dp),
-                                            shape = RoundedCornerShape(12.dp),
+                                            shape = RoundedCornerShape(16.dp),
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = PrimaryRed,
                                                 contentColor = Color.White
@@ -316,6 +306,28 @@ fun TravelScreen(controller: TravelController) {
                                 }
 
                                 Spacer(modifier = Modifier.height(20.dp))
+                            }
+
+                            // Manager Approval and Admin Dashboard buttons with loading state
+                            if (controller.isLoadingApprovalCount) {
+                                // Show loader while fetching approval count
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(28.dp),
+                                        strokeWidth = 3.dp,
+                                        color = Color(0xFFD32F2F)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(20.dp))
+                            } else if (!showButtonsBelowSearch &&
+                                (controller.totalApprovalCount > 0 || controller.isAdmin)
+                            ) {
+                                approvalActionButtons()
                             }
 
                             // TODO: Booking Mode Selection (Self / On Behalf) — hidden until feature is implemented
@@ -366,6 +378,9 @@ fun TravelScreen(controller: TravelController) {
                             // and Submit routes through /travel/v2/admin/request (multipart).
                             if (controller.isAdmin) {
                                 AdminOnBehalfSearchSection(controller = controller)
+                                if (showButtonsBelowSearch) {
+                                    approvalActionButtons()
+                                }
                             }
 
                             if (controller.isBookingForSelf || controller.selectedOnBehalfEmployee != null) {

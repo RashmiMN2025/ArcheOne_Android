@@ -395,7 +395,7 @@ private fun DetailInfoRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
         when {
             iconRes != null -> Icon(
@@ -427,13 +427,15 @@ private fun DetailInfoRow(
             fontSize = 15.sp,
             color = Color(0xFF888888),
         )
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = value,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 15.sp,
             color = Color.Black,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
         )
     }
 }
