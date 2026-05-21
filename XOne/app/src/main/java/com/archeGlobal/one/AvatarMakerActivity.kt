@@ -236,19 +236,23 @@ class AvatarMakerActivity : ComponentActivity() {
                                 }
 
                                 webViewClient = object : WebViewClient() {
+                                    private var pageStartMs = 0L
+
                                     override fun onPageStarted(
                                         view: WebView?,
                                         url: String?,
                                         favicon: android.graphics.Bitmap?,
                                     ) {
                                         super.onPageStarted(view, url, favicon)
-                                        Log.d(TAG, "onPageStarted: $url")
+                                        pageStartMs = System.currentTimeMillis()
+                                        Log.d(TAG, "[AvatarLoad] onPageStarted: $url")
                                         isLoading = true
                                     }
 
                                     override fun onPageFinished(view: WebView?, url: String?) {
                                         super.onPageFinished(view, url)
-                                        Log.d(TAG, "onPageFinished: $url")
+                                        val elapsed = if (pageStartMs > 0) System.currentTimeMillis() - pageStartMs else -1
+                                        Log.d(TAG, "[AvatarLoad] onPageFinished: $url (took ${elapsed}ms)")
                                         isLoading = false
                                         // Inject a network-hook that closes the activity when the
                                         // page completes an upload-style POST/PUT. The avatar page
@@ -264,11 +268,24 @@ class AvatarMakerActivity : ComponentActivity() {
                                         error: WebResourceError?,
                                     ) {
                                         super.onReceivedError(view, request, error)
+                                        val isMainFrame = request?.isForMainFrame == true
                                         Log.e(
                                             TAG,
-                                            "WebView error: ${error?.description} for ${request?.url}",
+                                            "[AvatarLoad] onReceivedError mainFrame=$isMainFrame code=${error?.errorCode} desc='${error?.description}' url=${request?.url}",
                                         )
-                                        isLoading = false
+                                        if (isMainFrame) isLoading = false
+                                    }
+
+                                    override fun onReceivedHttpError(
+                                        view: WebView?,
+                                        request: WebResourceRequest?,
+                                        errorResponse: android.webkit.WebResourceResponse?,
+                                    ) {
+                                        super.onReceivedHttpError(view, request, errorResponse)
+                                        Log.e(
+                                            TAG,
+                                            "[AvatarLoad] onReceivedHttpError status=${errorResponse?.statusCode} reason='${errorResponse?.reasonPhrase}' url=${request?.url}",
+                                        )
                                     }
 
                                     override fun onReceivedSslError(
@@ -276,9 +293,43 @@ class AvatarMakerActivity : ComponentActivity() {
                                         handler: SslErrorHandler?,
                                         error: SslError?,
                                     ) {
-                                        Log.w(TAG, "SSL error: ${error?.primaryError} on ${error?.url}")
-                                        // Avatar maker is hosted on archelabs.com - allow self-signed/expired certs
-                                        handler?.proceed()
+                                        // ---- Detailed SSL diagnostics for the backend chain-fix verification ----
+                                        // If this block fires, the server's TLS chain failed validation.
+                                        // The most common cause for archeforever.archelabs.com is a missing
+                                        // intermediate certificate (Sectigo CA DV R36). After the backend
+                                        // ships the full-chain fix, this method should stop being called.
+                                        val errorName = when (error?.primaryError) {
+                                            SslError.SSL_NOTYETVALID -> "SSL_NOTYETVALID (cert not yet valid)"
+                                            SslError.SSL_EXPIRED -> "SSL_EXPIRED (cert expired)"
+                                            SslError.SSL_IDMISMATCH -> "SSL_IDMISMATCH (hostname mismatch)"
+                                            SslError.SSL_UNTRUSTED -> "SSL_UNTRUSTED (chain not trusted — likely missing intermediate)"
+                                            SslError.SSL_DATE_INVALID -> "SSL_DATE_INVALID (cert date invalid)"
+                                            SslError.SSL_INVALID -> "SSL_INVALID (generic)"
+                                            else -> "UNKNOWN(${error?.primaryError})"
+                                        }
+                                        Log.e(TAG, "[AvatarSSL] ============ SSL ERROR ============")
+                                        Log.e(TAG, "[AvatarSSL] URL:        ${error?.url}")
+                                        Log.e(TAG, "[AvatarSSL] Error:      $errorName")
+                                        val cert = error?.certificate
+                                        if (cert != null) {
+                                            val issued = cert.issuedTo
+                                            val issuer = cert.issuedBy
+                                            Log.e(TAG, "[AvatarSSL] IssuedTo CN: ${issued?.cName}")
+                                            Log.e(TAG, "[AvatarSSL] IssuedTo O:  ${issued?.oName}")
+                                            Log.e(TAG, "[AvatarSSL] IssuedTo DN: ${issued?.dName}")
+                                            Log.e(TAG, "[AvatarSSL] Issuer CN:   ${issuer?.cName}")
+                                            Log.e(TAG, "[AvatarSSL] Issuer O:    ${issuer?.oName}")
+                                            Log.e(TAG, "[AvatarSSL] Issuer DN:   ${issuer?.dName}")
+                                            Log.e(TAG, "[AvatarSSL] Valid from:  ${cert.validNotBeforeDate}")
+                                            Log.e(TAG, "[AvatarSSL] Valid to:    ${cert.validNotAfterDate}")
+                                        } else {
+                                            Log.e(TAG, "[AvatarSSL] (no certificate object)")
+                                        }
+                                        Log.e(TAG, "[AvatarSSL] Hint: run `openssl s_client -connect archeforever.archelabs.com:443` —")
+                                        Log.e(TAG, "[AvatarSSL]   Verify return code != 0 means the server isn't sending the full chain.")
+                                        Log.e(TAG, "[AvatarSSL] ===================================")
+                                        handler?.cancel()
+                                        isLoading = false
                                     }
 
                                     override fun shouldOverrideUrlLoading(

@@ -1,7 +1,6 @@
 package com.archeGlobal.one
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.net.http.SslError
@@ -385,23 +384,7 @@ class WebViewActivity : ComponentActivity() {
                                                         error: SslError,
                                                     ) {
                                                         Log.e("WebViewActivity", "SSL Error: ${error.primaryError} on URL: ${error.url}")
-
-                                                        // Auto-proceed for arche.global domains (About Us content)
-                                                        val url = error.url ?: ""
-                                                        if (url.contains("arche.global")) {
-                                                            Log.w(
-                                                                "WebViewActivity",
-                                                                "Auto-proceeding with SSL error for arche.global domain",
-                                                            )
-                                                            handler.proceed()
-                                                            return
-                                                        }
-
-                                                        // Create an alert dialog to inform the user for other domains
-                                                        val builder = AlertDialog.Builder(context)
-                                                        builder.setTitle("SSL Certificate Error")
-
-                                                        // Customize message based on the type of SSL error
+                                                        handler.cancel()
                                                         val errorMessage =
                                                             when (error.primaryError) {
                                                                 SslError.SSL_NOTYETVALID -> "The certificate is not yet valid."
@@ -411,24 +394,12 @@ class WebViewActivity : ComponentActivity() {
                                                                 SslError.SSL_DATE_INVALID -> "The certificate date is invalid."
                                                                 else -> "An unknown SSL error occurred."
                                                             }
-
-                                                        builder.setMessage(
-                                                            "A security issue was detected with the website's SSL certificate: $errorMessage\n\nDo you want to proceed anyway? (Not recommended)",
-                                                        )
-                                                        builder.setPositiveButton("Proceed") { _, _ ->
-                                                            handler.proceed() // Allow the user to proceed (use with caution)
-                                                        }
-                                                        builder.setNegativeButton("Cancel") { _, _ ->
-                                                            handler.cancel() // Cancel the request
-                                                            Toast
-                                                                .makeText(
-                                                                    context,
-                                                                    "Connection aborted due to SSL error.",
-                                                                    Toast.LENGTH_LONG,
-                                                                ).show()
-                                                        }
-                                                        builder.setCancelable(false) // Prevent dismissing the dialog without a choice
-                                                        builder.show()
+                                                        Toast
+                                                            .makeText(
+                                                                context,
+                                                                "Connection aborted: $errorMessage",
+                                                                Toast.LENGTH_LONG,
+                                                            ).show()
                                                     }
 
                                                     override fun shouldInterceptRequest(
