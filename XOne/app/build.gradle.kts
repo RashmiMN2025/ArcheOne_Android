@@ -14,8 +14,8 @@ android {
         applicationId = "com.archeGlobal.one"
         minSdk = 26
         targetSdk = 35
-        versionCode = 28
-        versionName = "1.9"
+        versionCode = 29
+        versionName = "1.10"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters += listOf("armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64")

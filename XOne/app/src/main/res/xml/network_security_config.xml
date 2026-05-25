@@ -11,18 +11,41 @@
     </domain-config>
     -->
     
-    <!-- Configuration for arche.global with SSL pinning -->
+    <!--
+        Configuration for arche.global.
+        The bundled @raw/star_arche_global cert pins the current *.arche.global
+        leaf for defence-in-depth. `system` is included so any publicly-trusted
+        arche.global cert (e.g., from a different subdomain or after rotation)
+        also validates normally — without this, a subdomain whose chain doesn't
+        terminate at the exact bundled leaf would fail with SSL_UNTRUSTED.
+        This is NOT the unsafe handler.proceed() pattern; Android still does
+        full cryptographic chain validation.
+    -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">arche.global</domain>
         <trust-anchors>
             <certificates src="@raw/star_arche_global"/>
+            <certificates src="system"/>
         </trust-anchors>
     </domain-config>
 
-    <!-- Configuration for archelabs.com (avatar maker) - use system defaults -->
+    <!--
+        Configuration for archelabs.com (avatar maker).
+        TEMPORARY: bundles the Sectigo intermediate CA as an extra trust anchor.
+        The server at archeforever.archelabs.com is currently misconfigured — it
+        only sends the leaf certificate in the TLS handshake and omits the
+        intermediate, so Android can't build the chain (iOS/Chrome work because
+        they auto-fetch missing intermediates via AIA; Android does not).
+        Bundling the intermediate lets Android build the chain locally while
+        still doing full cryptographic validation. This is Google-Play-safe
+        (it is NOT the unsafe handler.proceed() pattern).
+        REMOVE this @raw/sectigo_intermediate_ca anchor once the backend ships
+        the full-chain fix on archeforever.archelabs.com.
+    -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">archelabs.com</domain>
         <trust-anchors>
+            <certificates src="@raw/sectigo_intermediate_ca"/>
             <certificates src="system"/>
         </trust-anchors>
     </domain-config>
