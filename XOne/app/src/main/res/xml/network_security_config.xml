@@ -13,7 +13,7 @@
     
     <!--
         Configuration for arche.global.
-        The bundled @raw/star_arche_global cert pins the current *.arche.global
+        The bundled @raw/arche_global cert pins the current *.arche.global
         leaf for defence-in-depth. `system` is included so any publicly-trusted
         arche.global cert (e.g., from a different subdomain or after rotation)
         also validates normally — without this, a subdomain whose chain doesn't
@@ -24,7 +24,7 @@
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">arche.global</domain>
         <trust-anchors>
-            <certificates src="@raw/star_arche_global"/>
+            <certificates src="@raw/arche_global"/>
             <certificates src="system"/>
         </trust-anchors>
     </domain-config>
