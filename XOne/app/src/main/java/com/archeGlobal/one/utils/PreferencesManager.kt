@@ -338,6 +338,13 @@ class PreferencesManager(
         sharedPreferences.edit().remove(KEY_INSTALL_TYPE).apply()
     }
 
+    // Completely wipe all data in this preferences file
+    fun clearAll() {
+        Log.w("PreferencesManager", "Hard Reset: Clearing all shared preferences.")
+        sharedPreferences.edit().clear().commit()
+        _lockedState.value = false
+    }
+
     companion object {
         private const val KEY_FAVORITES = "favorites"
         private const val KEY_AUTH_TOKEN = "auth_token"

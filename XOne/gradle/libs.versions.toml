@@ -62,8 +62,10 @@ composeMaterial3 = "1.5.3"
 androidxComposeFoundationFoundation = "1.9.4"
 uiGraphicsVersion = "1.9.4"
 roomKtx = "2.8.3"
+playAppUpdate = "2.1.0"
 
 [libraries]
+play-app-update = { module = "com.google.android.play:app-update-ktx", version.ref = "playAppUpdate" }
 accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
 accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistPager" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }

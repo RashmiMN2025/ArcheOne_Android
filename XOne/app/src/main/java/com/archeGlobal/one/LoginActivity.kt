@@ -31,8 +31,17 @@ import com.archeGlobal.one.utils.CustomToast
 class LoginActivity : AppCompatActivity() {
     private var showUpdateDialog by mutableStateOf(false)
 
+    override fun onResume() {
+        super.onResume()
+        // Proactive In-App Update - IMMEDIATE flow (updates inside the app)
+        com.archeGlobal.one.utils.AppUpdateUtils.startImmediateUpdateFlow(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Proactive In-App Update - IMMEDIATE flow (updates inside the app)
+        com.archeGlobal.one.utils.AppUpdateUtils.startImmediateUpdateFlow(this)
 
         enableEdgeToEdge()
         window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -85,9 +94,28 @@ class LoginActivity : AppCompatActivity() {
                 if (showUpdateDialog) {
                     UpdateRequiredDialog(
                         onUpdateClick = {
+                            // Force Logout just in case there is stale data
+                            com.archeGlobal.one.utils.UserDataManager.getInstance(this@LoginActivity).clearUserData()
+                            
                             // Open Play Store
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
-                            startActivity(intent)
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            }
+                            try {
+                                startActivity(intent)
+                                finish() // Close the app
+                            } catch (e: Exception) {
+                                val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
+                                try {
+                                    startActivity(webIntent)
+                                    finish()
+                                } catch (e2: Exception) {
+                                    // Fallback if no browser or store
+                                    finish()
+                                }
+                            }
                         },
                         onDismiss = { showUpdateDialog = false },
                     )

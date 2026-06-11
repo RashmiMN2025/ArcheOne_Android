@@ -29,6 +29,12 @@ class OtpVerificationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Proactive Play Store Update Check
+        com.archeGlobal.one.utils.AppUpdateUtils.checkForUpdates(this) {
+            showUpdateDialog()
+        }
+
         val email = intent.getStringExtra("email") ?: ""
         val mobile = intent.getStringExtra("mobile") ?: ""
         val employeeId = intent.getStringExtra("employeeId") ?: ""
@@ -83,35 +89,27 @@ class OtpVerificationActivity : AppCompatActivity() {
                 if (showUpdateDialog) {
                     UpdateRequiredDialog(
                         onUpdateClick = {
-                            // Dismiss dialog immediately
-                            showUpdateDialog = false
+                            // 1. Force Logout & Total Preference Wipe (Hard Reset)
+                            prefs.clearAll()
+                            com.archeGlobal.one.utils.MpinManager.clearAllMpinData(this@OtpVerificationActivity)
+                            
+                            Log.w("OtpVerificationActivity", "MANDATORY UPDATE: Performed Hard Reset of all data and MPIN during OTP stage.")
 
-                            // Clear session data
-                            UserDataManager.getInstance(this).clearSessionData()
-                            PreferencesManager(this).clearSessionData()
+                            // 2. Prepare LoginActivity as the new root
+                            val loginIntent = Intent(this@OtpVerificationActivity, LoginActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            }
+                            startActivity(loginIntent)
 
-                            // Set flag to navigate to login on return
-                            shouldNavigateToLogin = true
-
-                            // Launch Play Store intent
-                            val packageName = packageName
-                            val playStoreIntent =
-                                Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
-                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                }
+                            // 3. Launch Play Store
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK 
+                            }
 
                             try {
-                                if (playStoreIntent.resolveActivity(packageManager) != null) {
-                                    startActivity(playStoreIntent)
-                                    Log.d("OtpVerificationActivity", "Play Store intent launched successfully for package: $packageName")
-                                    // Finish OtpVerificationActivity immediately to ensure Play Store is in foreground
-                                    finish()
-                                } else {
-                                    Log.w("OtpVerificationActivity", "No Play Store app found, falling back to web URL")
-                                    launchWebFallback()
-                                }
+                                startActivity(intent)
+                                finish() // Close OtpVerificationActivity
                             } catch (e: Exception) {
-                                Log.e("OtpVerificationActivity", "Failed to launch Play Store intent: ${e.message}")
                                 launchWebFallback()
                             }
                         },
@@ -124,6 +122,12 @@ class OtpVerificationActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+
+        // Proactive Play Store Update Check
+        com.archeGlobal.one.utils.AppUpdateUtils.checkForUpdates(this) {
+            showUpdateDialog()
+        }
+
         // If returning from Play Store and shouldNavigateToLogin is true, navigate to LoginActivity
         if (shouldNavigateToLogin) {
             val loginIntent =
