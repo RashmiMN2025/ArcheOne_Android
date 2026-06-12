@@ -89,17 +89,16 @@ class OtpVerificationActivity : AppCompatActivity() {
                 if (showUpdateDialog) {
                     UpdateRequiredDialog(
                         onUpdateClick = {
-                            // 1. Force Logout & Total Preference Wipe (Hard Reset)
+                            // 1. Total Preference Wipe (Hard Reset)
+                            // We do this first so our special flags are set AFTER the wipe.
                             prefs.clearAll()
                             com.archeGlobal.one.utils.MpinManager.clearAllMpinData(this@OtpVerificationActivity)
-                            
-                            Log.w("OtpVerificationActivity", "MANDATORY UPDATE: Performed Hard Reset of all data and MPIN during OTP stage.")
 
-                            // 2. Prepare LoginActivity as the new root
-                            val loginIntent = Intent(this@OtpVerificationActivity, LoginActivity::class.java).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            }
-                            startActivity(loginIntent)
+                            // 2. Set flags to skip splash/onboarding on next launch
+                            prefs.setMandatoryUpdatePending(true)
+                            prefs.setFirstLaunchComplete()
+                            
+                            Log.w("OtpVerificationActivity", "MANDATORY UPDATE: Hard Reset performed during OTP stage. Bypass flags set.")
 
                             // 3. Launch Play Store
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
@@ -108,7 +107,8 @@ class OtpVerificationActivity : AppCompatActivity() {
 
                             try {
                                 startActivity(intent)
-                                finish() // Close OtpVerificationActivity
+                                // 4. Kill the entire app task immediately.
+                                finishAffinity()
                             } catch (e: Exception) {
                                 launchWebFallback()
                             }

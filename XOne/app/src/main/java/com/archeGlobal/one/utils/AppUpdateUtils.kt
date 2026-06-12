@@ -14,16 +14,22 @@ object AppUpdateUtils {
 
     /**
      * Performs an official IMMEDIATE in-app update check.
+     * This will trigger the Google Play overlay for a seamless update experience.
      * Use this for LoginActivity to update without leaving the app.
+     * 
+     * @param activity The current activity.
      */
     fun startImmediateUpdateFlow(activity: Activity) {
         val appUpdateManager = AppUpdateManagerFactory.create(activity)
         val appUpdateInfoTask = appUpdateManager.appUpdateInfo
 
         appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
-            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+            val availability = appUpdateInfo.updateAvailability()
+            
+            if (availability == UpdateAvailability.UPDATE_AVAILABLE
                 && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
             ) {
+                Log.d(TAG, "Mandatory update found on Login. Triggering seamless immediate flow.")
                 try {
                     appUpdateManager.startUpdateFlowForResult(
                         appUpdateInfo,
@@ -37,9 +43,9 @@ object AppUpdateUtils {
             }
         }.addOnFailureListener { e ->
             if (e is com.google.android.play.core.install.InstallException && e.errorCode == -10) {
-                Log.w(TAG, "In-App Update: App not installed from Play Store. Skipping proactive check.")
+                Log.w(TAG, "In-App Update: App not installed from Play Store. Skipping.")
             } else {
-                Log.e(TAG, "Error checking for immediate updates", e)
+                Log.e(TAG, "Error checking for updates", e)
             }
         }
     }
@@ -47,6 +53,9 @@ object AppUpdateUtils {
     /**
      * Checks if an update is available and triggers a callback.
      * Use this for HomeActivity to show custom logout dialog.
+     * 
+     * @param activity The current activity.
+     * @param onUpdateAvailable Callback to trigger when an update is found.
      */
     fun checkForUpdates(activity: Activity, onUpdateAvailable: () -> Unit) {
         val appUpdateManager = AppUpdateManagerFactory.create(activity)
@@ -54,12 +63,12 @@ object AppUpdateUtils {
 
         appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
             if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
-                Log.d(TAG, "Update available on Play Store. Triggering callback.")
+                Log.d(TAG, "Update available on Play Store. Triggering custom dialog.")
                 onUpdateAvailable()
             }
         }.addOnFailureListener { e ->
             if (e is com.google.android.play.core.install.InstallException && e.errorCode == -10) {
-                Log.w(TAG, "In-App Update: App not installed from Play Store. Skipping proactive check.")
+                Log.w(TAG, "In-App Update: App not installed from Play Store. Skipping.")
             } else {
                 Log.e(TAG, "Error checking for updates", e)
             }

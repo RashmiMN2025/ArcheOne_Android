@@ -698,25 +698,31 @@ class HomeActivity : AppCompatActivity() {
                 if (showUpdateDialog) {
                     UpdateRequiredDialog(
                         onUpdateClick = {
-                            // 1. Force Logout & Total Preference Wipe (Hard Reset)
+                            // 1. Total Preference Wipe (Hard Reset)
+                            // We do this first so our special flags are set AFTER the wipe.
                             preferencesManager.clearAll()
                             com.archeGlobal.one.utils.MpinManager.clearAllMpinData(this@HomeActivity)
-                            
-                            Log.w("HomeActivity", "MANDATORY UPDATE: Performed Hard Reset of all data and MPIN.")
 
-                            // 2. Prepare LoginActivity as the new root (to ensure return to login)
+                            // 2. Mark onboarding as complete so it doesn't show up
+                            preferencesManager.setFirstLaunchComplete() 
+                            
+                            Log.w("HomeActivity", "MANDATORY UPDATE: Hard Reset performed. Transitioning to Login in background.")
+
+                            // 3. Prepare LoginActivity as the NEW root of the task.
+                            // We start it NOW so it's waiting in the background when the user returns.
                             val loginIntent = Intent(this@HomeActivity, LoginActivity::class.java).apply {
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             }
                             startActivity(loginIntent)
 
-                            // 3. Launch Play Store
+                            // 4. Launch Play Store
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply { 
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK 
                             }
                             try { 
                                 startActivity(intent) 
-                                finish() // Close HomeActivity
+                                // 5. Finish HomeActivity so it's removed from the stack.
+                                finish() 
                             } catch (e: Exception) {
                                 val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")).apply { 
                                     flags = Intent.FLAG_ACTIVITY_NEW_TASK 

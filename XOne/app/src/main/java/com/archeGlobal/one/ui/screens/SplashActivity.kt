@@ -34,6 +34,19 @@ class SplashActivity : ComponentActivity() {
         userDataManager = UserDataManager.getInstance(applicationContext)
         preferencesManager = PreferencesManager(applicationContext)
 
+        // Check if we just came from a mandatory update
+        if (preferencesManager.isMandatoryUpdatePending()) {
+            Log.i("SplashActivity", "Post-Update: Redirecting directly to Login screen.")
+            preferencesManager.setMandatoryUpdatePending(false)
+            
+            val intent = Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+            return
+        }
+
         // Set Splash Screen UI
         setContent {
             XOneSplashScreen()

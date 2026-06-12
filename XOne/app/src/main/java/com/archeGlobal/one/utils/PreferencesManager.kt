@@ -18,9 +18,10 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import androidx.core.content.edit
 
 class PreferencesManager(
-    context: Context,
+    private val context: Context,
 ) {
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences(
@@ -343,6 +344,19 @@ class PreferencesManager(
         Log.w("PreferencesManager", "Hard Reset: Clearing all shared preferences.")
         sharedPreferences.edit().clear().commit()
         _lockedState.value = false
+    }
+
+    // Special flag that survives the main clearAll() wipe
+    fun setMandatoryUpdatePending(pending: Boolean) {
+        context.getSharedPreferences("mandatory_update_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("MANDATORY_UPDATE_PENDING", pending)
+            .commit()
+    }
+
+    fun isMandatoryUpdatePending(): Boolean {
+        return context.getSharedPreferences("mandatory_update_prefs", Context.MODE_PRIVATE)
+            .getBoolean("MANDATORY_UPDATE_PENDING", false)
     }
 
     companion object {
