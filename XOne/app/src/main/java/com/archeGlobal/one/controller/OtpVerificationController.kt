@@ -158,7 +158,7 @@ class OtpVerificationController(
         preferencesManager.saveAuthToken(token)
 
         encryptedAPIHelper.makeEncryptedCall(
-            endpoint = "login",
+            endpoint = "login/v2",
             method = "POST",
             request = request,
             responseClass = VerifyOtpResponse::class.java,

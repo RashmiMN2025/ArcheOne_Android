@@ -1,8 +1,17 @@
 package com.archeGlobal.one.ui.screens
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.*
+import android.net.Uri
+import android.provider.ContactsContract
+import android.util.Log
 import android.util.TypedValue
 import android.view.View
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -34,6 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -44,6 +55,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.BusinessCardController
 import com.archeGlobal.one.controller.OtpVerificationController
@@ -54,7 +72,166 @@ import com.archeGlobal.one.ui.theme.TextPrimary
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
+
+private data class ScannedBusinessCardContact(
+    val name: String = "",
+    val company: String = "",
+    val phone: String = "",
+    val email: String = "",
+)
+
+private fun parseBusinessCardQr(rawValue: String): ScannedBusinessCardContact {
+    val decodedValue = Uri.decode(rawValue).orEmpty()
+    val uri = runCatching { Uri.parse(rawValue) }.getOrNull()
+    val email =
+        firstQueryParameter(uri, "email", "email-id", "email_id", "mail")
+            ?: extractVCardValue(decodedValue, "EMAIL")
+            ?: extractMeCardValue(decodedValue, "EMAIL")
+            ?: extractMailToEmail(decodedValue)
+            ?: extractEmail(decodedValue)
+
+    val phone =
+        firstQueryParameter(uri, "phone", "tel", "telephone", "mobile", "cell")
+            ?: extractVCardValue(decodedValue, "TEL")
+            ?: extractMeCardValue(decodedValue, "TEL")
+            ?: extractTelPhone(decodedValue)
+            ?: extractPhone(decodedValue)
+
+    return ScannedBusinessCardContact(
+        phone = phone.orEmpty(),
+        email = email.orEmpty(),
+    )
+}
+
+private fun firstQueryParameter(
+    uri: Uri?,
+    vararg keys: String,
+): String? =
+    keys
+        .firstNotNullOfOrNull { key -> uri?.getQueryParameter(key)?.takeIf { it.isNotBlank() } }
+        ?.trim()
+
+private fun extractVCardValue(
+    rawValue: String,
+    key: String,
+): String? =
+    rawValue
+        .lineSequence()
+        .map { it.trim() }
+        .firstOrNull { line ->
+            line.substringBefore(':').substringBefore(';').equals(key, ignoreCase = true)
+        }?.substringAfter(':', "")
+        ?.cleanBusinessCardValue()
+
+private fun extractMeCardValue(
+    rawValue: String,
+    key: String,
+): String? {
+    val meCard = rawValue.substringAfter("MECARD:", missingDelimiterValue = "")
+    if (meCard.isBlank()) return null
+
+    return meCard
+        .split(';')
+        .firstOrNull { it.substringBefore(':').equals(key, ignoreCase = true) }
+        ?.substringAfter(':', "")
+        ?.cleanBusinessCardValue()
+}
+
+private fun extractMailToEmail(rawValue: String): String? =
+    rawValue
+        .takeIf { it.startsWith("mailto:", ignoreCase = true) }
+        ?.substringAfter(':')
+        ?.substringBefore('?')
+        ?.cleanBusinessCardValue()
+
+private fun extractTelPhone(rawValue: String): String? =
+    rawValue
+        .takeIf { it.startsWith("tel:", ignoreCase = true) }
+        ?.substringAfter(':')
+        ?.cleanBusinessCardValue()
+
+private fun extractEmail(rawValue: String): String? =
+    Regex(
+        pattern = "[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}",
+        option = RegexOption.IGNORE_CASE,
+    ).find(rawValue)
+        ?.value
+        ?.cleanBusinessCardValue()
+
+private fun extractPhone(rawValue: String): String? {
+    val labelledPhone =
+        Regex(
+            pattern = "(?:tel|phone|mobile|cell)\\D{0,16}([+]?\\d[\\d\\s().-]{6,}\\d)",
+            option = RegexOption.IGNORE_CASE,
+        ).find(rawValue)
+            ?.groupValues
+            ?.getOrNull(1)
+            ?.cleanBusinessCardValue()
+
+    if (!labelledPhone.isNullOrBlank()) return labelledPhone
+
+    return Regex("[+]?\\d[\\d\\s().-]{7,}\\d")
+        .findAll(rawValue)
+        .map { it.value.cleanBusinessCardValue() }
+        .firstOrNull { candidate ->
+            val digitCount = candidate.count { it.isDigit() }
+            digitCount in 7..15
+        }
+}
+
+private fun String.cleanBusinessCardValue(): String =
+    trim()
+        .trim(';')
+        .replace("\\n", "\n")
+        .replace("\\,", ",")
+        .replace("\\;", ";")
+        .replace(Regex("\\s+"), " ")
+        .trim()
+
+// OCR-based business card text extraction
+private fun extractContactFromOcrText(text: String): ScannedBusinessCardContact {
+    val emailPattern = Regex(
+        pattern = "[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}",
+        option = RegexOption.IGNORE_CASE,
+    )
+    
+    val phonePattern = Regex(
+        pattern = "(?:[+]?[0-9]{1,3}[-\\s]?)?[0-9]{6,}",
+        option = RegexOption.IGNORE_CASE,
+    )
+    
+    val email = emailPattern.find(text)?.value?.cleanBusinessCardValue() ?: ""
+    
+    // Extract phone - look for patterns with phone/mobile labels first
+    var phone = Regex(
+        pattern = "(?:tel|phone|mobile|cell)\\D{0,16}([+]?\\d[\\d\\s().-]{6,}\\d)",
+        option = RegexOption.IGNORE_CASE,
+    ).find(text)
+        ?.groupValues
+        ?.getOrNull(1)
+        ?.cleanBusinessCardValue() ?: ""
+    
+    // If no labeled phone found, search for phone-like patterns
+    if (phone.isEmpty()) {
+        phone = phonePattern.findAll(text)
+            .map { it.value.cleanBusinessCardValue() }
+            .firstOrNull { candidate ->
+                val digitCount = candidate.count { it.isDigit() }
+                digitCount in 7..15
+            } ?: ""
+    }
+    
+    return ScannedBusinessCardContact(
+        phone = phone,
+        email = email,
+    )
+}
 
 // Function to crop the white border from the QR code bitmap
 private fun cropQRCodeBitmap(
@@ -116,6 +293,7 @@ private fun ComposeQRCodeImage(
 @Composable
 private fun CustomTopAppBar(
     onBackPressed: () -> Unit,
+    onCameraClick: () -> Unit,
     onShareClick: () -> Unit,
 ) {
     TopAppBar(
@@ -149,6 +327,7 @@ private fun CustomTopAppBar(
             }
         },
         actions = {
+
             IconButton(
                 onClick = onShareClick,
                 modifier =
@@ -162,6 +341,21 @@ private fun CustomTopAppBar(
                     tint = TextPrimary,
                 )
             }
+
+            IconButton(
+                onClick = onCameraClick,
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .padding(end = 5.dp),
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_camera),
+                    contentDescription = "Camera",
+                    tint = TextPrimary,
+                )
+            }
+
         },
         colors =
             TopAppBarDefaults.topAppBarColors(
@@ -170,6 +364,576 @@ private fun CustomTopAppBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BusinessCardQrScannerSheet(
+    onDismiss: () -> Unit,
+    onQrCodeScanned: (String) -> Unit,
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    var hasScanned by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        dragHandle = null,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Scan Business Card",
+                    color = Color.Black,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = TextPrimary,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(360.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Color.Black),
+            ) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { ctx ->
+                        PreviewView(ctx).apply {
+                            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                        }
+                    },
+                    update = { previewView ->
+                        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+                        cameraProviderFuture.addListener(
+                            {
+                                val cameraProvider = cameraProviderFuture.get()
+                                val preview =
+                                    Preview.Builder().build().also {
+                                        it.setSurfaceProvider(previewView.surfaceProvider)
+                                    }
+                                val scanner = BarcodeScanning.getClient()
+                                val imageAnalysis =
+                                    ImageAnalysis
+                                        .Builder()
+                                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                        .build()
+                                        .also { analysis ->
+                                            analysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                                                val mediaImage = imageProxy.image
+                                                if (mediaImage != null && !hasScanned) {
+                                                    val image =
+                                                        InputImage.fromMediaImage(
+                                                            mediaImage,
+                                                            imageProxy.imageInfo.rotationDegrees,
+                                                        )
+                                                    scanner
+                                                        .process(image)
+                                                        .addOnSuccessListener { barcodes ->
+                                                            val qrCode =
+                                                                barcodes
+                                                                    .firstNotNullOfOrNull { barcode ->
+                                                                        barcode.displayValue ?: barcode.rawValue
+                                                                    }
+                                                            if (qrCode != null && !hasScanned) {
+                                                                hasScanned = true
+                                                                onQrCodeScanned(qrCode)
+                                                            }
+                                                        }.addOnFailureListener { error ->
+                                                            Log.e("BusinessCardScanner", "QR scan failed", error)
+                                                        }.addOnCompleteListener {
+                                                            imageProxy.close()
+                                                        }
+                                                } else {
+                                                    imageProxy.close()
+                                                }
+                                            }
+                                        }
+
+                                try {
+                                    cameraProvider.unbindAll()
+                                    cameraProvider.bindToLifecycle(
+                                        lifecycleOwner,
+                                        CameraSelector.DEFAULT_BACK_CAMERA,
+                                        preview,
+                                        imageAnalysis,
+                                    )
+                                } catch (error: Exception) {
+                                    Log.e("BusinessCardScanner", "Camera binding failed", error)
+                                }
+                            },
+                            context.mainExecutor,
+                        )
+                    },
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraExecutor.shutdown()
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BusinessCardOcrScannerSheet(
+    onDismiss: () -> Unit,
+    onContactExtracted: (ScannedBusinessCardContact) -> Unit,
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    var hasScanned by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        dragHandle = null,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Scan Business Card",
+                    color = Color.Black,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = TextPrimary,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(360.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Color.Black),
+            ) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { ctx ->
+                        PreviewView(ctx).apply {
+                            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                        }
+                    },
+                    update = { previewView ->
+                        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+                        cameraProviderFuture.addListener(
+                            {
+                                val cameraProvider = cameraProviderFuture.get()
+                                val preview =
+                                    Preview.Builder().build().also {
+                                        it.setSurfaceProvider(previewView.surfaceProvider)
+                                    }
+                                val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                                val imageAnalysis =
+                                    ImageAnalysis
+                                        .Builder()
+                                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                        .build()
+                                        .also { analysis ->
+                                            analysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                                                val mediaImage = imageProxy.image
+                                                if (mediaImage != null && !hasScanned) {
+                                                    val image =
+                                                        InputImage.fromMediaImage(
+                                                            mediaImage,
+                                                            imageProxy.imageInfo.rotationDegrees,
+                                                        )
+                                                    textRecognizer
+                                                        .process(image)
+                                                        .addOnSuccessListener { visionText ->
+                                                            val extractedText = visionText.text
+                                                            if (extractedText.isNotBlank() && !hasScanned) {
+                                                                hasScanned = true
+                                                                val contact = extractContactFromOcrText(extractedText)
+                                                                // Only process if we found email or phone
+                                                                if (contact.email.isNotBlank() || contact.phone.isNotBlank()) {
+                                                                    onContactExtracted(contact)
+                                                                } else {
+                                                                    // Reset for retry
+                                                                    hasScanned = false
+                                                                    Toast.makeText(
+                                                                        context,
+                                                                        "No contact information found. Please try again.",
+                                                                        Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                }
+                                                            }
+                                                        }.addOnFailureListener { error ->
+                                                            Log.e("BusinessCardOCR", "OCR scan failed", error)
+                                                            hasScanned = false
+                                                        }.addOnCompleteListener {
+                                                            imageProxy.close()
+                                                        }
+                                                } else {
+                                                    imageProxy.close()
+                                                }
+                                            }
+                                        }
+
+                                try {
+                                    cameraProvider.unbindAll()
+                                    cameraProvider.bindToLifecycle(
+                                        lifecycleOwner,
+                                        CameraSelector.DEFAULT_BACK_CAMERA,
+                                        preview,
+                                        imageAnalysis,
+                                    )
+                                } catch (error: Exception) {
+                                    Log.e("BusinessCardOCR", "Camera binding failed", error)
+                                }
+                            },
+                            context.mainExecutor,
+                        )
+                    },
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraExecutor.shutdown()
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddScannedContactSheet(
+    contact: ScannedBusinessCardContact,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var name by remember(contact) { mutableStateOf(contact.name) }
+    var company by remember(contact) { mutableStateOf(contact.company) }
+    var phone by remember(contact) { mutableStateOf(contact.phone) }
+    var email by remember(contact) { mutableStateOf(contact.email) }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        dragHandle = null,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Add contact",
+                    color = Color.Black,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = TextPrimary,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "Scanned business card",
+                color = Color.Black,
+                fontSize = 18.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                placeholder = {
+                    Text(
+                        "Name *",
+                        color = Color.Gray,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                    )
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        cursorColor = Color.Black,
+                        focusedIndicatorColor = Color.Black,
+                        unfocusedIndicatorColor = Color.Black,
+                        focusedPlaceholderColor = Color.Gray,
+                        unfocusedPlaceholderColor = Color.Gray,
+                    ),
+                textStyle =
+                    androidx.compose.ui.text.TextStyle(
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                    ),
+                shape = RoundedCornerShape(12.dp),
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = company,
+                onValueChange = { company = it },
+                placeholder = {
+                    Text(
+                        "Company *",
+                        color = Color.Gray,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                    )
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        cursorColor = Color.Black,
+                        focusedIndicatorColor = Color.Black,
+                        unfocusedIndicatorColor = Color.Black,
+                        focusedPlaceholderColor = Color.Gray,
+                        unfocusedPlaceholderColor = Color.Gray,
+                    ),
+                textStyle =
+                    androidx.compose.ui.text.TextStyle(
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                    ),
+                shape = RoundedCornerShape(12.dp),
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth(),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        cursorColor = Color.Black,
+                        focusedIndicatorColor = Color.Black,
+                        unfocusedIndicatorColor = Color.Black,
+                        focusedPlaceholderColor = Color.Gray,
+                        unfocusedPlaceholderColor = Color.Gray,
+                    ),
+                textStyle =
+                    androidx.compose.ui.text.TextStyle(
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                    ),
+                shape = RoundedCornerShape(12.dp),
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier.fillMaxWidth(),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        cursorColor = Color.Black,
+                        focusedIndicatorColor = Color.Black,
+                        unfocusedIndicatorColor = Color.Black,
+                        focusedPlaceholderColor = Color.Gray,
+                        unfocusedPlaceholderColor = Color.Gray,
+                    ),
+                textStyle =
+                    androidx.compose.ui.text.TextStyle(
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                    ),
+                shape = RoundedCornerShape(12.dp),
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(
+                onClick = {
+                    val insertIntent =
+                        Intent(ContactsContract.Intents.Insert.ACTION).apply {
+                            type = ContactsContract.RawContacts.CONTENT_TYPE
+                            putExtra(ContactsContract.Intents.Insert.NAME, name)
+                            putExtra(ContactsContract.Intents.Insert.COMPANY, company)
+                            putExtra(ContactsContract.Intents.Insert.PHONE, phone)
+                            putExtra(ContactsContract.Intents.Insert.EMAIL, email)
+                        }
+                    try {
+                        context.startActivity(insertIntent)
+                        onDismiss()
+                    } catch (error: Exception) {
+                        Toast.makeText(context, "Unable to open contacts", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                shape = RoundedCornerShape(24.dp),
+            ) {
+                Text(
+                    text = "Add to contacts",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
+}
+
+@Composable
+private fun ScannerModeDialog(
+    onDismiss: () -> Unit,
+    onQrScannerSelected: () -> Unit,
+    onOcrScannerSelected: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Select Scanning Mode",
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
+            )
+        },
+        text = {
+            Text(
+                "Choose how you want to scan the business card:",
+                fontFamily = GraphikFontFamily,
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onQrScannerSelected,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+            ) {
+                Text(
+                    "QR Code",
+                    color = Color.White,
+                    fontFamily = GraphikFontFamily,
+                )
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onOcrScannerSelected,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9E9E9E)),
+            ) {
+                Text(
+                    "Business Card Photo",
+                    color = Color.White,
+                    fontFamily = GraphikFontFamily,
+                )
+            }
+        },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BusinessCardScreen(
     businessCard: BusinessCardModel,
@@ -182,6 +946,42 @@ fun BusinessCardScreen(
     val cardBounds = remember { mutableStateOf<android.graphics.Rect?>(null) }
     var newLocation by remember(businessCard.location) { mutableStateOf(businessCard.location) }
     val context = LocalContext.current
+    var showScannerModeDialog by remember { mutableStateOf(false) }
+    var showQrScanner by remember { mutableStateOf(false) }
+    var showOcrScanner by remember { mutableStateOf(false) }
+    var scannedContact by remember { mutableStateOf<ScannedBusinessCardContact?>(null) }
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA,
+            ) == PackageManager.PERMISSION_GRANTED,
+        )
+    }
+    val cameraPermissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { isGranted ->
+            hasCameraPermission = isGranted
+            if (isGranted) {
+                showScannerModeDialog = true
+            } else {
+                Toast
+                    .makeText(
+                        context,
+                        "Camera permission is required to use camera",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+            }
+        }
+
+    fun openCamera() {
+        if (hasCameraPermission) {
+            showScannerModeDialog = true
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     // Create a LocationInfo object using the location string from businessCard
     // Use remember with businessCard.location as key to update when location changes
@@ -275,6 +1075,7 @@ fun BusinessCardScreen(
                 item {
                     CustomTopAppBar(
                         onBackPressed = { onBackPressed() },
+                        onCameraClick = { openCamera() },
                         onShareClick = {
                             scope.launch {
                                 cardBounds.value?.let { bounds ->
@@ -1027,6 +1828,47 @@ fun BusinessCardScreen(
                     }
                 },
                 dismissButton = null,
+            )
+        }
+
+        if (showScannerModeDialog) {
+            ScannerModeDialog(
+                onDismiss = { showScannerModeDialog = false },
+                onQrScannerSelected = {
+                    showScannerModeDialog = false
+                    showQrScanner = true
+                },
+                onOcrScannerSelected = {
+                    showScannerModeDialog = false
+                    showOcrScanner = true
+                },
+            )
+        }
+
+        if (showQrScanner) {
+            BusinessCardQrScannerSheet(
+                onDismiss = { showQrScanner = false },
+                onQrCodeScanned = { rawValue ->
+                    showQrScanner = false
+                    scannedContact = parseBusinessCardQr(rawValue)
+                },
+            )
+        }
+
+        if (showOcrScanner) {
+            BusinessCardOcrScannerSheet(
+                onDismiss = { showOcrScanner = false },
+                onContactExtracted = { contact ->
+                    showOcrScanner = false
+                    scannedContact = contact
+                },
+            )
+        }
+
+        scannedContact?.let { contact ->
+            AddScannedContactSheet(
+                contact = contact,
+                onDismiss = { scannedContact = null },
             )
         }
     }

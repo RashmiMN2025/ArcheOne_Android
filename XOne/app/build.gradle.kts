@@ -10,6 +10,21 @@ android {
     namespace = "com.archeGlobal.one"
     compileSdk = 36
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = project.properties["RELEASE_STORE_FILE"] as String?
+            storeFile =
+                if (!keystoreFile.isNullOrEmpty()) {
+                    file(keystoreFile)
+                } else {
+                    null
+                }
+            storePassword = project.properties["RELEASE_STORE_PASSWORD"] as String?
+            keyAlias = project.properties["RELEASE_KEY_ALIAS"] as String?
+            keyPassword = project.properties["RELEASE_KEY_PASSWORD"] as String?
+        }
+    }
+
     defaultConfig {
         applicationId = "com.archeGlobal.one"
         minSdk = 26
@@ -32,7 +47,7 @@ android {
             )
             isCrunchPngs = true
             proguardFiles += file("proguard-rules-r8.pro")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -133,6 +148,7 @@ dependencies {
     implementation(libs.foundation)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.play.services.mlkit.text.recognition.common)
 
     // Testing
     testImplementation(libs.junit)
@@ -149,8 +165,14 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.6.1")
     implementation("androidx.camera:camera-view:1.6.1")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
-    implementation("com.squareup.retrofit2:retrofit:2.x.x")
-    implementation("com.squareup.retrofit2:converter-gson:2.x.x")
+    
+    // OCR - Text Recognition for business card photos
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+    
+    // MSAL - Microsoft Authentication Library for Azure AD
+    implementation("com.microsoft.identity.client:msal:5.2.0") {
+        exclude(group = "com.microsoft.device.display", module = "display-mask")
+    }
 
     implementation("androidx.compose.ui:ui-tooling-preview:1.9.3")
 }

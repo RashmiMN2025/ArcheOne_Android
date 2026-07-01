@@ -85,7 +85,13 @@ class LoginController(
         employeeId: String,
         callback: (String, Boolean) -> Unit,
     ) {
-        Log.d("LoginController", "Token used for login: $token")
+        Log.d("LoginController", "===== LoginWithToken Called =====")
+        Log.d("LoginController", "Email: '$email' (length: ${email.length})")
+        Log.d("LoginController", "Mobile: '$mobile' (length: ${mobile.length})")
+        Log.d("LoginController", "EmployeeId: '$employeeId' (length: ${employeeId.length})")
+        Log.d("LoginController", "Token: '${token.take(30)}...' (length: ${token.length})")
+        Log.d("LoginController", "==================================")
+        
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
@@ -100,77 +106,53 @@ class LoginController(
                         appVersion = deviceInfo.appVersion,
                         deviceId = deviceInfo.deviceId,
                     )
-                val response = RetrofitClient.apiService.login(token, request).execute()
-                val responseBody = response.body()
-                val errorBody = response.errorBody()?.string()
-
-                withContext(Dispatchers.Main) {
-                    when {
-                        response.isSuccessful && responseBody != null -> {
-                            if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
-                                com.archeGlobal.one.utils.PreferencesManager(context).clearPunchState()
-                                UserDataManager.getInstance(context).saveUserDataFromResponse(responseBody, token)
-                                UserDataManager.getInstance(context).setIsLoggedIn(true)
-                                UserDataManager.getInstance(context).setHasLoggedIn(true)
-                                navigator.navigateToHome(true, true, email, mobile, employeeId)
-                            }
-                            callback("Login successful", false)
-                        }
-                        errorBody != null -> {
-                            Log.e("LoginController", "API Error Response: $errorBody")
-                            Log.e("LoginController", "Response Code: ${response.code()}")
-
-                            try {
-                                // Parse the error response to extract the message
-                                val errorJson = JSONObject(errorBody)
-                                val errorMessage = errorJson.optString("message", "")
-
-                                // Check if it's a 403 (Forbidden) - app update required
-                                if (response.code() == 403) {
-                                    // Show update dialog
+                
+                Log.d("LoginController", "LoginRequest object created:")
+                Log.d("LoginController", "  email: '${request.email}'")
+                Log.d("LoginController", "  mobile: '${request.mobile}'")
+                Log.d("LoginController", "  employeeId: '${request.employeeId}'")
+                Log.d("LoginController", "  platform: '${request.platform}'")
+                Log.d("LoginController", "  deviceModel: '${request.deviceModel}'")
+                
+                // Use EncryptedAPIHelper with MSAL token for backend authentication
+                // This automatically handles token formatting and encryption
+                Log.d("LoginController", "Calling backend login API via EncryptedAPIHelper with MSAL token...")
+                encryptedAPIHelper.makeEncryptedCallWithMsalToken(
+                    endpoint = "login/v2",
+                    method = "POST",
+                    request = request,
+                    responseClass = VerifyOtpResponse::class.java,
+                    callback = { response, error ->
+                        // Launch coroutine on Main dispatcher to handle UI updates and callbacks
+                        CoroutineScope(Dispatchers.Main).launch {
+                            when {
+                                error == null && response != null -> {
                                     if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
-                                        navigator.showUpdateDialog()
+                                        com.archeGlobal.one.utils.PreferencesManager(context).clearPunchState()
+                                        UserDataManager.getInstance(context).saveUserDataFromResponse(response, token)
+                                        UserDataManager.getInstance(context).setIsLoggedIn(true)
+                                        UserDataManager.getInstance(context).setHasLoggedIn(true)
+                                        navigator.navigateToHome(true, true, email, mobile, employeeId)
                                     }
-                                    val updateMessage = if (errorMessage.isNotBlank()) errorMessage else "App update required"
-                                    callback(updateMessage, true)
-                                } else {
-                                    // Use the API error message if available, otherwise use a default message
-                                    val finalErrorMessage =
-                                        if (errorMessage.isNotBlank()) {
-                                            errorMessage
-                                        } else {
-                                            when (response.code()) {
-                                                400 -> "Invalid login details. Please check your credentials."
-                                                401 -> "Invalid credentials. Please try again."
-                                                404 -> "User not found. Please check your details."
-                                                500 -> "Server error. Please try again later."
-                                                else -> "Login failed. Please try again."
-                                            }
-                                        }
-                                    callback(finalErrorMessage, true)
+                                    Log.d("LoginController", "✓ Login successful via EncryptedAPIHelper")
+                                    callback("Login successful", false)
                                 }
-                            } catch (e: Exception) {
-                                Log.e("LoginController", "Error parsing error response: ${e.message}")
-                                val fallbackMessage =
-                                    when (response.code()) {
-                                        400 -> "Invalid login details. Please check your credentials."
-                                        401 -> "Invalid credentials. Please try again."
-                                        403 -> "App update required"
-                                        404 -> "User not found. Please check your details."
-                                        500 -> "Server error. Please try again later."
-                                        else -> "Login failed. Please try again."
-                                    }
-                                callback(fallbackMessage, true)
+                                error != null -> {
+                                    Log.e("LoginController", "✗ Login failed: ${error.errorMessage}")
+                                    callback(error.errorMessage, true)
+                                }
+                                else -> {
+                                    callback("Login failed", true)
+                                }
                             }
-                        }
-                        else -> {
-                            callback("Server error occurred", true)
                         }
                     }
-                }
+                )
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    callback("Network error: ${e.message}", true)
+                    Log.e("LoginController", "Exception in loginWithToken: ${e.message}")
+                    e.printStackTrace()
+                    callback("Login failed: ${e.message}", true)
                 }
             }
         }

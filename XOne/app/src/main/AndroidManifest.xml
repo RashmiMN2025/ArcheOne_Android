@@ -109,6 +109,20 @@
             android:theme="@style/Theme.XOne">
         </activity>
 
+        <activity android:name="com.microsoft.identity.client.BrowserTabActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="com.archeGlobal.one"
+                    android:path="/Sg/UNMZmy1u8kGYkDOSwv44/HQs="
+                    android:scheme="msauth"
+                    tools:ignore="AppLinkUrlError" />
+            </intent-filter>
+        </activity>
+
         <!-- My Documents Activity -->
         <activity
             android:name=".MyDocumentsActivity"

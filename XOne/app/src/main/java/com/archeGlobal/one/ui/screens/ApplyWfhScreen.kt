@@ -361,28 +361,26 @@ fun ApplyWfhScreen(
                                             toDayOfWeek == java.time.DayOfWeek.SATURDAY || toDayOfWeek == java.time.DayOfWeek.SUNDAY
 
                             if (isWeekend) {
-                                Toast.makeText(context, "Work From Home cannot be applied on weekends.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "WFH cannot be applied on weekends.", Toast.LENGTH_LONG).show()
                                 return@Button
                             }
 
                             val allowedWfhDays = if (isBangalore) {
                                 listOf(
-                                    java.time.DayOfWeek.MONDAY,
                                     java.time.DayOfWeek.TUESDAY,
                                     java.time.DayOfWeek.WEDNESDAY,
                                     java.time.DayOfWeek.THURSDAY,
-                                    java.time.DayOfWeek.FRIDAY,
                                 )
                             } else {
                                 listOf(java.time.DayOfWeek.TUESDAY, java.time.DayOfWeek.WEDNESDAY, java.time.DayOfWeek.THURSDAY)
                             }
                             if (fromDayOfWeek !in allowedWfhDays || toDayOfWeek !in allowedWfhDays) {
                                 val allowedDaysMsg = if (isBangalore) {
-                                    "Monday, Tuesday, Wednesday, Thursday, or Friday"
+                                    "Tuesday, Wednesday, or Thursday"
                                 } else {
                                     "Tuesday, Wednesday, or Thursday"
                                 }
-                                Toast.makeText(context, "Work From Home can only be applied on $allowedDaysMsg.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "WFH is not allowed on Monday and Friday.", Toast.LENGTH_LONG).show()
                                 return@Button
                             }
 

@@ -134,7 +134,7 @@ interface ApiService {
         @Body request: VerifyOtpRequest,
     ): Call<OtpVerifyResponse>
 
-    @POST("login")
+    @POST("/login/v2")
     fun login(
         @Header("Authorization") token: String,
         @Body request: LoginRequest,

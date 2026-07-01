@@ -1,11 +1,11 @@
 package com.archeGlobal.one.ui.screens
 
-import MicrosoftLoginWebView
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.util.Patterns
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -62,7 +62,7 @@ import androidx.fragment.app.FragmentActivity
 import com.archeGlobal.one.LoginActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.LoginController
-
+import com.archeGlobal.one.controller.MSALAuthenticationController
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.model.AuthResponse
 import com.archeGlobal.one.model.UserData
@@ -120,6 +120,11 @@ fun LoginScreen(
     clearFields: Boolean = false,
 ) {
     val context = LocalContext.current
+    val componentActivity = context as? ComponentActivity
+    val msalAuthenticationController: MSALAuthenticationController? = remember(componentActivity) {
+        componentActivity?.let { MSALAuthenticationController(it, AndroidNavigator(it)) }
+    }
+    var msalInitialized by remember { mutableStateOf(false) }
     val userDataManager = UserDataManager.getInstance(context)
     val preferencesManager = PreferencesManager(context)
 
@@ -130,7 +135,6 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var mobileVisible by remember { mutableStateOf(false) }
     var firstTimeLogin by remember { mutableStateOf(forceOriginalLogin || isFirstTimeLogin(context)) }
-    var showWebView by remember { mutableStateOf(false) }
     var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
     var showMfaTermsDialog by remember { mutableStateOf(false) }
     var showOtpTermsDialog by remember { mutableStateOf(false) }
@@ -225,6 +229,52 @@ fun LoginScreen(
     var showTermsDialog by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(componentActivity) {
+        if (componentActivity != null && !msalInitialized) {
+            msalAuthenticationController?.initializeMSAL { success ->
+                msalInitialized = success
+            }
+        }
+    }
+
+    fun startMfaSignIn() {
+        // CRITICAL: Wait for MSAL initialization to complete
+        if (!msalInitialized) {
+            Log.w("LoginScreen", "MFA sign-in attempted but MSAL not initialized yet")
+            errorMessage = "Authentication system initializing. Please wait and try again."
+            return
+        }
+
+        val activity = context as? Activity
+        if (activity == null) {
+            errorMessage = "Unable to start authentication"
+            return
+        }
+        isLoading = true
+        errorMessage = null
+
+        msalAuthenticationController?.performSignIn(activity) { success, msg ->
+            isLoading = false
+            if (success) {
+                // After successful MSAL + Graph + Backend login:
+                // - User details fetched from Microsoft Graph
+                // - Backend login successful
+                // - Session token received
+                // - Navigate to home with authenticated user details
+                if (msalAuthenticationController?.isAuthenticated?.value == true) {
+                    // Extract user details from MSAL authentication controller
+                    // These were populated during performSignIn flow:
+                    // 1. Microsoft Graph fetch → populated email, mobile, employeeId
+                    // 2. Backend login → validated and stored
+                    val email = msalAuthenticationController?.userEmail?.value ?: ""
+                    navigator.navigateToHome(true, false, email, "", "")
+                }
+            } else {
+                errorMessage = msg
+            }
+        }
+    }
 
     val userData = userDataManager.getUserData()
 
@@ -1218,7 +1268,7 @@ fun LoginScreen(
                     Button(
                         onClick = {
                             if (termsAccepted) {
-                                showWebView = true // Show MicrosoftLoginWebView for MFA
+                                startMfaSignIn()
                             } else {
                                 showMfaTermsDialog = true // Or handle terms
                             }
@@ -1403,122 +1453,6 @@ fun LoginScreen(
                 }
 
 
-                if (showWebView) {
-                    Dialog(
-                        onDismissRequest = { showWebView = false },
-                        properties =
-                            DialogProperties(
-                                dismissOnBackPress = false,
-                                dismissOnClickOutside = false,
-                                usePlatformDefaultWidth = false, // Fullscreen
-                            ),
-                    ) {
-                        Surface(
-                            color = Color.White,
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(), // Almost full screen, adjust as needed
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                            ) {
-                                TopAppBar(
-                                    title = {
-                                        Text(
-                                            "Login with MFA",
-                                            modifier = Modifier.fillMaxWidth(),
-                                            fontSize = 20.sp,
-                                            textAlign = TextAlign.Center,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Medium,
-                                        )
-                                    },
-                                    navigationIcon = {
-                                        IconButton(onClick = { showWebView = false }) {
-                                            Icon(
-                                                Icons.Default.ArrowBack,
-                                                contentDescription = "Back",
-                                            )
-                                        }
-                                    },
-                                    actions = {
-                                        Spacer(modifier = Modifier.width(48.dp))
-                                    },
-                                    colors =
-                                        TopAppBarDefaults.topAppBarColors(
-                                            containerColor = Color.White,
-                                            titleContentColor = Color.Black,
-                                            navigationIconContentColor = Color.Black,
-                                        ),
-                                )
-                                MicrosoftLoginWebView(
-                                    url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Farcheone.arche.global%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
-                                    onReceiveAuth = { response ->
-                                        Log.d(
-                                            "LoginScreen",
-                                            "MFA onReceiveAuth called with token: ${response.token}",
-                                        )
-                                        Log.d(
-                                            "LoginScreen",
-                                            "Email: ${response.email}, EmployeeId: ${response.employeeId}, Mobile: ${response.mobilePhone}",
-                                        )
-                                        authResponse = response
-                                        isLoading = true
-                                        // Use encrypted API call like OTP flow
-                                        val otpController =
-                                            OtpVerificationController(
-                                                navigator = navigator,
-                                                context = context,
-                                            )
-                                        val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
-
-                                        otpController.verifyOtp(
-                                            email = response.email,
-                                            mobile = response.mobilePhone,
-                                            employeeId = response.employeeId,
-                                            otpFromUser = "", // Empty for MFA (assume backend handles)
-                                            isBiometric = true, // Not biometric
-                                            backgroundRefresh = false,
-                                            appVersion = deviceInfo.appVersion,
-                                            deviceModel = deviceInfo.deviceModel,
-                                            deviceId = deviceInfo.deviceId,
-                                            platform = deviceInfo.platform,
-                                            osVersion = deviceInfo.osVersion,
-                                            stayLoggedIn = stayLoggedIn,
-                                        ) { message, isError ->
-                                            Log.d(
-                                                "LoginScreen",
-                                                "loginWithToken callback: message=$message, isError=$isError",
-                                            )
-                                            isLoading = false
-                                            if (!isError) {
-                                                UserDataManager
-                                                    .getInstance(context)
-                                                    .setHasLoggedIn(true)
-                                                setFirstTimeLogin(context, false)
-                                                firstTimeLogin = false
-
-                                                if (navigator is AndroidNavigator) {
-                                                    navigator.navigateToHome(
-                                                        true,
-                                                        true,
-                                                        response.email,
-                                                        response.mobilePhone,
-                                                        response.employeeId,
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    },
-                                    onClose = {
-                                        showWebView = false
-                                    },
-                                )
-                            }
-                        }
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -1892,7 +1826,7 @@ fun LoginScreen(
                                     }
                                     if (showMfaTermsDialog) {
                                         showMfaTermsDialog = false
-                                        showWebView = true
+                                        startMfaSignIn()
                                     }
                                 },
                                 modifier =

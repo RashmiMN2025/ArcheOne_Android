@@ -1,6 +1,8 @@
 package com.archeGlobal.one.model
 
 import com.google.gson.annotations.SerializedName
+import java.util.Locale
+import java.util.Locale.getDefault
 
 /**
  * Enhanced Cab Booking Request Model to match the /travel/v2/request API endpoint
@@ -246,7 +248,7 @@ data class CabHistoryItem(
             approverEmail = null,
             createdDate = java.util.Date(), // Would need proper date parsing
             status =
-                when (status.toLowerCase()) {
+                when (status.lowercase()) {
                     "approved" -> TravelStatus.APPROVED
                     "rejected" -> TravelStatus.REJECTED
                     "cancelled" -> TravelStatus.CANCELLED

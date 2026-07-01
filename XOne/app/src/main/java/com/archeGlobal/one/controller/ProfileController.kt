@@ -15,6 +15,7 @@ import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.LogoutRequest
 import com.archeGlobal.one.network.LogoutResponse
 import com.archeGlobal.one.network.ProfilePictureResponse
+import com.archeGlobal.one.service.MSALAuthenticationManager
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.DeviceInfoUtils
 import com.archeGlobal.one.utils.UserDataManager
@@ -430,6 +431,41 @@ class ProfileController(
         }
 
     fun onLogoutClick() {
+        // First, sign out from MSAL, then proceed with API and local logout
+        signOutMsalAccount { msalSignOutComplete ->
+            Log.d("ProfileController", "MSAL sign-out completed: $msalSignOutComplete")
+            proceedWithLogoutAPI()
+        }
+    }
+
+    private fun signOutMsalAccount(callback: (Boolean) -> Unit) {
+        try {
+            val msalManager = MSALAuthenticationManager(context)
+            msalManager.initialize { success ->
+                if (success) {
+                    if (msalManager.isUserSignedIn()) {
+                        // User is signed in via MSAL, sign them out
+                        Log.d("ProfileController", "Signing out MSAL account...")
+                        msalManager.signOut { signOutSuccess ->
+                            Log.d("ProfileController", "MSAL sign-out result: $signOutSuccess")
+                            callback(signOutSuccess)
+                        }
+                    } else {
+                        Log.d("ProfileController", "User not signed in via MSAL, skipping MSAL sign-out")
+                        callback(true) // Consider it a success if no account was signed in
+                    }
+                } else {
+                    Log.e("ProfileController", "Failed to initialize MSAL for sign-out")
+                    callback(false)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("ProfileController", "MSAL sign-out exception: ${e.message}", e)
+            callback(false)
+        }
+    }
+
+    private fun proceedWithLogoutAPI() {
         val userData = userDataManager.getUserData()
         val email = userData?.email
 

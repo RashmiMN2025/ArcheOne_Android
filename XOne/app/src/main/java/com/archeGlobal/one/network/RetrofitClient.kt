@@ -74,7 +74,7 @@ class AuthInterceptor(
         // Skip /login (LoginController already handles 403 itself and shows the
         // dialog via the navigator) and OTP endpoints (auth flow handles its own
         // errors). Auth is still valid here, so we do NOT clear the session.
-        val isLoginEndpoint = url.contains("/login", ignoreCase = true)
+        val isLoginEndpoint = url.contains("/login/v2", ignoreCase = true)
         if (response.code == 403 && !isOtpEndpoint && !isLoginEndpoint) {
             Log.w("AuthInterceptor", "Received 403 Forbidden - App update required for URL: $url")
             handleForceUpdate(context, preferencesManager)
@@ -146,8 +146,8 @@ class AuthInterceptor(
 }
 
 object RetrofitClient {
-const val BASE_URL = "https://archeone.arche.global/"
-   //const val BASE_URL = "https://dev.arche.global/"
+//const val BASE_URL = "https://archeone.arche.global/"
+   const val BASE_URL = "https://dev.arche.global/"
     private var retrofit: Retrofit? = null
 
     // Initialize with context to get the token
