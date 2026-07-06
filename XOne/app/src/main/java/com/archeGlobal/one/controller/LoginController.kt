@@ -89,7 +89,7 @@ class LoginController(
         Log.d("LoginController", "Email: '$email' (length: ${email.length})")
         Log.d("LoginController", "Mobile: '$mobile' (length: ${mobile.length})")
         Log.d("LoginController", "EmployeeId: '$employeeId' (length: ${employeeId.length})")
-        Log.d("LoginController", "Token: '${token.take(30)}...' (length: ${token.length})")
+        Log.d("LoginController", "Token: '$token' (length: ${token.length})")
         Log.d("LoginController", "==================================")
         
         CoroutineScope(Dispatchers.IO).launch {

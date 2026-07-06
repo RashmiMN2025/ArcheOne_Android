@@ -248,6 +248,7 @@ class EncryptedAPIHelper(
 
         preferencesManager.clearSessionData()
         userDataManager.clearSessionData()
+        endActiveMsalSession()
 
         val intent =
             Intent(context, LoginActivity::class.java).apply {
@@ -260,6 +261,23 @@ class EncryptedAPIHelper(
                 }
             }
         context.startActivity(intent)
+    }
+
+    private fun endActiveMsalSession() {
+        try {
+            val msalManager = MSALAuthenticationManager(context)
+            msalManager.initialize { success ->
+                if (success && msalManager.isUserSignedIn()) {
+                    msalManager.signOut { signOutSuccess ->
+                        Log.d(TAG, "MSAL sign-out during token expiration result: $signOutSuccess")
+                    }
+                } else {
+                    Log.d(TAG, "No active MSAL session to sign out during token expiration")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to end active MSAL session during token expiration", e)
+        }
     }
 
     internal fun handleAppUpdateRequired(context: Context) {

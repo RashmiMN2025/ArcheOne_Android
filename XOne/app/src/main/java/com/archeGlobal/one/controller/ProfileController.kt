@@ -12,8 +12,6 @@ import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.ProfileModel
 import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.navigation.Navigator
-import com.archeGlobal.one.network.LogoutRequest
-import com.archeGlobal.one.network.LogoutResponse
 import com.archeGlobal.one.network.ProfilePictureResponse
 import com.archeGlobal.one.service.MSALAuthenticationManager
 import com.archeGlobal.one.network.RetrofitClient
@@ -431,10 +429,10 @@ class ProfileController(
         }
 
     fun onLogoutClick() {
-        // First, sign out from MSAL, then proceed with API and local logout
+        // Sign out from MSAL first, then proceed with local logout only
         signOutMsalAccount { msalSignOutComplete ->
             Log.d("ProfileController", "MSAL sign-out completed: $msalSignOutComplete")
-            proceedWithLogoutAPI()
+            proceedWithLocalLogout(userDataManager.getUserData())
         }
     }
 
@@ -444,7 +442,6 @@ class ProfileController(
             msalManager.initialize { success ->
                 if (success) {
                     if (msalManager.isUserSignedIn()) {
-                        // User is signed in via MSAL, sign them out
                         Log.d("ProfileController", "Signing out MSAL account...")
                         msalManager.signOut { signOutSuccess ->
                             Log.d("ProfileController", "MSAL sign-out result: $signOutSuccess")
@@ -452,7 +449,7 @@ class ProfileController(
                         }
                     } else {
                         Log.d("ProfileController", "User not signed in via MSAL, skipping MSAL sign-out")
-                        callback(true) // Consider it a success if no account was signed in
+                        callback(true)
                     }
                 } else {
                     Log.e("ProfileController", "Failed to initialize MSAL for sign-out")
@@ -465,61 +462,22 @@ class ProfileController(
         }
     }
 
-    private fun proceedWithLogoutAPI() {
-        val userData = userDataManager.getUserData()
-        val email = userData?.email
-
-        if (email.isNullOrEmpty()) {
-            Log.e("ProfileController", "Email not found, proceeding with local logout")
-            proceedWithLocalLogout(userData)
-            return
-        }
-
-        val employeeName = userData?.name ?: userData?.email ?: ""
-        userDataManager.setLastUsername(employeeName) // Save for welcome text
-
-        // Call logout API with encryption
-        val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
-        val logoutRequest = LogoutRequest(email, deviceId = deviceInfo.deviceId)
-        Log.d("ProfileController", "Calling encrypted logout API with email: $email")
-
-        val encryptedAPIHelper =
-            com.archeGlobal.one.utils
-                .EncryptedAPIHelper(context)
-        encryptedAPIHelper.makeEncryptedCall(
-            endpoint = "logout",
-            method = "POST",
-            request = logoutRequest,
-            responseClass = LogoutResponse::class.java,
-            withAuthHeader = true,
-        ) { response, error ->
-            if (error != null) {
-                Log.e("ProfileController", "Logout API error: ${error.errorMessage}")
-                // Even if API fails, proceed with local logout for user experience
-                proceedWithLocalLogout(userData)
-            } else if (response != null) {
-                Log.d("ProfileController", "Logout API success: ${response.message}")
-                proceedWithLocalLogout(userData)
-            } else {
-                Log.e("ProfileController", "Logout API failed: No response received")
-                // Even if API fails, proceed with local logout for user experience
-                proceedWithLocalLogout(userData)
-            }
-        }
-    }
-
     private fun proceedWithLocalLogout(userData: UserData?) {
-        // Clear login state and local data
+        // Clear all user data, including biometric settings, when the user logs out
+        userDataManager.clearUserData()
         userDataManager.setIsLoggedIn(false)
         userDataManager.setHasLoggedIn(true)
-        // Preserve that this is not a first-time user (important for showing fingerprint option)
+
+        // Preserve that this is not a first-time user so biometric setup can still be offered
         com.archeGlobal.one.utils
             .setFirstTimeLogin(context, false)
-        // Remove token and clear seen services so New stickers can appear on next login
+
+        // Remove any remaining session-specific values
         userDataManager.preferencesManager.clearAuthToken()
         userDataManager.preferencesManager.clearSeenServices()
         userDataManager.preferencesManager.clearInstallType()
-        // Navigate to login screen WITHOUT token
+
+        // Navigate to login screen WITHOUT cached login data
         navigator.navigateToLoginScreen()
     }
 

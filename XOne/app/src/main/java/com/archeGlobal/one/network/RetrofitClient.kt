@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.archeGlobal.one.LoginActivity
+import com.archeGlobal.one.service.MSALAuthenticationManager
 import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.utils.UserDataManager
 import okhttp3.Interceptor
@@ -90,6 +91,7 @@ class AuthInterceptor(
         // Clear session data but preserve MPIN and biometric data for re-authentication
         preferencesManager.clearSessionData()
         val userDataManager = UserDataManager.getInstance(context)
+        endActiveMsalSession()
 
         // Store current user data for re-authentication BEFORE clearing
         val lastUserData = userDataManager.getUserData()
@@ -118,6 +120,23 @@ class AuthInterceptor(
         context.startActivity(intent)
 
         Log.i("AuthInterceptor", "Redirected to login due to token expiration, preserving MPIN and biometric credentials")
+    }
+
+    private fun endActiveMsalSession() {
+        try {
+            val msalManager = MSALAuthenticationManager(context)
+            msalManager.initialize { success ->
+                if (success && msalManager.isUserSignedIn()) {
+                    msalManager.signOut { signOutSuccess ->
+                        Log.d("AuthInterceptor", "MSAL sign-out during token expiration result: $signOutSuccess")
+                    }
+                } else {
+                    Log.d("AuthInterceptor", "No active MSAL session to sign out during token expiration")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("AuthInterceptor", "Failed to end active MSAL session during token expiration", e)
+        }
     }
 
     private fun handleForceUpdate(

@@ -180,9 +180,13 @@ class HomeActivity : AppCompatActivity() {
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
+    private var email: String = ""
+    private var mobile: String = ""
+    private var employeeId: String = ""
     private var isAuthenticating = mutableStateOf(false) // New state for biometric authentication
     private var isLocked = false
     private var biometricPromptShown = false
+    private var showBiometricLockedDialog by mutableStateOf(false)
     private var currentSourceActivity = mutableStateOf<String?>(null) // Track source activity for back navigation
     private var showUpdateDialog by mutableStateOf(false)
 
@@ -258,25 +262,7 @@ class HomeActivity : AppCompatActivity() {
             !appLifecycleObserver.isAuthenticationSessionActive() &&
             !isAuthenticating.value
         ) {
-            isAuthenticating.value = true
-            biometricHelper.showBiometricPrompt(
-                activity = this,
-                onSuccess = {
-                    isAuthenticating.value = false
-                    appLifecycleObserver.setAuthenticationSessionActive(true)
-                    userDataManager.preferencesManager.setAppLockState(false)
-                },
-                onError = { error ->
-                    isAuthenticating.value = false
-                    Log.w("HomeActivity", "Biometric authentication failed: $error")
-                    val intent = Intent(this@HomeActivity, LoginActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        putExtra("session_expired", true)
-                    }
-                    startActivity(intent)
-                    finish()
-                },
-            )
+            promptBiometricUnlock()
         }
     }
 
@@ -304,9 +290,9 @@ class HomeActivity : AppCompatActivity() {
         val fromLogin = intent.getBooleanExtra("fromLogin", false)
         isFromLogin = fromLogin
         val fromMpin = intent.getBooleanExtra("fromMpin", false)
-        val email = intent.getStringExtra("email") ?: userDataManager.getUserData()?.email ?: ""
-        val mobile = intent.getStringExtra("mobile") ?: userDataManager.getUserData()?.mobile ?: ""
-        val employeeId = intent.getStringExtra("employeeId") ?: userDataManager.getUserData()?.employeeId ?: ""
+        email = intent.getStringExtra("email") ?: userDataManager.getUserData()?.email ?: ""
+        mobile = intent.getStringExtra("mobile") ?: userDataManager.getUserData()?.mobile ?: ""
+        employeeId = intent.getStringExtra("employeeId") ?: userDataManager.getUserData()?.employeeId ?: ""
         val token = intent.getStringExtra("token") ?: userDataManager.getAuthToken() ?: ""
 
         if (fromLogin || fromMpin) {
@@ -355,7 +341,32 @@ class HomeActivity : AppCompatActivity() {
         })
 
         otpVerificationController = OtpVerificationController(navigator = navigator, context = this)
+        setupContent()
+    }
 
+    private fun promptBiometricUnlock() {
+        val biometricHelper = BiometricHelper(this)
+        val appLifecycleObserver = XOneApplication.getInstance().getAppLifecycleObserver()
+
+        isAuthenticating.value = true
+        biometricHelper.showBiometricPrompt(
+            activity = this,
+            title = "Fingerprint Authentication",
+            subtitle = "Authenticate to unlock ArcheOne",
+            onSuccess = {
+                isAuthenticating.value = false
+                appLifecycleObserver.setAuthenticationSessionActive(true)
+                userDataManager.preferencesManager.setAppLockState(false)
+            },
+            onError = { error ->
+                isAuthenticating.value = false
+                Log.w("HomeActivity", "Biometric unlock failed: $error")
+                showBiometricLockedDialog = true
+            },
+        )
+    }
+
+    private fun setupContent() {
         val destination = intent.getStringExtra("destination")
         val navigateTo = intent.getStringExtra("navigateTo")
         val ticketCategory = intent.getStringExtra("ticketCategory")
@@ -372,6 +383,13 @@ class HomeActivity : AppCompatActivity() {
 
                 if (intent.getBooleanExtra("showUpdateDialog", false) || preferencesManager.getBoolean("showUpdateDialog", false)) {
                     showUpdateDialog = true
+                }
+
+                if (showBiometricLockedDialog) {
+                    BiometricLockedDialog(onUnlockNow = {
+                        showBiometricLockedDialog = false
+                        promptBiometricUnlock()
+                    })
                 }
 
                 var isLoading by remember { mutableStateOf(false) }
@@ -672,7 +690,7 @@ class HomeActivity : AppCompatActivity() {
                     }
 
                     composable(route = "approval_requests") { ApprovalRequestsScreen(controller = approvalRequestsController, onBack = { navController.popBackStack() }, onRequestClick = { r -> val dText = if (r.startDate == r.endDate || r.endDate.isNullOrEmpty()) r.startDate ?: "" else "${r.startDate} - ${r.endDate}"; navController.navigate("approval_request_detail?id=${java.net.URLEncoder.encode(r.eventId ?: "", "UTF-8")}&name=${java.net.URLEncoder.encode(r.employeeName ?: "", "UTF-8")}&leaveType=${java.net.URLEncoder.encode(r.requestType ?: "", "UTF-8")}&code=${java.net.URLEncoder.encode(r.employeeCode ?: "", "UTF-8")}&date=${java.net.URLEncoder.encode(dText, "UTF-8")}&duration=${java.net.URLEncoder.encode(r.leaveDuration ?: "", "UTF-8")}&reason=${java.net.URLEncoder.encode(r.reason ?: "", "UTF-8")}&description=${java.net.URLEncoder.encode(r.description ?: "", "UTF-8")}&status=${java.net.URLEncoder.encode(r.status ?: "pending", "UTF-8")}&punchIn=${java.net.URLEncoder.encode(r.punchIn ?: "", "UTF-8")}&punchOut=${java.net.URLEncoder.encode(r.punchOut ?: "", "UTF-8")}&category=${java.net.URLEncoder.encode(r.category ?: "approval request", "UTF-8")}&secondApprover=${java.net.URLEncoder.encode(r.secondApprover ?: "", "UTF-8")}&secondApproverEmail=${java.net.URLEncoder.encode(r.secondApproverEmail ?: "", "UTF-8")}") }) }
-
+                    
                     composable(route = "approval_request_detail?id={id}&name={name}&leaveType={leaveType}&code={code}&date={date}&duration={duration}&reason={reason}&description={description}&status={status}&punchIn={punchIn}&punchOut={punchOut}&category={category}&secondApprover={secondApprover}&secondApproverEmail={secondApproverEmail}") { backStackEntry ->
                         val a = backStackEntry.arguments
                         ApprovalRequestDetailScreen(
@@ -773,6 +791,56 @@ class HomeActivity : AppCompatActivity() {
     fun showUpdateDialog() {
         showUpdateDialog = true
         preferencesManager.setBoolean("showUpdateDialog", true)
+    }
+
+    @Composable
+    fun BiometricLockedDialog(onUnlockNow: () -> Unit) {
+        Dialog(onDismissRequest = {}, properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)) {
+            Surface(shape = RoundedCornerShape(20.dp), color = Color(0xFFF6F4EE), modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_fingerprint),
+                        contentDescription = "Locked",
+                        tint = Color(0xFFDD3825),
+                        modifier = Modifier.size(48.dp),
+                    )
+                    Spacer(modifier = Modifier.height(18.dp))
+                    androidx.compose.material3.Text(
+                        text = "ArcheOne is locked",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    androidx.compose.material3.Text(
+                        text = "Authentication is required to access the ArcheOne app.",
+                        fontSize = 15.sp,
+                        fontFamily = GraphikFontFamily,
+                        color = Color(0xFF4F4F4F),
+                        textAlign = TextAlign.Center,
+                        lineHeight = 22.sp,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = onUnlockNow,
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825), contentColor = Color.White),
+                        shape = RoundedCornerShape(14.dp),
+                    ) {
+                        androidx.compose.material3.Text(
+                            text = "Unlock now",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = GraphikFontFamily,
+                        )
+                    }
+                }
+            }
+        }
     }
 
     @Composable

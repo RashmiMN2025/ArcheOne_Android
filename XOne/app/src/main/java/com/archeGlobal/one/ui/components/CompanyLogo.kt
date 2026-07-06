@@ -17,7 +17,7 @@ fun CompanyLogo(modifier: Modifier = Modifier) {
         contentDescription = "Company Logo",
         modifier =
             Modifier
-                .height(40.dp) // Reduced from 30.dp to 20.dp
+                .height(50.dp) // Reduced from 30.dp to 20.dp
                 .then(modifier), // Apply any other modifiers after setting height
     )
 }

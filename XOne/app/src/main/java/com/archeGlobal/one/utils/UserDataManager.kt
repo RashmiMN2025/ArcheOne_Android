@@ -3,6 +3,7 @@ package com.archeGlobal.one.utils
 import android.content.Context
 import android.util.Log
 import com.archeGlobal.one.model.ApiGreetingCategory
+import com.archeGlobal.one.service.MSALAuthenticationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +26,8 @@ import com.google.gson.Gson
 class UserDataManager private constructor(
     context: Context,
 ) {
-    val preferencesManager = PreferencesManager(context.applicationContext)
+    private val appContext = context.applicationContext
+    val preferencesManager = PreferencesManager(appContext)
     private val gson = Gson()
 
     // In-memory cached data for quick access
@@ -385,6 +387,8 @@ class UserDataManager private constructor(
 
     // Clear only session data but preserve MPIN and biometric data for re-authentication
     fun clearSessionData() {
+        endActiveMsalSession()
+
         // Clear in-memory cache
         userData = null
         officesData = null
@@ -402,6 +406,23 @@ class UserDataManager private constructor(
         setIsLoggedIn(false)
         // Don't clear lastUsername, MPIN, or biometric credentials
         Log.d(TAG, "Session data cleared from both memory and preferences, preserving MPIN and biometric credentials")
+    }
+
+    private fun endActiveMsalSession() {
+        try {
+            val msalManager = MSALAuthenticationManager(appContext)
+            msalManager.initialize { success ->
+                if (success && msalManager.isUserSignedIn()) {
+                    msalManager.signOut { signOutSuccess ->
+                        Log.d(TAG, "MSAL sign-out during session clear result: $signOutSuccess")
+                    }
+                } else {
+                    Log.d(TAG, "No active MSAL session to sign out during session clear")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to end active MSAL session during session clear", e)
+        }
     }
 
     fun updateProfilePicture(profilePicUrl: String?) {
