@@ -616,7 +616,7 @@ class HomeActivity : AppCompatActivity() {
                     composable(route = "global_celebration") { GlobalCelebrationScreen(controller = GlobalCelebrationController(this@HomeActivity, navigator, greetingsController), onBackPressed = { navigator.navigateToGreetings() }) }
                     composable(route = "service_not_available?serviceName={serviceName}", arguments = listOf(navArgument("serviceName") { type = NavType.StringType; nullable = true })) { backStackEntry -> ServiceNotAvailableScreen(navController = navController, serviceName = backStackEntry.arguments?.getString("serviceName")) }
 
-                    composable(route = "travel") { TravelScreen(controller = travelController) }
+                    composable(route = "travel") { TravelDeskScreen(controller = travelController) }
                     composable(route = "travel_history") { TravelHistoryScreen(controller = travelController) }
                     composable(route = "travel_request_detail") { travelController.selectedTravelRequest?.let { tr -> TravelRequestDetailScreen(controller = travelController, travelRequest = tr) } ?: LaunchedEffect(Unit) { navController.popBackStack() } }
                     composable(route = "travel_history_detail") { travelController.selectedTravelRequest?.let { tr -> TravelHistoryDetailScreen(controller = travelController, travelRequest = tr) } ?: LaunchedEffect(Unit) { navController.popBackStack() } }
