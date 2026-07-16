@@ -13,6 +13,7 @@ import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.network.AssetDetail
+import com.archeGlobal.one.network.ExpenseRetrofitClient
 import com.archeGlobal.one.network.FAQCategory
 import com.archeGlobal.one.network.Office
 import com.archeGlobal.one.network.SmartCollateralCategory
@@ -367,6 +368,9 @@ class UserDataManager private constructor(
     }
 
     fun clearUserData() {
+        performExpenseLogout()
+        com.archeGlobal.one.network.ExpenseRetrofitClient.clearSession()
+
         // Clear in-memory cache
         userData = null
         officesData = null
@@ -387,7 +391,9 @@ class UserDataManager private constructor(
 
     // Clear only session data but preserve MPIN and biometric data for re-authentication
     fun clearSessionData() {
+        performExpenseLogout()
         endActiveMsalSession()
+        com.archeGlobal.one.network.ExpenseRetrofitClient.clearSession()
 
         // Clear in-memory cache
         userData = null
@@ -406,6 +412,22 @@ class UserDataManager private constructor(
         setIsLoggedIn(false)
         // Don't clear lastUsername, MPIN, or biometric credentials
         Log.d(TAG, "Session data cleared from both memory and preferences, preserving MPIN and biometric credentials")
+    }
+
+    private fun performExpenseLogout() {
+        Thread {
+            try {
+                ExpenseRetrofitClient.initialize(appContext)
+                val response = ExpenseRetrofitClient.logoutService.logout().execute()
+                if (response.isSuccessful) {
+                    Log.d(TAG, "Expense logout API completed successfully: ${response.body()?.message}")
+                } else {
+                    Log.e(TAG, "Expense logout API failed: HTTP ${response.code()} ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to call expense logout API", e)
+            }
+        }.start()
     }
 
     private fun endActiveMsalSession() {

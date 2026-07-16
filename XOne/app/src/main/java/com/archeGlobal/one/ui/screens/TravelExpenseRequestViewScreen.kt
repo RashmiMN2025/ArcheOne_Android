@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
@@ -37,6 +38,8 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
@@ -50,11 +53,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -62,72 +67,57 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.controller.TravelExpenseController
+import com.archeGlobal.one.network.TravelRequestItemUi
 import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private data class TravelRequestItemUi(
-    val tripId: String,
-    val projectId: String,
-    val destination: String,
-    val travelDates: String,
-    val estimatedCost: String,
-    val modeOfTravel: String,
-    val hotelNeeded: String,
-    val vehicleNeeded: String,
-    val advanceNeeded: String,
-    val advanceAmount: String,
-    val approvedAmount: String,
-    val status: String
-)
-
 @Composable
 fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val controller = remember { TravelExpenseController(context) }
+    val isLoading by controller.isLoading
+    val errorMessage by controller.errorMessage
+    val requests by controller.trips
+    val projectOptions by controller.projectOptions
+    val projectOptionsLoading by controller.projectOptionsLoading
+    val projectOptionsError by controller.projectOptionsError
+    var selectedRequest by remember { mutableStateOf<TravelRequestItemUi?>(null) }
+    var showDetailScreen by remember { mutableStateOf(false) }
+    var detailsLoading by remember { mutableStateOf(false) }
+
+    if (showDetailScreen && selectedRequest != null) {
+        TravelExpenseRequestDetailViewScreen(
+            controller = controller,
+            request = selectedRequest!!,
+            onBack = { showDetailScreen = false },
+            projectOptions = projectOptions,
+            projectOptionsLoading = projectOptionsLoading,
+            projectOptionsError = projectOptionsError
+        )
+        return
+    }
+
+    LaunchedEffect(Unit) {
+        controller.fetchTrips()
+        controller.fetchProjectOptions()
+    }
+
     var searchText by rememberSaveable { mutableStateOf("") }
     var showCreateDialog by rememberSaveable { mutableStateOf(false) }
-
-    val requests = remember {
-        listOf(
-            TravelRequestItemUi(
-                tripId = "TRP-001",
-                projectId = "PROJ-001",
-                destination = "Bangalore",
-                travelDates = "12-15 Apr 2026",
-                estimatedCost = "Rs 28,500",
-                modeOfTravel = "Flight",
-                hotelNeeded = "Yes",
-                vehicleNeeded = "No",
-                advanceNeeded = "Yes",
-                advanceAmount = "Rs 5,000",
-                approvedAmount = "Rs 5,000",
-                status = "Approved"
-            ),
-            TravelRequestItemUi(
-                tripId = "TRP-002",
-                projectId = "PROJ-002",
-                destination = "Mumbai",
-                travelDates = "28-30 Mar 2026",
-                estimatedCost = "Rs 12,400",
-                modeOfTravel = "Train",
-                hotelNeeded = "Yes",
-                vehicleNeeded = "Yes",
-                advanceNeeded = "No",
-                advanceAmount = "-",
-                approvedAmount = "-",
-                status = "Pending"
-            )
-        )
-    }
 
     val filteredRequests = requests.filter { request ->
         searchText.isBlank() ||
             request.destination.contains(searchText, ignoreCase = true) ||
-            request.tripId.contains(searchText, ignoreCase = true) ||
+            request.requestId.contains(searchText, ignoreCase = true) ||
+            request.tripCode.contains(searchText, ignoreCase = true) ||
             request.projectId.contains(searchText, ignoreCase = true) ||
             request.status.contains(searchText, ignoreCase = true)
     }
@@ -220,7 +210,31 @@ fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
-            if (filteredRequests.isEmpty()) {
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 56.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = PrimaryRed)
+                }
+            } else if (errorMessage != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 56.dp, start = 16.dp, end = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = errorMessage ?: "Failed to load travel requests",
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 16.sp,
+                        color = PrimaryRed,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            } else if (filteredRequests.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -241,14 +255,34 @@ fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     items(filteredRequests) { request ->
-                        TravelHistoryCard(request = request)
+                        TravelHistoryCard(
+                            request = request,
+                            onViewDetails = {
+                                detailsLoading = true
+                                controller.fetchTrip(
+                                    it.tripId,
+                                    onSuccess = { tripUi ->
+                                        selectedRequest = tripUi
+                                        detailsLoading = false
+                                        showDetailScreen = true
+                                    },
+                                    onError = { message ->
+                                        detailsLoading = false
+                                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                            }
+                        )
                     }
                 }
             }
         }
 
         Button(
-            onClick = { showCreateDialog = true },
+            onClick = {
+                controller.fetchProjectOptions()
+                showCreateDialog = true
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(20.dp)
@@ -269,17 +303,46 @@ fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
         }
     }
 
+    if (detailsLoading && !showDetailScreen) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0x88000000)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = PrimaryRed)
+        }
+    }
+
+    if (detailsLoading && !showDetailScreen) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0x88000000)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = PrimaryRed)
+        }
+    }
+
     if (showCreateDialog) {
         CreateTravelRequestBottomSheet(
-            onDismiss = { showCreateDialog = false }
+            controller = controller,
+            onDismiss = { showCreateDialog = false },
+            onRequestCreated = { showCreateDialog = false },
+            projectOptions = projectOptions,
+            projectOptionsLoading = projectOptionsLoading,
+            projectOptionsError = projectOptionsError
         )
     }
 }
 
 @Composable
-private fun TravelHistoryCard(request: TravelRequestItemUi) {
+private fun TravelHistoryCard(request: TravelRequestItemUi, onViewDetails: (TravelRequestItemUi) -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onViewDetails(request) },
         shape = RoundedCornerShape(16.dp),
         elevation = 2.dp,
         backgroundColor = Color.White
@@ -294,7 +357,7 @@ private fun TravelHistoryCard(request: TravelRequestItemUi) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "#${request.tripId.takeLast(3).padStart(6, '0')}",
+                    text = "#TR-${request.requestId}",
                     fontFamily = GraphikFontFamily,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -304,7 +367,7 @@ private fun TravelHistoryCard(request: TravelRequestItemUi) {
                     text = request.status.replaceFirstChar { it.uppercase() },
                     color = when (request.status.lowercase()) {
                         "approved" -> Color(0xFF2E7D32)
-                        "pending" -> Color(0xFFEF6C00)
+                        "pending", "submitted" -> Color(0xFFEF6C00)
                         "rejected" -> PrimaryRed
                         else -> Color.Gray
                     },
@@ -315,7 +378,7 @@ private fun TravelHistoryCard(request: TravelRequestItemUi) {
                         .background(
                             when (request.status.lowercase()) {
                                 "approved" -> Color(0xFF2E7D32).copy(alpha = 0.15f)
-                                "pending" -> Color(0xFFEF6C00).copy(alpha = 0.15f)
+                                "pending", "submitted" -> Color(0xFFEF6C00).copy(alpha = 0.15f)
                                 "rejected" -> PrimaryRed.copy(alpha = 0.15f)
                                 else -> Color.Gray.copy(alpha = 0.15f)
                             },
@@ -327,16 +390,19 @@ private fun TravelHistoryCard(request: TravelRequestItemUi) {
 
             Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
 
-            InfoRow("Trip ID", request.tripId)
-            InfoRow("Project ID", request.projectId)
+            InfoRow("Request ID", "#TR-${request.requestId}")
+            InfoRow("Trip Code", request.tripCode)
+            InfoRow("Project Code", request.projectId)
             InfoRow("Destination", request.destination)
+            InfoRow("Description", request.description)
             InfoRow("Travel Dates", request.travelDates)
             InfoRow("Estimated Cost", request.estimatedCost)
             InfoRow("Mode of Travel", request.modeOfTravel)
             InfoRow("Hotel Needed", request.hotelNeeded)
             InfoRow("Vehicle Needed", request.vehicleNeeded)
             InfoRow("Advance Needed", request.advanceNeeded)
-            InfoRow("Advance Amount", request.advanceAmount)
+            InfoRow("Advance Amount", request.firstAdvanceRequestedAmount)
+            InfoRow("Advance Requested", request.firstAdvanceRequestedAmount)
             InfoRow("Approved Amount", request.approvedAmount)
 
             Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
@@ -391,24 +457,34 @@ private fun InfoRow(label: String, value: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CreateTravelRequestBottomSheet(onDismiss: () -> Unit) {
+fun CreateTravelRequestBottomSheet(
+    controller: TravelExpenseController,
+    onDismiss: () -> Unit,
+    onRequestCreated: () -> Unit,
+    projectOptions: List<com.archeGlobal.one.network.ProjectOption>,
+    projectOptionsLoading: Boolean,
+    projectOptionsError: String?,
+    isEditMode: Boolean = false,
+    initialRequest: com.archeGlobal.one.network.TravelRequestItemUi? = null
+) {
+    val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
-    var projectId by rememberSaveable { mutableStateOf("") }
-    var description by rememberSaveable { mutableStateOf("") }
-    var destination by rememberSaveable { mutableStateOf("") }
-    var estimatedCost by rememberSaveable { mutableStateOf("") }
-    var modeOfTravel by rememberSaveable { mutableStateOf("") }
-    var startDateMillis by rememberSaveable { mutableStateOf<Long?>(null) }
-    var endDateMillis by rememberSaveable { mutableStateOf<Long?>(null) }
+    var projectId by rememberSaveable { mutableStateOf(initialRequest?.projectId ?: "") }
+    var description by rememberSaveable { mutableStateOf(initialRequest?.description?.takeIf { it != "-" } ?: "") }
+    var destination by rememberSaveable { mutableStateOf(initialRequest?.destination ?: "") }
+    var estimatedCost by rememberSaveable { mutableStateOf(initialRequest?.estimatedCost?.removePrefix("Rs ")?.replace(",", "")?.takeIf { it != "-" } ?: "") }
+    var modeOfTravel by rememberSaveable { mutableStateOf(initialRequest?.modeOfTravel ?: "") }
+    var startDateMillis by rememberSaveable { mutableStateOf<Long?>(initialRequest?.startDate?.let { parseDateString(it) }) }
+    var endDateMillis by rememberSaveable { mutableStateOf<Long?>(initialRequest?.endDate?.let { parseDateString(it) }) }
     var showStartDatePicker by rememberSaveable { mutableStateOf(false) }
     var showEndDatePicker by rememberSaveable { mutableStateOf(false) }
-    var advanceAmount by rememberSaveable { mutableStateOf("") }
+    var advanceAmount by rememberSaveable { mutableStateOf(initialRequest?.firstAdvanceRequestedAmountRaw?.takeIf { it.isNotBlank() } ?: "") }
     var advanceType by rememberSaveable { mutableStateOf("") }
-    var hotelNeeded by rememberSaveable { mutableStateOf(false) }
-    var vehicleNeeded by rememberSaveable { mutableStateOf(false) }
-    var advanceNeeded by rememberSaveable { mutableStateOf(false) }
+    var hotelNeeded by rememberSaveable { mutableStateOf(initialRequest?.hotelNeeded == "Yes") }
+    var vehicleNeeded by rememberSaveable { mutableStateOf(initialRequest?.vehicleNeeded == "Yes") }
+    var advanceNeeded by rememberSaveable { mutableStateOf(initialRequest?.advanceNeeded == "Yes") }
     val scrollState = rememberScrollState()
 
     val startDateText = startDateMillis?.let { dateFormatter.format(Date(it)) } ?: "Select date"
@@ -437,7 +513,7 @@ private fun CreateTravelRequestBottomSheet(onDismiss: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Create New Travel Request",
+                    text = if (isEditMode) "Update Travel Request" else "Create New Travel Request",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 19.sp,
@@ -453,6 +529,7 @@ private fun CreateTravelRequestBottomSheet(onDismiss: () -> Unit) {
                         .clickable { onDismiss() }
                         .padding(start = 12.dp)
                 )
+
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -500,7 +577,30 @@ private fun CreateTravelRequestBottomSheet(onDismiss: () -> Unit) {
                     }
                 }
 
-                FormInput("Project ID *", projectId) { projectId = it }
+                if (projectOptionsLoading) {
+                    Text(
+                        text = "Loading project options...",
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+                if (!projectOptionsError.isNullOrBlank()) {
+                    Text(
+                        text = projectOptionsError,
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 14.sp,
+                        color = PrimaryRed,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+                DropdownField(
+                    label = "Project ID *",
+                    value = projectId,
+                    options = if (projectOptions.isNotEmpty()) projectOptions.map { it.code } else listOf("No project options available"),
+                    onValueChange = { projectId = it }
+                )
                 FormInput("Description (Optional)", description) { description = it }
                 FormInput("Destination *", destination) { destination = it }
                 FormInput("Estimated Total Cost *", estimatedCost) { estimatedCost = it }
@@ -546,7 +646,86 @@ private fun CreateTravelRequestBottomSheet(onDismiss: () -> Unit) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Button(
-                onClick = onDismiss,
+                onClick = {
+                    val selectedProject = projectOptions.firstOrNull { it.code == projectId }
+                    if (projectOptionsLoading || projectOptions.isEmpty()) {
+                        Toast.makeText(context, "Project options are still loading. Please wait.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (selectedProject == null) {
+                        Toast.makeText(context, "Please select a valid project", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (destination.isBlank()) {
+                        Toast.makeText(context, "Please enter destination", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (estimatedCost.isBlank() || estimatedCost.toDoubleOrNull() == null) {
+                        Toast.makeText(context, "Please enter a valid estimated cost", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (startDateMillis == null || endDateMillis == null) {
+                        Toast.makeText(context, "Please select travel dates", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (endDateMillis!! < startDateMillis!!) {
+                        Toast.makeText(context, "End date cannot be before start date", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (modeOfTravel.isBlank()) {
+                        Toast.makeText(context, "Please select mode of travel", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    val estimatedAmountValue = estimatedCost.toDoubleOrNull() ?: 0.0
+                    val advanceAmountValue = if (advanceNeeded) {
+                        advanceAmount.toDoubleOrNull()?.also {
+                            if (it < 0) {
+                                Toast.makeText(context, "Please enter a valid advance amount", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    } else {
+                        0.0
+                    }
+                    if (advanceNeeded && advanceAmountValue == null) return@Button
+
+                    val requestPayload = com.archeGlobal.one.network.CreateTripRequest(
+                        destination = destination,
+                        startDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(startDateMillis!!)),
+                        endDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(endDateMillis!!)),
+                        description = description.ifBlank { null },
+                        hotelAccommodationNeeded = hotelNeeded,
+                        modeOfTravel = modeOfTravel.lowercase(Locale.getDefault()),
+                        vehicleNeeded = vehicleNeeded,
+                        advanceNeeded = advanceNeeded,
+                        advanceAmount = advanceAmountValue ?: 0.0,
+                        estimatedAmount = estimatedAmountValue,
+                        requestedAmount = estimatedAmountValue,
+                        projectId = selectedProject.id
+                    )
+
+                    if (isEditMode && initialRequest != null) {
+                        controller.updateTrip(
+                            tripId = initialRequest.tripId,
+                            request = requestPayload,
+                            onSuccess = {
+                                onRequestCreated()
+                            },
+                            onError = { message ->
+                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    } else {
+                        controller.createTrip(
+                            request = requestPayload,
+                            onSuccess = {
+                                onRequestCreated()
+                            },
+                            onError = { message ->
+                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -556,7 +735,7 @@ private fun CreateTravelRequestBottomSheet(onDismiss: () -> Unit) {
                 ),
                 shape = RoundedCornerShape(14.dp)
             ) {
-                Text("Create Request", fontFamily = GraphikFontFamily, fontSize = 16.sp)
+                Text(if (isEditMode) "Update Request" else "Create Request", fontFamily = GraphikFontFamily, fontSize = 16.sp)
             }
         }
     }
@@ -618,6 +797,14 @@ private fun CreateTravelRequestBottomSheet(onDismiss: () -> Unit) {
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+}
+
+private fun parseDateString(dateString: String): Long? {
+    return try {
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateString)?.time
+    } catch (e: Exception) {
+        null
     }
 }
 

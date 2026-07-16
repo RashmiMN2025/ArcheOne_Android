@@ -1660,6 +1660,7 @@ private fun formatServiceTitle(title: String): String {
         "Holiday Calendar" -> "Holiday\nCalendar"
         "New Onboarding" -> "New\nOnboarding"
         "TravelDesk" -> "TravelDesk"
+        "TravelExpense" -> "Travel\nExpense"
         "HelpDesk" -> "HelpDesk"
         "Goal Setting/KPI" -> "Goal\nSetting/KPI"
         "Business Card" -> "Business\nCard"
@@ -1851,7 +1852,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart", "Smart Collateral", "MeetSpace", "ArcheHonours",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "MyPay", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
-            "Locations", "TravelDesk", "Policy", "New Onboarding", "Profile", "Profile Connect", "ZenTask", "Password Reset", "Know Your Org", "Arche Odyssey", "ZingHR", "IdeaVault", "Pulse", "HelpDesk",
+            "Locations", "TravelDesk", "TravelExpense", "Policy", "New Onboarding", "Profile", "Profile Connect", "ZenTask", "Password Reset", "Know Your Org", "Arche Odyssey", "ZingHR", "IdeaVault", "Pulse", "HelpDesk",
             -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
@@ -1889,6 +1890,7 @@ private fun AppIcon(
                                         "blogs" -> R.drawable.xconnect
                                         "locations" -> R.drawable.locations
                                         "traveldesk" -> R.drawable.travel
+                                        "travelexpense" -> R.drawable.travel
                                         "policy" -> R.drawable.policy
                                         "newonboarding" -> R.drawable.new_onboarding
                                         "profile" -> R.drawable.profile

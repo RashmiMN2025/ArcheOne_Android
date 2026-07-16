@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.util.Log
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.archeGlobal.one.controller.SocialDataProvider
+import com.archeGlobal.one.network.ExpenseRetrofitClient
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.forceAppFontScale
@@ -32,6 +33,13 @@ class XOneApplication : Application() {
             Log.d("XOneApplication", "RetrofitClient initialized successfully")
         } catch (e: Exception) {
             Log.e("XOneApplication", "Error initializing RetrofitClient: ${e.message}", e)
+        }
+
+        try {
+            ExpenseRetrofitClient.initialize(applicationContext)
+            Log.d("XOneApplication", "ExpenseRetrofitClient initialized successfully")
+        } catch (e: Exception) {
+            Log.e("XOneApplication", "Error initializing ExpenseRetrofitClient: ${e.message}", e)
         }
 
         // Initialize UserDataManager

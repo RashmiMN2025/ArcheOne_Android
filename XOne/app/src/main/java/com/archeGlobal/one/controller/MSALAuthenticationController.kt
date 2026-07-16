@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.service.MSALAuthenticationManager
+import com.archeGlobal.one.utils.PreferencesManager
 import com.microsoft.identity.client.IAuthenticationResult
 import com.microsoft.identity.client.exception.MsalException
 
@@ -98,10 +99,18 @@ class MSALAuthenticationController(
                     isAuthenticated.value = true
                     accessToken.value = result.accessToken
                     userEmail.value = result.account?.username ?: ""
-                    
-                    // Step 3: Fetch user details from Microsoft Graph API
-                    Log.d(TAG, "Fetching user profile from Microsoft Graph...")
-                    authManager.fetchUserProfileFromGraph(result.accessToken) { userProfile ->
+
+                    val idToken = result.account?.idToken
+                    Log.d(TAG, "MSAL id token available: ${!idToken.isNullOrBlank()}")
+                    if (!idToken.isNullOrBlank()) {
+                        PreferencesManager(context).saveMsalIdToken(idToken)
+                        Log.d(TAG, "Stored MSAL id token for later expense entra login")
+                    }
+
+                    fun continueWithBackendLogin() {
+                        // Step 3: Fetch user details from Microsoft Graph API
+                        Log.d(TAG, "Fetching user profile from Microsoft Graph...")
+                        authManager.fetchUserProfileFromGraph(result.accessToken) { userProfile ->
                         if (userProfile != null) {
                             val email = userProfile["email"] ?: ""
                             val mobile = userProfile["mobilePhone"] ?: ""
@@ -131,6 +140,9 @@ class MSALAuthenticationController(
                             callback(true, "Signed in with MSAL (profile fetch failed)")
                         }
                     }
+                    }
+
+                    continueWithBackendLogin()
                 }
 
                 override fun onAuthenticationError(exception: MsalException) {
@@ -239,6 +251,7 @@ class MSALAuthenticationController(
                 isAuthenticated.value = false
                 userEmail.value = ""
                 accessToken.value = ""
+                PreferencesManager(context).clearMsalIdToken()
                 successMessage.value = "Signed out successfully"
                 errorMessage.value = ""
                 callback(true)

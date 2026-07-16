@@ -55,6 +55,16 @@ class PreferencesManager(
     // Get the saved authentication token
     fun getAuthToken(): String? = sharedPreferences.getString(KEY_AUTH_TOKEN, null)
 
+    fun saveMsalIdToken(token: String) {
+        sharedPreferences.edit().putString(KEY_MSAL_ID_TOKEN, token).apply()
+    }
+
+    fun getMsalIdToken(): String? = sharedPreferences.getString(KEY_MSAL_ID_TOKEN, null)
+
+    fun clearMsalIdToken() {
+        sharedPreferences.edit().remove(KEY_MSAL_ID_TOKEN).apply()
+    }
+
     // Check if this is the first launch of the app
     fun isFirstLaunch(): Boolean = sharedPreferences.getBoolean(KEY_IS_FIRST_LAUNCH, true)
 
@@ -219,6 +229,7 @@ class PreferencesManager(
             .edit()
             .apply {
                 remove(KEY_AUTH_TOKEN)
+                remove(KEY_MSAL_ID_TOKEN)
                 remove(KEY_USER_DATA)
                 remove(KEY_OFFICES_DATA)
                 remove(KEY_POLICIES_DATA)
@@ -252,6 +263,7 @@ class PreferencesManager(
             .edit()
             .apply {
                 remove(KEY_AUTH_TOKEN)
+                remove(KEY_MSAL_ID_TOKEN)
                 remove(KEY_USER_DATA)
                 remove(KEY_OFFICES_DATA)
                 remove(KEY_POLICIES_DATA)
@@ -362,6 +374,7 @@ class PreferencesManager(
     companion object {
         private const val KEY_FAVORITES = "favorites"
         private const val KEY_AUTH_TOKEN = "auth_token"
+        private const val KEY_MSAL_ID_TOKEN = "msal_id_token"
         private const val KEY_USER_DATA = "user_data"
         private const val KEY_OFFICES_DATA = "offices_data"
         private const val KEY_POLICIES_DATA = "policies_data"

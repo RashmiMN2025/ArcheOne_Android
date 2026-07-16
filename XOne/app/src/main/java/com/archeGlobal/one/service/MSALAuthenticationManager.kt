@@ -415,6 +415,47 @@ class MSALAuthenticationManager(private val context: Context) {
     }
 
     /**
+     * Get the Microsoft identity (id) token for expense entra login.
+     */
+    fun getIdToken(callback: (String?) -> Unit) {
+        if (mSingleAccountApp == null) {
+            Log.e(TAG, "MSAL not initialized")
+            callback(null)
+            return
+        }
+
+        val cachedIdToken = currentAccount?.idToken
+        if (!cachedIdToken.isNullOrBlank()) {
+            Log.d(TAG, "Returning cached MSAL id token")
+            callback(cachedIdToken)
+            return
+        }
+
+        try {
+            mSingleAccountApp!!.acquireTokenSilentAsync(
+                getScopes(),
+                AUTHORITY,
+                object : SilentAuthenticationCallback {
+                    override fun onSuccess(authenticationResult: IAuthenticationResult) {
+                        currentAccount = authenticationResult.account
+                        val idToken = authenticationResult.account?.idToken
+                        Log.d(TAG, "MSAL id token obtained silently: ${!idToken.isNullOrBlank()}")
+                        callback(idToken)
+                    }
+
+                    override fun onError(exception: MsalException) {
+                        Log.e(TAG, "Error getting id token: ${exception.message}")
+                        callback(null)
+                    }
+                },
+            )
+        } catch (exception: Exception) {
+            Log.e(TAG, "Exception getting id token: ${exception.message}")
+            callback(null)
+        }
+    }
+
+    /**
      * Check if user is logged in locally (in app preferences)
      * Used to detect orphaned MSAL cached accounts after logout
      */

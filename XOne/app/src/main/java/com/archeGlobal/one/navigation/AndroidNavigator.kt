@@ -450,6 +450,16 @@ class AndroidNavigator(
         }
     }
 
+    override fun navigateToTravelExpenseDesk() {
+        navController?.navigate("travel_expense_desk") {
+            launchSingleTop = true
+            restoreState = true
+            popUpTo("home") {
+                inclusive = false
+            }
+        }
+    }
+
     override fun navigateToTravelHistory() {
         navController?.navigate("travel_history") {
             launchSingleTop = true

@@ -158,6 +158,8 @@ fun PrideMonthTestScreen() {
 
                 override fun navigateToTravel() {}
 
+                override fun navigateToTravelExpenseDesk() {}
+
                 override fun navigateToTravelHistory() {}
 
                 override fun navigateToTravelExpenses() {}

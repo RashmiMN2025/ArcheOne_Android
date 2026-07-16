@@ -89,6 +89,8 @@ interface Navigator {
 
     fun navigateToTravel()
 
+    fun navigateToTravelExpenseDesk()
+
     fun navigateToTravelHistory()
 
     fun navigateToTravelExpenses()

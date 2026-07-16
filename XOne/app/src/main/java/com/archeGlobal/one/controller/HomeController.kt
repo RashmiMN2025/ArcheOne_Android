@@ -31,6 +31,7 @@ import com.archeGlobal.one.model.HomeItem
 import com.archeGlobal.one.model.HomeModel
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.network.ExpenseRetrofitClient
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.network.Service
 import com.archeGlobal.one.utils.ImageCache
@@ -1094,8 +1095,8 @@ class HomeController(
                                     stickerText = getStickerText(),
                                 )
                             }
-                        }
-                } ?: emptyMap(),
+                        }.let { withStaticHomeTiles(it) }
+                } ?: withStaticHomeTiles(emptyMap()),
             favorites = preferencesManager.getFavorites(),
             footerNavigation =
                 FooterNavigationModel(
@@ -1340,15 +1341,24 @@ class HomeController(
                     navigator.navigateToSOS(false)
                 }
                 "travel", "traveldesk", "travel desk" -> {
-                    // Load travel data on-demand before navigating
                     if (context is com.archeGlobal.one.HomeActivity) {
                         Log.d("HomeController", "Loading travel data on-demand")
                         context.travelController.onServiceAccessed()
-                        // Approval count will be loaded by TravelScreen's lifecycle (ON_RESUME)
-                        // No need to call it here to avoid duplicate API calls
                     }
                     Log.d("HomeController", "Navigating to Travel Screen")
                     navigator.navigateToTravel()
+                }
+                "travelexpense", "travel expense" -> {
+                    Log.d("HomeController", "TravelExpense clicked — calling entra login")
+                    ExpenseAuthController(context).loginWithStoredIdToken { success, message ->
+                        if (success) {
+                            Log.d("HomeController", "Expense entra login successful")
+                        } else {
+                            Log.w("HomeController", "Expense entra login failed: $message")
+                            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                        navigator.navigateToTravelExpenseDesk()
+                    }
                 }
                 "corevalues", "core values" -> {
                     Log.d("HomeController", "Navigating to Core Values")
@@ -1534,10 +1544,35 @@ class HomeController(
                                         stickerText = getStickerText(),
                                     )
                                 }
-                            }
-                    } ?: emptyMap(),
+                            }.let { withStaticHomeTiles(it) }
+                    } ?: withStaticHomeTiles(emptyMap()),
                 favorites = preferencesManager.getFavorites(),
             )
+    }
+
+    private fun withStaticHomeTiles(categories: Map<String, List<HomeItem>>): Map<String, List<HomeItem>> {
+        val travelExpenseTile =
+            HomeItem(
+                title = "TravelExpense",
+                icon = "travelexpense",
+                isFavorite = false,
+                category = "MyApps",
+                isNew = false,
+                stickerText = "",
+            )
+
+        val mutableCategories = categories.toMutableMap()
+        val targetCategory =
+            mutableCategories.keys.firstOrNull { it.equals("MyApps", ignoreCase = true) }
+                ?: mutableCategories.keys.firstOrNull()
+                ?: "MyApps"
+
+        val existingItems = mutableCategories[targetCategory].orEmpty()
+        if (existingItems.none { it.title.equals("TravelExpense", ignoreCase = true) }) {
+            mutableCategories[targetCategory] = listOf(travelExpenseTile) + existingItems
+        }
+
+        return mutableCategories
     }
 
     fun getCurrentViewItems(): List<HomeItem> =
