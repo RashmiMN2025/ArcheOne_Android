@@ -37,11 +37,26 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import android.util.Base64
+import java.io.ByteArrayOutputStream
+import android.provider.OpenableColumns
+import android.graphics.Bitmap
+import android.net.Uri
+import android.Manifest
+import android.R.attr.bitmap
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +73,19 @@ import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.archeGlobal.one.controller.ExpenseController
+import com.archeGlobal.one.network.ExpenseUi
+
+private fun queryName(context: android.content.Context, uri: Uri): String? {
+    val returnCursor = context.contentResolver.query(uri, null, null, null, null)
+    returnCursor?.use { cursor ->
+        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (nameIndex >= 0 && cursor.moveToFirst()) {
+            return cursor.getString(nameIndex)
+        }
+    }
+    return null
+}
 
 private enum class ExpenseTab { Drafts, Submitted }
 
@@ -87,57 +115,78 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
     var selectedTab by rememberSaveable { mutableStateOf(ExpenseTab.Drafts) }
     var showAddPopup by rememberSaveable { mutableStateOf(false) }
 
-    val draftExpenses = remember {
-        listOf(
-            DraftExpenseItem(
-                id = "EXP-3668",
-                billDate = "--",
-                vendorName = "--",
-                category = "Others",
-                amount = "Rs 2,450",
-                status = "Extracted",
-                uploadedAt = "Jun 25, 2026 09:49 AM"
-            ),
-            DraftExpenseItem(
-                id = "EXP-3642",
-                billDate = "--",
-                vendorName = "--",
-                category = "Others",
-                amount = "Rs 1,890",
-                status = "Extracted",
-                uploadedAt = "Jun 22, 2026 03:46 PM"
-            )
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val controller = remember { ExpenseController(context) }
+
+    val allExpenses by controller.expenses
+    val isLoading by controller.isLoading
+    val errorMessage by controller.errorMessage
+
+    LaunchedEffect(Unit) {
+        controller.fetchExpenses()
+    }
+
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         )
     }
 
-    val submittedExpenses = remember {
-        listOf(
-            SubmittedExpenseItem(
-                id = "EXP-3601",
-                category = "Accommodation",
-                description = "Hotel stay - Bangalore trip",
-                payment = "Bank Transfer",
-                amount = "Rs 12,500",
-                date = "Jun 21, 2026"
-            ),
-            SubmittedExpenseItem(
-                id = "EXP-3598",
-                category = "Travel",
-                description = "Flight - Mumbai to Delhi",
-                payment = "Corporate Card",
-                amount = "Rs 8,750",
-                date = "Jun 19, 2026"
-            )
-        )
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
+        bitmap?.let {
+            try {
+                val baos = ByteArrayOutputStream()
+                it.compress(Bitmap.CompressFormat.JPEG, 90, baos)
+                val bytes = baos.toByteArray()
+                controller.uploadExpense(bytes, "camera.jpg", "image/jpeg",
+                    onSuccess = { resp ->
+                        Toast.makeText(context, "Uploaded: ${'$'}{resp.name}", Toast.LENGTH_SHORT).show()
+                    },
+                    onError = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
+                )
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to capture image: ${'$'}{e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
-    val filteredDrafts = draftExpenses.filter { expense ->
-        searchText.isBlank() || expense.id.contains(searchText, ignoreCase = true)
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+        hasCameraPermission = isGranted
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Camera permission is required to take photos", Toast.LENGTH_LONG).show()
+        }
     }
-    val filteredSubmitted = submittedExpenses.filter { expense ->
-        searchText.isBlank() ||
-            expense.id.contains(searchText, ignoreCase = true) ||
-            expense.category.contains(searchText, ignoreCase = true)
+
+    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            try {
+                val input = context.contentResolver.openInputStream(it)
+                val bytes = input?.use { stream -> stream.readBytes() }
+                if (bytes != null && bytes.isNotEmpty()) {
+                    val filename = queryName(context, it) ?: it.lastPathSegment ?: "upload"
+                    controller.uploadExpense(bytes, filename, "application/octet-stream",
+                        onSuccess = { resp ->
+                            Toast.makeText(context, "Uploaded: ${'$'}{resp.name}", Toast.LENGTH_SHORT).show()
+                        },
+                        onError = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
+                    )
+                } else {
+                    Toast.makeText(context, "Failed to read file", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to read file: ${'$'}{e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    val draftStatuses = setOf("Uploaded", "Extracted", "Extracting")
+    val filteredDrafts = allExpenses.filter { expense ->
+        expense.status in draftStatuses && (searchText.isBlank() || expense.id.contains(searchText, ignoreCase = true) || expense.vendorName.contains(searchText, ignoreCase = true))
+    }
+    val filteredSubmitted = allExpenses.filter { expense ->
+        expense.status !in draftStatuses && (searchText.isBlank() || expense.id.contains(searchText, ignoreCase = true) || expense.category.contains(searchText, ignoreCase = true))
     }
 
     Box(
@@ -239,13 +288,32 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
             when (selectedTab) {
                 ExpenseTab.Drafts -> {
                     DraftsListContent(
-                        expenses = filteredDrafts,
+                        expenses = filteredDrafts.map { exp ->
+                            DraftExpenseItem(
+                                id = "EXP-${exp.id}",
+                                billDate = exp.billDate,
+                                vendorName = exp.vendorName,
+                                category = exp.category,
+                                amount = exp.totalAmount,
+                                status = exp.status,
+                                uploadedAt = exp.createdAt
+                            )
+                        },
                         modifier = Modifier.weight(1f)
                     )
                 }
                 ExpenseTab.Submitted -> {
                     SubmittedListContent(
-                        expenses = filteredSubmitted,
+                        expenses = filteredSubmitted.map { exp ->
+                            SubmittedExpenseItem(
+                                id = "EXP-${exp.id}",
+                                category = exp.category,
+                                description = exp.name,
+                                payment = "",
+                                amount = exp.totalAmount,
+                                date = exp.billDate
+                            )
+                        },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -277,8 +345,18 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
     if (showAddPopup) {
         AddExpensePopup(
             onDismiss = { showAddPopup = false },
-            onCamera = { showAddPopup = false },
-            onFiles = { showAddPopup = false },
+            onCamera = {
+                if (hasCameraPermission) {
+                    cameraLauncher.launch(null)
+                } else {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                }
+                showAddPopup = false
+            },
+            onFiles = {
+                fileLauncher.launch("*/*")
+                showAddPopup = false
+            },
             onManual = { showAddPopup = false }
         )
     }
@@ -318,6 +396,8 @@ private fun DraftsListContent(
             color = Color.Black,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         if (expenses.isEmpty()) {
             EmptyExpenseState(message = "No draft expenses found")
@@ -393,7 +473,6 @@ private fun DraftExpenseCard(expense: DraftExpenseItem) {
         ExpenseDetailRow("Bill Date", expense.billDate)
         ExpenseDetailRow("Vendor Name", expense.vendorName)
         ExpenseDetailRow("Category", expense.category)
-        ExpenseDetailRow("Amount", expense.amount)
         ExpenseDetailRow("Uploaded At", expense.uploadedAt)
         Divider(color = Color(0xFFEEEEEE))
         ViewDetailsRow()

@@ -1,0 +1,15 @@
+{
+  "client_id" : "c36462e1-05d1-4ddd-9190-2de64f15f8c1",
+  "authorization_user_agent" : "DEFAULT",
+  "redirect_uri" : "msauth://com.archeGlobal.one/Sg%2FUNMZmy1u8kGYkDOSwv44%2FHQs%3D",
+  "account_mode": "SINGLE",
+  "authorities" : [
+    {
+      "type": "AAD",
+      "audience": {
+        "type": "AzureADMyOrg",
+        "tenant_id": "3865b44b-651f-4df8-a0c8-2625494f6198"
+      }
+    }
+  ]
+}

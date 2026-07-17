@@ -77,6 +77,13 @@ object ExpenseRetrofitClient {
         expenseRetrofit!!.create(ExpenseTripService::class.java)
     }
 
+    val expenseService: ExpenseService by lazy {
+        if (expenseRetrofit == null) {
+            throw IllegalStateException("ExpenseRetrofitClient must be initialized before use")
+        }
+        expenseRetrofit!!.create(ExpenseService::class.java)
+    }
+
     val logoutService: ExpenseLogoutService by lazy {
         if (expenseRetrofit == null) {
             throw IllegalStateException("ExpenseRetrofitClient must be initialized before use")
