@@ -118,6 +118,95 @@ data class ProjectOption(
     val code: String,
 )
 
+data class MileageRateRequest(
+    @SerializedName("vehicle_id") val vehicleId: Int,
+    @SerializedName("vehicle_ownership_type") val vehicleOwnershipType: String,
+    @SerializedName("vehicle_type") val vehicleType: String,
+)
+
+data class MileageExpenseRoutePoint(
+    val name: String,
+    val latitude: Double,
+    val longitude: Double,
+)
+
+data class CreateMileageExpenseRequest(
+    @SerializedName("from_date") val fromDate: String,
+    @SerializedName("to_date") val toDate: String,
+    val route: List<MileageExpenseRoutePoint>,
+    @SerializedName("vehicle_id") val vehicleId: Int?,
+    @SerializedName("vehicle_ownership_type") val vehicleOwnershipType: String,
+    @SerializedName("vehicle_type") val vehicleType: String,
+    val distance: Double,
+    @SerializedName("customer_name") val customerName: String,
+    @SerializedName("project_id") val projectId: Int,
+    @SerializedName("duration_seconds") val durationSeconds: Int,
+)
+
+data class MileageExpenseRecord(
+    val id: Int,
+    val route: List<MileageExpenseRoutePoint>,
+    @SerializedName("from_date") val fromDate: String,
+    @SerializedName("to_date") val toDate: String,
+    val vehicle: String,
+    @SerializedName("vehicle_type") val vehicleType: String,
+    val status: String,
+    val amount: String,
+    val distance: String,
+    @SerializedName("customer_name") val customerName: String,
+    @SerializedName("project_id") val projectId: Int,
+)
+
+data class MileageExpensesResponse(
+    val total: Int,
+    val page: Int,
+    @SerializedName("per_page") val perPage: Int,
+    @SerializedName("has_next_page") val hasNextPage: Boolean,
+    val data: List<MileageExpenseRecord>,
+)
+
+data class MileageExpenseItemUi(
+    val id: String,
+    val customerName: String,
+    val date: String,
+    val startPoint: String,
+    val endPoint: String,
+    val type: String,
+    val vehicle: String,
+    val amount: String,
+    val distance: String,
+    val status: String,
+)
+
+fun MileageExpenseRecord.toMileageExpenseItemUi(): MileageExpenseItemUi {
+    val routePoints = route.filter { it.name.isNotBlank() }
+    val startPoint = routePoints.firstOrNull()?.name ?: "-"
+    val endPoint = routePoints.lastOrNull()?.name ?: "-"
+    val displayDate = if (fromDate.isNotBlank() && toDate.isNotBlank()) {
+        "$fromDate to $toDate"
+    } else {
+        "-"
+    }
+
+    return MileageExpenseItemUi(
+        id = "MLG-$id",
+        customerName = customerName.takeIf { it.isNotBlank() } ?: "-",
+        date = displayDate,
+        startPoint = startPoint,
+        endPoint = endPoint,
+        type = vehicleType.replaceFirstChar { it.uppercase() }.takeIf { it.isNotBlank() } ?: "Mileage",
+        vehicle = vehicle.replaceFirstChar { it.uppercase() }.takeIf { it.isNotBlank() } ?: "-",
+        amount = amount.takeIf { it.isNotBlank() } ?: "0.00",
+        distance = distance.takeIf { it.isNotBlank() } ?: "0",
+        status = status.replaceFirstChar { it.uppercase() }.takeIf { it.isNotBlank() } ?: "Pending",
+    )
+}
+
+data class MileageRateResponse(
+    @SerializedName("car_mileage_rate") val carMileageRate: String?,
+    @SerializedName("bike_mileage_rate") val bikeMileageRate: String?,
+)
+
 data class AdvanceRequestUi(
     val id: Int,
     val note: String,
@@ -236,3 +325,28 @@ private fun formatCurrency(amount: String?): String {
     if (amount.isNullOrBlank()) return "-"
     return "Rs $amount"
 }
+
+data class VehicleAssetsResponse(
+    val total: Int,
+    val page: Int,
+    @SerializedName("per_page") val perPage: Int,
+    @SerializedName("has_next_page") val hasNextPage: Boolean,
+    val data: List<VehicleAssetItem>,
+)
+
+data class VehicleAssetItem(
+    val id: Int,
+    val category: String?,
+    @SerializedName("fuel_type") val fuelType: String?,
+    @SerializedName("asset_code") val assetCode: String?,
+    @SerializedName("make_model") val makeModel: String?,
+    @SerializedName("vehicle_cc") val vehicleCc: Int?,
+    @SerializedName("vehicle_type") val vehicleType: String?,
+    val operator: VehicleAssetOperator?,
+)
+
+data class VehicleAssetOperator(
+    val id: Int,
+    @SerializedName("first_name") val firstName: String?,
+    @SerializedName("last_name") val lastName: String?,
+)

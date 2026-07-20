@@ -168,6 +168,9 @@ dependencies {
     
     // OCR - Text Recognition for business card photos
     implementation("com.google.mlkit:text-recognition:16.0.0")
+
+    // OpenStreetMap for in-app mileage location picker
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
     
     // MSAL - Microsoft Authentication Library for Azure AD
     implementation("com.microsoft.identity.client:msal:5.2.0") {

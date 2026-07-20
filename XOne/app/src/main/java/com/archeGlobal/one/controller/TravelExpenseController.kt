@@ -6,12 +6,15 @@ import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import com.archeGlobal.one.network.CreateTripRequest
 import com.archeGlobal.one.network.ExpenseRetrofitClient
+import com.archeGlobal.one.network.MileageExpenseItemUi
 import com.archeGlobal.one.network.TravelRequestItemUi
+import com.archeGlobal.one.network.toMileageExpenseItemUi
 import com.archeGlobal.one.network.toTravelRequestItemUi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 class TravelExpenseController(
     private val context: Context,
@@ -25,6 +28,15 @@ class TravelExpenseController(
     var projectOptionsLoading = mutableStateOf(false)
     var projectOptionsError = mutableStateOf<String?>(null)
     var createRequestLoading = mutableStateOf(false)
+    var vehicleAssets = mutableStateOf<List<com.archeGlobal.one.network.VehicleAssetItem>>(emptyList())
+    var vehicleAssetsLoading = mutableStateOf(false)
+    var vehicleAssetsError = mutableStateOf<String?>(null)
+    var mileageRate = mutableStateOf<String?>(null)
+    var mileageRateLoading = mutableStateOf(false)
+    var mileageRateError = mutableStateOf<String?>(null)
+    var mileageExpenses = mutableStateOf<List<MileageExpenseItemUi>>(emptyList())
+    var mileageExpensesLoading = mutableStateOf(false)
+    var mileageExpensesError = mutableStateOf<String?>(null)
 
     fun fetchTrips() {
         isLoading.value = true
@@ -72,6 +84,43 @@ class TravelExpenseController(
         }
     }
 
+    fun fetchMileageExpenses() {
+        mileageExpensesLoading.value = true
+        mileageExpensesError.value = null
+
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getMileageExpenses(page = 1, perPage = 10)
+                if (response.isSuccessful) {
+                    val items = response.body()?.data?.map { it.toMileageExpenseItemUi() }.orEmpty()
+                    withContext(Dispatchers.Main) {
+                        mileageExpenses.value = items
+                        mileageExpensesError.value = null
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch mileage expenses: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        mileageExpenses.value = emptyList()
+                        mileageExpensesError.value = "Failed to load mileage expenses (${response.code()})"
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching mileage expenses: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    mileageExpenses.value = emptyList()
+                    mileageExpensesError.value = e.message ?: "Failed to load mileage expenses"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    mileageExpensesLoading.value = false
+                }
+            }
+        }
+    }
+
     fun fetchProjectOptions() {
         projectOptionsLoading.value = true
         projectOptionsError.value = null
@@ -108,6 +157,145 @@ class TravelExpenseController(
             }
         }
     }
+
+    fun fetchVehicleAssets(vehicleType: String) {
+        vehicleAssetsLoading.value = true
+        vehicleAssetsError.value = null
+
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getVehicleAssets(
+                    vehicleType = vehicleType.lowercase(Locale.getDefault()),
+                )
+                if (response.isSuccessful) {
+                    val assets = response.body()?.data.orEmpty()
+                    withContext(Dispatchers.Main) {
+                        vehicleAssets.value = assets
+                        vehicleAssetsError.value = null
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch vehicle assets: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        vehicleAssets.value = emptyList()
+                        vehicleAssetsError.value = "Failed to load vehicles (${response.code()})"
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching vehicle assets: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    vehicleAssets.value = emptyList()
+                    vehicleAssetsError.value = e.message ?: "Failed to load vehicles"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    vehicleAssetsLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun createMileageExpense(
+        request: com.archeGlobal.one.network.CreateMileageExpenseRequest,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        createRequestLoading.value = true
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.createMileageExpense(request)
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Travel expense added successfully.", Toast.LENGTH_SHORT).show()
+                        onSuccess()
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to create mileage expense: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        onError("Failed to add travel expense (${response.code()})")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception creating mileage expense: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to add travel expense")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    createRequestLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun fetchMileageRate(
+        vehicleId: Int,
+        vehicleOwnershipType: String,
+        vehicleType: String,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        mileageRateLoading.value = true
+        mileageRateError.value = null
+        mileageRate.value = null
+
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getMileageRate(
+                    com.archeGlobal.one.network.MileageRateRequest(
+                        vehicleId = vehicleId,
+                        vehicleOwnershipType = vehicleOwnershipType.lowercase(Locale.getDefault()),
+                        vehicleType = vehicleType.lowercase(Locale.getDefault()),
+                    )
+                )
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    val rateValue = when (vehicleType.lowercase(Locale.getDefault())) {
+                        "bike" -> body?.bikeMileageRate
+                        else -> body?.carMileageRate
+                    }
+                    withContext(Dispatchers.Main) {
+                        if (!rateValue.isNullOrBlank()) {
+                            mileageRate.value = rateValue
+                            mileageRateError.value = null
+                            onSuccess(rateValue)
+                        } else {
+                            mileageRate.value = null
+                            mileageRateError.value = "No mileage rate returned"
+                            onError("No mileage rate returned")
+                        }
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch mileage rate: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        mileageRate.value = null
+                        mileageRateError.value = "Failed to load mileage rate (${response.code()})"
+                        onError("Failed to load mileage rate (${response.code()})")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching mileage rate: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    mileageRate.value = null
+                    mileageRateError.value = e.message ?: "Failed to load mileage rate"
+                    onError(e.message ?: "Failed to load mileage rate")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    mileageRateLoading.value = false
+                }
+            }
+        }
+    }
+
     fun createTrip(
         request: CreateTripRequest,
         onSuccess: () -> Unit,

@@ -37,4 +37,28 @@ interface ExpenseTripService {
         @Path("trip_id") tripId: String,
         @Body request: CreateTripRequest,
     ): Response<TripItemResponse>
+
+    @GET("v1/assets")
+    suspend fun getVehicleAssets(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 10,
+        @Query("category") category: String = "vehicle",
+        @Query("vehicle_type") vehicleType: String,
+    ): Response<VehicleAssetsResponse>
+
+    @POST("v1/travel-expenses/mileage-rate")
+    suspend fun getMileageRate(
+        @Body request: MileageRateRequest,
+    ): Response<MileageRateResponse>
+
+    @GET("v1/travel-expenses")
+    suspend fun getMileageExpenses(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 10,
+    ): Response<MileageExpensesResponse>
+
+    @POST("v1/travel-expenses")
+    suspend fun createMileageExpense(
+        @Body request: CreateMileageExpenseRequest,
+    ): Response<Any>
 }
