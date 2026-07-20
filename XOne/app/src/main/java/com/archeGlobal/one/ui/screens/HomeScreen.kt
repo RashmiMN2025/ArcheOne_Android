@@ -1142,7 +1142,7 @@ fun HomeScreenContent(
                                             }
                                         }
 
-                                        model.categories.forEach { (category, items) ->
+                                        controller.getAllAppsCategories().forEach { (category, items) ->
                                             item {
                                                 CategoryHeader(
                                                     title = category,

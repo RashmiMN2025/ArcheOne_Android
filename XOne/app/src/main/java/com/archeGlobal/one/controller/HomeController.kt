@@ -1575,10 +1575,20 @@ class HomeController(
         return mutableCategories
     }
 
+    private fun isVisibleInAllApps(item: HomeItem): Boolean {
+        val title = item.title.lowercase()
+        return title == "travelexpense" || title == "travel expense"
+    }
+
+    fun getAllAppsCategories(): Map<String, List<HomeItem>> =
+        model.categories
+            .mapValues { (_, items) -> items.filter { isVisibleInAllApps(it) } }
+            .filterValues { it.isNotEmpty() }
+
     fun getCurrentViewItems(): List<HomeItem> =
         when {
             model.viewFavorites -> model.favorites.values.flatten()
-            else -> model.categories.values.flatten()
+            else -> getAllAppsCategories().values.flatten()
         }
 
     fun updateProfilePicture(profilePicUrl: String?) {

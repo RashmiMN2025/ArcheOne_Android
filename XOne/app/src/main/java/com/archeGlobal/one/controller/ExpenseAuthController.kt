@@ -74,6 +74,10 @@ class ExpenseAuthController(
                     }
 
                     ExpenseRetrofitClient.cookieJar.saveRefreshToken(body!!.refreshToken)
+                    PreferencesManager(context).apply {
+                        setInt(ExpenseController.KEY_EXPENSE_USER_ID, body.id)
+                        setString(ExpenseController.KEY_EXPENSE_USER_EMAIL, body.email)
+                    }
                     Log.d(tag, "Expense entra login successful for ${body.email}")
                     withContext(Dispatchers.Main) {
                         callback(true, body.email)

@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -35,6 +36,8 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,15 +48,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import android.util.Base64
 import java.io.ByteArrayOutputStream
 import android.provider.OpenableColumns
 import android.graphics.Bitmap
 import android.net.Uri
 import android.Manifest
-import android.R.attr.bitmap
 import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -74,7 +74,9 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.controller.ExpenseController
+import com.archeGlobal.one.network.ExpenseDetailUi
 import com.archeGlobal.one.network.ExpenseUi
+import com.archeGlobal.one.network.SubmittedExpenseUi
 
 private fun queryName(context: android.content.Context, uri: Uri): String? {
     val returnCursor = context.contentResolver.query(uri, null, null, null, null)
@@ -96,17 +98,8 @@ private data class DraftExpenseItem(
     val category: String,
     val amount: String,
     val status: String,
-    val uploadedAt: String
-)
-
-private data class SubmittedExpenseItem(
-    val id: String,
-    val category: String,
-    val description: String,
-    val payment: String,
-    val amount: String,
-    val date: String,
-    val status: String = "Submitted"
+    val uploadedAt: String,
+    val source: ExpenseUi,
 )
 
 @Composable
@@ -114,16 +107,70 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
     var searchText by rememberSaveable { mutableStateOf("") }
     var selectedTab by rememberSaveable { mutableStateOf(ExpenseTab.Drafts) }
     var showAddPopup by rememberSaveable { mutableStateOf(false) }
+    var selectedExpenseDetail by remember { mutableStateOf<ExpenseDetailUi?>(null) }
+    var isDetailReadOnly by rememberSaveable { mutableStateOf(false) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val controller = remember { ExpenseController(context) }
 
     val allExpenses by controller.expenses
+    val submittedExpenses by controller.submittedExpenses
     val isLoading by controller.isLoading
-    val errorMessage by controller.errorMessage
+    val submittedLoading by controller.submittedLoading
+    val detailLoading by controller.detailLoading
+    val downloadLoading by controller.downloadLoading
+
+    if (selectedExpenseDetail != null) {
+        ExpenseExtractionDetailViewScreen(
+            expense = selectedExpenseDetail!!,
+            isReadOnly = isDetailReadOnly,
+            onBack = {
+                selectedExpenseDetail = null
+                isDetailReadOnly = false
+                if (selectedTab == ExpenseTab.Drafts) {
+                    controller.fetchExpenses()
+                } else {
+                    controller.fetchSubmittedExpenses()
+                }
+            },
+        )
+        return
+    }
 
     LaunchedEffect(Unit) {
         controller.fetchExpenses()
+    }
+
+    LaunchedEffect(selectedTab) {
+        if (selectedTab == ExpenseTab.Submitted) {
+            controller.fetchSubmittedExpenses()
+        }
+    }
+
+    fun openExpenseDetail(expenseId: String, readOnly: Boolean) {
+        isDetailReadOnly = readOnly
+        controller.fetchExpenseDetail(
+            expenseId = expenseId,
+            onSuccess = { detail -> selectedExpenseDetail = detail },
+            onError = { message -> Toast.makeText(context, message, Toast.LENGTH_LONG).show() },
+        )
+    }
+
+    fun deleteExpense(expense: ExpenseUi) {
+        controller.deleteExpense(
+            expenseId = expense.id,
+            onSuccess = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() },
+            onError = { message -> Toast.makeText(context, message, Toast.LENGTH_LONG).show() },
+        )
+    }
+
+    fun downloadExpense(expenseId: String, fileName: String?) {
+        controller.downloadExpenseFile(
+            expenseId = expenseId,
+            fallbackFileName = fileName,
+            onSuccess = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() },
+            onError = { message -> Toast.makeText(context, message, Toast.LENGTH_LONG).show() },
+        )
     }
 
     var hasCameraPermission by remember {
@@ -183,10 +230,20 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
 
     val draftStatuses = setOf("Uploaded", "Extracted", "Extracting")
     val filteredDrafts = allExpenses.filter { expense ->
-        expense.status in draftStatuses && (searchText.isBlank() || expense.id.contains(searchText, ignoreCase = true) || expense.vendorName.contains(searchText, ignoreCase = true))
+        expense.status in draftStatuses && (
+            searchText.isBlank() ||
+                expense.id.contains(searchText, ignoreCase = true) ||
+                expense.vendorName.contains(searchText, ignoreCase = true) ||
+                expense.name.contains(searchText, ignoreCase = true)
+            )
     }
-    val filteredSubmitted = allExpenses.filter { expense ->
-        expense.status !in draftStatuses && (searchText.isBlank() || expense.id.contains(searchText, ignoreCase = true) || expense.category.contains(searchText, ignoreCase = true))
+    val filteredSubmitted = submittedExpenses.filter { expense ->
+        searchText.isBlank() ||
+            expense.id.contains(searchText, ignoreCase = true) ||
+            expense.vendorName.contains(searchText, ignoreCase = true) ||
+            expense.category.contains(searchText, ignoreCase = true) ||
+            expense.name.contains(searchText, ignoreCase = true) ||
+            expense.status.contains(searchText, ignoreCase = true)
     }
 
     Box(
@@ -296,27 +353,45 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
                                 category = exp.category,
                                 amount = exp.totalAmount,
                                 status = exp.status,
-                                uploadedAt = exp.createdAt
+                                uploadedAt = exp.createdAt,
+                                source = exp,
                             )
                         },
+                        onViewDetails = { openExpenseDetail(it.id, readOnly = false) },
+                        onDelete = { deleteExpense(it) },
                         modifier = Modifier.weight(1f)
                     )
                 }
                 ExpenseTab.Submitted -> {
-                    SubmittedListContent(
-                        expenses = filteredSubmitted.map { exp ->
-                            SubmittedExpenseItem(
-                                id = "EXP-${exp.id}",
-                                category = exp.category,
-                                description = exp.name,
-                                payment = "",
-                                amount = exp.totalAmount,
-                                date = exp.billDate
-                            )
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
+                    if (submittedLoading && filteredSubmitted.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(color = PrimaryRed)
+                        }
+                    } else {
+                        SubmittedListContent(
+                            expenses = filteredSubmitted,
+                            onViewDetails = { openExpenseDetail(it.id, readOnly = true) },
+                            onDownload = { downloadExpense(it.id, it.name) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
+            }
+        }
+
+        if (detailLoading || downloadLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x88000000)),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(color = PrimaryRed)
             }
         }
 
@@ -385,6 +460,8 @@ private fun ExpenseTabButton(
 @Composable
 private fun DraftsListContent(
     expenses: List<DraftExpenseItem>,
+    onViewDetails: (ExpenseUi) -> Unit,
+    onDelete: (ExpenseUi) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -407,7 +484,11 @@ private fun DraftsListContent(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 items(expenses) { expense ->
-                    DraftExpenseCard(expense = expense)
+                    DraftExpenseCard(
+                        expense = expense,
+                        onViewDetails = { onViewDetails(expense.source) },
+                        onDelete = { onDelete(expense.source) },
+                    )
                 }
             }
         }
@@ -416,28 +497,36 @@ private fun DraftsListContent(
 
 @Composable
 private fun SubmittedListContent(
-    expenses: List<SubmittedExpenseItem>,
-    modifier: Modifier = Modifier
+    expenses: List<SubmittedExpenseUi>,
+    onViewDetails: (SubmittedExpenseUi) -> Unit,
+    onDownload: (SubmittedExpenseUi) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "My reimbursements",
+            text = "Submitted expenses (${expenses.size})",
             fontFamily = GraphikFontFamily,
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color.Black,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
         if (expenses.isEmpty()) {
-            EmptyExpenseState(message = "No ERP Ready Expenses found")
+            EmptyExpenseState(message = "No submitted expenses found")
         } else {
             LazyColumn(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 items(expenses) { expense ->
-                    SubmittedExpenseCard(expense = expense)
+                    SubmittedExpenseCard(
+                        expense = expense,
+                        onViewDetails = { onViewDetails(expense) },
+                        onDownload = { onDownload(expense) },
+                    )
                 }
             }
         }
@@ -445,7 +534,11 @@ private fun SubmittedListContent(
 }
 
 @Composable
-private fun DraftExpenseCard(expense: DraftExpenseItem) {
+private fun DraftExpenseCard(
+    expense: DraftExpenseItem,
+    onViewDetails: () -> Unit,
+    onDelete: () -> Unit,
+) {
     ExpenseCardContainer {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -475,43 +568,63 @@ private fun DraftExpenseCard(expense: DraftExpenseItem) {
         ExpenseDetailRow("Category", expense.category)
         ExpenseDetailRow("Uploaded At", expense.uploadedAt)
         Divider(color = Color(0xFFEEEEEE))
-        ViewDetailsRow()
+        ExpenseCardActionsRow(onViewDetails = onViewDetails, onDelete = onDelete)
     }
 }
 
 @Composable
-private fun SubmittedExpenseCard(expense: SubmittedExpenseItem) {
+private fun SubmittedExpenseCard(
+    expense: SubmittedExpenseUi,
+    onViewDetails: () -> Unit,
+    onDownload: () -> Unit,
+) {
     ExpenseCardContainer {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = expense.id,
+                text = "EXP-${expense.id}",
                 fontFamily = GraphikFontFamily,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black
+                color = Color.Black,
             )
             Text(
                 text = expense.status,
-                color = Color(0xFF2E7D32),
+                color = when (expense.status.lowercase()) {
+                    "approved" -> Color(0xFF2E7D32)
+                    "rejected" -> PrimaryRed
+                    "submitted", "pending" -> Color(0xFFEF6C00)
+                    else -> Color(0xFF1565C0)
+                },
                 fontFamily = GraphikFontFamily,
                 fontSize = 12.sp,
                 modifier = Modifier
-                    .background(Color(0xFFE8F5E9), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                    .background(
+                        when (expense.status.lowercase()) {
+                            "approved" -> Color(0xFFE8F5E9)
+                            "rejected" -> PrimaryRed.copy(alpha = 0.12f)
+                            "submitted", "pending" -> Color(0xFFFFF3E0)
+                            else -> Color(0xFFE3F2FD)
+                        },
+                        RoundedCornerShape(8.dp),
+                    )
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
             )
         }
         Divider(color = Color(0xFFEEEEEE))
+        ExpenseDetailRow("Bill Date", expense.billDate)
+        ExpenseDetailRow("Vendor Name", expense.vendorName)
         ExpenseDetailRow("Category", expense.category)
-        ExpenseDetailRow("Description", expense.description)
-        ExpenseDetailRow("Payment", expense.payment)
+        ExpenseDetailRow("File Name", expense.name)
         ExpenseDetailRow("Amount", expense.amount)
-        ExpenseDetailRow("Date", expense.date)
+        ExpenseDetailRow("Approved Amount", expense.approvedAmount)
+        ExpenseDetailRow("Employee", expense.employeeName)
+        ExpenseDetailRow("Submitted At", expense.submittedAt)
         Divider(color = Color(0xFFEEEEEE))
-        ViewDetailsRow()
+        SubmittedCardActionsRow(onViewDetails = onViewDetails, onDownload = onDownload)
     }
 }
 
@@ -559,7 +672,10 @@ private fun ExpenseDetailRow(label: String, value: String) {
 }
 
 @Composable
-private fun ViewDetailsRow() {
+private fun ExpenseCardActionsRow(
+    onViewDetails: () -> Unit,
+    onDelete: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
@@ -567,17 +683,50 @@ private fun ViewDetailsRow() {
     ) {
         Icon(
             imageVector = Icons.Default.Visibility,
-            contentDescription = null,
+            contentDescription = "View Details",
             tint = PrimaryRed,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier
+                .size(22.dp)
+                .clickable { onViewDetails() }
         )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            text = "View Details",
-            color = PrimaryRed,
-            fontFamily = GraphikFontFamily,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+        Spacer(modifier = Modifier.width(16.dp))
+        Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = "Delete",
+            tint = PrimaryRed,
+            modifier = Modifier
+                .size(22.dp)
+                .clickable { onDelete() }
+        )
+    }
+}
+
+@Composable
+private fun SubmittedCardActionsRow(
+    onViewDetails: () -> Unit,
+    onDownload: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Visibility,
+            contentDescription = "View Details",
+            tint = PrimaryRed,
+            modifier = Modifier
+                .size(22.dp)
+                .clickable { onViewDetails() },
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Icon(
+            imageVector = Icons.Default.Download,
+            contentDescription = "Download",
+            tint = PrimaryRed,
+            modifier = Modifier
+                .size(22.dp)
+                .clickable { onDownload() },
         )
     }
 }

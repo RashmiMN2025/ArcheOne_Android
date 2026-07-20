@@ -91,7 +91,6 @@ fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
     val projectOptionsError by controller.projectOptionsError
     var selectedRequest by remember { mutableStateOf<TravelRequestItemUi?>(null) }
     var showDetailScreen by remember { mutableStateOf(false) }
-    var detailsLoading by remember { mutableStateOf(false) }
 
     if (showDetailScreen && selectedRequest != null) {
         TravelExpenseRequestDetailViewScreen(
@@ -258,19 +257,10 @@ fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
                         TravelHistoryCard(
                             request = request,
                             onViewDetails = {
-                                detailsLoading = true
-                                controller.fetchTrip(
-                                    it.tripId,
-                                    onSuccess = { tripUi ->
-                                        selectedRequest = tripUi
-                                        detailsLoading = false
-                                        showDetailScreen = true
-                                    },
-                                    onError = { message ->
-                                        detailsLoading = false
-                                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                                    }
-                                )
+                                // Use list payload directly — GET /v1/trips/{id} currently
+                                // returns HTTP 500 (backend TripDetailResponse validation error).
+                                selectedRequest = it
+                                showDetailScreen = true
                             }
                         )
                     }
@@ -300,28 +290,6 @@ fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.SemiBold
             )
-        }
-    }
-
-    if (detailsLoading && !showDetailScreen) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0x88000000)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = PrimaryRed)
-        }
-    }
-
-    if (detailsLoading && !showDetailScreen) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0x88000000)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = PrimaryRed)
         }
     }
 
