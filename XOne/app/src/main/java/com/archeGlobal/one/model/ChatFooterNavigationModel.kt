@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.NavigationBar
@@ -34,10 +36,11 @@ fun ChatBottomNavigationBar(
     onChatClick: () -> Unit,
     onHeadsUpClick: () -> Unit,
     onSOSClick: () -> Unit,
-    onProfileClick: () -> Unit,
+    onAllAppsClick: () -> Unit = {},
     isUsingPrideIcon: Boolean = false,
     headsUpCount: Int = 0,
     modifier: Modifier = Modifier,
+    showAllApps: Boolean = false,
 ) {
     val homeSelectedColor = Color(0xFF000000) // Black for home
     val selectedColor = Color(0xFFDD3825) // Red for other items
@@ -122,6 +125,44 @@ fun ChatBottomNavigationBar(
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
                             color = selectedColor,
+                        )
+                    }
+                }
+            },
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor,
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor,
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
+        )
+
+        // All Apps item - displayed in the middle of the Chat footer
+        NavigationBarItem(
+            selected = showAllApps,
+            onClick = onAllAppsClick,
+            icon = {
+                CompositionLocalProvider(LocalContentColor provides if (showAllApps) selectedColor else unselectedColor) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(top = 4.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Apps,
+                            contentDescription = "All Apps",
+                            modifier = Modifier.size(24.dp),
+                            tint = if (showAllApps) selectedColor else unselectedColor,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "All Apps",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = if (showAllApps) selectedColor else unselectedColor,
                         )
                     }
                 }
@@ -230,44 +271,6 @@ fun ChatBottomNavigationBar(
                     selectedIconColor = selectedColor, // Red for SOS when selected
                     unselectedIconColor = unselectedColor,
                     selectedTextColor = selectedColor, // Red for SOS when selected
-                    unselectedTextColor = unselectedColor,
-                    indicatorColor = Color(0xFFF6F4EE),
-                ),
-            alwaysShowLabel = false,
-        )
-
-        // Profile item - always unselected in Chat screen
-        NavigationBarItem(
-            selected = false,
-            onClick = onProfileClick,
-            icon = {
-                CompositionLocalProvider(LocalContentColor provides unselectedColor) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 4.dp),
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.footerprofile),
-                            contentDescription = "Profile",
-                            modifier = Modifier.size(24.dp),
-                            tint = unselectedColor,
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Profile",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
-                            color = unselectedColor,
-                        )
-                    }
-                }
-            },
-            colors =
-                NavigationBarItemDefaults.colors(
-                    selectedIconColor = selectedColor, // Red for Profile when selected
-                    unselectedIconColor = unselectedColor,
-                    selectedTextColor = selectedColor, // Red for Profile when selected
                     unselectedTextColor = unselectedColor,
                     indicatorColor = Color(0xFFF6F4EE),
                 ),

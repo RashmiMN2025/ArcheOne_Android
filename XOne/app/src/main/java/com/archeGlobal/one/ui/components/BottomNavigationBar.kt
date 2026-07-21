@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.NavigationBar
@@ -39,6 +41,7 @@ fun BottomNavigationBar(
     onHeadsUpClick: () -> Unit,
     onSOSClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onAllAppsClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     headsUpCount: Int = 0,
 ) {
@@ -129,6 +132,44 @@ fun BottomNavigationBar(
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
                             color = if (model.showChat) selectedColor else unselectedColor,
+                        )
+                    }
+                }
+            },
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor,
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor,
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
+        )
+
+        // All Apps item
+        NavigationBarItem(
+            selected = model.showAllApps,
+            onClick = onAllAppsClick,
+            icon = {
+                CompositionLocalProvider(LocalContentColor provides if (model.showAllApps) selectedColor else unselectedColor) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(top = 4.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Apps,
+                            contentDescription = "All Apps",
+                            modifier = Modifier.size(26.dp),
+                            tint = if (model.showAllApps) selectedColor else unselectedColor,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "All Apps",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = if (model.showAllApps) selectedColor else unselectedColor,
                         )
                     }
                 }
@@ -243,42 +284,5 @@ fun BottomNavigationBar(
             alwaysShowLabel = false,
         )
 
-        // Profile item
-        NavigationBarItem(
-            selected = model.showProfile,
-            onClick = onProfileClick,
-            icon = {
-                CompositionLocalProvider(LocalContentColor provides if (model.showProfile) selectedColor else unselectedColor) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 4.dp),
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.footerprofile),
-                            contentDescription = "Profile",
-                            modifier = Modifier.size(24.dp),
-                            tint = if (model.showProfile) selectedColor else unselectedColor,
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Profile",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
-                            color = if (model.showProfile) selectedColor else unselectedColor,
-                        )
-                    }
-                }
-            },
-            colors =
-                NavigationBarItemDefaults.colors(
-                    selectedIconColor = selectedColor,
-                    unselectedIconColor = unselectedColor,
-                    selectedTextColor = selectedColor,
-                    unselectedTextColor = unselectedColor,
-                    indicatorColor = Color(0xFFF6F4EE),
-                ),
-            alwaysShowLabel = false,
-        )
     }
 }

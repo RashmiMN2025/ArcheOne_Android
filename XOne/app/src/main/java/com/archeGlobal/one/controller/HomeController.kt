@@ -1575,10 +1575,7 @@ class HomeController(
         return mutableCategories
     }
 
-    private fun isVisibleInAllApps(item: HomeItem): Boolean {
-        val title = item.title.lowercase()
-        return title == "travelexpense" || title == "travel expense"
-    }
+    private fun isVisibleInAllApps(item: HomeItem): Boolean = true
 
     fun getAllAppsCategories(): Map<String, List<HomeItem>> =
         model.categories

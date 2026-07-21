@@ -30,6 +30,7 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 fun EmergencyContactScreen(
     controller: EmergencyContactController,
     modifier: Modifier = Modifier,
+    onBackPressed: (() -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
 
@@ -70,7 +71,7 @@ fun EmergencyContactScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { controller.onBackPressed() }) {
+                        IconButton(onClick = { (onBackPressed ?: { controller.onBackPressed() })() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     },

@@ -18,6 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,9 +27,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -44,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -74,7 +80,12 @@ import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HomeController
 import com.archeGlobal.one.controller.MpinController
+import com.archeGlobal.one.controller.ProfileController
 import com.archeGlobal.one.controller.OtpVerificationController
+import com.archeGlobal.one.controller.AboutMeController
+import com.archeGlobal.one.controller.AddressController
+import com.archeGlobal.one.controller.EmergencyContactController
+import com.archeGlobal.one.controller.UserDocumentsController
 import com.archeGlobal.one.model.AboutMeModel
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.HomeItem
@@ -102,6 +113,296 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AllAppsScreen(
+    controller: HomeController,
+    onItemClick: (HomeItem) -> Unit,
+    onToggleFavorite: (HomeItem) -> Unit,
+    onBackPressed: () -> Unit,
+    columns: Int = 3,
+    onFooterHomeClick: () -> Unit = {},
+    onFooterChatClick: () -> Unit = {},
+    onFooterHeadsUpClick: () -> Unit = {},
+    onFooterSOSClick: () -> Unit = {},
+    onFooterProfileClick: () -> Unit = {},
+    onFooterAllAppsClick: () -> Unit = {},
+    headsUpCount: Int = 0,
+) {
+    var currentView by rememberSaveable { mutableStateOf("All Apps") }
+    var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
+    var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    var selectedSize by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    var snapshotApp by remember { mutableStateOf<HomeItem?>(null) }
+    var snapshotPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    var snapshotSize by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    FooterScaffold(
+        footerNavigation = controller.model.footerNavigation.copy(
+            showHome = false,
+            showChat = false,
+            showAllApps = true,
+            showHeadsUp = false,
+            showSOS = false,
+            showProfile = false,
+        ),
+        isUsingPrideIcon = controller.isUsingPrideIcon(),
+        onFooterHomeClick = onFooterHomeClick,
+        onFooterChatClick = onFooterChatClick,
+        onFooterHeadsUpClick = onFooterHeadsUpClick,
+        onFooterSOSClick = onFooterSOSClick,
+        onFooterProfileClick = onFooterProfileClick,
+        onFooterAllAppsClick = onFooterAllAppsClick,
+        headsUpCount = headsUpCount,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        Color(0xFFE0DCD1),
+                                        Color(0xFFC8C8CA),
+                                        Color(0xFF474749),
+                                    ),
+                            ),
+                    ),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    val selectorItems = listOf(
+                        Triple("All Apps", "Explore everything", Icons.Default.Apps) to { currentView = "All Apps" },
+                        Triple("Favorites", "Your saved apps", Icons.Default.Star) to { currentView = "Favorites" },
+                    )
+
+                    selectorItems.forEach { (item, action) ->
+                        val (title, subtitle, icon) = item
+                        Card(
+                            modifier = Modifier.weight(1f).clickable { action() },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (currentView == title) Color(0xFFDD3825) else Color(0xFFF6F4EE),
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = title,
+                                    tint = if (currentView == title) Color.White else Color(0xFFDD3825),
+                                    modifier = Modifier.size(22.dp),
+                                )
+                                Text(
+                                    text = title,
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (currentView == title) Color.White else Color.Black,
+                                )
+                                Text(
+                                    text = subtitle,
+                                    fontSize = 12.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    color = if (currentView == title) Color.White.copy(alpha = 0.85f) else Color.DarkGray,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Box(modifier = Modifier.weight(1f)) {
+                    if (currentView == "All Apps") {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                        ) {
+                            controller.getAllAppsCategories().forEach { (category, items) ->
+                                item {
+                                    CategoryHeader(
+                                        title = category,
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp),
+                                    )
+                                }
+
+                                items(
+                                    items = items.chunked(columns),
+                                    key = { rowItems -> "${category}_${rowItems.joinToString("_") { "${it.title}_${it.isFavorite}" }}" },
+                                ) { rowItems ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        rowItems.forEach { item ->
+                                            AppItem(
+                                                title = item.title,
+                                                isFavorite = item.isFavorite,
+                                                onClick = { onItemClick(item) },
+                                                onFavoriteClick = { onToggleFavorite(item) },
+                                                modifier = Modifier.weight(1f),
+                                                showFavoriteButton = false,
+                                                isSelected = false,
+                                                onLongPress = { position, size ->
+                                                    selectedApp = item
+                                                    selectedPosition = position
+                                                    selectedSize = size
+                                                },
+                                                isNew = item.isNew,
+                                                stickerText = item.stickerText,
+                                            )
+                                        }
+                                        repeat(columns - rowItems.size) {
+                                            Spacer(modifier = Modifier.weight(1f))
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                }
+                            }
+                        }
+                    } else {
+                        val favorites = controller.model.favorites
+                        if (favorites.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                EmptyFavorites()
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                            ) {
+                                favorites.forEach { (category, items) ->
+                                    item {
+                                        CategoryHeader(
+                                            title = category,
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 8.dp),
+                                        )
+                                    }
+
+                                    items(
+                                        items = items.chunked(columns),
+                                        key = { rowItems -> "fav_${category}_${rowItems.joinToString("_") { it.title }}" },
+                                    ) { rowItems ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        ) {
+                                            rowItems.forEach { item ->
+                                                AppItem(
+                                                    title = item.title,
+                                                    isFavorite = true,
+                                                    onClick = { onItemClick(item) },
+                                                    onFavoriteClick = { onToggleFavorite(item) },
+                                                    modifier = Modifier.weight(1f),
+                                                    showFavoriteButton = false,
+                                                    isSelected = false,
+                                                    onLongPress = { position, size ->
+                                                        selectedApp = item
+                                                        selectedPosition = position
+                                                        selectedSize = size
+                                                    },
+                                                    isNew = item.isNew,
+                                                    stickerText = item.stickerText,
+                                                )
+                                            }
+                                            repeat(columns - rowItems.size) {
+                                                Spacer(modifier = Modifier.weight(1f))
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (selectedApp != null && selectedPosition != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.35f))
+                            .clickable(onClick = {
+                                selectedApp = null
+                                selectedPosition = null
+                                selectedSize = null
+                            }),
+                    )
+
+                    val displayApp = selectedApp!!
+                    val (x, y) = selectedPosition!!
+                    val density = LocalDensity.current
+                    val dialogWidth = 160.dp
+                    val dialogHeight = 52.dp
+                    val dialogWidthPx = with(density) { dialogWidth.toPx() }
+                    val screenWidthPx = with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+                    val topPadding = WindowInsets.systemBars.getTop(density)
+
+                    val xOffset = when {
+                        x + dialogWidthPx / 2 > screenWidthPx -> screenWidthPx - dialogWidthPx - 16f
+                        x - dialogWidthPx / 2 < 0 -> 16f
+                        else -> x - dialogWidthPx / 2
+                    }
+
+                    val yOffset = y - with(density) { 115.dp.toPx() / 2 } - with(density) { 8.dp.toPx() } - topPadding
+
+                    Card(
+                        modifier = Modifier
+                            .width(dialogWidth)
+                            .height(dialogHeight)
+                            .offset {
+                                IntOffset(
+                                    x = xOffset.toInt(),
+                                    y = yOffset.toInt(),
+                                )
+                            },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    ) {
+                        Text(
+                            text = if (displayApp.isFavorite) "Remove from Favourites" else "Add to Favourites",
+                            fontSize = 13.sp,
+                            color = Color.Black,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable {
+                                    onToggleFavorite(displayApp)
+                                    selectedApp = null
+                                    selectedPosition = null
+                                    selectedSize = null
+                                }
+                                .padding(vertical = 12.dp),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun ProfileHeader(
     model: HomeModel,
@@ -118,129 +419,91 @@ fun ProfileHeader(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .height(240.dp)
+                .height(170.dp)
                 .clip(RoundedCornerShape(bottomStart = 26.dp, bottomEnd = 26.dp)),
     ) {
-        // Background image with clip
-        Image(
-            painter = painterResource(id = R.drawable.header_home),
-            contentDescription = "Header Background",
-            modifier =
-                Modifier
-                    .fillMaxSize(),
-            contentScale = ContentScale.Crop,
-        )
-
-        // Content without overlay
         Row(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 27.dp, end = 16.dp, top = 70.dp, bottom = 16.dp),
-            // Adjusted top padding from 60.dp to 50.dp and bottom from 24.dp to 16.dp
-            horizontalArrangement = Arrangement.SpaceBetween,
+                    .padding(start = 24.dp, end = 20.dp, top = 20.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                verticalAlignment = Alignment.Top,
+            Surface(
+                modifier =
+                    Modifier
+                        .size(112.dp)
+                        .clickable(onClick = onShowProfileClick)
+                        .shadow(elevation = 10.dp, shape = CircleShape)
+                        .border(0.5.dp, Color.White, CircleShape),
+                shape = CircleShape,
+                color = Color(0xFFF2F2F2),
             ) {
-                Spacer(modifier = Modifier.width(5.dp))
-                // Profile picture
-                Surface(
-                    modifier =
-                        Modifier
-                            .size(90.dp, 95.dp)
-                            .padding(top = 8.dp)
-                            .clickable(onClick = onShowProfileClick),
-                    shape = CircleShape,
-                    color = Color.LightGray,
-                ) {
-                    // If profile picture URL is available, display it using Coil
-                    if (model.profilePicture != null && model.profilePicture.isNotEmpty()) {
-                        Log.d("HomeScreen", "Loading profile picture: ${model.profilePicture}")
+                if (model.profilePicture != null && model.profilePicture.isNotEmpty()) {
+                    Log.d("HomeScreen", "Loading profile picture: ${model.profilePicture}")
 
-                        // Use ImageCache version for recomposition
-                        val context = LocalContext.current
-                        val cacheVersion = ImageCache.profileImageVersion.value
-                        key(model.profilePicture, cacheVersion) {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                // Always show the person icon first as a placeholder
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    tint = Color.DarkGray,
-                                )
+                    val context = LocalContext.current
+                    val cacheVersion = ImageCache.profileImageVersion.value
+                    key(model.profilePicture, cacheVersion) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize().padding(12.dp),
+                                tint = Color.DarkGray,
+                            )
 
-                                // Load the actual profile image on top
-                                Image(
-                                    painter =
-                                        rememberAsyncImagePainter(
-                                            ImageCache.createProfileImageRequest(
-                                                context = context,
-                                                url = model.profilePicture,
-                                            ),
-                                            onSuccess = {
-                                                Log.d(
-                                                    "HomeScreen",
-                                                    "Profile image loaded successfully: ${model.profilePicture}",
-                                                )
-                                            },
+                            Image(
+                                painter =
+                                    rememberAsyncImagePainter(
+                                        ImageCache.createProfileImageRequest(
+                                            context = context,
+                                            url = model.profilePicture,
                                         ),
-                                    contentDescription = "Profile Picture",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
-                                )
-                            }
+                                        onSuccess = {
+                                            Log.d(
+                                                "HomeScreen",
+                                                "Profile image loaded successfully: ${model.profilePicture}",
+                                            )
+                                        },
+                                    ),
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
                         }
-                    } else {
-                        // Default profile icon
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            tint = Color.DarkGray,
-                        )
                     }
-                }
-
-                Spacer(modifier = Modifier.width(20.dp))
-
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        text = model.userName,
-                        fontSize = 23.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.Black,
-                    )
-
-                    Text(
-                        text = model.designation,
-                        fontSize = 18.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Black,
-                    )
-
-                    Text(
-                        text = model.department,
-                        fontSize = 15.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Black,
-                    )
-
-                    Text(
-                        text = model.employeeId,
-                        fontSize = 15.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Black,
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                        tint = Color.DarkGray,
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(
+                modifier = Modifier.padding(top = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = "Hello, ${model.userName}!",
+                    fontSize = 22.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black,
+                )
+
+                Text(
+                    text = "welcome back",
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.DarkGray,
+                )
             }
         }
     }
@@ -261,6 +524,8 @@ fun ResponsiveHomeScreen(
     onFooterHeadsUpClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
+    profileController: ProfileController? = null,
+    onOpenAllAppsScreen: () -> Unit = {},
     onXCardClick: () -> Unit,
     isAuthenticating: Boolean = false,
     onRefresh: () -> Unit = {},
@@ -294,6 +559,8 @@ fun ResponsiveHomeScreen(
         onFooterHeadsUpClick = onFooterHeadsUpClick,
         onFooterSOSClick = onFooterSOSClick,
         onFooterProfileClick = onFooterProfileClick,
+        profileController = profileController,
+        onOpenAllAppsScreen = onOpenAllAppsScreen,
         onXCardClick = onXCardClick,
         isAuthenticating = isAuthenticating,
         onRefresh = onRefresh,
@@ -321,6 +588,8 @@ fun HomeScreenContent(
     onFooterHeadsUpClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
+    profileController: ProfileController? = null,
+    onOpenAllAppsScreen: () -> Unit = {},
     onXCardClick: () -> Unit,
     isAuthenticating: Boolean = false,
     onRefresh: () -> Unit = {},
@@ -387,6 +656,8 @@ fun HomeScreenContent(
 
         // State to track the current view (All Apps or Favorites)
         var currentView by remember { mutableStateOf("All Apps") }
+        var showProfileSheet by rememberSaveable { mutableStateOf(false) }
+        var profileSheetRoute by rememberSaveable { mutableStateOf<String?>(null) }
 
         // --- Rating Pop-up Logic ---
         var navigationCount by rememberSaveable { mutableStateOf(0) }
@@ -770,6 +1041,111 @@ fun HomeScreenContent(
                     }
                 }
             }
+
+        }
+
+        if (showProfileSheet && profileController != null) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showProfileSheet = false
+                    profileSheetRoute = null
+                },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                containerColor = Color.Transparent,
+                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                dragHandle = {
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .size(width = 44.dp, height = 4.dp)
+                            .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(50.dp)),
+                    )
+                },
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight(0.92f)
+                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
+                ) {
+                    when (profileSheetRoute) {
+                        "aboutme" -> {
+                            if (navigator != null) {
+                                val aboutMeController = remember(navigator) { AboutMeController(navigator) }
+                                AboutMeScreen(
+                                    controller = aboutMeController,
+                                    modifier = Modifier.fillMaxSize(),
+                                    onBackPressed = { profileSheetRoute = null },
+                                )
+                            } else {
+                                ProfileScreen(
+                                    controller = profileController,
+                                    showFooter = false,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                        }
+                        "address" -> {
+                            if (navigator != null) {
+                                val addressController = remember(navigator) { AddressController(navigator) }
+                                AddressDetailsScreen(
+                                    controller = addressController,
+                                    modifier = Modifier.fillMaxSize(),
+                                    onBackPressed = { profileSheetRoute = null },
+                                )
+                            } else {
+                                ProfileScreen(
+                                    controller = profileController,
+                                    showFooter = false,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                        }
+                        "emergency" -> {
+                            if (navigator != null) {
+                                val emergencyController = remember(navigator) { EmergencyContactController(navigator) }
+                                EmergencyContactScreen(
+                                    controller = emergencyController,
+                                    modifier = Modifier.fillMaxSize(),
+                                    onBackPressed = { profileSheetRoute = null },
+                                )
+                            } else {
+                                ProfileScreen(
+                                    controller = profileController,
+                                    showFooter = false,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                        }
+                        "documents" -> {
+                            val documentsController = remember(context) { UserDocumentsController(context) }
+                            UserDocumentsScreen(
+                                controller = documentsController,
+                                context = context,
+                                onBackPressed = {
+                                    profileSheetRoute = null
+                                },
+                            )
+                        }
+                        else -> {
+                            ProfileScreen(
+                                controller = profileController,
+                                showFooter = false,
+                                modifier = Modifier.fillMaxSize(),
+                                onMenuItemClick = { title ->
+                                    profileSheetRoute =
+                                        when (title) {
+                                            "aboutme" -> "aboutme"
+                                            "address" -> "address"
+                                            "emergency" -> "emergency"
+                                            "documents" -> "documents"
+                                            else -> null
+                                        }
+                                },
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         // Show event popup if available and visibility is true
@@ -879,6 +1255,9 @@ fun HomeScreenContent(
             onFooterHeadsUpClick = onFooterHeadsUpClick,
             onFooterSOSClick = onFooterSOSClick,
             onFooterProfileClick = onFooterProfileClick,
+            onFooterAllAppsClick = {
+                onOpenAllAppsScreen()
+            },
             headsUpCount = headsUpCount,
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -896,20 +1275,7 @@ fun HomeScreenContent(
                                     } else {
                                         0.dp
                                     },
-                            ).pointerInput(Unit) {
-                                detectHorizontalDragGestures(
-                                    onDragEnd = { /* Handle drag end */ },
-                                    onHorizontalDrag = { _, dragAmount ->
-                                        if (dragAmount > 50) {
-                                            // Swiped from left to right
-                                            currentView = "All Apps"
-                                        } else if (dragAmount < -50) {
-                                            // Swiped from right to left
-                                            currentView = "Favorites"
-                                        }
-                                    },
-                                )
-                            },
+                            ),
                 ) {
                     Column(
                         modifier =
@@ -929,10 +1295,13 @@ fun HomeScreenContent(
                     ) {
                         ProfileHeader(
                             model = model,
-                            onShowProfileClick = onShowProfileClick,
+                            onShowProfileClick = {
+                                profileSheetRoute = null
+                                showProfileSheet = true
+                            },
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         // Celebration banner (using same celebrationData from above)
                         CelebrationBanner(
@@ -1000,257 +1369,101 @@ fun HomeScreenContent(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        // Toggle Buttons
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            Button(
-                                onClick = {
-                                    onAllAppsClick()
-                                    currentView = "All Apps"
-                                },
-                                modifier = Modifier.width(150.dp),
-                                colors =
-                                    ButtonDefaults.buttonColors(
-                                        containerColor =
-                                            if (currentView == "All Apps") {
-                                                Color(0xFFDD3825)
-                                            } else {
-                                                Color(0xFFF6F4EE)
-                                            },
-                                        contentColor =
-                                            if (currentView == "All Apps") {
-                                                Color.White
-                                            } else {
-                                                Color.Black
-                                            },
-                                    ),
-                                elevation =
-                                    ButtonDefaults.buttonElevation(
-                                        defaultElevation = 0.dp,
-                                    ),
-                                border =
-                                    BorderStroke(
-                                        1.dp,
-                                        if (currentView == "All Apps") Color(0xFFDD3825) else DividerColor,
-                                    ),
-                                shape = RoundedCornerShape(8.dp),
-                            ) {
-                                Text(
-                                    text = "All Apps",
-                                    fontSize = 16.sp, // Added font size
-                                    fontFamily = GraphikFontFamily, // Added font family
-                                    fontWeight = FontWeight.Medium, // Added font weight
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(30.dp))
-
-                            Button(
-                                onClick = {
-                                    onFavoritesClick()
-                                    currentView = "Favorites"
-                                },
-                                modifier = Modifier.width(150.dp),
-                                colors =
-                                    ButtonDefaults.buttonColors(
-                                        containerColor =
-                                            if (currentView == "Favorites") {
-                                                Color(0xFFDD3825)
-                                            } else {
-                                                Color(0xFFF6F4EE)
-                                            },
-                                        contentColor =
-                                            if (currentView == "Favorites") {
-                                                Color.White
-                                            } else {
-                                                Color.Black
-                                            },
-                                    ),
-                                elevation =
-                                    ButtonDefaults.buttonElevation(
-                                        defaultElevation = 0.dp,
-                                    ),
-                                border =
-                                    BorderStroke(
-                                        1.dp,
-                                        if (currentView == "Favorites") Color(0xFFDD3825) else DividerColor,
-                                    ),
-                                shape = RoundedCornerShape(8.dp),
-                            ) {
-                                Text(
-                                    text = "Favorites",
-                                    fontSize = 16.sp, // Added font size
-                                    fontFamily = GraphikFontFamily, // Added font family
-                                    fontWeight = FontWeight.Medium, // Added font weight
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Content area with SwipeRefresh
                         Box(modifier = Modifier.weight(1f)) {
                             SwipeRefresh(
                                 state = swipeRefreshState,
                                 onRefresh = { performRefresh() },
                                 modifier = Modifier.fillMaxSize(),
-                                indicator = { _, _ -> // Empty indicator - we'll use UniversalLoader instead
+                                indicator = { _, _ ->
                                 },
                             ) {
-                                if (currentView == "All Apps") {
-                                    // All Apps View
-                                    LazyColumn(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                                    ) {
-                                        if (controller.showAttendance) {
-                                            item {
-                                                TimeAttendanceCard(
-                                                    isPunchedIn = controller.isPunchedIn,
-                                                    punchInTime = controller.punchInTime,
-                                                    punchOutTime = controller.punchOutTime,
-                                                    timeSpent = controller.timeSpent,
-                                                    onViewAllClick = {
-                                                        onItemClick(HomeItem(title = "Timesheet", icon = "timesheet", category = ""))
-                                                    },
-                                                    onPunchInClick = {
-                                                        val title = if (controller.punchInTime.isNotEmpty()) "Punch Out" else "Punch In"
-                                                        onItemClick(HomeItem(title = title, icon = "punch_in", category = ""))
-                                                    },
-                                                    onApplyLeaveClick = {
-                                                        onItemClick(HomeItem(title = "Apply Leave", icon = "apply_leave", category = ""))
-                                                    },
-                                                    onApplyOutDoorClick = {
-                                                        onItemClick(HomeItem(title = "Apply OutDoor", icon = "apply_outdoor", category = ""))
-                                                    },
-                                                    onRegularizeClick = {
-                                                        onItemClick(HomeItem(title = "Regularize", icon = "regularize", category = ""))
-                                                    },
-                                                    onManagerApprovalsClick = {
-                                                        onItemClick(HomeItem(title = "Manager Approvals", icon = "manager_approvals", category = ""))
-                                                    },
-                                                    showManagerApprovals = controller.hasReportees,
-                                                )
-                                                Spacer(modifier = Modifier.height(16.dp))
-                                            }
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                ) {
+                                    if (controller.showAttendance) {
+                                        item {
+                                            TimeAttendanceCard(
+                                                isPunchedIn = controller.isPunchedIn,
+                                                punchInTime = controller.punchInTime,
+                                                punchOutTime = controller.punchOutTime,
+                                                timeSpent = controller.timeSpent,
+                                                onViewAllClick = {
+                                                    onItemClick(HomeItem(title = "Timesheet", icon = "timesheet", category = ""))
+                                                },
+                                                onPunchInClick = {
+                                                    val title = if (controller.punchInTime.isNotEmpty()) "Punch Out" else "Punch In"
+                                                    onItemClick(HomeItem(title = title, icon = "punch_in", category = ""))
+                                                },
+                                                onApplyLeaveClick = {
+                                                    onItemClick(HomeItem(title = "Apply Leave", icon = "apply_leave", category = ""))
+                                                },
+                                                onApplyOutDoorClick = {
+                                                    onItemClick(HomeItem(title = "Apply OutDoor", icon = "apply_outdoor", category = ""))
+                                                },
+                                                onRegularizeClick = {
+                                                    onItemClick(HomeItem(title = "Regularize", icon = "regularize", category = ""))
+                                                },
+                                                onManagerApprovalsClick = {
+                                                    onItemClick(HomeItem(title = "Manager Approvals", icon = "manager_approvals", category = ""))
+                                                },
+                                                showManagerApprovals = controller.hasReportees,
+                                            )
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                        }
+                                    }
+
+                                    item {
+                                        val travelExpenseItem = remember(model.categories) {
+                                            controller
+                                                .getAllAppsCategories()
+                                                .values
+                                                .flatten()
+                                                .firstOrNull { it.title.equals("TravelExpense", ignoreCase = true) }
                                         }
 
-                                        controller.getAllAppsCategories().forEach { (category, items) ->
-                                            item {
-                                                CategoryHeader(
-                                                    title = category,
-                                                    modifier =
-                                                        Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(vertical = 8.dp),
+                                        travelExpenseItem?.let { item ->
+                                            Column(modifier = Modifier.fillMaxWidth()) {
+                                                Text(
+                                                    text = "Travel Expense",
+                                                    fontSize = 18.sp,
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = Color.Black,
+                                                    modifier = Modifier.padding(bottom = 8.dp),
                                                 )
-                                            }
 
-                                            items(
-                                                items = items.chunked(columns),
-                                                key = { rowItems -> "${category}_${rowItems.joinToString("_") { "${it.title}_${it.isFavorite}" }}" }
-                                            ) { rowItems ->
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                 ) {
-                                                    rowItems.forEach { item ->
-                                                        AppItem(
-                                                            title = item.title,
-                                                            isFavorite = item.isFavorite,
-                                                            // Wrap onClick with handleNavigation!
-                                                            onClick = { onItemClick(item) },
-                                                            onFavoriteClick = { onToggleFavorite(item) },
-                                                            modifier = Modifier.weight(1f),
-                                                            showFavoriteButton = false,
-                                                            isSelected = false,
-                                                            onLongPress = { position, size ->
-                                                                selectedApp = item
-                                                                selectedPosition = position
-                                                                selectedSize = size
-                                                            },
-                                                            isNew = item.isNew,
-                                                            stickerText = item.stickerText,
-                                                        )
-                                                    }
-                                                    repeat(columns - rowItems.size) {
-                                                        Spacer(modifier = Modifier.weight(1f))
-                                                    }
-                                                }
-                                                Spacer(modifier = Modifier.height(10.dp))
-                                            }
-                                        }
-                                    }
-                                } else if (currentView == "Favorites") {
-                                    // Favorites View
-                                    if (model.favorites.isEmpty()) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
-                                            EmptyFavorites()
-                                        }
-                                    } else {
-                                        LazyColumn(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp),
-                                        ) {
-                                            model.favorites.forEach { (category, items) ->
-                                                item {
-                                                    CategoryHeader(
-                                                        title = category,
-                                                        modifier =
-                                                            Modifier
-                                                                .fillMaxWidth()
-                                                                .padding(vertical = 8.dp),
+                                                    AppItem(
+                                                        title = item.title,
+                                                        isFavorite = item.isFavorite,
+                                                        onClick = { onItemClick(item) },
+                                                        onFavoriteClick = { onToggleFavorite(item) },
+                                                        modifier = Modifier.weight(1f),
+                                                        showFavoriteButton = false,
+                                                        isSelected = false,
+                                                        onLongPress = { position, size ->
+                                                            selectedApp = item
+                                                            selectedPosition = position
+                                                            selectedSize = size
+                                                        },
+                                                        isNew = item.isNew,
+                                                        stickerText = item.stickerText,
                                                     )
-                                                }
 
-                                                items(
-                                                    items = items.chunked(columns),
-                                                    key = { rowItems -> "fav_${category}_${rowItems.joinToString("_") { it.title }}" }
-                                                ) { rowItems ->
-                                                    Row(
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                                    ) {
-                                                        rowItems.forEach { item ->
-                                                            AppItem(
-                                                                title = item.title,
-                                                                isFavorite = true,
-                                                                // Wrap onClick with handleNavigation!
-                                                                onClick = { onItemClick(item) },
-                                                                onFavoriteClick = { onToggleFavorite(item) },
-                                                                modifier = Modifier.weight(1f),
-                                                                showFavoriteButton = false,
-                                                                isSelected = false,
-                                                                onLongPress = { position, size ->
-                                                                    selectedApp = item
-                                                                    selectedPosition = position
-                                                                    selectedSize = size
-                                                                },
-                                                                isNew = item.isNew,
-                                                                stickerText = item.stickerText,
-                                                            )
-                                                        }
-                                                        repeat(columns - rowItems.size) {
-                                                            Spacer(modifier = Modifier.weight(1f))
-                                                        }
-                                                    }
-                                                    Spacer(modifier = Modifier.height(10.dp))
+                                                    Spacer(modifier = Modifier.weight(1f).aspectRatio(0.92f))
+                                                    Spacer(modifier = Modifier.weight(1f).aspectRatio(0.92f))
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            } // Close SwipeRefresh
+                            }
                         }
                     }
                 }
@@ -1752,18 +1965,15 @@ private fun AppItem(
                             position.y + (coordinates.size.height / 2),
                         )
                     itemSize = Pair(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
-                }.pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = {
-                            onClick()
-                        },
-                        onLongPress = {
-                            if (itemPosition != null && itemSize != null) {
-                                onLongPress(itemPosition!!, itemSize!!)
-                            }
-                        },
-                    )
-                },
+                }
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = {
+                        if (itemPosition != null && itemSize != null) {
+                            onLongPress(itemPosition!!, itemSize!!)
+                        }
+                    },
+                ),
         elevation =
             CardDefaults.cardElevation(
                 defaultElevation = 2.dp,
@@ -2044,17 +2254,39 @@ fun TimeAttendanceCard(
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 12.dp),
                 color = Color(0xFFE5E5E5),
-                thickness = 0.5.dp,
+                thickness = 0.6.dp,
             )
 
-            // Time Spent + Punch status — label and value on the same line
+            val displayPunchInTime = if (punchInTime.isNotBlank()) punchInTime else "00 h 00m"
+            val displayPunchOutTime = if (punchOutTime.isNotBlank()) punchOutTime else "00 h 00m"
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom,
             ) {
-                // Left: label + value
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Punch In",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 13.sp,
+                        color = punchGreen,
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = displayPunchInTime,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = if (punchInTime.isNotBlank()) punchGreen else Color(0xFF888888),
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
                     Text(
                         text = "Time Spent",
                         fontFamily = GraphikFontFamily,
@@ -2071,53 +2303,26 @@ fun TimeAttendanceCard(
                         color = Color.Black,
                     )
                 }
-                // Right: punch status label + time
-                if (isPunchedIn) {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Punched In",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 13.sp,
-                            color = punchGreen,
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = punchInTime,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 14.sp,
-                            color = Color(0xFF888888),
-                        )
-                    }
-                } else if (punchOutTime.isNotEmpty()) {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Punched Out",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 13.sp,
-                            color = primaryRed,
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = punchOutTime,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 14.sp,
-                            color = Color(0xFF888888),
-                        )
-                    }
-                } else {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = punchStatus,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 13.sp,
-                            color = punchStatusColor,
-                        )
-                    }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.End,
+                ) {
+                    Text(
+                        text = "Punch Out",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 13.sp,
+                        color = primaryRed,
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = displayPunchOutTime,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = if (punchOutTime.isNotBlank()) primaryRed else Color(0xFF888888),
+                    )
                 }
             }
 
@@ -2131,7 +2336,7 @@ fun TimeAttendanceCard(
                 OutlinedButton(
                     onClick = onPunchInClick,
                     modifier = Modifier.weight(1f).height(44.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, primaryRed),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
@@ -2149,7 +2354,7 @@ fun TimeAttendanceCard(
                 OutlinedButton(
                     onClick = onApplyLeaveClick,
                     modifier = Modifier.weight(1f).height(44.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, primaryRed),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
@@ -2176,7 +2381,7 @@ fun TimeAttendanceCard(
                 OutlinedButton(
                     onClick = onApplyOutDoorClick,
                     modifier = Modifier.weight(1f).height(44.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, primaryRed),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
@@ -2194,7 +2399,7 @@ fun TimeAttendanceCard(
                 OutlinedButton(
                     onClick = onRegularizeClick,
                     modifier = Modifier.weight(1f).height(44.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, primaryRed),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryRed),
@@ -2211,15 +2416,15 @@ fun TimeAttendanceCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Manager Approvals Button — only shown when user has reportees
             if (showManagerApprovals) Button(
                 onClick = onManagerApprovalsClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp),
-                shape = RoundedCornerShape(8.dp),
+                    .height(50.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = primaryRed),
             ) {
                 Icon(
@@ -2233,7 +2438,7 @@ fun TimeAttendanceCard(
                     text = "Manager Approvals",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
                     color = Color.White,
                 )
             } // end Manager Approvals Button

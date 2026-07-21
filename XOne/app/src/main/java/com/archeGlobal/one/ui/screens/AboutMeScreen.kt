@@ -30,6 +30,7 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 fun AboutMeScreen(
     controller: AboutMeController,
     modifier: Modifier = Modifier,
+    onBackPressed: (() -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
 
@@ -70,7 +71,7 @@ fun AboutMeScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { controller.onBackPressed() }) {
+                        IconButton(onClick = { (onBackPressed ?: { controller.onBackPressed() })() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     },

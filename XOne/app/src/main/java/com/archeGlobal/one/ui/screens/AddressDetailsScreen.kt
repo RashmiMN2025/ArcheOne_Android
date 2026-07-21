@@ -29,6 +29,7 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 fun AddressDetailsScreen(
     controller: AddressController,
     modifier: Modifier = Modifier,
+    onBackPressed: (() -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
 
@@ -69,7 +70,7 @@ fun AddressDetailsScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { controller.onBackPressed() }) {
+                        IconButton(onClick = { (onBackPressed ?: { controller.onBackPressed() })() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     },

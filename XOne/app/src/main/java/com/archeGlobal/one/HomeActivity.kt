@@ -232,6 +232,11 @@ class HomeActivity : AppCompatActivity() {
                 helpDeskController.loadTicketsData(ticketCategory)
                 navigator.navController?.navigate("track_tickets")
             }
+        } else if (navigateTo == "all_apps") {
+            navigator.navController?.navigate("all_apps") {
+                launchSingleTop = true
+                popUpTo("home") { inclusive = false }
+            }
         }
     }
 
@@ -507,6 +512,8 @@ class HomeActivity : AppCompatActivity() {
                             onFooterHeadsUpClick = { navController.navigate("headsup") },
                             onFooterSOSClick = controller::onFooterSOSClick,
                             onFooterProfileClick = controller::onFooterProfileClick,
+                            profileController = profileController,
+                            onOpenAllAppsScreen = { navController.navigate("all_apps") },
                             onXCardClick = controller::onXCardClick,
                             isAuthenticating = isAuthenticating.value,
                             onRefresh = { refreshHomeData() },
@@ -518,17 +525,47 @@ class HomeActivity : AppCompatActivity() {
                         )
                     }
 
+                    composable(route = "all_apps") {
+                        AllAppsScreen(
+                            controller = controller,
+                            onItemClick = controller::onItemClick,
+                            onToggleFavorite = controller::onToggleFavorite,
+                            onBackPressed = { navController.popBackStack() },
+                            onFooterHomeClick = { navController.navigate("home") },
+                            onFooterChatClick = { navigator.navigateToChat() },
+                            onFooterHeadsUpClick = { navController.navigate("headsup") },
+                            onFooterSOSClick = { navController.navigate("sos") },
+                            onFooterProfileClick = { navController.navigate("profile") },
+                            onFooterAllAppsClick = { navController.navigate("all_apps") },
+                            headsUpCount = 0,
+                        )
+                    }
+
                     composable(route = "chat") {
                         LaunchedEffect(Unit) { chatController.onChatScreenEnter() }
-                        ChatScreen(viewModel = chatController.viewModel, navController = navController, onBackPressed = chatController::onBackPressed, showBottomBar = true)
+                        ChatScreen(
+                            viewModel = chatController.viewModel,
+                            navController = navController,
+                            onBackPressed = chatController::onBackPressed,
+                            showBottomBar = true,
+                            onAllAppsClick = { navController.navigate("all_apps") },
+                        )
                     }
 
                     composable(route = "headsup") {
                         HeadsUpScreen(
-                            footerNavigation = controller.model.footerNavigation,
+                            footerNavigation = controller.model.footerNavigation.copy(
+                                showHome = false,
+                                showChat = false,
+                                showAllApps = false,
+                                showHeadsUp = true,
+                                showSOS = false,
+                                showProfile = false,
+                            ),
                             isUsingPrideIcon = controller.isUsingPrideIcon(),
                             onFooterHomeClick = { navController.navigate("home") },
                             onFooterChatClick = { navController.navigate("chat") },
+                            onFooterAllAppsClick = { navController.navigate("all_apps") },
                             onFooterHeadsUpClick = { },
                             onFooterSOSClick = { navController.navigate("sos") },
                             onFooterProfileClick = { navController.navigate("profile") },
@@ -598,6 +635,7 @@ class HomeActivity : AppCompatActivity() {
                                 },
                                 onFooterHomeClick = { navController.navigate("home") { popUpTo("home") { inclusive = true } } },
                                 onFooterChatClick = { navigator.navigateToChat() },
+                                onFooterAllAppsClick = { navController.navigate("all_apps") },
                                 onFooterHeadsUpClick = { navController.navigate("headsup") },
                                 onFooterSOSClick = { },
                                 onFooterProfileClick = { navController.navigate("profile") },

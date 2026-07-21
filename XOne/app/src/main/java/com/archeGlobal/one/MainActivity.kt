@@ -128,6 +128,22 @@ class MainActivity : ComponentActivity() {
                         val startDestination = if (showWelcomeScreen) "welcome" else "home"
 
                         NavHost(navController = navController, startDestination = startDestination) {
+                            composable("all_apps") {
+                                AllAppsScreen(
+                                    controller = homeController,
+                                    onItemClick = homeController::onItemClick,
+                                    onToggleFavorite = homeController::onToggleFavorite,
+                                    onBackPressed = { navController.popBackStack() },
+                                    onFooterHomeClick = { navController.navigate("home") },
+                                    onFooterChatClick = { navController.navigate("chat") },
+                                    onFooterHeadsUpClick = { navController.navigate("headsup") },
+                                    onFooterSOSClick = { navController.navigate("sos") },
+                                    onFooterProfileClick = { navController.navigate("profile") },
+                                    onFooterAllAppsClick = { navController.navigate("all_apps") },
+                                    headsUpCount = 0,
+                                )
+                            }
+
                             composable("welcome") {
                                 WelcomeScreen(
                                     onXOneClick = welcomeController::onXOneClick,
@@ -156,6 +172,7 @@ class MainActivity : ComponentActivity() {
                                     onFooterHeadsUpClick = { /* TODO: Navigate to HeadsUp */ },
                                     onFooterProfileClick = homeController::onFooterProfileClick,
                                     onFooterSOSClick = homeController::onFooterSOSClick,
+                                    onOpenAllAppsScreen = { navController.navigate("all_apps") },
                                     onXCardClick = homeController::onXCardClick,
                                     controller = homeController,
                                     // Pass event data and visibility state

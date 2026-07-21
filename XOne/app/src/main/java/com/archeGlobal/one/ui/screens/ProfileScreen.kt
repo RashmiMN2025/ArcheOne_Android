@@ -59,11 +59,13 @@ fun ProfileScreen(
     controller: ProfileController,
     modifier: Modifier = Modifier,
     footerNavigation: FooterNavigationModel = FooterNavigationModel(showProfile = true),
+    showFooter: Boolean = true,
     onFooterHomeClick: () -> Unit = { controller.onBackPressed() },
     onFooterChatClick: () -> Unit = {},
     onFooterHeadsUpClick: () -> Unit = {},
     onFooterSOSClick: () -> Unit = {},
     onFooterProfileClick: () -> Unit = {},
+    onMenuItemClick: ((String) -> Unit)? = null,
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showUploadDialog by remember { mutableStateOf(false) }
@@ -153,6 +155,141 @@ fun ProfileScreen(
             showUploadDialog = false
         }
 
+    val profileContent: @Composable () -> Unit = {
+        Box(
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        Color(0xFFE0DCD1),
+                                        Color(0xFFC8C8CA),
+                                        Color(0xFF474749),
+                                    ),
+                            ),
+                    ),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                ProfileHeader(
+                    name = controller.model.name,
+                    email = controller.model.email,
+                    profilePicture = controller.model.profilePicture,
+                    onProfilePictureClick = { uri ->
+                        controller.onProfilePictureClick(uri)
+                    },
+                    onCameraCapture = { bitmap ->
+                        controller.uploadProfilePhoto(bitmap)
+                    },
+                    onDeleteProfilePhoto = {
+                        controller.deleteProfilePhoto()
+                        ImageCache.invalidateProfileImageCache() // Invalidate cache
+                    },
+                    onAvatarCreated = { filePath ->
+                        controller.updateProfilePictureFromUrl(filePath)
+                    },
+                    onAvatarMakerClosed = {
+                        controller.refreshProfilePicture()
+                    },
+                )
+
+                Column(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    MenuItems(
+                        items = controller.model.menuItems,
+                        onItemClick = { title ->
+                            when (title) {
+                                "About Me" -> if (onMenuItemClick != null) onMenuItemClick("aboutme") else controller.onAboutMeClick()
+                                "Address/Coordinates" -> if (onMenuItemClick != null) onMenuItemClick("address") else controller.onAddressClick()
+                                "Emergency Contact" -> if (onMenuItemClick != null) onMenuItemClick("emergency") else controller.onEmergencyContactClick()
+                                "Documents" -> if (onMenuItemClick != null) onMenuItemClick("documents") else controller.onDocumentsClick()
+                                "Log out" -> showLogoutDialog = true
+                            }
+                        },
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(bottom = 16.dp),
+                    ) {
+                        Text(
+                            text = controller.model.version,
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            textDecoration = TextDecoration.Underline,
+                        )
+
+                        if (controller.model.lastLoginTime.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Last Login: ${controller.model.lastLoginTime}",
+                                color = Color.White.copy(alpha = 0.8f),
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                            )
+                        }
+                    }
+                }
+
+                if (showLogoutDialog) {
+                    LogoutConfirmationDialog(
+                        onConfirm = {
+                            showLogoutDialog = false
+                            Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
+                            controller.onLogoutClick()
+                        },
+                        onDismiss = { showLogoutDialog = false },
+                    )
+                }
+            }
+
+            if (showUploadDialog) {
+                ProfilePictureUploadDialog(
+                    profilePicture = controller.model.profilePicture,
+                    onCameraClick = {
+                        if (hasCameraPermission) {
+                            cameraLauncher.launch(null)
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    },
+                    onGalleryClick = { galleryLauncher.launch("image/*") },
+                    onCreateAvatarClick = {
+                        val userData = userDataManager.getUserData()
+                        val intent = Intent(context, com.archeGlobal.one.AvatarMakerActivity::class.java).apply {
+                            putExtra("email", userData?.email.orEmpty())
+                            putExtra("employeeId", userData?.employeeId.orEmpty())
+                        }
+                        avatarMakerLauncher.launch(intent)
+                    },
+                    onDeleteClick = {
+                        controller.deleteProfilePhoto()
+                        ImageCache.invalidateProfileImageCache() // Invalidate cache
+                        showUploadDialog = false
+                    },
+                    onDismiss = { showUploadDialog = false },
+                )
+            }
+        }
+    }
+
     Box(
         modifier =
             Modifier
@@ -160,147 +297,20 @@ fun ProfileScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .systemBarsPadding(),
     ) {
-        FooterScaffold(
-            footerNavigation = footerNavigation,
-            onFooterHomeClick = onFooterHomeClick,
-            onFooterChatClick = onFooterChatClick,
-            onFooterHeadsUpClick = onFooterHeadsUpClick,
-            onFooterSOSClick = onFooterSOSClick,
-            onFooterProfileClick = onFooterProfileClick,
-            headsUpCount = userDataManager.getHeadsUpCount(),
-        ) {
-            Box(
-                modifier =
-                    modifier
-                        .fillMaxSize()
-                        .background(
-                            brush =
-                                Brush.verticalGradient(
-                                    colors =
-                                        listOf(
-                                            Color(0xFFE0DCD1),
-                                            Color(0xFFC8C8CA),
-                                            Color(0xFF474749),
-                                        ),
-                                ),
-                        ),
+        if (showFooter) {
+            FooterScaffold(
+                footerNavigation = footerNavigation,
+                onFooterHomeClick = onFooterHomeClick,
+                onFooterChatClick = onFooterChatClick,
+                onFooterHeadsUpClick = onFooterHeadsUpClick,
+                onFooterSOSClick = onFooterSOSClick,
+                onFooterProfileClick = onFooterProfileClick,
+                headsUpCount = userDataManager.getHeadsUpCount(),
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    ProfileHeader(
-                        name = controller.model.name,
-                        email = controller.model.email,
-                        profilePicture = controller.model.profilePicture,
-                        onProfilePictureClick = { uri ->
-                            controller.onProfilePictureClick(uri)
-                        },
-                        onCameraCapture = { bitmap ->
-                            controller.uploadProfilePhoto(bitmap)
-                        },
-                        onDeleteProfilePhoto = {
-                            controller.deleteProfilePhoto()
-                            ImageCache.invalidateProfileImageCache() // Invalidate cache
-                        },
-                        onAvatarCreated = { filePath ->
-                            controller.updateProfilePictureFromUrl(filePath)
-                        },
-                        onAvatarMakerClosed = {
-                            controller.refreshProfilePicture()
-                        },
-                    )
-
-                    Column(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .padding(horizontal = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        MenuItems(
-                            items = controller.model.menuItems,
-                            onItemClick = { title ->
-                                when (title) {
-                                    "About Me" -> controller.onAboutMeClick()
-                                    "Address/Coordinates" -> controller.onAddressClick()
-                                    "Emergency Contact" -> controller.onEmergencyContactClick()
-                                    "Documents" -> controller.onDocumentsClick()
-                                    "Log out" -> showLogoutDialog = true
-                                }
-                            },
-                        )
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(bottom = 16.dp),
-                        ) {
-                            Text(
-                                text = controller.model.version,
-                                color = Color.White,
-                                fontSize = 18.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                textDecoration = TextDecoration.Underline,
-                            )
-
-                            if (controller.model.lastLoginTime.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Last Login: ${controller.model.lastLoginTime}",
-                                    color = Color.White.copy(alpha = 0.8f),
-                                    fontSize = 14.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                )
-                            }
-                        }
-                    }
-
-                    if (showLogoutDialog) {
-                        LogoutConfirmationDialog(
-                            onConfirm = {
-                                showLogoutDialog = false
-                                Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
-                                controller.onLogoutClick()
-                            },
-                            onDismiss = { showLogoutDialog = false },
-                        )
-                    }
-                }
-
-                if (showUploadDialog) {
-                    ProfilePictureUploadDialog(
-                        profilePicture = controller.model.profilePicture,
-                        onCameraClick = {
-                            if (hasCameraPermission) {
-                                cameraLauncher.launch(null)
-                            } else {
-                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                            }
-                        },
-                        onGalleryClick = { galleryLauncher.launch("image/*") },
-                        onCreateAvatarClick = {
-                            val userData = userDataManager.getUserData()
-                            val intent = Intent(context, com.archeGlobal.one.AvatarMakerActivity::class.java).apply {
-                                putExtra("email", userData?.email.orEmpty())
-                                putExtra("employeeId", userData?.employeeId.orEmpty())
-                            }
-                            avatarMakerLauncher.launch(intent)
-                        },
-                        onDeleteClick = {
-                            controller.deleteProfilePhoto()
-                            ImageCache.invalidateProfileImageCache() // Invalidate cache
-                            showUploadDialog = false
-                        },
-                        onDismiss = { showUploadDialog = false },
-                    )
-                }
+                profileContent()
             }
+        } else {
+            profileContent()
         }
     }
 }

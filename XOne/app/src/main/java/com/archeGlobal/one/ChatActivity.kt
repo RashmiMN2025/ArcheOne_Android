@@ -1,5 +1,6 @@
 package com.archeGlobal.one
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -53,7 +54,14 @@ class ChatActivity : ComponentActivity() {
                             onChatClick = { /* Already on Chat screen */ },
                             onHeadsUpClick = { /* TODO: Navigate to HeadsUp from ChatActivity */ },
                             onSOSClick = { navigator.navigateToSOS(true) },
-                            onProfileClick = { navigator.navigateToProfile() },
+                            onAllAppsClick = {
+                                val intent = Intent(this@ChatActivity, HomeActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                    putExtra("navigateTo", "all_apps")
+                                }
+                                startActivity(intent)
+                                finish()
+                            },
                             isUsingPrideIcon = isUsingPrideIcon,
                             headsUpCount = userDataManager.getHeadsUpCount(),
                         )
@@ -77,6 +85,15 @@ class ChatActivity : ComponentActivity() {
                                     viewModel = chatController.viewModel,
                                     navController = navController,
                                     onBackPressed = { onBackPressedDispatcher.onBackPressed() },
+                                    showBottomBar = true,
+                                    onAllAppsClick = {
+                                        val intent = Intent(this@ChatActivity, HomeActivity::class.java).apply {
+                                            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                            putExtra("navigateTo", "all_apps")
+                                        }
+                                        startActivity(intent)
+                                        finish()
+                                    },
                                 )
                             }
                         }

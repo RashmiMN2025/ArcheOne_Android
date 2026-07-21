@@ -90,6 +90,7 @@ fun ChatScreen(
     navController: NavController,
     onBackPressed: () -> Unit,
     showBottomBar: Boolean = false,
+    onAllAppsClick: () -> Unit = {},
 ) {
     var showReportDialog by remember { mutableStateOf(false) }
     var messageToReport by remember { mutableStateOf<Message?>(null) }
@@ -281,9 +282,9 @@ fun ChatScreen(
                         ChatBottomNavigationBar(
                             onHomeClick = { navController.navigate("home") },
                             onChatClick = { /* Already on Chat screen */ },
+                            onAllAppsClick = onAllAppsClick,
                             onHeadsUpClick = { navController.navigate("headsup") },
                             onSOSClick = { navController.navigate("sos") },
-                            onProfileClick = { navController.navigate("profile") },
                             isUsingPrideIcon = isUsingPrideIcon,
                             headsUpCount = userDataManager.getHeadsUpCount(),
                         )

@@ -474,9 +474,10 @@ class TravelExpenseController(
                     }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()
+                    val message = extractApiErrorMessage(errorBody) ?: "Failed to submit travel request (${response.code()})"
                     Log.e(tag, "Failed to create trip: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
-                        onError("Failed to submit travel request (${response.code()})")
+                        onError(message)
                     }
                 }
             } catch (e: Exception) {
@@ -512,9 +513,10 @@ class TravelExpenseController(
                     }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()
+                    val message = extractApiErrorMessage(errorBody) ?: "Failed to update travel request (${response.code()})"
                     Log.e(tag, "Failed to update trip: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
-                        onError("Failed to update travel request (${response.code()})")
+                        onError(message)
                     }
                 }
             } catch (e: Exception) {
@@ -567,6 +569,13 @@ class TravelExpenseController(
         }
     }
 
+    private fun extractApiErrorMessage(errorBody: String?): String? {
+        if (errorBody.isNullOrBlank()) return null
+        return Regex("\"detail\"\\s*:\\s*\"([^\"]*)\"").find(errorBody)?.groupValues?.get(1)
+            ?.replace("\\\"", "\"")
+            ?: errorBody
+    }
+
     fun deleteTrip(
         tripId: String,
         onSuccess: () -> Unit,
@@ -586,9 +595,10 @@ class TravelExpenseController(
                     }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()
+                    val message = extractApiErrorMessage(errorBody) ?: "Failed to delete travel request (${response.code()})"
                     Log.e(tag, "Failed to delete trip: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
-                        onError("Failed to delete travel request (${response.code()})")
+                        onError(message)
                     }
                 }
             } catch (e: Exception) {

@@ -18,6 +18,7 @@ fun FooterScaffold(
     onFooterHeadsUpClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
+    onFooterAllAppsClick: () -> Unit = {},
     headsUpCount: Int = 0,
     content: @Composable () -> Unit,
 ) {
@@ -36,6 +37,7 @@ fun FooterScaffold(
                 onHeadsUpClick = onFooterHeadsUpClick,
                 onSOSClick = onFooterSOSClick,
                 onProfileClick = onFooterProfileClick,
+                onAllAppsClick = onFooterAllAppsClick,
                 headsUpCount = headsUpCount,
                 modifier = Modifier.zIndex(1f), // Ensure navigation bar is always on top
             )

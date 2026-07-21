@@ -60,19 +60,20 @@ fun CelebrationBanner(
                     .background(
                         color = Color(0x1ADD3825),
                         shape = RoundedCornerShape(8.dp),
-                    ).padding(vertical = 8.dp, horizontal = 12.dp),
+                    )
+                    .padding(vertical = 8.dp, horizontal = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
                 onClick = onClick,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(22.dp),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.cele),
                     contentDescription = "Celebration Pin",
                     tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
 
@@ -80,7 +81,7 @@ fun CelebrationBanner(
 
             Text(
                 text = "Cheers to our peers' birthdays and work anniversaries—here's to celebrating your joy and achievements!",
-                fontSize = 13.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = GraphikFontFamily,
                 textAlign = TextAlign.Center,
@@ -96,13 +97,13 @@ fun CelebrationBanner(
 
             IconButton(
                 onClick = onClick,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(22.dp),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.rightpin),
                     contentDescription = "Celebration Pin",
                     tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
