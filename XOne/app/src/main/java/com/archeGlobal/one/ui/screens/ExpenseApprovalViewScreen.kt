@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -29,10 +30,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,10 +45,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.controller.ExpenseController
+import com.archeGlobal.one.controller.TravelExpenseController
+import com.archeGlobal.one.network.MileageExpenseItemUi
+import com.archeGlobal.one.network.SubmittedExpenseUi
+import com.archeGlobal.one.network.TeamMileageDashboardMetricsResponse
+import com.archeGlobal.one.network.TravelRequestItemUi
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -56,122 +64,32 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 private enum class ApprovalTab { TravelRequest, Expenses, Mileage }
 
-private data class ExpenseApprovalItem(
-    val id: String,
-    val category: String,
-    val description: String,
-    val payment: String,
-    val amount: String,
-    val date: String
-)
-
-private data class TravelApprovalItem(
-    val id: String,
-    val tripId: String,
-    val projectId: String,
-    val destination: String,
-    val travelDates: String,
-    val estimatedCost: String,
-    val modeOfTravel: String,
-    val hotelNeeded: String,
-    val vehicleNeeded: String,
-    val advanceAmount: String,
-    val approvedAmount: String,
-    val status: String,
-    val action: String
-)
-
-private data class MileageApprovalItem(
-    val id: String,
-    val customerName: String,
-    val date: String,
-    val startPoint: String,
-    val endPoint: String,
-    val type: String,
-    val vehicle: String,
-    val amount: String,
-    val distance: String,
-    val status: String,
-    val action: String
-)
-
 @Composable
 fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
     var selectedTab by rememberSaveable { mutableStateOf(ApprovalTab.TravelRequest) }
+    val context = LocalContext.current
+    val travelExpenseController = remember { TravelExpenseController(context) }
+    val expenseController = remember { ExpenseController(context) }
 
-    val expenseApprovals = remember {
-        listOf(
-            ExpenseApprovalItem(
-                id = "EXP-3601",
-                category = "Accommodation",
-                description = "Hotel stay - Bangalore trip",
-                payment = "Bank Transfer",
-                amount = "Rs 12,500",
-                date = "Jun 21, 2026"
-            ),
-            ExpenseApprovalItem(
-                id = "EXP-3598",
-                category = "Travel",
-                description = "Flight - Mumbai to Delhi",
-                payment = "Corporate Card",
-                amount = "Rs 8,750",
-                date = "Jun 19, 2026"
-            )
-        )
+    LaunchedEffect(selectedTab) {
+        when (selectedTab) {
+            ApprovalTab.TravelRequest -> travelExpenseController.fetchTeamTrips()
+            ApprovalTab.Expenses -> expenseController.fetchApprovalExpenses()
+            ApprovalTab.Mileage -> {
+                travelExpenseController.fetchTeamMileageDashboardMetrics()
+                travelExpenseController.fetchTeamMileageExpenses()
+            }
+        }
     }
 
-    val travelApprovals = remember {
-        listOf(
-            TravelApprovalItem(
-                id = "TRP-001",
-                tripId = "TRP-001",
-                projectId = "PROJ-001",
-                destination = "Bangalore",
-                travelDates = "12-15 Apr 2026",
-                estimatedCost = "Rs 28,500",
-                modeOfTravel = "Flight",
-                hotelNeeded = "Yes",
-                vehicleNeeded = "No",
-                advanceAmount = "Rs 5,000",
-                approvedAmount = "Rs 5,000",
-                status = "Approved",
-                action = "Review & Approve"
-            ),
-            TravelApprovalItem(
-                id = "TRP-002",
-                tripId = "TRP-002",
-                projectId = "PROJ-002",
-                destination = "Mumbai",
-                travelDates = "28-30 Mar 2026",
-                estimatedCost = "Rs 12,400",
-                modeOfTravel = "Train",
-                hotelNeeded = "Yes",
-                vehicleNeeded = "Yes",
-                advanceAmount = "-",
-                approvedAmount = "-",
-                status = "Pending",
-                action = "Review Request"
-            )
-        )
-    }
-
-    val mileageApprovals = remember {
-        listOf(
-            MileageApprovalItem(
-                id = "MLG-1002",
-                customerName = "Priya Nair",
-                date = "Jun 25, 2026",
-                startPoint = "Hyderabad",
-                endPoint = "Secunderabad",
-                type = "Personal",
-                vehicle = "Bike",
-                amount = "Rs 480",
-                distance = "28 km",
-                status = "Pending",
-                action = "Review Claim"
-            )
-        )
-    }
+    val teamTrips = travelExpenseController.teamTrips.value
+    val approvalExpenses = expenseController.approvalExpenses.value
+    val teamMileageMetrics = travelExpenseController.teamMileageMetrics.value
+    val mileageExpenses = travelExpenseController.teamMileageExpenses.value
+    val isLoading = travelExpenseController.teamTripsLoading.value ||
+        travelExpenseController.teamMileageMetricsLoading.value ||
+        travelExpenseController.teamMileageExpensesLoading.value ||
+        expenseController.approvalExpensesLoading.value
 
     Box(
         modifier = Modifier
@@ -252,9 +170,31 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
             }
 
             when (selectedTab) {
-                ApprovalTab.Expenses -> ExpenseApprovalList(expenses = expenseApprovals)
-                ApprovalTab.TravelRequest -> TravelApprovalList(travels = travelApprovals)
-                ApprovalTab.Mileage -> MileageApprovalList(mileages = mileageApprovals)
+                ApprovalTab.Expenses -> ExpenseApprovalList(
+                    expenses = approvalExpenses,
+                    isLoading = expenseController.approvalExpensesLoading.value,
+                    errorMessage = expenseController.approvalExpensesError.value
+                )
+                ApprovalTab.TravelRequest -> TravelApprovalList(
+                    travels = teamTrips,
+                    isLoading = travelExpenseController.teamTripsLoading.value,
+                    errorMessage = travelExpenseController.teamTripsError.value
+                )
+                ApprovalTab.Mileage -> MileageApprovalList(
+                    metrics = teamMileageMetrics,
+                    mileages = mileageExpenses,
+                    isLoading = travelExpenseController.teamMileageExpensesLoading.value,
+                    errorMessage = travelExpenseController.teamMileageExpensesError.value
+                )
+            }
+        }
+
+        if (isLoading && teamTrips.isEmpty() && approvalExpenses.isEmpty() && mileageExpenses.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = PrimaryRed)
             }
         }
     }
@@ -281,14 +221,18 @@ private fun ApprovalTabButton(
 }
 
 @Composable
-private fun ExpenseApprovalList(expenses: List<ExpenseApprovalItem>) {
+private fun ExpenseApprovalList(
+    expenses: List<SubmittedExpenseUi>,
+    isLoading: Boolean,
+    errorMessage: String?,
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
         item {
             Text(
-                text = "Teams expenses",
+                text = "Team expenses",
                 fontFamily = GraphikFontFamily,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -297,12 +241,23 @@ private fun ExpenseApprovalList(expenses: List<ExpenseApprovalItem>) {
             )
         }
 
-        if (expenses.isEmpty()) {
+        if (isLoading && expenses.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = PrimaryRed)
+                }
+            }
+        } else if (expenses.isEmpty()) {
             item {
                 ApprovalEmptyState(
                     icon = Icons.Default.Description,
-                    title = "Expense not found",
-                    message = "We couldn't find any expense document for this entry."
+                    title = if (errorMessage.isNullOrBlank()) "No expense requests" else "Unable to load expenses",
+                    message = errorMessage ?: "No approval requests were returned for the selected view."
                 )
             }
         } else {
@@ -317,7 +272,11 @@ private fun ExpenseApprovalList(expenses: List<ExpenseApprovalItem>) {
 }
 
 @Composable
-private fun TravelApprovalList(travels: List<TravelApprovalItem>) {
+private fun TravelApprovalList(
+    travels: List<TravelRequestItemUi>,
+    isLoading: Boolean,
+    errorMessage: String?,
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp)
@@ -333,12 +292,23 @@ private fun TravelApprovalList(travels: List<TravelApprovalItem>) {
             )
         }
 
-        if (travels.isEmpty()) {
+        if (isLoading && travels.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = PrimaryRed)
+                }
+            }
+        } else if (travels.isEmpty()) {
             item {
                 ApprovalEmptyState(
                     icon = Icons.Default.FlightTakeoff,
-                    title = "No travel request found",
-                    message = "No travel request found for the current filters."
+                    title = if (errorMessage.isNullOrBlank()) "No travel requests" else "Unable to load travel requests",
+                    message = errorMessage ?: "No travel requests were returned for your team."
                 )
             }
         } else {
@@ -353,7 +323,12 @@ private fun TravelApprovalList(travels: List<TravelApprovalItem>) {
 }
 
 @Composable
-private fun MileageApprovalList(mileages: List<MileageApprovalItem>) {
+private fun MileageApprovalList(
+    metrics: TeamMileageDashboardMetricsResponse?,
+    mileages: List<MileageExpenseItemUi>,
+    isLoading: Boolean,
+    errorMessage: String?,
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp)
@@ -366,21 +341,27 @@ private fun MileageApprovalList(mileages: List<MileageApprovalItem>) {
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ApprovalStatCard(
-                    title = "Team Distance Traveled",
-                    value = "0.00 km",
+                    title = "Team Claims",
+                    value = (metrics?.pendingCount ?: mileages.size).toString(),
                     icon = Icons.Default.DirectionsCar,
                     modifier = Modifier.weight(1f)
                 )
                 ApprovalStatCard(
-                    title = "Carbon Emissions",
-                    value = "0.00 Kg CO₂e",
-                    icon = Icons.Default.Eco,
+                    title = "Total Distance",
+                    value = "${formatMetricValue(metrics?.totalDistance)} km",
+                    icon = Icons.Default.DirectionsCar,
                     modifier = Modifier.weight(1f)
                 )
                 ApprovalStatCard(
-                    title = "Total Claim Amount",
-                    value = "Rs 0.00",
+                    title = "Total Claim",
+                    value = "Rs ${formatMetricValue(metrics?.totalClaimAmount)}",
                     icon = Icons.Default.Description,
+                    modifier = Modifier.weight(1f)
+                )
+                ApprovalStatCard(
+                    title = "Approved",
+                    value = "Rs ${formatMetricValue(metrics?.totalApprovedAmount)}",
+                    icon = Icons.Default.Visibility,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -395,12 +376,23 @@ private fun MileageApprovalList(mileages: List<MileageApprovalItem>) {
             )
         }
 
-        if (mileages.isEmpty()) {
+        if (isLoading && mileages.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = PrimaryRed)
+                }
+            }
+        } else if (mileages.isEmpty()) {
             item {
                 ApprovalEmptyState(
                     icon = Icons.Default.DirectionsCar,
-                    title = "No data",
-                    message = "You haven't spent anything yet"
+                    title = if (errorMessage.isNullOrBlank()) "No mileage claims" else "Unable to load mileage claims",
+                    message = errorMessage ?: "No mileage claims were returned for the team."
                 )
             }
         } else {
@@ -416,7 +408,7 @@ private fun MileageApprovalList(mileages: List<MileageApprovalItem>) {
 
 @Composable
 private fun ExpenseApprovalCard(
-    expense: ExpenseApprovalItem,
+    expense: SubmittedExpenseUi,
     modifier: Modifier = Modifier
 ) {
     ApprovalCardContainer(modifier = modifier) {
@@ -427,26 +419,27 @@ private fun ExpenseApprovalCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = expense.description,
+                    text = expense.name,
                     fontFamily = GraphikFontFamily,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
                 )
                 Text(
-                    text = "${expense.category} • ${expense.date}",
+                    text = "${expense.category} • ${expense.billDate}",
                     fontFamily = GraphikFontFamily,
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
             }
-            PendingStatusBadge()
+            TravelStatusBadge(status = expense.status)
         }
 
         Divider(color = Color(0xFFEAEAEA))
 
-        ApprovalDetailRow("Payment", expense.payment)
+        ApprovalDetailRow("Vendor", expense.vendorName)
         ApprovalDetailRow("Amount", expense.amount, isBold = true)
+        ApprovalDetailRow("Status", expense.status)
         ApprovalDetailRow("ID", expense.id)
 
         ReviewActionRow(actionText = "Review")
@@ -455,7 +448,7 @@ private fun ExpenseApprovalCard(
 
 @Composable
 private fun TravelApprovalCard(
-    travel: TravelApprovalItem,
+    travel: TravelRequestItemUi,
     modifier: Modifier = Modifier
 ) {
     ApprovalCardContainer(modifier = modifier) {
@@ -473,7 +466,7 @@ private fun TravelApprovalCard(
                     color = Color.Black
                 )
                 Text(
-                    text = "TRP-${travel.tripId} • ${travel.travelDates}",
+                    text = "${travel.tripCode} • ${travel.travelDates}",
                     fontFamily = GraphikFontFamily,
                     fontSize = 14.sp,
                     color = Color.Gray
@@ -491,15 +484,15 @@ private fun TravelApprovalCard(
         ApprovalDetailRow("Vehicle Needed", travel.vehicleNeeded)
         ApprovalDetailRow("Advance", travel.advanceAmount)
         ApprovalDetailRow("Approved Amount", travel.approvedAmount)
-        ApprovalDetailRow("Action", travel.action)
+        ApprovalDetailRow("Status", travel.status)
 
-        ReviewActionRow(actionText = travel.action)
+        ReviewActionRow(actionText = "Review")
     }
 }
 
 @Composable
 private fun MileageApprovalCard(
-    mileage: MileageApprovalItem,
+    mileage: MileageExpenseItemUi,
     modifier: Modifier = Modifier
 ) {
     ApprovalCardContainer(modifier = modifier) {
@@ -523,7 +516,7 @@ private fun MileageApprovalCard(
                     color = Color.Gray
                 )
             }
-            PendingStatusBadge()
+            TravelStatusBadge(status = mileage.status)
         }
 
         Divider(color = Color(0xFFEAEAEA))
@@ -533,9 +526,9 @@ private fun MileageApprovalCard(
         ApprovalDetailRow("Vehicle", mileage.vehicle)
         ApprovalDetailRow("Type", mileage.type)
         ApprovalDetailRow("Amount", mileage.amount, isBold = true)
-        ApprovalDetailRow("Action", mileage.action)
+        ApprovalDetailRow("Status", mileage.status)
 
-        ReviewActionRow(actionText = mileage.action)
+        ReviewActionRow(actionText = "Review")
     }
 }
 
@@ -613,26 +606,12 @@ private fun ReviewActionRow(actionText: String) {
 }
 
 @Composable
-private fun PendingStatusBadge() {
-    Text(
-        text = "Pending",
-        color = Color(0xFFEF6C00),
-        fontFamily = GraphikFontFamily,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Medium,
-        modifier = Modifier
-            .background(Color(0xFFEF6C00).copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-    )
-}
-
-@Composable
 private fun TravelStatusBadge(status: String) {
     val isApproved = status.equals("Approved", ignoreCase = true)
     val color = if (isApproved) Color(0xFF2E7D32) else Color(0xFFEF6C00)
 
     Text(
-        text = status,
+        text = status.takeIf { it.isNotBlank() } ?: "Pending",
         color = color,
         fontFamily = GraphikFontFamily,
         fontSize = 13.sp,
@@ -688,6 +667,10 @@ private fun ApprovalStatCard(
             )
         }
     }
+}
+
+private fun formatMetricValue(value: String?): String {
+    return value?.takeIf { it.isNotBlank() } ?: "0"
 }
 
 @Composable

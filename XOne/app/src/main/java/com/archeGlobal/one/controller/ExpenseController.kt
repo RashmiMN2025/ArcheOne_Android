@@ -37,6 +37,9 @@ class ExpenseController(private val context: Context) {
     var submittedExpenses = mutableStateOf<List<SubmittedExpenseUi>>(emptyList())
     var submittedLoading = mutableStateOf(false)
     var submittedError = mutableStateOf<String?>(null)
+    var approvalExpenses = mutableStateOf<List<SubmittedExpenseUi>>(emptyList())
+    var approvalExpensesLoading = mutableStateOf(false)
+    var approvalExpensesError = mutableStateOf<String?>(null)
     var detailLoading = mutableStateOf(false)
     var downloadLoading = mutableStateOf(false)
     var userOptions = mutableStateOf<List<ExpenseUserOption>>(emptyList())
@@ -115,6 +118,46 @@ class ExpenseController(private val context: Context) {
             } finally {
                 withContext(Dispatchers.Main) {
                     submittedLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun fetchApprovalExpenses(page: Int = 1, perPage: Int = 10) {
+        approvalExpensesLoading.value = true
+        approvalExpensesError.value = null
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.expenseService.getSubmittedExpenses(
+                    page = page,
+                    perPage = perPage,
+                    view = "approvals",
+                )
+                if (response.isSuccessful) {
+                    val items = response.body()?.data?.map { it.toSubmittedUi() }.orEmpty()
+                    withContext(Dispatchers.Main) {
+                        approvalExpenses.value = items
+                        approvalExpensesError.value = null
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch approval expenses: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        approvalExpenses.value = emptyList()
+                        approvalExpensesError.value = "Failed to load approval expenses (${response.code()})"
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching approval expenses: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    approvalExpenses.value = emptyList()
+                    approvalExpensesError.value = e.message ?: "Failed to load approval expenses"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    approvalExpensesLoading.value = false
                 }
             }
         }

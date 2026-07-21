@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.archeGlobal.one.network.CreateTripRequest
 import com.archeGlobal.one.network.ExpenseRetrofitClient
 import com.archeGlobal.one.network.MileageExpenseItemUi
+import com.archeGlobal.one.network.TeamMileageDashboardMetricsResponse
 import com.archeGlobal.one.network.TravelRequestItemUi
 import com.archeGlobal.one.network.toMileageExpenseItemUi
 import com.archeGlobal.one.network.toTravelRequestItemUi
@@ -37,6 +38,18 @@ class TravelExpenseController(
     var mileageExpenses = mutableStateOf<List<MileageExpenseItemUi>>(emptyList())
     var mileageExpensesLoading = mutableStateOf(false)
     var mileageExpensesError = mutableStateOf<String?>(null)
+    var mileageDashboardMetrics = mutableStateOf<TeamMileageDashboardMetricsResponse?>(null)
+    var mileageDashboardMetricsLoading = mutableStateOf(false)
+    var mileageDashboardMetricsError = mutableStateOf<String?>(null)
+    var teamMileageMetrics = mutableStateOf<TeamMileageDashboardMetricsResponse?>(null)
+    var teamMileageMetricsLoading = mutableStateOf(false)
+    var teamMileageMetricsError = mutableStateOf<String?>(null)
+    var teamMileageExpenses = mutableStateOf<List<MileageExpenseItemUi>>(emptyList())
+    var teamMileageExpensesLoading = mutableStateOf(false)
+    var teamMileageExpensesError = mutableStateOf<String?>(null)
+    var teamTrips = mutableStateOf<List<TravelRequestItemUi>>(emptyList())
+    var teamTripsLoading = mutableStateOf(false)
+    var teamTripsError = mutableStateOf<String?>(null)
 
     fun fetchTrips() {
         isLoading.value = true
@@ -116,6 +129,152 @@ class TravelExpenseController(
             } finally {
                 withContext(Dispatchers.Main) {
                     mileageExpensesLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun fetchMileageDashboardMetrics() {
+        mileageDashboardMetricsLoading.value = true
+        mileageDashboardMetricsError.value = null
+
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getMileageDashboardMetrics()
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        mileageDashboardMetrics.value = response.body()
+                        mileageDashboardMetricsError.value = null
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch mileage dashboard metrics: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        mileageDashboardMetrics.value = null
+                        mileageDashboardMetricsError.value = "Failed to load dashboard metrics (${response.code()})"
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching mileage dashboard metrics: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    mileageDashboardMetrics.value = null
+                    mileageDashboardMetricsError.value = e.message ?: "Failed to load dashboard metrics"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    mileageDashboardMetricsLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun fetchTeamMileageDashboardMetrics() {
+        teamMileageMetricsLoading.value = true
+        teamMileageMetricsError.value = null
+
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getTeamMileageDashboardMetrics()
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        teamMileageMetrics.value = response.body()
+                        teamMileageMetricsError.value = null
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch team mileage metrics: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        teamMileageMetrics.value = null
+                        teamMileageMetricsError.value = "Failed to load mileage metrics (${response.code()})"
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching team mileage metrics: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    teamMileageMetrics.value = null
+                    teamMileageMetricsError.value = e.message ?: "Failed to load mileage metrics"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    teamMileageMetricsLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun fetchTeamMileageExpenses(page: Int = 1, perPage: Int = 10) {
+        teamMileageExpensesLoading.value = true
+        teamMileageExpensesError.value = null
+
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getTeamMileageExpenses(page = page, perPage = perPage)
+                if (response.isSuccessful) {
+                    val items = response.body()?.data?.map { it.toMileageExpenseItemUi() }.orEmpty()
+                    withContext(Dispatchers.Main) {
+                        teamMileageExpenses.value = items
+                        teamMileageExpensesError.value = null
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch team mileage expenses: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        teamMileageExpenses.value = emptyList()
+                        teamMileageExpensesError.value = "Failed to load team mileage expenses (${response.code()})"
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching team mileage expenses: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    teamMileageExpenses.value = emptyList()
+                    teamMileageExpensesError.value = e.message ?: "Failed to load team mileage expenses"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    teamMileageExpensesLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun fetchTeamTrips(page: Int = 1, perPage: Int = 10) {
+        teamTripsLoading.value = true
+        teamTripsError.value = null
+
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getTeamTrips(page = page, perPage = perPage)
+                if (response.isSuccessful) {
+                    val items = response.body()?.data?.map { it.toTravelRequestItemUi() }.orEmpty()
+                    withContext(Dispatchers.Main) {
+                        teamTrips.value = items
+                        teamTripsError.value = null
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch team trips: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        teamTrips.value = emptyList()
+                        teamTripsError.value = "Failed to load team travel requests (${response.code()})"
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching team trips: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    teamTrips.value = emptyList()
+                    teamTripsError.value = e.message ?: "Failed to load team travel requests"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    teamTripsLoading.value = false
                 }
             }
         }

@@ -16,6 +16,12 @@ interface ExpenseTripService {
         @Query("per_page") perPage: Int = 10,
     ): Response<TripsListResponse>
 
+    @GET("v1/trips/team")
+    suspend fun getTeamTrips(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 10,
+    ): Response<TripsListResponse>
+
     @GET("v1/projects/options/my")
     suspend fun getProjectOptions(): Response<ProjectOptionsResponse>
 
@@ -53,6 +59,18 @@ interface ExpenseTripService {
 
     @GET("v1/travel-expenses")
     suspend fun getMileageExpenses(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 10,
+    ): Response<MileageExpensesResponse>
+
+    @GET("v1/travel-expenses/dashboard-metrics")
+    suspend fun getMileageDashboardMetrics(): Response<TeamMileageDashboardMetricsResponse>
+
+    @GET("v1/travel-expenses/team/dashboard-metrics")
+    suspend fun getTeamMileageDashboardMetrics(): Response<TeamMileageDashboardMetricsResponse>
+
+    @GET("v1/travel-expenses/team")
+    suspend fun getTeamMileageExpenses(
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 10,
     ): Response<MileageExpensesResponse>

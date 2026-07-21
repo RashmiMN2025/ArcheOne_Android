@@ -25,6 +25,7 @@ interface ExpenseService {
     suspend fun getSubmittedExpenses(
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 10,
+        @Query("view") view: String? = null,
     ): Response<SubmittedExpensesListResponse>
 
     @GET("v1/expenses/{expense_id}")

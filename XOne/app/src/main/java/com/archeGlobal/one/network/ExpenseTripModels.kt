@@ -124,6 +124,14 @@ data class MileageRateRequest(
     @SerializedName("vehicle_type") val vehicleType: String,
 )
 
+data class TeamMileageDashboardMetricsResponse(
+    @SerializedName("total_distance") val totalDistance: String? = null,
+    @SerializedName("total_claim_amount") val totalClaimAmount: String? = null,
+    @SerializedName("total_approved_amount") val totalApprovedAmount: String? = null,
+    @SerializedName("pending_count") val pendingCount: Int? = null,
+    @SerializedName("total_carbon_emission") val totalCarbonEmission: String? = null,
+)
+
 data class MileageExpenseRoutePoint(
     val name: String,
     val latitude: Double,

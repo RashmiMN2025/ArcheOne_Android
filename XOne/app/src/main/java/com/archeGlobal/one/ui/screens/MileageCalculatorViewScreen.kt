@@ -239,12 +239,16 @@ fun MileageCalculatorViewScreen(onBack: () -> Unit) {
     val mileageExpenses by expenseController.mileageExpenses
     val mileageExpensesLoading by expenseController.mileageExpensesLoading
     val mileageExpensesError by expenseController.mileageExpensesError
+    val mileageDashboardMetrics by expenseController.mileageDashboardMetrics
+    val mileageDashboardMetricsLoading by expenseController.mileageDashboardMetricsLoading
+    val mileageDashboardMetricsError by expenseController.mileageDashboardMetricsError
 
     var searchText by rememberSaveable { mutableStateOf("") }
     var showAddMileageSheet by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         expenseController.fetchMileageExpenses()
+        expenseController.fetchMileageDashboardMetrics()
     }
 
     val trips = remember(mileageExpenses) {
@@ -339,17 +343,18 @@ fun MileageCalculatorViewScreen(onBack: () -> Unit) {
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    val totalDistance = trips.sumOf { it.distance.filter { char -> char.isDigit() }.toLongOrNull() ?: 0L }
-                    val totalAmount = trips.sumOf { it.amount.filter { char -> char.isDigit() }.toLongOrNull() ?: 0L }
+                    val totalDistance = formatMetricValue(mileageDashboardMetrics?.totalDistance)
+                    val totalAmount = formatMetricValue(mileageDashboardMetrics?.totalClaimAmount)
+                    val totalCarbonEmission = formatMetricValue(mileageDashboardMetrics?.totalCarbonEmission)
                     MileageStatCard(
                         title = "Total distance logged",
-                        value = "${totalDistance} km",
+                        value = "$totalDistance km",
                         icon = Icons.Default.DirectionsCar,
                         modifier = Modifier.weight(1f)
                     )
                     MileageStatCard(
                         title = "Total Carbon Emission",
-                        value = "0.00 Kg CO₂e",
+                        value = "$totalCarbonEmission Kg CO₂e",
                         icon = Icons.Default.Eco,
                         modifier = Modifier.weight(1f)
                     )
@@ -450,6 +455,10 @@ fun MileageCalculatorViewScreen(onBack: () -> Unit) {
     if (showAddMileageSheet) {
         AddMileageExpenseBottomSheet(onDismiss = { showAddMileageSheet = false })
     }
+}
+
+private fun formatMetricValue(value: String?): String {
+    return value?.takeIf { it.isNotBlank() } ?: "0"
 }
 
 @Composable
