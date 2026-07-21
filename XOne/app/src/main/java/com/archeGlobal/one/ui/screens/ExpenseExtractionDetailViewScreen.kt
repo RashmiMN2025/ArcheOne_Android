@@ -65,8 +65,12 @@ import com.archeGlobal.one.controller.ExpenseController
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.controller.TravelExpenseController
 import com.archeGlobal.one.network.ExpenseDetailUi
+import com.archeGlobal.one.network.ExpenseSubmitErrorDetail
+import com.archeGlobal.one.network.ExpenseSubmitRequest
+import com.archeGlobal.one.network.ExpenseSubmitResponse
 import com.archeGlobal.one.network.ExpenseUserOption
 import com.archeGlobal.one.network.SplitExpenseRequest
+import com.google.gson.JsonObject
 import com.archeGlobal.one.network.SplitUpdatedData
 import com.archeGlobal.one.network.SplitUserAmount
 import com.archeGlobal.one.network.ensureSplitExtractedData
@@ -100,6 +104,9 @@ fun ExpenseExtractionDetailViewScreen(
     var soNumber by rememberSaveable(expense.id) {
         mutableStateOf(expense.soNumber.ifBlank { expense.documentId })
     }
+    var showLimitExceededDialog by rememberSaveable { mutableStateOf(false) }
+    var limitExceededDetail by rememberSaveable { mutableStateOf<ExpenseSubmitErrorDetail?>(null) }
+    var limitDialogNote by rememberSaveable(expense.id) { mutableStateOf(expense.note) }
 
     var category by rememberSaveable(expense.id) { mutableStateOf(expense.category) }
     var mode by rememberSaveable(expense.id) { mutableStateOf(expense.mode) }
@@ -127,10 +134,35 @@ fun ExpenseExtractionDetailViewScreen(
         tripController.fetchTrips()
     }
 
+    val selectedProjectOption = projectOptions.firstOrNull { it.code.equals(projectId, ignoreCase = true) }
+    val selectedProjectNumericId = selectedProjectOption?.id
+    val selectedTripNumericId = trips.firstOrNull {
+        it.tripCode.equals(tripId, ignoreCase = true) || it.requestId == tripId
+    }?.requestId?.toIntOrNull()
+
     val projectCodes = projectOptions.map { it.code }.ifEmpty {
         listOfNotNull(expense.projectId.takeIf { it.isNotBlank() })
     }
     val tripCodes = trips.map { it.tripCode }.filter { it.isNotBlank() && it != "-" }
+
+    fun buildSubmitRequest(submitBehavior: String? = null): ExpenseSubmitRequest {
+        val payloadData = expense.extractedData?.deepCopy() ?: JsonObject()
+        return ExpenseSubmitRequest(
+            projectId = selectedProjectNumericId,
+            tripId = if (selectedProjectNumericId == null) selectedTripNumericId else null,
+            flightClass = "economy",
+            trainClass = if (expense.category.contains("train", ignoreCase = true)) {
+                "tier_3"
+            } else {
+                null
+            },
+            accommodationType = accommodationType.lowercase(Locale.getDefault())
+                .takeIf { it == "domestic" || it == "international" },
+            data = payloadData,
+            note = limitDialogNote.ifBlank { note.ifBlank { null } },
+            submitBehavior = submitBehavior,
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -218,7 +250,15 @@ fun ExpenseExtractionDetailViewScreen(
                         label = "Project ID",
                         value = projectId,
                         options = projectCodes,
-                        onValueChange = { projectId = it },
+                        onValueChange = { value ->
+                            projectId = value
+                            projectOptions.firstOrNull { it.code.equals(value, ignoreCase = true) }
+                                ?.let { selected ->
+                                    customerId = selected.customerId.orEmpty()
+                                    soNumber = selected.soNumber?.takeIf { it.isNotBlank() }
+                                        ?: soNumber
+                                }
+                        },
                         enabled = !isReadOnly,
                     )
                     DetailDropdownField(
@@ -431,7 +471,24 @@ fun ExpenseExtractionDetailViewScreen(
                         }
                     }
                     Button(
-                        onClick = onBack,
+                        onClick = {
+                            expenseController.submitExpense(
+                                expenseId = expense.id,
+                                request = buildSubmitRequest(),
+                                onSuccess = { response ->
+                                    Toast.makeText(context, "Expense submitted successfully", Toast.LENGTH_LONG).show()
+                                    onBack()
+                                },
+                                onLimitExceeded = { detail ->
+                                    limitExceededDetail = detail
+                                    limitDialogNote = note
+                                    showLimitExceededDialog = true
+                                },
+                                onError = { message ->
+                                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                },
+                            )
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .height(52.dp),
@@ -459,6 +516,48 @@ fun ExpenseExtractionDetailViewScreen(
             fileUrl = expense.fileUrl,
             fileName = expense.name,
             onDismiss = { showDocumentViewer = false },
+        )
+    }
+
+    if (showLimitExceededDialog && limitExceededDetail != null) {
+        ExpenseLimitExceededDialog(
+            detail = limitExceededDetail!!,
+            currency = currency.ifBlank { expense.currency.ifBlank { "INR" } },
+            note = limitDialogNote,
+            onNoteChange = { limitDialogNote = it },
+            onSubmitManager = {
+                showLimitExceededDialog = false
+                expenseController.submitExpense(
+                    expenseId = expense.id,
+                    request = buildSubmitRequest(submitBehavior = "submit_to_manager"),
+                    onSuccess = { response ->
+                        Toast.makeText(context, "Expense submitted to manager", Toast.LENGTH_LONG).show()
+                        onBack()
+                    },
+                    onLimitExceeded = { _ -> },
+                    onError = { message ->
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                    },
+                )
+            },
+            onSubmitLimit = {
+                showLimitExceededDialog = false
+                expenseController.submitExpense(
+                    expenseId = expense.id,
+                    request = buildSubmitRequest(),
+                    onSuccess = { response ->
+                        Toast.makeText(context, "Expense submitted within limit", Toast.LENGTH_LONG).show()
+                        onBack()
+                    },
+                    onLimitExceeded = { _ -> },
+                    onError = { message ->
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                    },
+                )
+            },
+            onDismiss = {
+                showLimitExceededDialog = false
+            },
         )
     }
 
@@ -554,6 +653,126 @@ fun ExpenseExtractionDetailViewScreen(
                 }
             },
         )
+    }
+}
+
+@Composable
+private fun ExpenseLimitExceededDialog(
+    detail: ExpenseSubmitErrorDetail,
+    currency: String,
+    note: String,
+    onNoteChange: (String) -> Unit,
+    onSubmitManager: () -> Unit,
+    onSubmitLimit: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val totalAmount = detail.totalAmount ?: 0.0
+    val approvalLimit = detail.approvalLimit ?: 0.0
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.94f)
+                .padding(vertical = 24.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = 8.dp,
+            backgroundColor = Color.White,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Text(
+                    text = "Reimbursement limit exceeded",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp,
+                    color = Color.Black,
+                )
+                Text(
+                    text = "Your reimbursement amount exceeds your limit",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 15.sp,
+                    color = Color.Black,
+                )
+                Text(
+                    text = "Your expense of ${currency} ${String.format(Locale.getDefault(), "%.2f", totalAmount)} exceeds your grade limit of ${currency} ${String.format(Locale.getDefault(), "%.2f", approvalLimit)}. You can auto-approve ${currency} ${String.format(Locale.getDefault(), "%.2f", approvalLimit)} within your limit, or send the full amount to your manager for review.",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                )
+                Text(
+                    text = "Note",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black,
+                )
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = onNoteChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp),
+                    placeholder = {
+                        Text(
+                            text = "Add a note for manager or approval",
+                            color = Color.Gray,
+                            fontFamily = GraphikFontFamily,
+                        )
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        backgroundColor = Color(0xFFF6F4EE),
+                        focusedBorderColor = PrimaryRed,
+                        unfocusedBorderColor = Color.LightGray,
+                    ),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Button(
+                        onClick = onSubmitManager,
+                        modifier = Modifier.weight(1f).height(50.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = PrimaryRed,
+                            contentColor = Color.White,
+                        ),
+                    ) {
+                        Text(
+                            text = "Submit for manager review",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    Button(
+                        onClick = onSubmitLimit,
+                        modifier = Modifier.weight(1f).height(50.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = Color(0xFFF6F4EE),
+                            contentColor = Color.Black,
+                        ),
+                    ) {
+                        Text(
+                            text = "Submit only limit amount",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

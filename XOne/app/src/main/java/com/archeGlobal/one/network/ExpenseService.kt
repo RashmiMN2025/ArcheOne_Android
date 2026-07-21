@@ -33,6 +33,12 @@ interface ExpenseService {
         @Path("expense_id") expenseId: String,
     ): Response<ExpenseDetailResponse>
 
+    @PATCH("v1/expenses/{expense_id}/submit")
+    suspend fun submitExpense(
+        @Path("expense_id") expenseId: String,
+        @Body request: ExpenseSubmitRequest,
+    ): Response<ExpenseSubmitResponse>
+
     @DELETE("v1/expenses/{expense_id}")
     suspend fun deleteExpense(
         @Path("expense_id") expenseId: String,

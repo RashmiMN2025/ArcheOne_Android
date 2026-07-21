@@ -470,6 +470,41 @@ data class SplitUserAmountResponse(
     val amount: String? = null,
 )
 
+data class ExpenseSubmitRequest(
+    @SerializedName("project_id") val projectId: Int? = null,
+    @SerializedName("trip_id") val tripId: Int? = null,
+    @SerializedName("flight_class") val flightClass: String? = null,
+    @SerializedName("train_class") val trainClass: String? = null,
+    @SerializedName("accommodation_type") val accommodationType: String? = null,
+    val data: com.google.gson.JsonObject? = null,
+    val note: String? = null,
+    @SerializedName("submit_behavior") val submitBehavior: String? = null,
+)
+
+data class ExpenseSubmitResponse(
+    val id: Int? = null,
+    val data: com.google.gson.JsonObject? = null,
+    val note: String? = null,
+    @SerializedName("overall_document_confidence") val overallDocumentConfidence: Double? = null,
+    val status: String? = null,
+    @SerializedName("project_id") val projectId: Int? = null,
+    @SerializedName("trip_id") val tripId: Int? = null,
+    @SerializedName("user_amount") val userAmount: String? = null,
+)
+
+data class ExpenseSubmitErrorResponse(
+    val detail: ExpenseSubmitErrorDetail? = null,
+)
+
+data class ExpenseSubmitErrorDetail(
+    val message: String? = null,
+    @SerializedName("error_code") val errorCode: String? = null,
+    @SerializedName("total_amount") val totalAmount: Double? = null,
+    @SerializedName("approval_limit") val approvalLimit: Double? = null,
+    @SerializedName("remaining_daily") val remainingDaily: Double? = null,
+    @SerializedName("remaining_monthly") val remainingMonthly: Double? = null,
+)
+
 data class ApiValidationErrorResponse(
     val detail: List<ApiValidationErrorDetail>? = null,
 )

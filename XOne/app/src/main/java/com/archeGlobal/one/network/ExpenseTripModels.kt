@@ -116,6 +116,8 @@ data class DeleteTripResponse(
 data class ProjectOption(
     val id: Int,
     val code: String,
+    @SerializedName("customer_id") val customerId: String? = null,
+    @SerializedName("so_number") val soNumber: String? = null,
 )
 
 data class MileageRateRequest(

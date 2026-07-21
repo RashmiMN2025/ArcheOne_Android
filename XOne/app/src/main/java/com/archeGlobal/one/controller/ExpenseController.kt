@@ -423,6 +423,66 @@ class ExpenseController(private val context: Context) {
         }
     }
 
+    fun submitExpense(
+        expenseId: String,
+        request: com.archeGlobal.one.network.ExpenseSubmitRequest,
+        onSuccess: (com.archeGlobal.one.network.ExpenseSubmitResponse) -> Unit,
+        onLimitExceeded: (com.archeGlobal.one.network.ExpenseSubmitErrorDetail) -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        isLoading.value = true
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.expenseService.submitExpense(expenseId, request)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    withContext(Dispatchers.Main) {
+                        if (body != null) {
+                            onSuccess(body)
+                        } else {
+                            onError("Empty submit response")
+                        }
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to submit expense: HTTP ${response.code()} $errorBody")
+                    val parsed = try {
+                        Gson().fromJson(errorBody, com.archeGlobal.one.network.ExpenseSubmitErrorResponse::class.java)
+                    } catch (_: Exception) {
+                        null
+                    }
+                    val detail = parsed?.detail
+                    val fallbackError = "Failed to submit expense (${response.code()})"
+                    if (detail != null &&
+                        (detail.errorCode == "LIMIT_EXCEEDED" ||
+                            detail.message?.contains("Amount exceeds available spending limit.", ignoreCase = true) == true)
+                    ) {
+                        withContext(Dispatchers.Main) {
+                            onLimitExceeded(detail)
+                        }
+                    } else {
+                        val errorMessage = detail?.message?.takeIf { it.isNotBlank() }
+                            ?: parseErrorMessage(errorBody, fallbackError)
+                        withContext(Dispatchers.Main) {
+                            onError(errorMessage)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception submitting expense: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to submit expense")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    isLoading.value = false
+                }
+            }
+        }
+    }
+
     private fun parseErrorMessage(errorBody: String, fallback: String): String {
         if (errorBody.isBlank()) return fallback
         return try {
