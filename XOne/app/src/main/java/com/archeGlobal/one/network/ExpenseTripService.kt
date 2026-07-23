@@ -4,6 +4,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -25,6 +26,9 @@ interface ExpenseTripService {
     @GET("v1/projects/options/my")
     suspend fun getProjectOptions(): Response<ProjectOptionsResponse>
 
+    @GET("v1/trips/options")
+    suspend fun getTripOptions(): Response<List<TripOptionResponse>>
+
     @POST("v1/trips/")
     suspend fun createTrip(@Body request: CreateTripRequest): Response<TripItemResponse>
 
@@ -43,6 +47,12 @@ interface ExpenseTripService {
         @Path("trip_id") tripId: String,
         @Body request: CreateTripRequest,
     ): Response<TripItemResponse>
+
+    @PATCH("v1/trips/{trip_id}/status")
+    suspend fun updateTripStatus(
+        @Path("trip_id") tripId: String,
+        @Body request: TripStatusUpdateRequest,
+    ): Response<TripStatusUpdateResponse>
 
     @GET("v1/assets")
     suspend fun getVehicleAssets(

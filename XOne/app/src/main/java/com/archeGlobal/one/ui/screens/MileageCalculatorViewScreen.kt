@@ -602,6 +602,7 @@ private fun MileageDetailRow(label: String, value: String) {
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = Color.Gray,
             modifier = Modifier.width(130.dp)
@@ -1168,6 +1169,7 @@ private fun MileageLocationField(
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 6.dp),
@@ -1218,6 +1220,7 @@ private fun MileageFormInput(
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 6.dp),
@@ -1538,6 +1541,7 @@ private fun MileageDropdownField(
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 6.dp),
@@ -1597,6 +1601,7 @@ private fun MileageDateField(
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 6.dp)

@@ -52,8 +52,12 @@ data class TripItemResponse(
     @SerializedName("total_requested_amount")
     val totalRequestedAmount: String?,
     val advances: List<AdvanceResponse>,
-    val employee: EmployeeResponse?,
-    val project: TripProjectResponse?,
+    @SerializedName("user")
+    val user: EmployeeResponse? = null,
+    val employee: EmployeeResponse? = null,
+    val project: TripProjectResponse? = null,
+    @SerializedName("project_code")
+    val projectCode: String? = null,
 )
 
 data class TripProjectResponse(
@@ -83,7 +87,14 @@ data class EmployeeResponse(
     val id: Int?,
     val email: String?,
     @SerializedName("reporting_manager")
-    val reportingManager: String?,
+    val reportingManager: ReportingManagerResponse?,
+)
+
+data class ReportingManagerResponse(
+    @SerializedName("first_name") val firstName: String?,
+    @SerializedName("last_name") val lastName: String?,
+    val id: Int?,
+    val email: String?,
 )
 
 data class CreateTripRequest(
@@ -113,6 +124,17 @@ data class CreateTripRequest(
 
 data class DeleteTripResponse(
     val message: String,
+)
+
+data class TripStatusUpdateRequest(
+    val approved_amount: Double?,
+    val comment: String,
+    val status: String,
+)
+
+data class TripStatusUpdateResponse(
+    val message: String? = null,
+    val data: TripItemResponse? = null,
 )
 
 data class ProjectOption(
@@ -240,6 +262,12 @@ data class ProjectOptionsResponse(
     val data: List<ProjectOption>,
 )
 
+data class TripOptionResponse(
+    val id: Int,
+    @SerializedName("trip_id") val tripId: String,
+    val destination: String,
+)
+
 data class TravelRequestItemUi(
     val requestId: String,
     val tripId: String,
@@ -271,12 +299,18 @@ data class TravelRequestItemUi(
     val status: String,
 )
 
-fun TripItemResponse.toTravelRequestItemUi(): TravelRequestItemUi =
-    TravelRequestItemUi(
+fun TripItemResponse.toTravelRequestItemUi(): TravelRequestItemUi {
+    val traveler = user ?: employee
+    val projectCodeValue = projectCode?.takeIf { it.isNotBlank() } ?: project?.code?.takeIf { it.isNotBlank() } ?: "-"
+    val reportingManagerName = traveler?.reportingManager?.let { manager ->
+        listOfNotNull(manager.firstName, manager.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() } ?: manager.email
+    } ?: "-"
+
+    return TravelRequestItemUi(
         requestId = id.toString(),
         tripId = tripId?.takeIf { it.isNotBlank() } ?: id.toString(),
         tripCode = tripCode?.takeIf { it.isNotBlank() } ?: "-",
-        projectId = project?.code?.takeIf { it.isNotBlank() } ?: "-",
+        projectId = projectCodeValue,
         destination = destination,
         description = description?.takeIf { it.isNotBlank() } ?: "-",
         startDate = startDate,
@@ -304,15 +338,16 @@ fun TripItemResponse.toTravelRequestItemUi(): TravelRequestItemUi =
                 issuedAmount = advance.issuedAmount?.takeIf { it.isNotBlank() }?.let { formatCurrency(it) } ?: "-",
             )
         },
-        employeeName = listOfNotNull(this.employee?.firstName, this.employee?.lastName).joinToString(" ").takeIf { it.isNotBlank() } ?: "-",
-        employeeEmail = this.employee?.email ?: "-",
-        reportingManager = this.employee?.reportingManager?.takeIf { it.isNotBlank() } ?: "-",
+        employeeName = listOfNotNull(traveler?.firstName, traveler?.lastName).joinToString(" ").takeIf { it.isNotBlank() } ?: "-",
+        employeeEmail = traveler?.email ?: "-",
+        reportingManager = reportingManagerName,
         firstAdvanceRequestedAmount = advances.firstOrNull()?.requestedAmount?.takeIf { it.isNotBlank() }?.let { formatCurrency(it) } ?: "-",
         firstAdvanceRequestedAmountRaw = advances.firstOrNull()?.requestedAmount.orEmpty(),
         firstAdvanceStatus = advances.firstOrNull()?.status?.takeIf { it.isNotBlank() } ?: "-",
         firstAdvanceIssuedAmount = advances.firstOrNull()?.issuedAmount?.takeIf { it.isNotBlank() }?.let { formatCurrency(it) } ?: "-",
         status = status,
     )
+}
 
 private fun formatTravelDates(
     startDate: String,

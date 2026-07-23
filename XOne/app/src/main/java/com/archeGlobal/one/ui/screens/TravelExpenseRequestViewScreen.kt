@@ -388,18 +388,16 @@ private fun TravelHistoryCard(request: TravelRequestItemUi, onViewDetails: (Trav
             Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
 
             InfoRow("Request ID", "TR-${request.requestId}")
-            InfoRow("Trip Code", request.tripCode)
-            InfoRow("Project Code", request.projectId)
+            InfoRow("Trip ID", request.tripCode)
+            InfoRow("Project ID", request.projectId)
             InfoRow("Destination", request.destination)
-            InfoRow("Description", request.description)
             InfoRow("Travel Dates", request.travelDates)
             InfoRow("Estimated Cost", request.estimatedCost)
             InfoRow("Mode of Travel", request.modeOfTravel)
-            InfoRow("Hotel Needed", request.hotelNeeded)
-            InfoRow("Vehicle Needed", request.vehicleNeeded)
-            InfoRow("Advance Needed", request.advanceNeeded)
-            InfoRow("Advance Amount", request.firstAdvanceRequestedAmount)
-            InfoRow("Advance Requested", request.firstAdvanceRequestedAmount)
+            InfoRow("Hotel", request.hotelNeeded)
+            InfoRow("Vehicle", request.vehicleNeeded)
+            InfoRow("Advance", request.advanceNeeded)
+            InfoRow("Requested Amount", request.firstAdvanceRequestedAmount)
             InfoRow("Approved Amount", request.approvedAmount)
 
             Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
@@ -598,10 +596,8 @@ fun CreateTravelRequestBottomSheet(
                     options = if (projectOptions.isNotEmpty()) projectOptions.map { it.code } else listOf("No project options available"),
                     onValueChange = { projectId = it }
                 )
-                FormInput("Description (Optional)", description) { description = it }
-                FormInput("Destination *", destination) { destination = it }
-                FormInput("Estimated Total Cost *", estimatedCost) { estimatedCost = it }
-
+                FormInput("Description *","Enter Description", description) { description = it }
+                FormInput("Destination *","Enter destination", destination) { destination = it }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -619,6 +615,7 @@ fun CreateTravelRequestBottomSheet(
                         modifier = Modifier.weight(1f)
                     )
                 }
+                FormInput("Estimated Total Cost *","Estimated Total Cost *", estimatedCost) { estimatedCost = it }
 
                 DropdownField(
                     label = "Mode Of Travel *",
@@ -630,11 +627,11 @@ fun CreateTravelRequestBottomSheet(
                 SwitchRow("Vehicle Needed ?", vehicleNeeded) { vehicleNeeded = it }
                 SwitchRow("Advance Needed ?", advanceNeeded) { advanceNeeded = it }
                 if (advanceNeeded) {
-                    FormInput("Advance Amount *", advanceAmount) { advanceAmount = it }
+                    FormInput("Amount *","Enter advance amount", advanceAmount) { advanceAmount = it }
                     DropdownField(
                         label = "Advance Type *",
                         value = advanceType,
-                        options = listOf("Cash", "Bank Transfer"),
+                        options = listOf("Cash"),
                         onValueChange = { advanceType = it }
                     )
                 }
@@ -807,30 +804,44 @@ private fun parseDateString(dateString: String): Long? {
 
 @Composable
 private fun FormInput(
+    label: String,
     placeholder: String,
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        placeholder = {
-            Text(
-                text = placeholder,
-                color = Color.Gray,
-                fontFamily = GraphikFontFamily,
-                fontSize = 14.sp
-            )
-        },
-        shape = RoundedCornerShape(10.dp),
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            backgroundColor = Color.White,
-            focusedBorderColor = Color.LightGray,
-            unfocusedBorderColor = Color(0xFFD4D4D4)
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 6.dp)
         )
-    )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = {
+                    Text(
+                        text = placeholder,
+                        color = Color.Gray,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp
+                    )
+                },
+                shape = RoundedCornerShape(10.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    backgroundColor = Color.White,
+                    focusedBorderColor = Color.LightGray,
+                    unfocusedBorderColor = Color(0xFFD4D4D4)
+                )
+            )
+        }
+    }
 }
 
 @Composable
@@ -843,6 +854,7 @@ private fun SwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = Color.Black
         )
@@ -866,6 +878,7 @@ private fun DropdownField(
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 6.dp)
@@ -909,7 +922,11 @@ private fun DropdownField(
                             expanded = false
                         }
                     ) {
-                        Text(option, fontFamily = GraphikFontFamily)
+                        Text(
+                            option,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal
+                            )
                     }
                 }
             }
@@ -928,6 +945,7 @@ private fun DateSelectorField(
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             fontSize = 13.sp,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 6.dp)

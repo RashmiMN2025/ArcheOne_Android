@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -16,15 +17,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -48,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +70,8 @@ import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 private enum class ApprovalTab { TravelRequest, Expenses, Mileage }
 
@@ -71,6 +81,12 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val travelExpenseController = remember { TravelExpenseController(context) }
     val expenseController = remember { ExpenseController(context) }
+
+    var selectedTravelRequest by rememberSaveable { mutableStateOf<TravelRequestItemUi?>(null) }
+    var showTravelDetail by rememberSaveable { mutableStateOf(false) }
+    var approvalAmountText by rememberSaveable { mutableStateOf("") }
+    var reviewComment by rememberSaveable { mutableStateOf("") }
+    var isReviewSubmitting by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(selectedTab) {
         when (selectedTab) {
@@ -183,7 +199,14 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
                 ApprovalTab.TravelRequest -> TravelApprovalList(
                     travels = teamTrips,
                     isLoading = travelExpenseController.teamTripsLoading.value,
-                    errorMessage = travelExpenseController.teamTripsError.value
+                    errorMessage = travelExpenseController.teamTripsError.value,
+                    onRequestClick = { request ->
+                        selectedTravelRequest = request
+                        approvalAmountText = request.firstAdvanceRequestedAmountRaw.takeIf { it.isNotBlank() } ?: ""
+                        reviewComment = ""
+                        isReviewSubmitting = false
+                        showTravelDetail = true
+                    }
                 )
                 ApprovalTab.Mileage -> MileageApprovalList(
                     metrics = teamMileageMetrics,
@@ -202,6 +225,307 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
                 CircularProgressIndicator(color = PrimaryRed)
             }
         }
+    }
+
+    if (showTravelDetail && selectedTravelRequest != null) {
+        val request = selectedTravelRequest!!
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable { showTravelDetail = false },
+            contentAlignment = Alignment.TopCenter
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 100.dp, bottom = 0.dp)
+                    .clickable(enabled = false) { },
+                shape = RoundedCornerShape(16.dp),
+                elevation = 8.dp,
+                backgroundColor = Color.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Review Travel Request TR-${request.requestId}",
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "Review the details of the travel request and provide your approval or rejection.",
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 13.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+
+                    Divider(color = Color(0xFFEAEAEA))
+
+                    ApprovalDetailPairRow(
+                        leftTitle = "Employee",
+                        leftValue = request.employeeName,
+                        rightTitle = "Reporting Manager",
+                        rightValue = request.reportingManager
+                    )
+                    ApprovalDetailPairRow(
+                        leftTitle = "Destination",
+                        leftValue = request.destination,
+                        rightTitle = "Duration",
+                        rightValue = formatDuration(request.startDate, request.endDate)
+                    )
+                    ApprovalDetailPairRow(
+                        leftTitle = "Travel Dates",
+                        leftValue = request.travelDates,
+                        rightTitle = "Submitted Date",
+                        rightValue = formatDisplayDate(request.startDate)
+                    )
+
+                    ApprovalDetailPairRow(
+                        leftTitle = "Purpose of Travel",
+                        leftValue = request.description,
+                        rightTitle = "",
+                        rightValue = ""
+                    )
+                    ApprovalDetailPairRow(
+                        leftTitle = "Estimated Total Cost",
+                        leftValue = request.estimatedCost,
+                        rightTitle = "Advance Requested",
+                        rightValue = request.firstAdvanceRequestedAmount,
+                        isBoldLeft = true,
+                        isBoldRight = false
+                    )
+                    ApprovalDetailPairRow(
+                        leftTitle ="Advance Type",
+                        leftValue = if (request.advanceNeeded.equals("Yes", ignoreCase = true)) "Cash" else "N/A",
+                        rightTitle = "",
+                        rightValue = ""
+                        )
+
+                    Text(
+                        text = "Approval Amount *",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                    OutlinedTextField(
+                        value = approvalAmountText,
+                        onValueChange = { approvalAmountText = it.filter { char -> char.isDigit() || char == '.' || char == ',' } },
+                        placeholder = { Text("Enter approved amount") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            backgroundColor = Color.White,
+                            focusedBorderColor = Color.LightGray,
+                            unfocusedBorderColor = Color(0xFFD4D4D4)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text(
+                        text = "Comments",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                    OutlinedTextField(
+                        value = reviewComment,
+                        onValueChange = { reviewComment = it },
+                        placeholder = { Text("Comments (Required on Rejection)") },
+                        minLines = 3,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            backgroundColor = Color.White,
+                            focusedBorderColor = Color.LightGray,
+                            unfocusedBorderColor = Color(0xFFD4D4D4)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFFDF2F2), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = "Note: Upon approval, a Trip ID will be generated automatically. The advance will need to be issued separately from the Advance Management section.",
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 12.sp,
+                            color = Color(0xFFB45309)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = { showTravelDetail = false },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF6F4EE), contentColor = Color.Black),
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = !isReviewSubmitting
+                        ) {
+                            Text("Cancel")
+                        }
+                        Button(
+                            onClick = {
+                                val parsedAmount = approvalAmountText.toDoubleOrNull()
+                                isReviewSubmitting = true
+                                travelExpenseController.updateTripStatus(
+                                    tripId = request.tripId,
+                                    approvedAmount = parsedAmount,
+                                    comment = reviewComment.trim(),
+                                    status = "rejected",
+                                    onSuccess = {
+                                        isReviewSubmitting = false
+                                        showTravelDetail = false
+                                        travelExpenseController.fetchTeamTrips()
+                                        Toast.makeText(context, "Travel request rejected", Toast.LENGTH_SHORT).show()
+                                    },
+                                    onError = { message ->
+                                        isReviewSubmitting = false
+                                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF3E8E8), contentColor = PrimaryRed),
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = !isReviewSubmitting
+                        ) {
+                            Text("Reject")
+                        }
+                        Button(
+                            onClick = {
+                                val parsedAmount = approvalAmountText.toDoubleOrNull()
+                                isReviewSubmitting = true
+                                travelExpenseController.updateTripStatus(
+                                    tripId = request.tripId,
+                                    approvedAmount = parsedAmount,
+                                    comment = reviewComment.trim(),
+                                    status = "approved",
+                                    onSuccess = {
+                                        isReviewSubmitting = false
+                                        showTravelDetail = false
+                                        travelExpenseController.fetchTeamTrips()
+                                        Toast.makeText(context, "Travel request approved", Toast.LENGTH_SHORT).show()
+                                    },
+                                    onError = { message ->
+                                        isReviewSubmitting = false
+                                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(backgroundColor = PrimaryRed, contentColor = Color.White),
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = !isReviewSubmitting
+                        ) {
+                            Text("Approve")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ApprovalDetailPairRow(
+    leftTitle: String,
+    leftValue: String,
+    rightTitle: String,
+    rightValue: String,
+    isBoldLeft: Boolean = false,
+    isBoldRight: Boolean = false,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = leftTitle,
+                fontFamily = GraphikFontFamily,
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+            Text(
+                text = leftValue.takeIf { it.isNotBlank() } ?: "-",
+                fontFamily = GraphikFontFamily,
+                fontSize = 14.sp,
+                fontWeight = if (isBoldLeft) FontWeight.SemiBold else FontWeight.Medium,
+                color = Color.Black,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = rightTitle,
+                fontFamily = GraphikFontFamily,
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+            Text(
+                text = rightValue.takeIf { it.isNotBlank() } ?: "-",
+                fontFamily = GraphikFontFamily,
+                fontSize = 14.sp,
+                fontWeight = if (isBoldRight) FontWeight.SemiBold else FontWeight.Medium,
+                color = Color.Black,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+}
+
+private fun formatDuration(startDate: String, endDate: String): String {
+    if (startDate.isBlank() || endDate.isBlank()) return "-"
+    return try {
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val start = formatter.parse(startDate)
+        val end = formatter.parse(endDate)
+        if (start != null && end != null) {
+            val diffDays = ((end.time - start.time) / 86_400_000L) + 1
+            if (diffDays <= 1L) "1 day" else "$diffDays days"
+        } else {
+            "-"
+        }
+    } catch (_: Exception) {
+        "-"
+    }
+}
+
+private fun formatDisplayDate(value: String): String {
+    if (value.isBlank()) return "-"
+    return try {
+        val inputFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outputFormatter = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+        val parsedDate = inputFormatter.parse(value)
+        parsedDate?.let { outputFormatter.format(it) } ?: value
+    } catch (_: Exception) {
+        value
     }
 }
 
@@ -281,6 +605,7 @@ private fun TravelApprovalList(
     travels: List<TravelRequestItemUi>,
     isLoading: Boolean,
     errorMessage: String?,
+    onRequestClick: (TravelRequestItemUi) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -320,7 +645,8 @@ private fun TravelApprovalList(
             items(travels) { travel ->
                 TravelApprovalCard(
                     travel = travel,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    onRequestClick = onRequestClick
                 )
             }
         }
@@ -454,9 +780,10 @@ private fun ExpenseApprovalCard(
 @Composable
 private fun TravelApprovalCard(
     travel: TravelRequestItemUi,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRequestClick: (TravelRequestItemUi) -> Unit,
 ) {
-    ApprovalCardContainer(modifier = modifier) {
+    ApprovalCardContainer(modifier = modifier.clickable { onRequestClick(travel) }) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -464,34 +791,35 @@ private fun TravelApprovalCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${travel.destination} Trip",
+                    text = "TR-${travel.requestId}",
                     fontFamily = GraphikFontFamily,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
                 )
-                Text(
-                    text = "${travel.tripCode} • ${travel.travelDates}",
-                    fontFamily = GraphikFontFamily,
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
             }
             TravelStatusBadge(status = travel.status)
         }
 
-        Divider(color = Color(0xFFEAEAEA))
+        Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
 
+        ApprovalDetailRow("Request ID", travel.requestId)
+        ApprovalDetailRow("Trip ID", travel.tripCode)
         ApprovalDetailRow("Project", travel.projectId)
-        ApprovalDetailRow("Mode", travel.modeOfTravel)
+        ApprovalDetailRow("Submitted By", travel.employeeName)
+        ApprovalDetailRow("Destination", travel.destination)
+        ApprovalDetailRow("Travel Dates", travel.travelDates)
         ApprovalDetailRow("Estimated Cost", travel.estimatedCost, isBold = true)
-        ApprovalDetailRow("Hotel Needed", travel.hotelNeeded)
-        ApprovalDetailRow("Vehicle Needed", travel.vehicleNeeded)
+        ApprovalDetailRow("Mode of Travel", travel.modeOfTravel)
+        ApprovalDetailRow("Hotel", travel.hotelNeeded)
+        ApprovalDetailRow("Vehicle", travel.vehicleNeeded)
         ApprovalDetailRow("Advance", travel.advanceAmount)
+        ApprovalDetailRow("Requested Amount", travel.firstAdvanceRequestedAmount)
         ApprovalDetailRow("Approved Amount", travel.approvedAmount)
-        ApprovalDetailRow("Status", travel.status)
 
-        ReviewActionRow(actionText = "Review")
+        Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
+
+        ReviewActionRow(actionText = "View", onClick = { onRequestClick(travel) })
     }
 }
 
@@ -587,9 +915,11 @@ private fun ApprovalDetailRow(
 }
 
 @Composable
-private fun ReviewActionRow(actionText: String) {
+private fun ReviewActionRow(actionText: String, onClick: () -> Unit = {}) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {

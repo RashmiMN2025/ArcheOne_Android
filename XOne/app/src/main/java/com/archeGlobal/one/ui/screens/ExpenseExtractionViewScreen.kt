@@ -39,6 +39,9 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,6 +60,10 @@ import android.net.Uri
 import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.DropdownMenu
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -108,14 +115,18 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
     var searchText by rememberSaveable { mutableStateOf("") }
     var selectedTab by rememberSaveable { mutableStateOf(ExpenseTab.Drafts) }
     var showAddPopup by rememberSaveable { mutableStateOf(false) }
+    var showManualBottomSheet by rememberSaveable { mutableStateOf(false) }
     var selectedExpenseDetail by remember { mutableStateOf<ExpenseDetailUi?>(null) }
     var isDetailReadOnly by rememberSaveable { mutableStateOf(false) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val controller = remember { ExpenseController(context) }
+    val travelController = remember { com.archeGlobal.one.controller.TravelExpenseController(context) }
 
     val allExpenses by controller.expenses
     val submittedExpenses by controller.submittedExpenses
+    val projectOptions by travelController.projectOptions
+    val tripOptions by travelController.tripOptions
     val isLoading by controller.isLoading
     val submittedLoading by controller.submittedLoading
     val detailLoading by controller.detailLoading
@@ -153,6 +164,8 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
 
     LaunchedEffect(Unit) {
         controller.fetchExpenses()
+        travelController.fetchProjectOptions()
+        travelController.fetchTripOptions()
     }
 
     LaunchedEffect(selectedTab) {
@@ -446,7 +459,22 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
                 fileLauncher.launch("*/*")
                 showAddPopup = false
             },
-            onManual = { showAddPopup = false }
+            onManual = {
+                showAddPopup = false
+                showManualBottomSheet = true
+            }
+        )
+    }
+
+    if (showManualBottomSheet) {
+        ManualExpenseEntryBottomSheet(
+            projectOptions = projectOptions,
+            tripOptions = tripOptions,
+            onDismiss = { showManualBottomSheet = false },
+            onProjectSelected = { projectId, customerId, soNumber, tripId ->
+                showManualBottomSheet = false
+                Toast.makeText(context, "Project: $projectId, Trip: $tripId", Toast.LENGTH_SHORT).show()
+            },
         )
     }
 }
@@ -629,14 +657,12 @@ private fun SubmittedExpenseCard(
             )
         }
         Divider(color = Color(0xFFEEEEEE))
-        ExpenseDetailRow("Bill Date", expense.billDate)
-        ExpenseDetailRow("Vendor Name", expense.vendorName)
         ExpenseDetailRow("Category", expense.category)
+        ExpenseDetailRow("Bill Date", expense.billDate)
+        ExpenseDetailRow("Description", expense.vendorName)
         ExpenseDetailRow("File Name", expense.name)
         ExpenseDetailRow("Amount", expense.amount)
-        ExpenseDetailRow("Approved Amount", expense.approvedAmount)
-        ExpenseDetailRow("Employee", expense.employeeName)
-        ExpenseDetailRow("Submitted At", expense.submittedAt)
+        ExpenseDetailRow("Submission Date", expense.submittedAt)
         Divider(color = Color(0xFFEEEEEE))
         SubmittedCardActionsRow(onViewDetails = onViewDetails, onDownload = onDownload)
     }
@@ -815,6 +841,210 @@ private fun AddExpensePopup(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ManualExpenseEntryBottomSheet(
+    projectOptions: List<com.archeGlobal.one.network.ProjectOption>,
+    tripOptions: List<com.archeGlobal.one.network.TripOptionResponse>,
+    onDismiss: () -> Unit,
+    onProjectSelected: (projectId: String, customerId: String, soNumber: String?, tripId: String) -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var projectId by rememberSaveable { mutableStateOf("") }
+    var tripId by rememberSaveable { mutableStateOf("") }
+    var customerId by rememberSaveable { mutableStateOf("") }
+    var soNumber by rememberSaveable { mutableStateOf("") }
+    var projectExpanded by remember { mutableStateOf(false) }
+    var tripExpanded by remember { mutableStateOf(false) }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        containerColor = Color(0xFFF6F4EE),
+        dragHandle = null,
+        tonalElevation = 8.dp,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Enter Expense Details",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp,
+                    color = Color.Black,
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Close")
+                }
+            }
+
+            ManualField(
+                label = "Project ID",
+                value = projectId,
+                placeholder = "Select project ID",
+                expanded = projectExpanded,
+                onExpandedChange = { projectExpanded = it },
+                options = projectOptions.map { it.code },
+                onValueChange = {
+                    projectId = it
+                    projectOptions.firstOrNull { option -> option.code.equals(it, ignoreCase = true) }?.let { selected ->
+                        customerId = selected.customerId.orEmpty()
+                        soNumber = selected.soNumber.orEmpty()
+                    }
+                },
+            )
+            ManualField(
+                label = "Trip ID",
+                value = tripId,
+                placeholder = "Select trip ID",
+                expanded = tripExpanded,
+                onExpandedChange = { tripExpanded = it },
+                options = tripOptions.map { it.tripId },
+                onValueChange = { tripId = it },
+            )
+            ManualTextField(
+                label = "Customer ID",
+                value = customerId,
+                onValueChange = { customerId = it },
+                placeholder = "Enter customer ID",
+            )
+            ManualTextField(
+                label = "SO Number",
+                value = soNumber,
+                onValueChange = { soNumber = it },
+                placeholder = "Enter SO number",
+            )
+            Button(
+                onClick = {
+                    onProjectSelected(projectId, customerId, soNumber.ifBlank { null }, tripId)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = projectId.isNotBlank() && tripId.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = PrimaryRed,
+                    contentColor = Color.White,
+                ),
+            ) {
+                Text(text = "Continue")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManualField(
+    label: String,
+    value: String,
+    placeholder: String,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    options: List<String>,
+    onValueChange: (String) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontFamily = GraphikFontFamily,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 6.dp),
+        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = value.ifBlank { placeholder },
+                onValueChange = {},
+                modifier = Modifier.fillMaxWidth(),
+                readOnly = true,
+                enabled = false,
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                    )
+                },
+                shape = RoundedCornerShape(10.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    backgroundColor = Color(0xFFFAFAFA),
+                    disabledTextColor = if (value.isBlank()) Color.Gray else Color.Black,
+                    disabledBorderColor = Color(0xFFD4D4D4),
+                    disabledTrailingIconColor = Color.Gray,
+                ),
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable { onExpandedChange(true) }
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) },
+            modifier = Modifier.fillMaxWidth(0.95f),
+        ) {
+            if (options.isEmpty()) {
+                DropdownMenuItem(onClick = { onExpandedChange(false) }) {
+                    Text(text = "No options available", fontFamily = GraphikFontFamily, color = Color.Gray)
+                }
+            } else {
+                options.forEach { option ->
+                    DropdownMenuItem(onClick = {
+                        onValueChange(option)
+                        onExpandedChange(false)
+                    }) {
+                        Text(text = option, fontFamily = GraphikFontFamily)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManualTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontFamily = GraphikFontFamily,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 6.dp),
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = {
+                Text(text = placeholder, color = Color.Gray, fontFamily = GraphikFontFamily)
+            },
+            shape = RoundedCornerShape(10.dp),
+            singleLine = true,
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                backgroundColor = Color(0xFFFAFAFA),
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color(0xFFD4D4D4),
+            ),
+        )
     }
 }
 

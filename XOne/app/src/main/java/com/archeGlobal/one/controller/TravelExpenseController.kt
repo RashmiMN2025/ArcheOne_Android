@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.archeGlobal.one.network.CreateTripRequest
 import com.archeGlobal.one.network.ExpenseRetrofitClient
 import com.archeGlobal.one.network.MileageExpenseItemUi
+import com.archeGlobal.one.network.TripStatusUpdateRequest
 import com.archeGlobal.one.network.TeamMileageDashboardMetricsResponse
 import com.archeGlobal.one.network.TravelRequestItemUi
 import com.archeGlobal.one.network.toMileageExpenseItemUi
@@ -28,6 +29,9 @@ class TravelExpenseController(
     var projectOptions = mutableStateOf<List<com.archeGlobal.one.network.ProjectOption>>(emptyList())
     var projectOptionsLoading = mutableStateOf(false)
     var projectOptionsError = mutableStateOf<String?>(null)
+    var tripOptions = mutableStateOf<List<com.archeGlobal.one.network.TripOptionResponse>>(emptyList())
+    var tripOptionsLoading = mutableStateOf(false)
+    var tripOptionsError = mutableStateOf<String?>(null)
     var createRequestLoading = mutableStateOf(false)
     var vehicleAssets = mutableStateOf<List<com.archeGlobal.one.network.VehicleAssetItem>>(emptyList())
     var vehicleAssetsLoading = mutableStateOf(false)
@@ -317,6 +321,43 @@ class TravelExpenseController(
         }
     }
 
+    fun fetchTripOptions() {
+        tripOptionsLoading.value = true
+        tripOptionsError.value = null
+
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getTripOptions()
+                if (response.isSuccessful) {
+                    val options = response.body().orEmpty()
+                    withContext(Dispatchers.Main) {
+                        tripOptions.value = options
+                        tripOptionsError.value = null
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch trip options: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        tripOptions.value = emptyList()
+                        tripOptionsError.value = "Failed to load trip options (${response.code()})"
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching trip options: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    tripOptions.value = emptyList()
+                    tripOptionsError.value = e.message ?: "Failed to load trip options"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    tripOptionsLoading.value = false
+                }
+            }
+        }
+    }
+
     fun fetchVehicleAssets(vehicleType: String) {
         vehicleAssetsLoading.value = true
         vehicleAssetsError.value = null
@@ -484,6 +525,51 @@ class TravelExpenseController(
                 Log.e(tag, "Exception creating trip: ${e.message}", e)
                 withContext(Dispatchers.Main) {
                     onError(e.message ?: "Failed to submit travel request")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    createRequestLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun updateTripStatus(
+        tripId: String,
+        approvedAmount: Double?,
+        comment: String,
+        status: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        createRequestLoading.value = true
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val request = TripStatusUpdateRequest(
+                    approved_amount = approvedAmount,
+                    comment = comment,
+                    status = status,
+                )
+                val response = ExpenseRetrofitClient.tripService.updateTripStatus(tripId, request)
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        fetchTeamTrips()
+                        onSuccess()
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    val message = extractApiErrorMessage(errorBody) ?: "Failed to update travel request (${response.code()})"
+                    Log.e(tag, "Failed to update trip status: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        onError(message)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception updating trip status: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to update travel request")
                 }
             } finally {
                 withContext(Dispatchers.Main) {
