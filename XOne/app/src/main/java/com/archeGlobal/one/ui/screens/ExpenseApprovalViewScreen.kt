@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.Visibility
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -90,6 +91,10 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
         travelExpenseController.teamMileageMetricsLoading.value ||
         travelExpenseController.teamMileageExpensesLoading.value ||
         expenseController.approvalExpensesLoading.value
+
+    BackHandler {
+        onBack()
+    }
 
     Box(
         modifier = Modifier

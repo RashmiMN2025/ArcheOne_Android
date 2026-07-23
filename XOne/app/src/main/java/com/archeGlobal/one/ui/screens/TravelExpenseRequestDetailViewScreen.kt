@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.LaunchedEffect
 import com.archeGlobal.one.controller.TravelExpenseController
 import com.archeGlobal.one.network.ProjectOption
@@ -63,6 +64,10 @@ fun TravelExpenseRequestDetailViewScreen(
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     var showEditBottomSheet by rememberSaveable { mutableStateOf(false) }
+
+    BackHandler {
+        onBack()
+    }
 
     LaunchedEffect(projectOptions, projectOptionsLoading) {
         if (projectOptions.isEmpty() && !projectOptionsLoading) {
@@ -127,34 +132,26 @@ fun TravelExpenseRequestDetailViewScreen(
                     travelDates = request.travelDates,
                 )
 
-                ExpenseRequestDetailCard(title = "Request Information") {
-                    TravelDetailRow(label = "Request ID", value = "#TR-${request.requestId}")
-                    TravelDetailRow(label = "Trip ID", value = request.tripCode)
-                    TravelDetailRow(label = "Project Code", value = request.projectId)
+                ExpenseRequestDetailCard(title = "Employee Details") {
+                    TravelDetailRow(label = "Employee", value = request.employeeName)
+                    TravelDetailRow(label = "Email", value = request.employeeEmail)
+                    TravelDetailRow(label = "Reporting Manager", value = request.reportingManager)
+                }
+
+                ExpenseRequestDetailCard(title = "Travel Information") {
                     TravelDetailRow(label = "Destination", value = request.destination)
+                    TravelDetailRow(label = "Travel Dates", value = request.travelDates)
+                    TravelDetailRow(label = "Estimated Cost", value = request.estimatedCost)
+                }
+
+                ExpenseRequestDetailCard(title = "Purpose of Travel") {
                     TravelDetailRow(label = "Description", value = request.description)
                 }
 
-                ExpenseRequestDetailCard(title = "Employee") {
-                    TravelDetailRow(label = "Employee", value = request.employeeName)
-                    TravelDetailRow(label = "Email", value = request.employeeEmail)
-                }
-
-                ExpenseRequestDetailCard(title = "Travel Details") {
-                    TravelDetailRow(label = "Travel Dates", value = request.travelDates)
-                    TravelDetailRow(label = "Mode of Travel", value = request.modeOfTravel)
-                    TravelDetailRow(label = "Hotel Needed", value = request.hotelNeeded)
-                    TravelDetailRow(label = "Vehicle Needed", value = request.vehicleNeeded)
-                }
-
-                ExpenseRequestDetailCard(title = "Financials") {
-                    TravelDetailRow(label = "Estimated Cost", value = request.estimatedCost)
-                    TravelDetailRow(label = "Advance Needed", value = request.advanceNeeded)
-                    TravelDetailRow(label = "Advance Amount", value = request.firstAdvanceRequestedAmount)
+                ExpenseRequestDetailCard(title = "Advance Summary") {
+                    TravelDetailRow(label = "Advance Requested", value = request.firstAdvanceRequestedAmount)
                     TravelDetailRow(label = "Approved Amount", value = request.approvedAmount)
                     TravelDetailRow(label = "Total Requested", value = request.totalRequestedAmount)
-                    TravelDetailRow(label = "Total Approved", value = request.totalApprovedAmount)
-                    TravelDetailRow(label = "Total Issued", value = request.totalIssuedAmount)
                 }
 
                 Row(
@@ -247,7 +244,7 @@ private fun TravelSummaryCard(
             ) {
                 Column {
                     Text(
-                        text = "#TR-$requestId",
+                        text = "TR-$requestId",
                         fontSize = 18.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,

@@ -16,12 +16,20 @@ class ExpenseAuthController(
     private val tag = "ExpenseAuthController"
 
     fun loginWithStoredIdToken(callback: (Boolean, String) -> Unit) {
-        val idToken = PreferencesManager(context).getMsalIdToken()
-        if (idToken.isNullOrBlank()) {
-            callback(false, "MSAL id token not found. Please login again.")
-            return
+        val storedIdToken = PreferencesManager(context).getMsalIdToken()
+
+        Log.d(tag, "Attempting to obtain a fresh MSAL id token for Entra login")
+        loginWithEntraIdTokenFromMsal { success, message ->
+            if (success) {
+                callback(true, message)
+            } else if (storedIdToken.isNullOrBlank()) {
+                Log.w(tag, "No stored MSAL id token fallback available: $message")
+                callback(false, message)
+            } else {
+                Log.w(tag, "Fresh MSAL id token unavailable, falling back to stored id token: $message")
+                loginWithEntraIdToken(storedIdToken, callback)
+            }
         }
-        loginWithEntraIdToken(idToken, callback)
     }
 
     fun loginWithEntraIdTokenFromMsal(callback: (Boolean, String) -> Unit) {
@@ -31,16 +39,13 @@ class ExpenseAuthController(
                 callback(false, "Authentication system not ready")
                 return@initialize
             }
-            if (!msalManager.isUserSignedIn()) {
-                Log.d(tag, "Skipping entra login: no signed-in MSAL account")
-                callback(false, NO_SIGNED_IN_MSAL_ACCOUNT)
-                return@initialize
-            }
             msalManager.getIdToken { idToken ->
                 if (idToken.isNullOrBlank()) {
                     callback(false, "Could not obtain Microsoft identity token")
                     return@getIdToken
                 }
+                PreferencesManager(context).saveMsalIdToken(idToken)
+                Log.d(tag, "Refreshed and stored MSAL id token for Entra login")
                 loginWithEntraIdToken(idToken, callback)
             }
         }

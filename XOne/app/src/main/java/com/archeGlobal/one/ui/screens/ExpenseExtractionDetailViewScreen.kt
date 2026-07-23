@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.Composable
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,6 +129,10 @@ fun ExpenseExtractionDetailViewScreen(
     var note by rememberSaveable(expense.id) { mutableStateOf(expense.note) }
     var showDocumentViewer by rememberSaveable { mutableStateOf(false) }
     var showSplitDialog by rememberSaveable { mutableStateOf(false) }
+
+    BackHandler {
+        onBack()
+    }
 
     LaunchedEffect(Unit) {
         tripController.fetchProjectOptions()

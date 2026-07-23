@@ -46,6 +46,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
@@ -121,6 +122,15 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
     val downloadLoading by controller.downloadLoading
 
     if (selectedExpenseDetail != null) {
+        BackHandler {
+            selectedExpenseDetail = null
+            isDetailReadOnly = false
+            if (selectedTab == ExpenseTab.Drafts) {
+                controller.fetchExpenses()
+            } else {
+                controller.fetchSubmittedExpenses()
+            }
+        }
         ExpenseExtractionDetailViewScreen(
             expense = selectedExpenseDetail!!,
             isReadOnly = isDetailReadOnly,
@@ -135,6 +145,10 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
             },
         )
         return
+    }
+
+    BackHandler {
+        onBack()
     }
 
     LaunchedEffect(Unit) {

@@ -82,6 +82,8 @@ data class EmployeeResponse(
     val lastName: String?,
     val id: Int?,
     val email: String?,
+    @SerializedName("reporting_manager")
+    val reportingManager: String?,
 )
 
 data class CreateTripRequest(
@@ -261,6 +263,7 @@ data class TravelRequestItemUi(
     val advances: List<AdvanceRequestUi>,
     val employeeName: String,
     val employeeEmail: String,
+    val reportingManager: String,
     val firstAdvanceRequestedAmount: String,
     val firstAdvanceRequestedAmountRaw: String,
     val firstAdvanceStatus: String,
@@ -303,6 +306,7 @@ fun TripItemResponse.toTravelRequestItemUi(): TravelRequestItemUi =
         },
         employeeName = listOfNotNull(this.employee?.firstName, this.employee?.lastName).joinToString(" ").takeIf { it.isNotBlank() } ?: "-",
         employeeEmail = this.employee?.email ?: "-",
+        reportingManager = this.employee?.reportingManager?.takeIf { it.isNotBlank() } ?: "-",
         firstAdvanceRequestedAmount = advances.firstOrNull()?.requestedAmount?.takeIf { it.isNotBlank() }?.let { formatCurrency(it) } ?: "-",
         firstAdvanceRequestedAmountRaw = advances.firstOrNull()?.requestedAmount.orEmpty(),
         firstAdvanceStatus = advances.firstOrNull()?.status?.takeIf { it.isNotBlank() } ?: "-",

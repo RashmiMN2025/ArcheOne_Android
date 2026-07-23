@@ -424,12 +424,6 @@ class MSALAuthenticationManager(private val context: Context) {
             return
         }
 
-        val cachedIdToken = currentAccount?.idToken
-        if (!cachedIdToken.isNullOrBlank()) {
-            Log.d(TAG, "Returning cached MSAL id token")
-            callback(cachedIdToken)
-            return
-        }
 
         try {
             mSingleAccountApp!!.acquireTokenSilentAsync(
@@ -445,6 +439,9 @@ class MSALAuthenticationManager(private val context: Context) {
 
                     override fun onError(exception: MsalException) {
                         Log.e(TAG, "Error getting id token: ${exception.message}")
+                        if (exception.message?.contains("no signed in account", ignoreCase = true) == true) {
+                            currentAccount = null
+                        }
                         callback(null)
                     }
                 },

@@ -62,6 +62,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -249,6 +250,10 @@ fun MileageCalculatorViewScreen(onBack: () -> Unit) {
     LaunchedEffect(Unit) {
         expenseController.fetchMileageExpenses()
         expenseController.fetchMileageDashboardMetrics()
+    }
+
+    BackHandler {
+        onBack()
     }
 
     val trips = remember(mileageExpenses) {
@@ -661,7 +666,7 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
     val mileageRateLoading by tripController.mileageRateLoading
     val mileageRateError by tripController.mileageRateError
 
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
     var customerName by rememberSaveable { mutableStateOf("") }
@@ -774,7 +779,7 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.88f)
+                .fillMaxHeight(0.9f)
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
         ) {

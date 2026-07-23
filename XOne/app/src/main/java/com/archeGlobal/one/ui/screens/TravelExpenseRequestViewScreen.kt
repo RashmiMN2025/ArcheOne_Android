@@ -53,6 +53,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -91,8 +92,12 @@ fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
     val projectOptionsError by controller.projectOptionsError
     var selectedRequest by remember { mutableStateOf<TravelRequestItemUi?>(null) }
     var showDetailScreen by remember { mutableStateOf(false) }
+    var isFetchingDetail by remember { mutableStateOf(false) }
 
     if (showDetailScreen && selectedRequest != null) {
+        BackHandler {
+            showDetailScreen = false
+        }
         TravelExpenseRequestDetailViewScreen(
             controller = controller,
             request = selectedRequest!!,
@@ -102,6 +107,10 @@ fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
             projectOptionsError = projectOptionsError
         )
         return
+    }
+
+    BackHandler {
+        onBack()
     }
 
     LaunchedEffect(Unit) {
@@ -248,21 +257,41 @@ fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
                     )
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 96.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    items(filteredRequests) { request ->
-                        TravelHistoryCard(
-                            request = request,
-                            onViewDetails = {
-                                // Use list payload directly — GET /v1/trips/{id} currently
-                                // returns HTTP 500 (backend TripDetailResponse validation error).
-                                selectedRequest = it
-                                showDetailScreen = true
-                            }
-                        )
+                if (isFetchingDetail) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 56.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = PrimaryRed)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 96.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        items(filteredRequests) { request ->
+                            TravelHistoryCard(
+                                request = request,
+                                onViewDetails = {
+                                    isFetchingDetail = true
+                                    controller.fetchTrip(
+                                        tripId = it.tripId,
+                                        onSuccess = { tripDetail ->
+                                            selectedRequest = tripDetail
+                                            showDetailScreen = true
+                                            isFetchingDetail = false
+                                        },
+                                        onError = { message ->
+                                            isFetchingDetail = false
+                                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                        }
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -325,7 +354,7 @@ private fun TravelHistoryCard(request: TravelRequestItemUi, onViewDetails: (Trav
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "#TR-${request.requestId}",
+                    text = "TR-${request.requestId}",
                     fontFamily = GraphikFontFamily,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -358,7 +387,7 @@ private fun TravelHistoryCard(request: TravelRequestItemUi, onViewDetails: (Trav
 
             Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
 
-            InfoRow("Request ID", "#TR-${request.requestId}")
+            InfoRow("Request ID", "TR-${request.requestId}")
             InfoRow("Trip Code", request.tripCode)
             InfoRow("Project Code", request.projectId)
             InfoRow("Destination", request.destination)
@@ -436,7 +465,7 @@ fun CreateTravelRequestBottomSheet(
     initialRequest: com.archeGlobal.one.network.TravelRequestItemUi? = null
 ) {
     val context = LocalContext.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
     var projectId by rememberSaveable { mutableStateOf(initialRequest?.projectId ?: "") }
@@ -469,7 +498,7 @@ fun CreateTravelRequestBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.88f)
+                .fillMaxHeight(0.9f)
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
         ) {
