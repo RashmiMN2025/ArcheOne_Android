@@ -4,8 +4,15 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Address
+import android.util.Log
+import android.location.Criteria
 import android.location.Geocoder
+import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.widget.Toast
@@ -21,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -91,16 +99,61 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
+import org.osmdroid.util.MapTileIndex
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.net.HttpURLConnection
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private const val MAPPLS_ACCESS_TOKEN = "a5d8515bf86b25045659870561ac1980"
+private const val MAPPLS_TILE_BASE_URL = "https://apis.mappls.com/advancedmaps/v1/$MAPPLS_ACCESS_TOKEN/map_sdk/mal_en/"
+
+private fun buildMapplsTileSource(): OnlineTileSourceBase {
+    return object : OnlineTileSourceBase(
+        "mappls",
+        2,
+        20,
+        256,
+        ".png",
+        arrayOf(MAPPLS_TILE_BASE_URL)
+    ) {
+        override fun getTileURLString(pTile: Long): String {
+            val zoom = MapTileIndex.getZoom(pTile)
+            val x = MapTileIndex.getX(pTile)
+            val y = MapTileIndex.getY(pTile)
+            return "$MAPPLS_TILE_BASE_URL$zoom/$x/$y.png"
+        }
+    }
+}
+
+private suspend fun probeMapplsAvailability(): Boolean = withContext(Dispatchers.IO) {
+    val probeUrl = URL("${MAPPLS_TILE_BASE_URL}2/1/1.png")
+    var connection: HttpURLConnection? = null
+    return@withContext try {
+        connection = probeUrl.openConnection() as HttpURLConnection
+        connection.connectTimeout = 8000
+        connection.readTimeout = 8000
+        val code = connection.responseCode
+        val contentType = connection.contentType.orEmpty()
+        code in 200..299 && contentType.startsWith("image", ignoreCase = true)
+    } catch (_: Exception) {
+        false
+    } finally {
+        connection?.disconnect()
+    }
+}
 
 private data class MileageTripUi(
     val id: String,
@@ -201,14 +254,70 @@ private fun getCurrentGeoPoint(context: Context, onResult: (GeoPoint?) -> Unit) 
         return
     }
 
-    val provider = when {
-        locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
-        locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
-        else -> null
+    val lastKnownLocation = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+        .firstOrNull { provider -> locationManager.isProviderEnabled(provider) }
+        ?.let { provider -> locationManager.getLastKnownLocation(provider) }
+
+    if (lastKnownLocation != null) {
+        onResult(GeoPoint(lastKnownLocation.latitude, lastKnownLocation.longitude))
+        return
     }
 
-    val location = provider?.let { locationManager.getLastKnownLocation(it) }
-    onResult(location?.let { GeoPoint(it.latitude, it.longitude) })
+    val criteria = Criteria().apply { accuracy = Criteria.ACCURACY_FINE }
+    val provider = locationManager.getBestProvider(criteria, true)
+    if (provider == null) {
+        onResult(null)
+        return
+    }
+
+    val handler = Handler(Looper.getMainLooper())
+    var resolved = false
+    val listener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            if (resolved) return
+            resolved = true
+            handler.removeCallbacksAndMessages(null)
+            locationManager.removeUpdates(this)
+            onResult(GeoPoint(location.latitude, location.longitude))
+        }
+
+        override fun onProviderEnabled(provider: String) = Unit
+        override fun onProviderDisabled(provider: String) = Unit
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+    }
+
+    try {
+        locationManager.requestSingleUpdate(provider, listener, Looper.getMainLooper())
+        handler.postDelayed({
+            if (!resolved) {
+                resolved = true
+                locationManager.removeUpdates(listener)
+                onResult(null)
+            }
+        }, 10000)
+    } catch (_: SecurityException) {
+        onResult(null)
+    }
+}
+
+private fun calculateDistanceInKm(startPoint: GeoPoint?, endPoint: GeoPoint?): String {
+    if (startPoint == null || endPoint == null) {
+        return ""
+    }
+
+    val earthRadiusKm = 6371.0
+    val latDistance = Math.toRadians(endPoint.latitude - startPoint.latitude)
+    val lonDistance = Math.toRadians(endPoint.longitude - startPoint.longitude)
+    val startLat = Math.toRadians(startPoint.latitude)
+    val endLat = Math.toRadians(endPoint.latitude)
+
+    val a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2) +
+        Math.cos(startLat) * Math.cos(endLat) *
+        Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2)
+    val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    val distance = earthRadiusKm * c
+
+    return BigDecimal(distance).setScale(1, RoundingMode.HALF_UP).toPlainString()
 }
 
 private fun searchGeoPoint(context: Context, query: String, onResult: (GeoPoint?, String) -> Unit) {
@@ -686,7 +795,8 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
     var calculatedPrice by rememberSaveable { mutableStateOf("") }
     var showMapPicker by rememberSaveable { mutableStateOf(false) }
     var locationFieldMode by rememberSaveable { mutableStateOf("start") }
-    var selectedPoint by rememberSaveable { mutableStateOf<GeoPoint?>(null) }
+    var startPoint by rememberSaveable { mutableStateOf<GeoPoint?>(null) }
+    var destinationPoint by rememberSaveable { mutableStateOf<GeoPoint?>(null) }
     val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) {
@@ -708,6 +818,14 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
             tripController.fetchVehicleAssets(vehicleType)
         } else {
             tripController.vehicleAssets.value = emptyList()
+        }
+    }
+
+    LaunchedEffect(startPoint, destinationPoint) {
+        if (startPoint != null && destinationPoint != null) {
+            distance = calculateDistanceInKm(startPoint, destinationPoint)
+        } else {
+            distance = ""
         }
     }
 
@@ -773,7 +891,7 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        containerColor = Color.White,
+        containerColor = Color(0xFFF6F4EE),
         dragHandle = null,
         tonalElevation = 8.dp
     ) {
@@ -1041,13 +1159,13 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                         route = listOf(
                             com.archeGlobal.one.network.MileageExpenseRoutePoint(
                                 name = startLocation,
-                                latitude = selectedPoint?.latitude ?: 0.0,
-                                longitude = selectedPoint?.longitude ?: 0.0,
+                                latitude = startPoint?.latitude ?: 0.0,
+                                longitude = startPoint?.longitude ?: 0.0,
                             ),
                             com.archeGlobal.one.network.MileageExpenseRoutePoint(
                                 name = destination,
-                                latitude = selectedPoint?.latitude ?: 0.0,
-                                longitude = selectedPoint?.longitude ?: 0.0,
+                                latitude = destinationPoint?.latitude ?: 0.0,
+                                longitude = destinationPoint?.longitude ?: 0.0,
                             )
                         ),
                         vehicleId = selectedVehicle?.id,
@@ -1085,14 +1203,16 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
         LocationPickerBottomSheet(
             title = if (locationFieldMode == "start") "Select start location" else "Select destination",
             initialLocation = if (locationFieldMode == "start") startLocation else destination,
+            initialPoint = if (locationFieldMode == "start") startPoint else destinationPoint,
             onDismiss = { showMapPicker = false },
             onSelectLocation = { locationName, point ->
                 if (locationFieldMode == "start") {
                     startLocation = locationName
+                    startPoint = point
                 } else {
                     destination = locationName
+                    destinationPoint = point
                 }
-                selectedPoint = point
                 showMapPicker = false
             }
         )
@@ -1256,17 +1376,19 @@ private fun MileageFormInput(
 private fun LocationPickerBottomSheet(
     title: String,
     initialLocation: String,
+    initialPoint: GeoPoint? = null,
     onDismiss: () -> Unit,
     onSelectLocation: (String, GeoPoint) -> Unit,
 ) {
     val context = LocalContext.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val currentContext = context.applicationContext
     var currentLocation by remember(initialLocation) { mutableStateOf(initialLocation) }
-    var selectedPoint by remember { mutableStateOf<GeoPoint?>(null) }
-    var currentGeoPoint by remember { mutableStateOf<GeoPoint?>(null) }
+    var selectedPoint by remember(initialPoint) { mutableStateOf(initialPoint) }
+    var currentGeoPoint by remember(initialPoint) { mutableStateOf(initialPoint) }
     var showSearchDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var activeTileSource by remember { mutableStateOf<OnlineTileSourceBase?>(null) }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -1284,6 +1406,13 @@ private fun LocationPickerBottomSheet(
 
     LaunchedEffect(Unit) {
         Configuration.getInstance().load(currentContext, currentContext.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
+        val mapplsAvailable = probeMapplsAvailability()
+        activeTileSource = if (mapplsAvailable) {
+            buildMapplsTileSource()
+        } else {
+            Log.w("MileageMap", "Mappls tile probe failed; using OpenStreetMap fallback")
+            null
+        }
         getCurrentGeoPoint(context) { point ->
             currentGeoPoint = point
             if (point != null) {
@@ -1331,8 +1460,9 @@ private fun LocationPickerBottomSheet(
                 fontFamily = GraphikFontFamily,
                 fontSize = 13.sp,
                 color = Color.Gray,
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1373,10 +1503,11 @@ private fun LocationPickerBottomSheet(
                 AndroidView(
                     factory = { ctx ->
                         val mapView = MapView(ctx)
-                        mapView.setTileSource(TileSourceFactory.MAPNIK)
+                        val tileSource = activeTileSource ?: TileSourceFactory.MAPNIK
+                        mapView.setTileSource(tileSource)
                         mapView.setMultiTouchControls(true)
                         mapView.controller.setZoom(12.0)
-                        val initialPoint = selectedPoint ?: currentGeoPoint ?: GeoPoint(12.9716, 77.5946)
+                        val initialPoint = selectedPoint ?: currentGeoPoint ?: initialPoint ?: GeoPoint(12.9716, 77.5946)
                         mapView.controller.setCenter(initialPoint)
 
                         val marker = Marker(mapView)
@@ -1431,7 +1562,11 @@ private fun LocationPickerBottomSheet(
                         mapView
                     },
                     update = { mapView ->
-                        val targetPoint = selectedPoint ?: currentGeoPoint
+                        val targetPoint = selectedPoint ?: currentGeoPoint ?: initialPoint
+                        val tileSource = activeTileSource ?: TileSourceFactory.MAPNIK
+                        if (mapView.tileProvider.tileSource != tileSource) {
+                            mapView.setTileSource(tileSource)
+                        }
                         if (targetPoint != null) {
                             val marker = mapView.overlays.filterIsInstance<Marker>().firstOrNull()
                             marker?.position = targetPoint

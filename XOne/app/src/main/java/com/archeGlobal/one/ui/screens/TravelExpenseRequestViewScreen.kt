@@ -79,6 +79,7 @@ import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun TravelExpenseRequestViewScreen(onBack: () -> Unit) {
@@ -364,7 +365,7 @@ private fun TravelHistoryCard(request: TravelRequestItemUi, onViewDetails: (Trav
                     text = request.status.replaceFirstChar { it.uppercase() },
                     color = when (request.status.lowercase()) {
                         "approved" -> Color(0xFF2E7D32)
-                        "pending", "submitted" -> Color(0xFFEF6C00)
+                        "pending", "submitted" -> Color(0xFF757575)
                         "rejected" -> PrimaryRed
                         else -> Color.Gray
                     },
@@ -464,7 +465,16 @@ fun CreateTravelRequestBottomSheet(
 ) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+    val displayDateFormatter = remember {
+        SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+    }
+    val apiDateFormatter = remember {
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+    }
 
     var projectId by rememberSaveable { mutableStateOf(initialRequest?.projectId ?: "") }
     var description by rememberSaveable { mutableStateOf(initialRequest?.description?.takeIf { it != "-" } ?: "") }
@@ -482,14 +492,20 @@ fun CreateTravelRequestBottomSheet(
     var advanceNeeded by rememberSaveable { mutableStateOf(initialRequest?.advanceNeeded == "Yes") }
     val scrollState = rememberScrollState()
 
-    val startDateText = startDateMillis?.let { dateFormatter.format(Date(it)) } ?: "Select date"
-    val endDateText = endDateMillis?.let { dateFormatter.format(Date(it)) } ?: "Select date"
+    LaunchedEffect(initialRequest?.tripId, initialRequest?.startDate, initialRequest?.endDate) {
+        startDateMillis = initialRequest?.startDate?.let { parseDateString(it) }
+        endDateMillis = initialRequest?.endDate?.let { parseDateString(it) }
+        advanceAmount = initialRequest?.firstAdvanceRequestedAmountRaw?.takeIf { it.isNotBlank() } ?: ""
+    }
+
+    val startDateText = startDateMillis?.let { displayDateFormatter.format(Date(it)) } ?: "Select date"
+    val endDateText = endDateMillis?.let { displayDateFormatter.format(Date(it)) } ?: "Select date"
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        containerColor = Color.White,
+        containerColor = Color(0xFFF6F4EE),
         dragHandle = null,
         tonalElevation = 8.dp
     ) {
@@ -684,8 +700,8 @@ fun CreateTravelRequestBottomSheet(
 
                     val requestPayload = com.archeGlobal.one.network.CreateTripRequest(
                         destination = destination,
-                        startDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(startDateMillis!!)),
-                        endDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(endDateMillis!!)),
+                        startDate = apiDateFormatter.format(Date(startDateMillis!!)),
+                        endDate = apiDateFormatter.format(Date(endDateMillis!!)),
                         description = description.ifBlank { null },
                         hotelAccommodationNeeded = hotelNeeded,
                         modeOfTravel = modeOfTravel.lowercase(Locale.getDefault()),
@@ -693,7 +709,7 @@ fun CreateTravelRequestBottomSheet(
                         advanceNeeded = advanceNeeded,
                         advanceAmount = advanceAmountValue ?: 0.0,
                         estimatedAmount = estimatedAmountValue,
-                        requestedAmount = estimatedAmountValue,
+                        requestedAmount = advanceAmountValue ?: 0.0,
                         projectId = selectedProject.id
                     )
 
@@ -796,7 +812,10 @@ fun CreateTravelRequestBottomSheet(
 
 private fun parseDateString(dateString: String): Long? {
     return try {
-        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateString)?.time
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        formatter.parse(dateString)?.time
     } catch (e: Exception) {
         null
     }
@@ -926,7 +945,7 @@ private fun DropdownField(
                             option,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal
-                            )
+                        )
                     }
                 }
             }

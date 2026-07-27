@@ -889,7 +889,8 @@ private fun ApprovalCardContainer(
 private fun ApprovalDetailRow(
     title: String,
     value: String,
-    isBold: Boolean = false
+    isBold: Boolean = false,
+    valueColor: Color = Color.Black
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -907,7 +908,7 @@ private fun ApprovalDetailRow(
             fontFamily = GraphikFontFamily,
             fontSize = 14.sp,
             fontWeight = if (isBold) FontWeight.SemiBold else FontWeight.Normal,
-            color = Color.Black,
+            color = valueColor,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f)
         )
@@ -940,13 +941,22 @@ private fun ReviewActionRow(actionText: String, onClick: () -> Unit = {}) {
     }
 }
 
+private fun getStatusColor(status: String): Color {
+    val normalizedStatus = status.trim().ifBlank { "Pending" }
+    return when {
+        normalizedStatus.equals("Approved", ignoreCase = true) -> Color(0xFF2E7D32)
+        normalizedStatus.equals("Rejected", ignoreCase = true) -> PrimaryRed
+        else -> Color(0xFF757575)
+    }
+}
+
 @Composable
 private fun TravelStatusBadge(status: String) {
-    val isApproved = status.equals("Approved", ignoreCase = true)
-    val color = if (isApproved) Color(0xFF2E7D32) else Color(0xFFEF6C00)
+    val normalizedStatus = status.takeIf { it.isNotBlank() } ?: "Pending"
+    val color = getStatusColor(normalizedStatus)
 
     Text(
-        text = status.takeIf { it.isNotBlank() } ?: "Pending",
+        text = normalizedStatus.replaceFirstChar { it.uppercase() },
         color = color,
         fontFamily = GraphikFontFamily,
         fontSize = 13.sp,

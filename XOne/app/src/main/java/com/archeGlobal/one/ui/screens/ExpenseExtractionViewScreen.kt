@@ -3,6 +3,7 @@ package com.archeGlobal.one.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
@@ -32,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
@@ -39,8 +42,12 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,10 +67,11 @@ import android.net.Uri
 import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material.DropdownMenu
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,6 +93,9 @@ import com.archeGlobal.one.controller.ExpenseController
 import com.archeGlobal.one.network.ExpenseDetailUi
 import com.archeGlobal.one.network.ExpenseUi
 import com.archeGlobal.one.network.SubmittedExpenseUi
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private fun queryName(context: android.content.Context, uri: Uri): String? {
     val returnCursor = context.contentResolver.query(uri, null, null, null, null)
@@ -844,6 +855,16 @@ private fun AddExpensePopup(
     }
 }
 
+private data class ManualExpenseItemForm(
+    val passengerName: String = "",
+    val seatNumber: String = "",
+    val purpose: String = "",
+    val item: String = "",
+    val quantity: String = "",
+    val price: String = "",
+    val total: String = "",
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ManualExpenseEntryBottomSheet(
@@ -853,12 +874,70 @@ private fun ManualExpenseEntryBottomSheet(
     onProjectSelected: (projectId: String, customerId: String, soNumber: String?, tripId: String) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scrollState = rememberScrollState()
+
     var projectId by rememberSaveable { mutableStateOf("") }
     var tripId by rememberSaveable { mutableStateOf("") }
     var customerId by rememberSaveable { mutableStateOf("") }
     var soNumber by rememberSaveable { mutableStateOf("") }
     var projectExpanded by remember { mutableStateOf(false) }
     var tripExpanded by remember { mutableStateOf(false) }
+    var customerExpanded by remember { mutableStateOf(false) }
+    var category by rememberSaveable { mutableStateOf("") }
+    var travelMode by rememberSaveable { mutableStateOf("") }
+    var hotelMode by rememberSaveable { mutableStateOf("") }
+    var accommodationType by rememberSaveable { mutableStateOf("") }
+    var travelClass by rememberSaveable { mutableStateOf("") }
+    var vendorName by rememberSaveable { mutableStateOf("") }
+    var currency by rememberSaveable { mutableStateOf("") }
+    var travelName by rememberSaveable { mutableStateOf("") }
+    var bookingPlatform by rememberSaveable { mutableStateOf("") }
+    var boardingDate by rememberSaveable { mutableStateOf("") }
+    var boardingTime by rememberSaveable { mutableStateOf("") }
+    var boardingAddress by rememberSaveable { mutableStateOf("") }
+    var droppingDate by rememberSaveable { mutableStateOf("") }
+    var droppingTime by rememberSaveable { mutableStateOf("") }
+    var droppingAddress by rememberSaveable { mutableStateOf("") }
+    var trainClass by rememberSaveable { mutableStateOf("") }
+    var trainName by rememberSaveable { mutableStateOf("") }
+    var trainNumber by rememberSaveable { mutableStateOf("") }
+    var pnrNumber by rememberSaveable { mutableStateOf("") }
+    var departure by rememberSaveable { mutableStateOf("") }
+    var destination by rememberSaveable { mutableStateOf("") }
+    var fromLocation by rememberSaveable { mutableStateOf("") }
+    var toLocation by rememberSaveable { mutableStateOf("") }
+    var notes by rememberSaveable { mutableStateOf("") }
+    var gst by rememberSaveable { mutableStateOf("") }
+    var amount by rememberSaveable { mutableStateOf("") }
+    var sgstPercent by rememberSaveable { mutableStateOf("") }
+    var sgstAmount by rememberSaveable { mutableStateOf("") }
+    var cgstPercent by rememberSaveable { mutableStateOf("") }
+    var cgstAmount by rememberSaveable { mutableStateOf("") }
+    var igstPercent by rememberSaveable { mutableStateOf("") }
+    var igstAmount by rememberSaveable { mutableStateOf("") }
+    var taxAmount by rememberSaveable { mutableStateOf("") }
+    var gsint by rememberSaveable { mutableStateOf("") }
+    var expenseDate by rememberSaveable { mutableStateOf("") }
+    var detailItems by remember { mutableStateOf(listOf(ManualExpenseItemForm())) }
+
+    val categoryOptions = listOf(
+        "Travel",
+        "Flight Receipt",
+        "Flight Invoice",
+        "Hotel Accommodation",
+        "Meals food",
+        "Stationery",
+        "Fuel gas",
+        "Entertainment",
+        "Information Technology",
+        "Other",
+    )
+    val travelModeOptions = listOf("general", "Auto Bike taxi", "Bus", "train", "Flight Receipt", "Flight Invoice")
+    val hotelModeOptions = listOf("invoice", "receipt")
+    val accommodationTypeOptions = listOf("Domestic", "International")
+    val travelClassOptions = listOf("economy", "premium economy", "business")
+    val trainClassOptions = listOf("tier 3", "tier 2", "tier 1")
+    val customerOptions = projectOptions.mapNotNull { it.customerId }.distinct()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -871,9 +950,11 @@ private fun ManualExpenseEntryBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .fillMaxHeight(0.9f)
+                .padding(start = 16.dp, end = 16.dp, bottom = 20.dp)
         ) {
+            Spacer(modifier = Modifier.height(24.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -883,130 +964,310 @@ private fun ManualExpenseEntryBottomSheet(
                     text = "Enter Expense Details",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 20.sp,
+                    fontSize = 19.sp,
                     color = Color.Black,
                 )
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close")
+                Text(
+                    text = "Cancel",
+                    color = PrimaryRed,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .clickable { onDismiss() }
+                        .padding(start = 12.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(top = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(bottom = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    SectionCard {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                text = "Reference details",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = Color.Black,
+                            )
+                            ManualDropdownField(
+                                label = "Project ID",
+                                value = projectId,
+                                options = projectOptions.map { it.code },
+                                onValueChange = {
+                                    projectId = it
+                                    projectOptions.firstOrNull { option -> option.code.equals(it, ignoreCase = true) }?.let { selected ->
+                                        customerId = selected.customerId.orEmpty()
+                                        soNumber = selected.soNumber.orEmpty()
+                                    }
+                                },
+                            )
+                            ManualTextField(
+                                label = "Customer ID",
+                                value = customerId,
+                                onValueChange = { customerId = it },
+                                placeholder = "Enter customer ID",
+                            )
+                            ManualDropdownField(
+                                label = "Trip ID",
+                                value = tripId,
+                                options = tripOptions.map { it.tripId },
+                                onValueChange = { tripId = it },
+                            )
+                            ManualTextField(
+                                label = "SO Number",
+                                value = soNumber,
+                                onValueChange = { soNumber = it },
+                                placeholder = "Enter SO number",
+                            )
+                        }
+                    }
+
+                    SectionCard {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                text = "Expense details",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = Color.Black,
+                            )
+                            ManualDropdownField(
+                                label = "Category *",
+                                value = category,
+                                options = categoryOptions,
+                                onValueChange = {
+                                    category = it
+                                    if (it != "Travel") {
+                                        travelMode = ""
+                                    }
+                                    if (it != "Hotel Accommodation") {
+                                        hotelMode = ""
+                                        accommodationType = ""
+                                    }
+                                },
+                            )
+
+                            if (category == "Travel") {
+                                ManualDropdownField(
+                                    label = "Mode",
+                                    value = travelMode,
+                                    options = travelModeOptions,
+                                    onValueChange = { travelMode = it },
+                                )
+
+                                when (travelMode) {
+                                    "Bus" -> {
+                                        ManualTextField(label = "Travel name *", value = travelName, onValueChange = { travelName = it }, placeholder = "Enter travel name")
+                                        ManualTextField(label = "Booking platform *", value = bookingPlatform, onValueChange = { bookingPlatform = it }, placeholder = "Enter booking platform")
+                                        ManualTextField(label = "Currency *", value = currency, onValueChange = { currency = it }, placeholder = "Enter currency")
+                                        DateSelectorField(label = "Boarding date *", value = boardingDate, onValueChange = { boardingDate = it }, placeholder = "YYYY-MM-DD")
+                                        ManualTextField(label = "Boarding time *", value = boardingTime, onValueChange = { boardingTime = it }, placeholder = "HH:MM")
+                                        ManualTextField(label = "Boarding address *", value = boardingAddress, onValueChange = { boardingAddress = it }, placeholder = "Enter boarding address")
+                                        DateSelectorField(label = "Dropping date *", value = droppingDate, onValueChange = { droppingDate = it }, placeholder = "YYYY-MM-DD")
+                                        ManualTextField(label = "Dropping time *", value = droppingTime, onValueChange = { droppingTime = it }, placeholder = "HH:MM")
+                                        ManualTextField(label = "Dropping address *", value = droppingAddress, onValueChange = { droppingAddress = it }, placeholder = "Enter dropping address")
+                                        detailItems.forEachIndexed { index, item ->
+                                            TravelItemBlock(
+                                                index = index + 1,
+                                                passengerName = item.passengerName,
+                                                seatNumber = item.seatNumber,
+                                                onPassengerNameChange = { updated -> detailItems = detailItems.toMutableList().apply { set(index, item.copy(passengerName = updated)) } },
+                                                onSeatNumberChange = { updated -> detailItems = detailItems.toMutableList().apply { set(index, item.copy(seatNumber = updated)) } },
+                                                onDelete = { detailItems = detailItems.filterIndexed { itemIndex, _ -> itemIndex != index } }
+                                            )
+                                        }
+                                        TextButton(onClick = { detailItems = detailItems + ManualExpenseItemForm() }) {
+                                            Text("Add new item", color = PrimaryRed, fontFamily = GraphikFontFamily)
+                                        }
+                                        ManualTextField(label = "GST", value = gst, onValueChange = { gst = it }, placeholder = "Enter GST")
+                                        ManualTextField(label = "Amount", value = amount, onValueChange = { amount = it }, placeholder = "Enter amount")
+                                        ManualTextField(label = "Notes", value = notes, onValueChange = { notes = it }, placeholder = "Enter notes")
+                                    }
+                                    "train" -> {
+                                        ManualDropdownField(label = "Train class *", value = trainClass, options = trainClassOptions, onValueChange = { trainClass = it })
+                                        ManualTextField(label = "Vendor name *", value = vendorName, onValueChange = { vendorName = it }, placeholder = "Enter vendor name")
+                                        ManualTextField(label = "Currency *", value = currency, onValueChange = { currency = it }, placeholder = "Enter currency")
+                                        ManualTextField(label = "Train name *", value = trainName, onValueChange = { trainName = it }, placeholder = "Enter train name")
+                                        ManualTextField(label = "Train number *", value = trainNumber, onValueChange = { trainNumber = it }, placeholder = "Enter train number")
+                                        ManualTextField(label = "PNR number *", value = pnrNumber, onValueChange = { pnrNumber = it }, placeholder = "Enter PNR")
+                                        ManualTextField(label = "Departure *", value = departure, onValueChange = { departure = it }, placeholder = "Enter departure")
+                                        ManualTextField(label = "Boarding *", value = fromLocation, onValueChange = { fromLocation = it }, placeholder = "Enter boarding")
+                                        ManualTextField(label = "Destination *", value = destination, onValueChange = { destination = it }, placeholder = "Enter destination")
+                                        ManualTextField(label = "Dropping *", value = toLocation, onValueChange = { toLocation = it }, placeholder = "Enter dropping")
+                                        detailItems.forEachIndexed { index, item ->
+                                            TravelItemBlock(
+                                                index = index + 1,
+                                                passengerName = item.passengerName,
+                                                seatNumber = item.purpose,
+                                                seatLabel = "Purpose / Project ID",
+                                                onPassengerNameChange = { updated -> detailItems = detailItems.toMutableList().apply { set(index, item.copy(passengerName = updated)) } },
+                                                onSeatNumberChange = { updated -> detailItems = detailItems.toMutableList().apply { set(index, item.copy(purpose = updated)) } },
+                                                onDelete = { detailItems = detailItems.filterIndexed { itemIndex, _ -> itemIndex != index } }
+                                            )
+                                        }
+                                        TextButton(onClick = { detailItems = detailItems + ManualExpenseItemForm() }) {
+                                            Text("Add new item", color = PrimaryRed, fontFamily = GraphikFontFamily)
+                                        }
+                                        ManualTextField(label = "SGST Percentage *", value = sgstPercent, onValueChange = { sgstPercent = it }, placeholder = "Enter SGST %")
+                                        ManualTextField(label = "SGST amount *", value = sgstAmount, onValueChange = { sgstAmount = it }, placeholder = "Enter SGST amount")
+                                        ManualTextField(label = "CGST Percentage *", value = cgstPercent, onValueChange = { cgstPercent = it }, placeholder = "Enter CGST %")
+                                        ManualTextField(label = "CGST amount *", value = cgstAmount, onValueChange = { cgstAmount = it }, placeholder = "Enter CGST amount")
+                                        ManualTextField(label = "IGST Percentage *", value = igstPercent, onValueChange = { igstPercent = it }, placeholder = "Enter IGST %")
+                                        ManualTextField(label = "IGST amount *", value = igstAmount, onValueChange = { igstAmount = it }, placeholder = "Enter IGST amount")
+                                        ManualTextField(label = "GST *", value = gst, onValueChange = { gst = it }, placeholder = "Enter GST")
+                                        ManualTextField(label = "Amount *", value = amount, onValueChange = { amount = it }, placeholder = "Enter amount")
+                                        ManualTextField(label = "Notes", value = notes, onValueChange = { notes = it }, placeholder = "Enter notes")
+                                    }
+                                    "Flight Receipt", "Flight Invoice" -> {
+                                        ManualDropdownField(label = "Flight class", value = travelClass,  options = travelClassOptions, onValueChange = { travelClass = it })
+                                        ManualTextField(label = "Notes", value = notes, onValueChange = { notes = it }, placeholder = "Enter notes")
+                                    }
+                                    else -> {
+                                        ManualTextField(label = "Notes", value = notes, onValueChange = { notes = it }, placeholder = "Enter notes")
+                                    }
+                                }
+                            }
+
+                            if (category == "Hotel Accommodation") {
+                                ManualDropdownField(label = "Mode *", value = hotelMode, options = hotelModeOptions, onValueChange = { hotelMode = it })
+                                ManualDropdownField(label = "Accommodation type *", value = accommodationType,  options = accommodationTypeOptions, onValueChange = { accommodationType = it })
+                                ManualTextField(label = "Notes", value = notes, onValueChange = { notes = it }, placeholder = "Enter notes")
+                            }
+
+                            if (category == "Meals food") {
+                                ManualTextField(label = "Vendor name *", value = vendorName, onValueChange = { vendorName = it }, placeholder = "Enter vendor name")
+                                ManualTextField(label = "GSINT *", value = gsint, onValueChange = { gsint = it }, placeholder = "Enter GSINT")
+                                DateSelectorField(label = "Date *", value = expenseDate, onValueChange = { expenseDate = it }, placeholder = "YYYY-MM-DD")
+                                ManualTextField(label = "Currency *", value = currency, onValueChange = { currency = it }, placeholder = "Enter currency")
+                                detailItems.forEachIndexed { index, item ->
+                                    MealsItemBlock(
+                                        index = index + 1,
+                                        itemName = item.item,
+                                        quantity = item.quantity,
+                                        price = item.price,
+                                        total = item.total,
+                                        onItemChange = { updated -> detailItems = detailItems.toMutableList().apply { set(index, item.copy(item = updated)) } },
+                                        onQuantityChange = { updated -> detailItems = detailItems.toMutableList().apply { set(index, item.copy(quantity = updated)) } },
+                                        onPriceChange = { updated -> detailItems = detailItems.toMutableList().apply { set(index, item.copy(price = updated)) } },
+                                        onTotalChange = { updated -> detailItems = detailItems.toMutableList().apply { set(index, item.copy(total = updated)) } },
+                                        onDelete = { detailItems = detailItems.filterIndexed { itemIndex, _ -> itemIndex != index } }
+                                    )
+                                }
+                                TextButton(onClick = { detailItems = detailItems + ManualExpenseItemForm() }) {
+                                    Text("Add new item", color = PrimaryRed, fontFamily = GraphikFontFamily)
+                                }
+                                ManualTextField(label = "SGST Percentage *", value = sgstPercent, onValueChange = { sgstPercent = it }, placeholder = "Enter SGST %")
+                                ManualTextField(label = "SGST amount *", value = sgstAmount, onValueChange = { sgstAmount = it }, placeholder = "Enter SGST amount")
+                                ManualTextField(label = "CGST Percentage *", value = cgstPercent, onValueChange = { cgstPercent = it }, placeholder = "Enter CGST %")
+                                ManualTextField(label = "CGST amount *", value = cgstAmount, onValueChange = { cgstAmount = it }, placeholder = "Enter CGST amount")
+                                ManualTextField(label = "IGST Percentage *", value = igstPercent, onValueChange = { igstPercent = it }, placeholder = "Enter IGST %")
+                                ManualTextField(label = "IGST amount *", value = igstAmount, onValueChange = { igstAmount = it }, placeholder = "Enter IGST amount")
+                                ManualTextField(label = "Tax amount *", value = taxAmount, onValueChange = { taxAmount = it }, placeholder = "Enter tax amount")
+                                ManualTextField(label = "Amount *", value = amount, onValueChange = { amount = it }, placeholder = "Enter amount")
+                                ManualTextField(label = "Notes", value = notes, onValueChange = { notes = it }, placeholder = "Enter notes")
+                            }
+
+                            if (category in listOf("Flight Receipt", "Flight Invoice", "Stationery", "Fuel gas", "Entertainment", "Information Technology", "Other")) {
+                                ManualTextField(label = "Notes", value = notes, onValueChange = { notes = it }, placeholder = "Enter notes")
+                            }
+                        }
+                    }
                 }
             }
 
-            ManualField(
-                label = "Project ID",
-                value = projectId,
-                placeholder = "Select project ID",
-                expanded = projectExpanded,
-                onExpandedChange = { projectExpanded = it },
-                options = projectOptions.map { it.code },
-                onValueChange = {
-                    projectId = it
-                    projectOptions.firstOrNull { option -> option.code.equals(it, ignoreCase = true) }?.let { selected ->
-                        customerId = selected.customerId.orEmpty()
-                        soNumber = selected.soNumber.orEmpty()
-                    }
-                },
-            )
-            ManualField(
-                label = "Trip ID",
-                value = tripId,
-                placeholder = "Select trip ID",
-                expanded = tripExpanded,
-                onExpandedChange = { tripExpanded = it },
-                options = tripOptions.map { it.tripId },
-                onValueChange = { tripId = it },
-            )
-            ManualTextField(
-                label = "Customer ID",
-                value = customerId,
-                onValueChange = { customerId = it },
-                placeholder = "Enter customer ID",
-            )
-            ManualTextField(
-                label = "SO Number",
-                value = soNumber,
-                onValueChange = { soNumber = it },
-                placeholder = "Enter SO number",
-            )
+            Spacer(modifier = Modifier.height(12.dp))
             Button(
                 onClick = {
                     onProjectSelected(projectId, customerId, soNumber.ifBlank { null }, tripId)
                 },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = projectId.isNotBlank() && tripId.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = PrimaryRed,
                     contentColor = Color.White,
                 ),
+                shape = RoundedCornerShape(14.dp)
             ) {
-                Text(text = "Continue")
+                Text(text = "Save expense", fontFamily = GraphikFontFamily, fontSize = 16.sp)
             }
         }
     }
 }
 
 @Composable
-private fun ManualField(
+private fun ManualDropdownField(
     label: String,
     value: String,
-    placeholder: String,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
     options: List<String>,
     onValueChange: (String) -> Unit,
 ) {
+    var expanded by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
-            fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
             color = Color.Black,
-            modifier = Modifier.padding(bottom = 6.dp),
+            modifier = Modifier.padding(bottom = 6.dp)
         )
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
-                value = value.ifBlank { placeholder },
+                value = value.ifBlank { "Select" },
                 onValueChange = {},
-                modifier = Modifier.fillMaxWidth(),
                 readOnly = true,
                 enabled = false,
+                modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowDown,
                         contentDescription = null,
-                        tint = Color.Gray,
+                        tint = Color.Gray
                     )
                 },
                 shape = RoundedCornerShape(10.dp),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    backgroundColor = Color(0xFFFAFAFA),
+                    backgroundColor = Color.White,
                     disabledTextColor = if (value.isBlank()) Color.Gray else Color.Black,
                     disabledBorderColor = Color(0xFFD4D4D4),
-                    disabledTrailingIconColor = Color.Gray,
-                ),
+                    disabledTrailingIconColor = Color.Gray
+                )
             )
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .clickable { onExpandedChange(true) }
+                    .clickable { expanded = true }
             )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { onExpandedChange(false) },
-            modifier = Modifier.fillMaxWidth(0.95f),
-        ) {
-            if (options.isEmpty()) {
-                DropdownMenuItem(onClick = { onExpandedChange(false) }) {
-                    Text(text = "No options available", fontFamily = GraphikFontFamily, color = Color.Gray)
-                }
-            } else {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.fillMaxWidth(0.9f),
+            ) {
                 options.forEach { option ->
                     DropdownMenuItem(onClick = {
                         onValueChange(option)
-                        onExpandedChange(false)
+                        expanded = false
                     }) {
-                        Text(text = option, fontFamily = GraphikFontFamily)
+                        Text(
+                            option,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal
+                        )
                     }
                 }
             }
@@ -1040,11 +1301,155 @@ private fun ManualTextField(
             shape = RoundedCornerShape(10.dp),
             singleLine = true,
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                backgroundColor = Color(0xFFFAFAFA),
+                backgroundColor = Color.White,
                 focusedBorderColor = Color.LightGray,
                 unfocusedBorderColor = Color(0xFFD4D4D4),
             ),
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateSelectorField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String = "YYYY-MM-DD",
+) {
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
+    val dateFormatter = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    val selectedMillis = datePickerState.selectedDateMillis
+                    if (selectedMillis != null) {
+                        onValueChange(dateFormatter.format(Date(selectedMillis)))
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK", fontFamily = GraphikFontFamily)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel", fontFamily = GraphikFontFamily)
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontFamily = GraphikFontFamily,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 6.dp),
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
+            placeholder = {
+                Text(text = placeholder, color = Color.Gray, fontFamily = GraphikFontFamily)
+            },
+            readOnly = true,
+            singleLine = true,
+            trailingIcon = {
+                Icon(imageVector = Icons.Default.DateRange, contentDescription = null, tint = PrimaryRed)
+            },
+            shape = RoundedCornerShape(10.dp),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                backgroundColor = Color.White,
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color(0xFFD4D4D4),
+            ),
+        )
+    }
+}
+
+@Composable
+private fun SectionCard(content: @Composable () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = 2.dp,
+        backgroundColor = Color.White,
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun TravelItemBlock(
+    index: Int,
+    passengerName: String,
+    seatNumber: String,
+    seatLabel: String = "Seat number",
+    onPassengerNameChange: (String) -> Unit,
+    onSeatNumberChange: (String) -> Unit,
+    onDelete: () -> Unit,
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        backgroundColor = Color(0xFFF8F8F8),
+        elevation = 0.dp,
+    ) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                text = "Item $index",
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = Color.Black,
+            )
+            ManualTextField(label = "Passenger name", value = passengerName, onValueChange = onPassengerNameChange, placeholder = "Enter passenger name")
+            ManualTextField(label = seatLabel, value = seatNumber, onValueChange = onSeatNumberChange, placeholder = "Enter value")
+        }
+    }
+}
+
+@Composable
+private fun MealsItemBlock(
+    index: Int,
+    itemName: String,
+    quantity: String,
+    price: String,
+    total: String,
+    onItemChange: (String) -> Unit,
+    onQuantityChange: (String) -> Unit,
+    onPriceChange: (String) -> Unit,
+    onTotalChange: (String) -> Unit,
+    onDelete: () -> Unit,
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        backgroundColor = Color(0xFFF8F8F8),
+        elevation = 0.dp,
+    ) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                text = "Item $index",
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = Color.Black,
+            )
+            ManualTextField(label = "Item", value = itemName, onValueChange = onItemChange, placeholder = "Enter item")
+            ManualTextField(label = "Quantity", value = quantity, onValueChange = onQuantityChange, placeholder = "Enter quantity")
+            ManualTextField(label = "Price", value = price, onValueChange = onPriceChange, placeholder = "Enter price")
+            ManualTextField(label = "Total", value = total, onValueChange = onTotalChange, placeholder = "Enter total")
+        }
     }
 }
 
