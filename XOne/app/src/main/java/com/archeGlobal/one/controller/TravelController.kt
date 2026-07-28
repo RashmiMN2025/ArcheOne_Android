@@ -163,6 +163,10 @@ class TravelController(
     var isAdmin by mutableStateOf(false)
         private set
 
+    // Flag to indicate if the expense approvals tile should be shown on the travel expense desk
+    var canViewExpenseApprovals by mutableStateOf(false)
+        private set
+
     // Flag to indicate if approval count is being loaded
     var isLoadingApprovalCount by mutableStateOf(true)
         private set
@@ -225,6 +229,16 @@ class TravelController(
             reportingManagerName = ""
             reportingManagerEmail = ""
             selectedOnBehalfEmployee = null
+        }
+    }
+
+    fun setExpenseApprovalVisibility(role: String?) {
+        canViewExpenseApprovals = isAdminRole(role)
+    }
+
+    companion object {
+        fun isAdminRole(role: String?): Boolean {
+            return role?.trim()?.lowercase()?.contains("admin") == true
         }
     }
 

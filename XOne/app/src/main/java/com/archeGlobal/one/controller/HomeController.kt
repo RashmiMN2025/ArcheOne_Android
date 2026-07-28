@@ -1350,9 +1350,12 @@ class HomeController(
                 }
                 "travelexpense", "travel expense" -> {
                     Log.d("HomeController", "TravelExpense clicked — calling entra login")
-                    ExpenseAuthController(context).loginWithStoredIdToken { success, message ->
+                    ExpenseAuthController(context).loginWithStoredIdToken { success, message, role ->
                         if (success) {
                             Log.d("HomeController", "Expense entra login successful")
+                            if (context is com.archeGlobal.one.HomeActivity) {
+                                context.travelController.setExpenseApprovalVisibility(role)
+                            }
                         } else {
                             Log.w("HomeController", "Expense entra login failed: $message")
                             android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()

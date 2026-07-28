@@ -15,16 +15,16 @@ class ExpenseAuthController(
 ) {
     private val tag = "ExpenseAuthController"
 
-    fun loginWithStoredIdToken(callback: (Boolean, String) -> Unit) {
+    fun loginWithStoredIdToken(callback: (Boolean, String, String?) -> Unit) {
         val storedIdToken = PreferencesManager(context).getMsalIdToken()
 
         Log.d(tag, "Attempting to obtain a fresh MSAL id token for Entra login")
-        loginWithEntraIdTokenFromMsal { success, message ->
+        loginWithEntraIdTokenFromMsal { success, message, role ->
             if (success) {
-                callback(true, message)
+                callback(true, message, role)
             } else if (storedIdToken.isNullOrBlank()) {
                 Log.w(tag, "No stored MSAL id token fallback available: $message")
-                callback(false, message)
+                callback(false, message, null)
             } else {
                 Log.w(tag, "Fresh MSAL id token unavailable, falling back to stored id token: $message")
                 loginWithEntraIdToken(storedIdToken, callback)
@@ -32,16 +32,16 @@ class ExpenseAuthController(
         }
     }
 
-    fun loginWithEntraIdTokenFromMsal(callback: (Boolean, String) -> Unit) {
+    fun loginWithEntraIdTokenFromMsal(callback: (Boolean, String, String?) -> Unit) {
         val msalManager = com.archeGlobal.one.service.MSALAuthenticationManager(context)
         msalManager.initialize { initialized ->
             if (!initialized) {
-                callback(false, "Authentication system not ready")
+                callback(false, "Authentication system not ready", null)
                 return@initialize
             }
             msalManager.getIdToken { idToken ->
                 if (idToken.isNullOrBlank()) {
-                    callback(false, "Could not obtain Microsoft identity token")
+                    callback(false, "Could not obtain Microsoft identity token", null)
                     return@getIdToken
                 }
                 PreferencesManager(context).saveMsalIdToken(idToken)
@@ -53,10 +53,10 @@ class ExpenseAuthController(
 
     fun loginWithEntraIdToken(
         idToken: String,
-        callback: (Boolean, String) -> Unit,
+        callback: (Boolean, String, String?) -> Unit,
     ) {
         if (idToken.isBlank()) {
-            callback(false, "Missing Microsoft identity token")
+            callback(false, "Missing Microsoft identity token", null)
             return
         }
 
@@ -73,7 +73,7 @@ class ExpenseAuthController(
                     val body = response.body()
                     if (body?.refreshToken.isNullOrBlank()) {
                         withContext(Dispatchers.Main) {
-                            callback(false, "Expense login response missing refresh token")
+                            callback(false, "Expense login response missing refresh token", null)
                         }
                         return@launch
                     }
@@ -84,22 +84,40 @@ class ExpenseAuthController(
                         setString(ExpenseController.KEY_EXPENSE_USER_EMAIL, body.email)
                     }
                     Log.d(tag, "Expense entra login successful for ${body.email}")
+
+                    val role = fetchCurrentUserRole()
                     withContext(Dispatchers.Main) {
-                        callback(true, body.email)
+                        callback(true, body.email, role)
                     }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()
                     Log.e(tag, "Expense entra login failed: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
-                        callback(false, "Expense login failed (${response.code()})")
+                        callback(false, "Expense login failed (${response.code()})", null)
                     }
                 }
             } catch (e: Exception) {
                 Log.e(tag, "Expense entra login exception: ${e.message}", e)
                 withContext(Dispatchers.Main) {
-                    callback(false, e.message ?: "Expense login failed")
+                    callback(false, e.message ?: "Expense login failed", null)
                 }
             }
+        }
+    }
+
+    private suspend fun fetchCurrentUserRole(): String? = withContext(Dispatchers.IO) {
+        try {
+            val response = ExpenseRetrofitClient.expenseService.getCurrentUserProfile()
+            if (response.isSuccessful) {
+                response.body()?.role?.takeIf { it.isNotBlank() }
+            } else {
+                val errorBody = response.errorBody()?.string().orEmpty()
+                Log.w(tag, "Fetch current user profile failed: HTTP ${response.code()} $errorBody")
+                null
+            }
+        } catch (e: Exception) {
+            Log.w(tag, "Fetch current user profile exception: ${e.message}", e)
+            null
         }
     }
 

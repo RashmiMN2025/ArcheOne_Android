@@ -132,6 +132,17 @@ fun SubmittedExpenseItemResponse.toSubmittedUi(): SubmittedExpenseUi = Submitted
     submittedAt = submittedAt?.takeIf { it.isNotBlank() } ?: "-",
 )
 
+data class ExpenseUserProfileResponse(
+    @SerializedName("first_name") val firstName: String? = null,
+    @SerializedName("last_name") val lastName: String? = null,
+    val email: String? = null,
+    @SerializedName("phone_number") val phoneNumber: String? = null,
+    val role: String? = null,
+    val grade: String? = null,
+    @SerializedName("cost_center") val costCenter: String? = null,
+    val department: String? = null,
+)
+
 data class UploadExpenseRequest(
     val file: String,
     val filename: String? = null,
@@ -275,6 +286,7 @@ data class ExpenseDetailUi(
     val billDate: String,
     val projectId: String,
     val category: String,
+    val subCategory: String,
     val mode: String,
     val accommodationType: String,
     val hotelName: String,
@@ -363,6 +375,7 @@ fun ExpenseDetailResponse.toDetailUi(): ExpenseDetailUi {
         projectId = project?.code?.takeIf { it.isNotBlank() }
             ?: extracted.confidenceText("project_id"),
         category = category.formatExpenseCategory(),
+        subCategory = subCategory.formatExpenseCategory(),
         mode = extracted.confidenceText("transaction_details", "payment_method")
             .ifBlank { extracted.confidenceText("booking_details", "booking_channel") },
         accommodationType = accommodationType.formatAccommodationType()

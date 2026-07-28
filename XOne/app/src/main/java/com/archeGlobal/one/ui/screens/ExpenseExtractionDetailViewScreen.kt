@@ -1,6 +1,7 @@
 package com.archeGlobal.one.ui.screens
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -62,6 +63,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.archeGlobal.one.ImageViewerActivity
+import com.archeGlobal.one.PdfViewerActivity
 import com.archeGlobal.one.controller.ExpenseController
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.controller.TravelExpenseController
@@ -82,6 +85,24 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import java.util.Locale
 import kotlin.math.roundToLong
+
+private fun shouldShowDetailField(isReadOnly: Boolean, value: String): Boolean =
+    !isReadOnly || value.isNotBlank()
+
+private fun String.normalizeExpenseCategory(): String = trim().lowercase(Locale.getDefault())
+
+fun isPdfUrl(fileUrl: String?): Boolean {
+    val normalized = fileUrl?.trim().orEmpty().lowercase(Locale.getDefault())
+    return normalized.endsWith(".pdf") || normalized.contains(".pdf?") || normalized.contains(".pdf#")
+}
+
+fun isImageUrl(fileUrl: String?): Boolean {
+    val normalized = fileUrl?.trim().orEmpty().lowercase(Locale.getDefault())
+    return normalized.endsWith(".jpg") || normalized.endsWith(".jpeg") || normalized.endsWith(".png") ||
+        normalized.endsWith(".gif") || normalized.endsWith(".webp") || normalized.endsWith(".bmp") ||
+        normalized.contains(".jpg?") || normalized.contains(".jpeg?") || normalized.contains(".png?") ||
+        normalized.contains(".gif?") || normalized.contains(".webp?") || normalized.contains(".bmp?")
+}
 
 @Composable
 fun ExpenseExtractionDetailViewScreen(
@@ -110,7 +131,7 @@ fun ExpenseExtractionDetailViewScreen(
     var limitDialogNote by rememberSaveable(expense.id) { mutableStateOf(expense.note) }
 
     var category by rememberSaveable(expense.id) { mutableStateOf(expense.category) }
-    var mode by rememberSaveable(expense.id) { mutableStateOf(expense.mode) }
+    var mode by rememberSaveable(expense.id) { mutableStateOf(expense.subCategory) }
     var accommodationType by rememberSaveable(expense.id) {
         mutableStateOf(expense.accommodationType)
     }
@@ -242,8 +263,19 @@ fun ExpenseExtractionDetailViewScreen(
                     status = expense.status,
                     uploadedAt = expense.createdAt,
                     onOpenFile = {
-                        if (expense.fileUrl.isNullOrBlank()) {
+                        val fileUrl = expense.fileUrl.orEmpty()
+                        if (fileUrl.isBlank()) {
                             Toast.makeText(context, "File URL not available", Toast.LENGTH_SHORT).show()
+                        } else if (isPdfUrl(fileUrl)) {
+                            context.startActivity(Intent(context, PdfViewerActivity::class.java).apply {
+                                putExtra(PdfViewerActivity.EXTRA_FILE_URL, fileUrl)
+                                putExtra(PdfViewerActivity.EXTRA_TITLE, expense.name.ifBlank { "Document" })
+                            })
+                        } else if (isImageUrl(fileUrl)) {
+                            context.startActivity(Intent(context, ImageViewerActivity::class.java).apply {
+                                putExtra("fileUrl", fileUrl)
+                                putExtra("title", expense.name.ifBlank { "Image" })
+                            })
                         } else {
                             showDocumentViewer = true
                         }
@@ -299,141 +331,198 @@ fun ExpenseExtractionDetailViewScreen(
                 }
 
                 DetailSectionCard(title = "Extracted Data") {
-                    DetailLabeledField(
-                        label = "Category",
-                        value = category,
-                        onValueChange = { category = it },
-                        placeholder = "Category",
-                        enabled = !isReadOnly,
-                    )
-                    DetailLabeledField(
-                        label = "Mode",
-                        value = mode,
-                        onValueChange = { mode = it },
-                        placeholder = "Mode",
-                        enabled = !isReadOnly,
-                    )
-                    DetailDropdownField(
-                        label = "Accommodation Type",
-                        value = accommodationType,
-                        options = listOf("Domestic", "International"),
-                        onValueChange = { accommodationType = it },
-                        enabled = !isReadOnly,
-                    )
-                    DetailLabeledField(
-                        label = "Hotel Name",
-                        value = hotelName,
-                        onValueChange = { hotelName = it },
-                        placeholder = "Hotel name",
-                        enabled = !isReadOnly,
-                    )
-                    DetailLabeledField(
-                        label = "GSTIN of Hotel",
-                        value = gstinOfHotel,
-                        onValueChange = { gstinOfHotel = it },
-                        placeholder = "GSTIN",
-                        enabled = !isReadOnly,
-                    )
-                    DetailLabeledField(
-                        label = "Currency",
-                        value = currency,
-                        onValueChange = { currency = it },
-                        placeholder = "Currency",
-                        enabled = !isReadOnly,
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
+                    val normalizedCategory = category.normalizeExpenseCategory()
+                    val normalizedMode = mode.normalizeExpenseCategory()
+                    val isTravelCategory = normalizedCategory == "travel" || normalizedCategory.contains("travel")
+                    val isHotelCategory = normalizedCategory == "hotel accommodation" || normalizedCategory.contains("hotel")
+
+                    if (shouldShowDetailField(isReadOnly, category)) {
                         DetailLabeledField(
-                            label = "Check In",
-                            value = checkIn,
-                            onValueChange = { checkIn = it },
-                            placeholder = "YYYY-MM-DD",
-                            modifier = Modifier.weight(1f),
-                            enabled = !isReadOnly,
-                        )
-                        DetailLabeledField(
-                            label = "Check Out",
-                            value = checkOut,
-                            onValueChange = { checkOut = it },
-                            placeholder = "YYYY-MM-DD",
-                            modifier = Modifier.weight(1f),
+                            label = "Category",
+                            value = category,
+                            onValueChange = { category = it },
+                            placeholder = "Category",
                             enabled = !isReadOnly,
                         )
                     }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
+                    if (shouldShowDetailField(isReadOnly, mode)) {
                         DetailLabeledField(
-                            label = "No of Nights",
-                            value = noOfNights,
-                            onValueChange = { noOfNights = it },
-                            placeholder = "0",
-                            modifier = Modifier.weight(1f),
-                            enabled = !isReadOnly,
-                        )
-                        DetailLabeledField(
-                            label = "Room Type",
-                            value = roomType,
-                            onValueChange = { roomType = it },
-                            placeholder = "Room type",
-                            modifier = Modifier.weight(1f),
+                            label = "Mode",
+                            value = mode,
+                            onValueChange = { mode = it },
+                            placeholder = "Mode",
                             enabled = !isReadOnly,
                         )
                     }
-                    DetailLabeledField(
-                        label = "Service Charges",
-                        value = serviceCharges,
-                        onValueChange = { serviceCharges = it },
-                        placeholder = "0.00",
-                        enabled = !isReadOnly,
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
+
+                    if (isHotelCategory) {
+                        if (shouldShowDetailField(isReadOnly, accommodationType)) {
+                            DetailDropdownField(
+                                label = "Accommodation Type",
+                                value = accommodationType,
+                                options = listOf("Domestic", "International"),
+                                onValueChange = { accommodationType = it },
+                                enabled = !isReadOnly,
+                            )
+                        }
+                        if (shouldShowDetailField(isReadOnly, hotelName)) {
+                            DetailLabeledField(
+                                label = "Hotel Name",
+                                value = hotelName,
+                                onValueChange = { hotelName = it },
+                                placeholder = "Hotel name",
+                                enabled = !isReadOnly,
+                            )
+                        }
+                        if (shouldShowDetailField(isReadOnly, gstinOfHotel)) {
+                            DetailLabeledField(
+                                label = "GSTIN of Hotel",
+                                value = gstinOfHotel,
+                                onValueChange = { gstinOfHotel = it },
+                                placeholder = "GSTIN",
+                                enabled = !isReadOnly,
+                            )
+                        }
+                    }
+
+                    if (shouldShowDetailField(isReadOnly, currency)) {
+                        DetailLabeledField(
+                            label = "Currency",
+                            value = currency,
+                            onValueChange = { currency = it },
+                            placeholder = "Currency",
+                            enabled = !isReadOnly,
+                        )
+                    }
+
+                    if (isHotelCategory) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            if (shouldShowDetailField(isReadOnly, checkIn)) {
+                                DetailLabeledField(
+                                    label = "Check In",
+                                    value = checkIn,
+                                    onValueChange = { checkIn = it },
+                                    placeholder = "YYYY-MM-DD",
+                                    modifier = Modifier.weight(1f),
+                                    enabled = !isReadOnly,
+                                )
+                            }
+                            if (shouldShowDetailField(isReadOnly, checkOut)) {
+                                DetailLabeledField(
+                                    label = "Check Out",
+                                    value = checkOut,
+                                    onValueChange = { checkOut = it },
+                                    placeholder = "YYYY-MM-DD",
+                                    modifier = Modifier.weight(1f),
+                                    enabled = !isReadOnly,
+                                )
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            if (shouldShowDetailField(isReadOnly, noOfNights)) {
+                                DetailLabeledField(
+                                    label = "No of Nights",
+                                    value = noOfNights,
+                                    onValueChange = { noOfNights = it },
+                                    placeholder = "0",
+                                    modifier = Modifier.weight(1f),
+                                    enabled = !isReadOnly,
+                                )
+                            }
+                            if (shouldShowDetailField(isReadOnly, roomType)) {
+                                DetailLabeledField(
+                                    label = "Room Type",
+                                    value = roomType,
+                                    onValueChange = { roomType = it },
+                                    placeholder = "Room type",
+                                    modifier = Modifier.weight(1f),
+                                    enabled = !isReadOnly,
+                                )
+                            }
+                        }
+                    } else if (isTravelCategory) {
+                        if (shouldShowDetailField(isReadOnly, checkIn)) {
+                            DetailLabeledField(
+                                label = if (normalizedMode == "train") "Departure" else "Boarding Date",
+                                value = checkIn,
+                                onValueChange = { checkIn = it },
+                                placeholder = "YYYY-MM-DD",
+                                enabled = !isReadOnly,
+                            )
+                        }
+                        if (shouldShowDetailField(isReadOnly, checkOut)) {
+                            DetailLabeledField(
+                                label = if (normalizedMode == "train") "Destination" else "Dropping Date",
+                                value = checkOut,
+                                onValueChange = { checkOut = it },
+                                placeholder = "YYYY-MM-DD",
+                                enabled = !isReadOnly,
+                            )
+                        }
+                    }
+
+                    if (shouldShowDetailField(isReadOnly, serviceCharges)) {
+                        DetailLabeledField(
+                            label = "Service Charges",
+                            value = serviceCharges,
+                            onValueChange = { serviceCharges = it },
+                            placeholder = "0.00",
+                            enabled = !isReadOnly,
+                        )
+                    }
+                    if (shouldShowDetailField(isReadOnly, sgstAmount)) {
                         DetailLabeledField(
                             label = "SGST Amount",
                             value = sgstAmount,
                             onValueChange = { sgstAmount = it },
                             placeholder = "0.00",
-                            modifier = Modifier.weight(1f),
                             enabled = !isReadOnly,
                         )
+                    }
+                    if (shouldShowDetailField(isReadOnly, cgstAmount)) {
                         DetailLabeledField(
                             label = "CGST Amount",
                             value = cgstAmount,
                             onValueChange = { cgstAmount = it },
                             placeholder = "0.00",
-                            modifier = Modifier.weight(1f),
                             enabled = !isReadOnly,
                         )
                     }
-                    DetailLabeledField(
-                        label = "IGST Amount",
-                        value = igstAmount,
-                        onValueChange = { igstAmount = it },
-                        placeholder = "0.00",
-                        enabled = !isReadOnly,
-                    )
-                    DetailLabeledField(
-                        label = "Amount",
-                        value = amount,
-                        onValueChange = { amount = it },
-                        placeholder = "0.00",
-                        enabled = !isReadOnly,
-                    )
-                    DetailLabeledField(
-                        label = "Note",
-                        value = note,
-                        onValueChange = { note = it },
-                        placeholder = "Add a note",
-                        singleLine = false,
-                        minLines = 3,
-                        enabled = !isReadOnly,
-                    )
+                    if (shouldShowDetailField(isReadOnly, igstAmount)) {
+                        DetailLabeledField(
+                            label = "IGST Amount",
+                            value = igstAmount,
+                            onValueChange = { igstAmount = it },
+                            placeholder = "0.00",
+                            enabled = !isReadOnly,
+                        )
+                    }
+                    if (shouldShowDetailField(isReadOnly, amount)) {
+                        DetailLabeledField(
+                            label = "Amount",
+                            value = amount,
+                            onValueChange = { amount = it },
+                            placeholder = "0.00",
+                            enabled = !isReadOnly,
+                        )
+                    }
+                    if (shouldShowDetailField(isReadOnly, note)) {
+                        DetailLabeledField(
+                            label = "Note",
+                            value = note,
+                            onValueChange = { note = it },
+                            placeholder = "Add a note",
+                            singleLine = false,
+                            minLines = 3,
+                            enabled = !isReadOnly,
+                        )
+                    }
                 }
 
                 if (!isReadOnly) {

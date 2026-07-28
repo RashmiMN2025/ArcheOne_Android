@@ -97,32 +97,42 @@ fun TravelDeskScreen(controller: TravelController) {
     val userEmployeeId = controller.employeeId.ifBlank { "--" }
     val userGrade = controller.employeeGrade.ifBlank { "--" }
 
-    val tiles = listOf(
-        ExpenseTile(
-            title = "Travel Request",
-            description = "Submit new travel expense requests",
-            icon = Icons.Default.FlightTakeoff,
-            onClick = { openTravelRequestScreen = true }
-        ),
-        ExpenseTile(
-            title = "My Expense",
-            description = "View and manage my expenses",
-            icon = Icons.Default.Assignment,
-            onClick = { openExpenseExtractionScreen = true }
-        ),
-        ExpenseTile(
-            title = "Mileage Calculator",
-            description = "Estimate trip reimbursement",
-            icon = Icons.Default.DirectionsCar,
-            onClick = { openMileageCalculatorScreen = true }
-        ),
-        ExpenseTile(
-            title = "Approvals",
-            description = "Review pending approvals",
-            icon = Icons.Default.CheckCircle,
-            onClick = { openExpenseApprovalScreen = true }
+    val tiles = buildList {
+        add(
+            ExpenseTile(
+                title = "Travel Request",
+                description = "Submit new travel expense requests",
+                icon = Icons.Default.FlightTakeoff,
+                onClick = { openTravelRequestScreen = true }
+            )
         )
-    )
+        add(
+            ExpenseTile(
+                title = "My Expense",
+                description = "View and manage my expenses",
+                icon = Icons.Default.Assignment,
+                onClick = { openExpenseExtractionScreen = true }
+            )
+        )
+        add(
+            ExpenseTile(
+                title = "Mileage Calculator",
+                description = "Estimate trip reimbursement",
+                icon = Icons.Default.DirectionsCar,
+                onClick = { openMileageCalculatorScreen = true }
+            )
+        )
+        if (controller.canViewExpenseApprovals) {
+            add(
+                ExpenseTile(
+                    title = "Approvals",
+                    description = "Review pending approvals",
+                    icon = Icons.Default.CheckCircle,
+                    onClick = { openExpenseApprovalScreen = true }
+                )
+            )
+        }
+    }
 
     Box(
         modifier = Modifier

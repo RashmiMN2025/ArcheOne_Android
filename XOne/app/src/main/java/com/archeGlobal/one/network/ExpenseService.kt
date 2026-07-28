@@ -33,6 +33,9 @@ interface ExpenseService {
         @Path("expense_id") expenseId: String,
     ): Response<ExpenseDetailResponse>
 
+    @GET("v1/users/me")
+    suspend fun getCurrentUserProfile(): Response<ExpenseUserProfileResponse>
+
     @PATCH("v1/expenses/{expense_id}/submit")
     suspend fun submitExpense(
         @Path("expense_id") expenseId: String,
