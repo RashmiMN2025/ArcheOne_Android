@@ -108,6 +108,32 @@ private fun queryName(context: android.content.Context, uri: Uri): String? {
     return null
 }
 
+private fun formatUploadDateTime(dateString: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        val date = inputFormat.parse(dateString)
+        if (date != null) {
+            val outputFormat = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
+            outputFormat.format(date)
+        } else {
+            dateString
+        }
+    } catch (e: Exception) {
+        dateString
+    }
+}
+
+private fun dateFormate(dateString: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = inputFormat.parse(dateString) ?: return ""
+        val outputFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+        outputFormat.format(date)
+    } catch (e: Exception) {
+        ""
+    }
+}
+
 private enum class ExpenseTab { Drafts, Submitted }
 
 private data class DraftExpenseItem(
@@ -225,7 +251,7 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
                 val bytes = baos.toByteArray()
                 controller.uploadExpense(bytes, "camera.jpg", "image/jpeg",
                     onSuccess = { resp ->
-                        Toast.makeText(context, "Uploaded: ${'$'}{resp.name}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Uploaded successfully", Toast.LENGTH_SHORT).show()
                     },
                     onError = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
                 )
@@ -253,7 +279,7 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
                     val filename = queryName(context, it) ?: it.lastPathSegment ?: "upload"
                     controller.uploadExpense(bytes, filename, "application/octet-stream",
                         onSuccess = { resp ->
-                            Toast.makeText(context, "Uploaded: ${'$'}{resp.name}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Uploaded successfully", Toast.LENGTH_SHORT).show()
                         },
                         onError = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
                     )
@@ -616,10 +642,10 @@ private fun DraftExpenseCard(
             )
         }
         Divider(color = Color(0xFFEEEEEE))
-        ExpenseDetailRow("Bill Date", expense.billDate)
+        ExpenseDetailRow("Bill Date", dateFormate(expense.billDate))
         ExpenseDetailRow("Vendor Name", expense.vendorName)
         ExpenseDetailRow("Category", expense.category)
-        ExpenseDetailRow("Uploaded At", expense.uploadedAt)
+        ExpenseDetailRow("Uploaded At", formatUploadDateTime(expense.uploadedAt))
         Divider(color = Color(0xFFEEEEEE))
         ExpenseCardActionsRow(onViewDetails = onViewDetails, onDelete = onDelete)
     }
@@ -669,11 +695,10 @@ private fun SubmittedExpenseCard(
         }
         Divider(color = Color(0xFFEEEEEE))
         ExpenseDetailRow("Category", expense.category)
-        ExpenseDetailRow("Bill Date", expense.billDate)
+        ExpenseDetailRow("Bill Date", dateFormate(expense.billDate))
         ExpenseDetailRow("Description", expense.vendorName)
-        ExpenseDetailRow("File Name", expense.name)
         ExpenseDetailRow("Amount", expense.amount)
-        ExpenseDetailRow("Submission Date", expense.submittedAt)
+        ExpenseDetailRow("Submission Date", formatUploadDateTime(expense.submittedAt))
         Divider(color = Color(0xFFEEEEEE))
         SubmittedCardActionsRow(onViewDetails = onViewDetails, onDownload = onDownload)
     }

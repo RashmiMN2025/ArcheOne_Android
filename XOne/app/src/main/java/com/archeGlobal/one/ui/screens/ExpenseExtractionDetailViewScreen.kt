@@ -566,6 +566,18 @@ fun ExpenseExtractionDetailViewScreen(
                     }
                     Button(
                         onClick = {
+                            if (projectId.isBlank()) {
+                                Toast.makeText(context, "Project ID is required", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            if (customerId.isBlank()) {
+                                Toast.makeText(context, "Customer ID is required", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            if (soNumber.isBlank()) {
+                                Toast.makeText(context, "SO Number is required", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
                             expenseController.submitExpense(
                                 expenseId = expense.id,
                                 request = buildSubmitRequest(),
