@@ -392,14 +392,14 @@ private fun TravelHistoryCard(request: TravelRequestItemUi, onViewDetails: (Trav
             InfoRow("Trip ID", request.tripCode)
             InfoRow("Project ID", request.projectId)
             InfoRow("Destination", request.destination)
-            InfoRow("Travel Dates", request.travelDates)
+            InfoRow("Travel Dates", "${request.startDate} - ${request.endDate}")
             InfoRow("Estimated Cost", request.estimatedCost)
             InfoRow("Mode of Travel", request.modeOfTravel)
             InfoRow("Hotel", request.hotelNeeded)
             InfoRow("Vehicle", request.vehicleNeeded)
             InfoRow("Advance", request.advanceNeeded)
-            InfoRow("Requested Amount", request.firstAdvanceRequestedAmount)
-            InfoRow("Approved Amount", request.approvedAmount)
+            InfoRow("Requested Amount", request.totalRequestedAmount)
+            InfoRow("Approved Amount", request.totalApprovedAmount)
 
             Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
 
@@ -485,6 +485,7 @@ fun CreateTravelRequestBottomSheet(
     var endDateMillis by rememberSaveable { mutableStateOf<Long?>(initialRequest?.endDate?.let { parseDateString(it) }) }
     var showStartDatePicker by rememberSaveable { mutableStateOf(false) }
     var showEndDatePicker by rememberSaveable { mutableStateOf(false) }
+    var dateValidationError by rememberSaveable { mutableStateOf("") }
     var advanceAmount by rememberSaveable { mutableStateOf(initialRequest?.firstAdvanceRequestedAmountRaw?.takeIf { it.isNotBlank() } ?: "") }
     var advanceType by rememberSaveable { mutableStateOf("") }
     var hotelNeeded by rememberSaveable { mutableStateOf(initialRequest?.hotelNeeded == "Yes") }
@@ -496,6 +497,10 @@ fun CreateTravelRequestBottomSheet(
         startDateMillis = initialRequest?.startDate?.let { parseDateString(it) }
         endDateMillis = initialRequest?.endDate?.let { parseDateString(it) }
         advanceAmount = initialRequest?.firstAdvanceRequestedAmountRaw?.takeIf { it.isNotBlank() } ?: ""
+    }
+
+    LaunchedEffect(startDateMillis, endDateMillis) {
+        dateValidationError = getDateValidationError(startDateMillis, endDateMillis)
     }
 
     val startDateText = startDateMillis?.let { displayDateFormatter.format(Date(it)) } ?: "Select date"
@@ -614,22 +619,33 @@ fun CreateTravelRequestBottomSheet(
                 )
                 FormInput("Description *","Enter Description", description) { description = it }
                 FormInput("Destination *","Enter destination", destination) { destination = it }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    DateSelectorField(
-                        label = "Start Date *",
-                        value = startDateText,
-                        onClick = { showStartDatePicker = true },
-                        modifier = Modifier.weight(1f)
-                    )
-                    DateSelectorField(
-                        label = "End Date *",
-                        value = endDateText,
-                        onClick = { showEndDatePicker = true },
-                        modifier = Modifier.weight(1f)
-                    )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        DateSelectorField(
+                            label = "Start Date *",
+                            value = startDateText,
+                            onClick = { showStartDatePicker = true },
+                            modifier = Modifier.weight(1f)
+                        )
+                        DateSelectorField(
+                            label = "End Date *",
+                            value = endDateText,
+                            onClick = { showEndDatePicker = true },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    if (dateValidationError.isNotBlank()) {
+                        Text(
+                            text = dateValidationError,
+                            color = PrimaryRed,
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 4.dp, top = 6.dp)
+                        )
+                    }
                 }
                 FormInput("Estimated Total Cost *","Estimated Total Cost *", estimatedCost) { estimatedCost = it }
 
@@ -666,12 +682,16 @@ fun CreateTravelRequestBottomSheet(
                         Toast.makeText(context, "Please select a valid project", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
+                    if (description == null || description.isBlank()) {
+                        Toast.makeText(context, "Please enter a description", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
                     if (destination.isBlank()) {
                         Toast.makeText(context, "Please enter destination", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
                     if (estimatedCost.isBlank() || estimatedCost.toDoubleOrNull() == null) {
-                        Toast.makeText(context, "Please enter a valid estimated cost", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Please enter a estimated cost", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
                     if (startDateMillis == null || endDateMillis == null) {
@@ -679,13 +699,22 @@ fun CreateTravelRequestBottomSheet(
                         return@Button
                     }
                     if (endDateMillis!! < startDateMillis!!) {
-                        Toast.makeText(context, "End date cannot be before start date", Toast.LENGTH_SHORT).show()
+                        dateValidationError = getDateValidationError(startDateMillis, endDateMillis)
                         return@Button
                     }
                     if (modeOfTravel.isBlank()) {
                         Toast.makeText(context, "Please select mode of travel", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
+                    if (advanceAmount.isBlank()) {
+                        Toast.makeText(context, "Please enter advance amount", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (advanceType.isBlank()) {
+                        Toast.makeText(context, "Please select advance type", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
                     val estimatedAmountValue = estimatedCost.toDoubleOrNull() ?: 0.0
                     val advanceAmountValue = if (advanceNeeded) {
                         advanceAmount.toDoubleOrNull()?.also {
@@ -696,7 +725,14 @@ fun CreateTravelRequestBottomSheet(
                     } else {
                         0.0
                     }
-                    if (advanceNeeded && advanceAmountValue == null) return@Button
+                    if (advanceNeeded && advanceAmountValue == null) {
+                        Toast.makeText(context, "Please enter advance amount", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (advanceNeeded && !isAdvanceAmountValid(advanceAmountValue ?: 0.0, estimatedAmountValue)) {
+                        Toast.makeText(context, "Advance amount cannot be greater than estimated cost", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
 
                     val requestPayload = com.archeGlobal.one.network.CreateTripRequest(
                         destination = destination,
@@ -704,7 +740,7 @@ fun CreateTravelRequestBottomSheet(
                         endDate = apiDateFormatter.format(Date(endDateMillis!!)),
                         description = description.ifBlank { null },
                         hotelAccommodationNeeded = hotelNeeded,
-                        modeOfTravel = modeOfTravel.lowercase(Locale.getDefault()),
+                        modeOfTravel = normalizeModeOfTravel(modeOfTravel),
                         vehicleNeeded = vehicleNeeded,
                         advanceNeeded = advanceNeeded,
                         advanceAmount = advanceAmountValue ?: 0.0,
@@ -761,9 +797,7 @@ fun CreateTravelRequestBottomSheet(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         startDateMillis = millis
-                        if (endDateMillis != null && endDateMillis!! < millis) {
-                            endDateMillis = millis
-                        }
+                        dateValidationError = getDateValidationError(startDateMillis, endDateMillis)
                     }
                     showStartDatePicker = false
                 }) {
@@ -792,6 +826,9 @@ fun CreateTravelRequestBottomSheet(
                     datePickerState.selectedDateMillis?.let { millis ->
                         if (startDateMillis == null || millis >= startDateMillis!!) {
                             endDateMillis = millis
+                            dateValidationError = ""
+                        } else {
+                            dateValidationError = "End date cannot be before start date"
                         }
                     }
                     showEndDatePicker = false
@@ -808,6 +845,26 @@ fun CreateTravelRequestBottomSheet(
             DatePicker(state = datePickerState)
         }
     }
+}
+
+fun normalizeModeOfTravel(modeOfTravel: String): String {
+    return if (modeOfTravel.equals("Own vehicle", ignoreCase = true)) {
+        "own_vehicle"
+    } else {
+        modeOfTravel.trim().lowercase(Locale.getDefault())
+    }
+}
+
+fun getDateValidationError(startDateMillis: Long?, endDateMillis: Long?): String {
+    return if (startDateMillis != null && endDateMillis != null && endDateMillis < startDateMillis) {
+        "End date cannot be before start date"
+    } else {
+        ""
+    }
+}
+
+fun isAdvanceAmountValid(advanceAmount: Double, estimatedCost: Double): Boolean {
+    return advanceAmount <= estimatedCost
 }
 
 private fun parseDateString(dateString: String): Long? {

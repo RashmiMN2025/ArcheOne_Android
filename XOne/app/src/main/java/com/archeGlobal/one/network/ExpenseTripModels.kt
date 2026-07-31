@@ -77,6 +77,20 @@ data class AdvanceResponse(
     val status: String?,
     @SerializedName("issued_amount")
     val issuedAmount: String?,
+    val approval: ApprovalDetailResponse?,
+    val issuance: IssuanceDetailResponse?,
+)
+
+data class ApprovalDetailResponse(
+    val approver: EmployeeResponse?,
+    val date: String?,
+    val comment: String?,
+)
+
+data class IssuanceDetailResponse(
+    val issuer: EmployeeResponse?,
+    val date: String?,
+    val comment: String?,
 )
 
 data class EmployeeResponse(
@@ -250,6 +264,12 @@ data class AdvanceRequestUi(
     val estimatedAmount: String,
     val status: String,
     val issuedAmount: String,
+    val approvedBy: String,
+    val approvalDate: String,
+    val approvalComment: String,
+    val issuedBy: String,
+    val issuanceDate: String,
+    val issuanceComment: String,
 )
 
 data class ProjectOptionsResponse(
@@ -313,8 +333,8 @@ fun TripItemResponse.toTravelRequestItemUi(): TravelRequestItemUi {
         projectId = projectCodeValue,
         destination = destination,
         description = description?.takeIf { it.isNotBlank() } ?: "-",
-        startDate = startDate,
-        endDate = endDate,
+        startDate = dateFormate(startDate),
+        endDate = dateFormate(endDate),
         travelDates = formatTravelDates(startDate, endDate),
         estimatedCost = formatCurrency(estimatedAmount),
         modeOfTravel = modeOfTravel.replaceFirstChar { it.uppercase() },
@@ -327,6 +347,13 @@ fun TripItemResponse.toTravelRequestItemUi(): TravelRequestItemUi {
         totalApprovedAmount = totalApprovedAmount?.takeIf { it.isNotBlank() }?.let { formatCurrency(it) } ?: "-",
         totalIssuedAmount = totalIssuedAmount?.takeIf { it.isNotBlank() }?.let { formatCurrency(it) } ?: "-",
         advances = advances.map { advance ->
+            val approverName = advance.approval?.approver?.let { approver ->
+                listOfNotNull(approver.firstName, approver.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() } ?: approver.email
+            } ?: "-"
+            val issuerName = advance.issuance?.issuer?.let { issuer ->
+                listOfNotNull(issuer.firstName, issuer.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() } ?: issuer.email
+            } ?: "-"
+            
             AdvanceRequestUi(
                 id = advance.id,
                 note = advance.note?.takeIf { it.isNotBlank() } ?: "-",
@@ -336,6 +363,12 @@ fun TripItemResponse.toTravelRequestItemUi(): TravelRequestItemUi {
                 estimatedAmount = advance.estimatedAmount?.takeIf { it.isNotBlank() }?.let { formatCurrency(it) } ?: "-",
                 status = advance.status?.takeIf { it.isNotBlank() } ?: "-",
                 issuedAmount = advance.issuedAmount?.takeIf { it.isNotBlank() }?.let { formatCurrency(it) } ?: "-",
+                approvedBy = approverName,
+                approvalDate = advance.approval?.date?.takeIf { it.isNotBlank() }?.let { dateFormate(it) } ?: "-",
+                approvalComment = advance.approval?.comment?.takeIf { it.isNotBlank() } ?: "-",
+                issuedBy = issuerName,
+                issuanceDate = advance.issuance?.date?.takeIf { it.isNotBlank() }?.let { dateFormate(it) } ?: "-",
+                issuanceComment = advance.issuance?.comment?.takeIf { it.isNotBlank() } ?: "-",
             )
         },
         employeeName = listOfNotNull(traveler?.firstName, traveler?.lastName).joinToString(" ").takeIf { it.isNotBlank() } ?: "-",
@@ -367,6 +400,17 @@ private fun formatTravelDates(
         }
     } catch (_: Exception) {
         "$startDate - $endDate"
+    }
+}
+
+private fun dateFormate(dateString: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = inputFormat.parse(dateString) ?: return ""
+        val outputFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+        outputFormat.format(date)
+    } catch (e: Exception) {
+        ""
     }
 }
 

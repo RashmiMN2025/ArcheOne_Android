@@ -783,7 +783,14 @@ private fun TravelApprovalCard(
     modifier: Modifier = Modifier,
     onRequestClick: (TravelRequestItemUi) -> Unit,
 ) {
-    ApprovalCardContainer(modifier = modifier.clickable { onRequestClick(travel) }) {
+    val shouldShowDetailAction = shouldShowTravelDetailAction(travel.status)
+    val cardModifier = if (shouldShowDetailAction) {
+        modifier.clickable { onRequestClick(travel) }
+    } else {
+        modifier
+    }
+
+    ApprovalCardContainer(modifier = cardModifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -819,8 +826,14 @@ private fun TravelApprovalCard(
 
         Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
 
-        ReviewActionRow(actionText = "View", onClick = { onRequestClick(travel) })
+        if (shouldShowDetailAction) {
+            ReviewActionRow(actionText = "View", onClick = { onRequestClick(travel) })
+        }
     }
+}
+
+fun shouldShowTravelDetailAction(status: String?): Boolean {
+    return status?.equals("approved", ignoreCase = true) != true
 }
 
 @Composable

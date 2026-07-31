@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.LaunchedEffect
 import com.archeGlobal.one.controller.TravelExpenseController
 import com.archeGlobal.one.network.ProjectOption
@@ -64,6 +65,7 @@ fun TravelExpenseRequestDetailViewScreen(
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     var showEditBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val isApproved = request.status.equals("approved", ignoreCase = true)
 
     BackHandler {
         onBack()
@@ -133,6 +135,31 @@ fun TravelExpenseRequestDetailViewScreen(
                 )
 
                 ExpenseRequestDetailCard(title = "Employee Details") {
+                    if(isApproved) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Trip ID",
+                                tint = PrimaryRed,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Trip ID: ${request.tripId}",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+                        }
+                        Divider(
+                            color = Color(0xFFEAEAEA),
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
                     TravelDetailRow(label = "Employee", value = request.employeeName)
                     TravelDetailRow(label = "Email", value = request.employeeEmail)
                     TravelDetailRow(label = "Reporting Manager", value = request.reportingManager)
@@ -140,7 +167,7 @@ fun TravelExpenseRequestDetailViewScreen(
 
                 ExpenseRequestDetailCard(title = "Travel Information") {
                     TravelDetailRow(label = "Destination", value = request.destination)
-                    TravelDetailRow(label = "Travel Dates", value = request.travelDates)
+                    TravelDetailRow("Travel Dates", "${request.startDate} - ${request.endDate}")
                     TravelDetailRow(label = "Estimated Cost", value = request.estimatedCost)
                 }
 
@@ -149,77 +176,93 @@ fun TravelExpenseRequestDetailViewScreen(
                 }
 
                 ExpenseRequestDetailCard(title = "Advance Summary") {
-                    TravelDetailRow(label = "Advance Requested", value = request.firstAdvanceRequestedAmount)
-                    TravelDetailRow(label = "Approved Amount", value = request.approvedAmount)
-                    TravelDetailRow(label = "Total Requested", value = request.totalRequestedAmount)
+                    TravelDetailRow(
+                        label = "Total Advance Requested",
+                        value = request.totalRequestedAmount
+                    )
+                    TravelDetailRow(label = "Advance Type", value = "Cash")
+                    TravelDetailRow(
+                        label = "Total Advance Approved",
+                        value = request.totalApprovedAmount
+                    )
+                    TravelDetailRow(
+                        label = "Total Advance Issued",
+                        value = request.totalIssuedAmount
+                    )
                 }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Button(
-                        onClick = { showEditBottomSheet = true },
+                if (isApproved && request.advances.isNotEmpty()) {
+                    AdvancesAndApprovalsBlock(advances = request.advances, tripId = request.tripId)
+                }
+
+                if (!isApproved) {
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = PrimaryRed,
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(16.dp)
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(
-                            text = "Update",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 18.sp
-                        )
-                    }
-                    Button(
-                        onClick = {
-                            controller.deleteTrip(
-                                request.tripId,
-                                onSuccess = { onBack() },
-                                onError = { message ->
-                                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                                }
+                        Button(
+                            onClick = { showEditBottomSheet = true },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = PrimaryRed,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Text(
+                                text = "Update",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 18.sp
                             )
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = Color(0xFFF6F4EE),
-                            contentColor = Color.Black
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Text(
-                            text = "Delete",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 18.sp
-                        )
+                        }
+                        Button(
+                            onClick = {
+                                controller.deleteTrip(
+                                    request.tripId,
+                                    onSuccess = { onBack() },
+                                    onError = { message ->
+                                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = Color(0xFFF6F4EE),
+                                contentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Text(
+                                text = "Delete",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 18.sp
+                            )
+                        }
                     }
                 }
             }
         }
-    }
 
-    if (showEditBottomSheet) {
-        CreateTravelRequestBottomSheet(
-            controller = controller,
-            onDismiss = { showEditBottomSheet = false },
-            onRequestCreated = { showEditBottomSheet = false },
-            projectOptions = projectOptions,
-            projectOptionsLoading = projectOptionsLoading,
-            projectOptionsError = projectOptionsError,
-            isEditMode = true,
-            initialRequest = request
-        )
+        if (showEditBottomSheet) {
+            CreateTravelRequestBottomSheet(
+                controller = controller,
+                onDismiss = { showEditBottomSheet = false },
+                onRequestCreated = { showEditBottomSheet = false },
+                projectOptions = projectOptions,
+                projectOptionsLoading = projectOptionsLoading,
+                projectOptionsError = projectOptionsError,
+                isEditMode = true,
+                initialRequest = request
+            )
+        }
     }
 }
 
@@ -255,6 +298,28 @@ private fun TravelSummaryCard(
             }
 
             TravelDetailRow(label = "Travel Dates", value = travelDates)
+        }
+    }
+}
+
+@Composable
+private fun AdvancesAndApprovalsBlock(
+    advances: List<com.archeGlobal.one.network.AdvanceRequestUi>,
+    tripId: String,
+) {
+    ExpenseRequestDetailCard(title = "Advances & Approvals") {
+        advances.forEachIndexed { index, advance ->
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                TravelDetailRow(label = "Advance Requested", value = advance.requestedAmount)
+                TravelDetailRow(label = "Requested Date", value = advance.endDate)
+                TravelDetailRow(label = "Advance Issued", value = advance.issuedAmount)
+                TravelDetailRow(label = "Approved By", value = advance.approvedBy)
+                TravelDetailRow(label = "Approval Date", value = advance.approvalDate)
+                TravelDetailRow(label = "Comments", value = advance.approvalComment)
+                if (index < advances.size - 1) {
+                    Divider(color = Color(0xFFEAEAEA), modifier = Modifier.padding(vertical = 8.dp))
+                }
+            }
         }
     }
 }
@@ -335,3 +400,4 @@ private fun TravelDetailRow(label: String, value: String) {
         )
     }
 }
+
