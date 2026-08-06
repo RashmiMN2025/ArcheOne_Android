@@ -156,6 +156,8 @@ data class ProjectOption(
     val code: String,
     @SerializedName("customer_id") val customerId: String? = null,
     @SerializedName("so_number") val soNumber: String? = null,
+    @SerializedName("customer_name") val customerName: String? = null,
+    val status: String? = null
 )
 
 data class MileageRateRequest(
@@ -251,8 +253,7 @@ fun MileageExpenseRecord.toMileageExpenseItemUi(): MileageExpenseItemUi {
 }
 
 data class MileageRateResponse(
-    @SerializedName("car_mileage_rate") val carMileageRate: String?,
-    @SerializedName("bike_mileage_rate") val bikeMileageRate: String?,
+    @SerializedName("mileage_rate") val mileageRate: String?,
 )
 
 data class AdvanceRequestUi(

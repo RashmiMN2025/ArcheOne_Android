@@ -1,6 +1,7 @@
 {
   "client_id" : "c36462e1-05d1-4ddd-9190-2de64f15f8c1",
-  "authorization_user_agent" : "DEFAULT",
+  "authorization_user_agent" : "BROWSER",
+  "broker_redirect_uri_registered": false,
   "redirect_uri" : "msauth://com.archeGlobal.one/Sg%2FUNMZmy1u8kGYkDOSwv44%2FHQs%3D",
   "account_mode": "SINGLE",
   "authorities" : [

@@ -84,7 +84,7 @@ class TravelExpenseController(
                     Log.e(tag, "Failed to fetch trips: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         trips.value = emptyList()
-                        errorMessage.value = "Failed to load travel requests (${response.code()})"
+                        errorMessage.value = parseErrorMessage(errorBody, "Failed to load travel requests (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
@@ -121,7 +121,7 @@ class TravelExpenseController(
                     Log.e(tag, "Failed to fetch mileage expenses: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         mileageExpenses.value = emptyList()
-                        mileageExpensesError.value = "Failed to load mileage expenses (${response.code()})"
+                        mileageExpensesError.value = parseErrorMessage(errorBody, "Failed to load mileage expenses (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
@@ -157,7 +157,7 @@ class TravelExpenseController(
                     Log.e(tag, "Failed to fetch mileage dashboard metrics: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         mileageDashboardMetrics.value = null
-                        mileageDashboardMetricsError.value = "Failed to load dashboard metrics (${response.code()})"
+                        mileageDashboardMetricsError.value = parseErrorMessage(errorBody, "Failed to load dashboard metrics (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
@@ -193,7 +193,7 @@ class TravelExpenseController(
                     Log.e(tag, "Failed to fetch team mileage metrics: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         teamMileageMetrics.value = null
-                        teamMileageMetricsError.value = "Failed to load mileage metrics (${response.code()})"
+                        teamMileageMetricsError.value = parseErrorMessage(errorBody, "Failed to load mileage metrics (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
@@ -230,7 +230,7 @@ class TravelExpenseController(
                     Log.e(tag, "Failed to fetch team mileage expenses: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         teamMileageExpenses.value = emptyList()
-                        teamMileageExpensesError.value = "Failed to load team mileage expenses (${response.code()})"
+                        teamMileageExpensesError.value = parseErrorMessage(errorBody, "Failed to load team mileage expenses (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
@@ -267,7 +267,7 @@ class TravelExpenseController(
                     Log.e(tag, "Failed to fetch team trips: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         teamTrips.value = emptyList()
-                        teamTripsError.value = "Failed to load team travel requests (${response.code()})"
+                        teamTripsError.value = parseErrorMessage(errorBody, "Failed to load team travel requests (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
@@ -304,7 +304,7 @@ class TravelExpenseController(
                     Log.e(tag, "Failed to fetch project options: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         projectOptions.value = emptyList()
-                        projectOptionsError.value = "Failed to load projects (${response.code()})"
+                        projectOptionsError.value = parseErrorMessage(errorBody, "Failed to load projects (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
@@ -341,7 +341,7 @@ class TravelExpenseController(
                     Log.e(tag, "Failed to fetch trip options: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         tripOptions.value = emptyList()
-                        tripOptionsError.value = "Failed to load trip options (${response.code()})"
+                        tripOptionsError.value = parseErrorMessage(errorBody, "Failed to load trip options (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
@@ -380,7 +380,7 @@ class TravelExpenseController(
                     Log.e(tag, "Failed to fetch vehicle assets: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         vehicleAssets.value = emptyList()
-                        vehicleAssetsError.value = "Failed to load vehicles (${response.code()})"
+                        vehicleAssetsError.value = parseErrorMessage(errorBody, "Failed to load vehicles (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
@@ -417,7 +417,7 @@ class TravelExpenseController(
                     val errorBody = response.errorBody()?.string().orEmpty()
                     Log.e(tag, "Failed to create mileage expense: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
-                        onError("Failed to add travel expense (${response.code()})")
+                        onError(parseErrorMessage(errorBody, "Failed to add travel expense (${response.code()})"))
                     }
                 }
             } catch (e: Exception) {
@@ -456,11 +456,7 @@ class TravelExpenseController(
                     )
                 )
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    val rateValue = when (vehicleType.lowercase(Locale.getDefault())) {
-                        "bike" -> body?.bikeMileageRate
-                        else -> body?.carMileageRate
-                    }
+                    val rateValue = response.body()?.mileageRate
                     withContext(Dispatchers.Main) {
                         if (!rateValue.isNullOrBlank()) {
                             mileageRate.value = rateValue
@@ -477,8 +473,9 @@ class TravelExpenseController(
                     Log.e(tag, "Failed to fetch mileage rate: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         mileageRate.value = null
-                        mileageRateError.value = "Failed to load mileage rate (${response.code()})"
-                        onError("Failed to load mileage rate (${response.code()})")
+                        val message = parseErrorMessage(errorBody, "Failed to load mileage rate (${response.code()})")
+                        mileageRateError.value = message
+                        onError(message)
                     }
                 }
             } catch (e: Exception) {
@@ -515,7 +512,7 @@ class TravelExpenseController(
                     }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()
-                    val message = extractApiErrorMessage(errorBody) ?: "Failed to submit travel request (${response.code()})"
+                    val message = parseErrorMessage(errorBody, "Failed to submit travel request (${response.code()})")
                     Log.e(tag, "Failed to create trip: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         onError(message)
@@ -560,7 +557,7 @@ class TravelExpenseController(
                     }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()
-                    val message = extractApiErrorMessage(errorBody) ?: "Failed to update travel request (${response.code()})"
+                    val message = parseErrorMessage(errorBody, "Failed to update travel request (${response.code()})")
                     Log.e(tag, "Failed to update trip status: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         onError(message)
@@ -599,7 +596,7 @@ class TravelExpenseController(
                     }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()
-                    val message = extractApiErrorMessage(errorBody) ?: "Failed to update travel request (${response.code()})"
+                    val message = parseErrorMessage(errorBody, "Failed to update travel request (${response.code()})")
                     Log.e(tag, "Failed to update trip: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         onError(message)
@@ -643,7 +640,7 @@ class TravelExpenseController(
                     val errorBody = response.errorBody()?.string().orEmpty()
                     Log.e(tag, "Failed to fetch trip: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
-                        onError("Failed to load travel request details (${response.code()})")
+                        onError(parseErrorMessage(errorBody, "Failed to load travel request details (${response.code()})"))
                     }
                 }
             } catch (e: Exception) {
@@ -655,12 +652,8 @@ class TravelExpenseController(
         }
     }
 
-    private fun extractApiErrorMessage(errorBody: String?): String? {
-        if (errorBody.isNullOrBlank()) return null
-        return Regex("\"detail\"\\s*:\\s*\"([^\"]*)\"").find(errorBody)?.groupValues?.get(1)
-            ?.replace("\\\"", "\"")
-            ?: errorBody
-    }
+    private fun parseErrorMessage(errorBody: String?, fallback: String): String =
+        com.archeGlobal.one.network.parseApiErrorMessage(errorBody, fallback)
 
     fun deleteTrip(
         tripId: String,
@@ -681,7 +674,7 @@ class TravelExpenseController(
                     }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()
-                    val message = extractApiErrorMessage(errorBody) ?: "Failed to delete travel request (${response.code()})"
+                    val message = parseErrorMessage(errorBody, "Failed to delete travel request (${response.code()})")
                     Log.e(tag, "Failed to delete trip: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
                         onError(message)

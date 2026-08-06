@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
@@ -93,6 +94,7 @@ import com.archeGlobal.one.controller.ExpenseController
 import com.archeGlobal.one.network.ExpenseDetailUi
 import com.archeGlobal.one.network.ExpenseUi
 import com.archeGlobal.one.network.SubmittedExpenseUi
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -155,6 +157,7 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
     var showManualBottomSheet by rememberSaveable { mutableStateOf(false) }
     var selectedExpenseDetail by remember { mutableStateOf<ExpenseDetailUi?>(null) }
     var isDetailReadOnly by rememberSaveable { mutableStateOf(false) }
+    var expensePendingDelete by remember { mutableStateOf<ExpenseUi?>(null) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val controller = remember { ExpenseController(context) }
@@ -208,6 +211,13 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
     LaunchedEffect(selectedTab) {
         if (selectedTab == ExpenseTab.Submitted) {
             controller.fetchSubmittedExpenses()
+        }
+    }
+
+    LaunchedEffect(allExpenses) {
+        if (allExpenses.any { it.status.equals("Extracting", ignoreCase = true) }) {
+            delay(5000)
+            controller.fetchExpenses()
         }
     }
 
@@ -270,21 +280,21 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
         }
     }
 
-    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
+    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
+        uris.forEach { uri ->
             try {
-                val input = context.contentResolver.openInputStream(it)
+                val input = context.contentResolver.openInputStream(uri)
                 val bytes = input?.use { stream -> stream.readBytes() }
+                val filename = queryName(context, uri) ?: uri.lastPathSegment ?: "upload"
                 if (bytes != null && bytes.isNotEmpty()) {
-                    val filename = queryName(context, it) ?: it.lastPathSegment ?: "upload"
                     controller.uploadExpense(bytes, filename, "application/octet-stream",
                         onSuccess = { resp ->
-                            Toast.makeText(context, "Uploaded successfully", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Uploaded $filename successfully", Toast.LENGTH_SHORT).show()
                         },
-                        onError = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
+                        onError = { msg -> Toast.makeText(context, "Failed to upload $filename: $msg", Toast.LENGTH_LONG).show() }
                     )
                 } else {
-                    Toast.makeText(context, "Failed to read file", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Failed to read file: $filename", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Failed to read file: ${'$'}{e.message}", Toast.LENGTH_LONG).show()
@@ -422,7 +432,7 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
                             )
                         },
                         onViewDetails = { openExpenseDetail(it.id, readOnly = false) },
-                        onDelete = { deleteExpense(it) },
+                        onDelete = { expensePendingDelete = it },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -500,6 +510,27 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
                 showAddPopup = false
                 showManualBottomSheet = true
             }
+        )
+    }
+
+    expensePendingDelete?.let { expense ->
+        AlertDialog(
+            onDismissRequest = { expensePendingDelete = null },
+            title = { Text(text = "Delete Bill", fontFamily = GraphikFontFamily, fontWeight = FontWeight.SemiBold) },
+            text = { Text(text = "Are you sure you want to delete this bill? This action cannot be undone.", fontFamily = GraphikFontFamily) },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleteExpense(expense)
+                    expensePendingDelete = null
+                }) {
+                    Text(text = "Delete", color = PrimaryRed, fontFamily = GraphikFontFamily, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { expensePendingDelete = null }) {
+                    Text(text = "Cancel", fontFamily = GraphikFontFamily)
+                }
+            },
         )
     }
 

@@ -33,20 +33,35 @@ class ExpenseAuthController(
     }
 
     fun loginWithEntraIdTokenFromMsal(callback: (Boolean, String, String?) -> Unit) {
+        refreshMsalIdToken { idToken ->
+            if (idToken.isNullOrBlank()) {
+                callback(false, "Could not obtain Microsoft identity token", null)
+            } else {
+                loginWithEntraIdToken(idToken, callback)
+            }
+        }
+    }
+
+    /**
+     * Silently asks MSAL for a current id token (MSAL refreshes it internally if the
+     * cached one has expired) and persists it. Calls back with null if no token could
+     * be obtained, e.g. MSAL isn't ready or there's no signed-in account.
+     */
+    private fun refreshMsalIdToken(callback: (String?) -> Unit) {
         val msalManager = com.archeGlobal.one.service.MSALAuthenticationManager(context)
         msalManager.initialize { initialized ->
             if (!initialized) {
-                callback(false, "Authentication system not ready", null)
+                callback(null)
                 return@initialize
             }
             msalManager.getIdToken { idToken ->
                 if (idToken.isNullOrBlank()) {
-                    callback(false, "Could not obtain Microsoft identity token", null)
+                    callback(null)
                     return@getIdToken
                 }
                 PreferencesManager(context).saveMsalIdToken(idToken)
                 Log.d(tag, "Refreshed and stored MSAL id token for Entra login")
-                loginWithEntraIdToken(idToken, callback)
+                callback(idToken)
             }
         }
     }
@@ -54,6 +69,7 @@ class ExpenseAuthController(
     fun loginWithEntraIdToken(
         idToken: String,
         callback: (Boolean, String, String?) -> Unit,
+        allowRefreshRetry: Boolean = true,
     ) {
         if (idToken.isBlank()) {
             callback(false, "Missing Microsoft identity token", null)
@@ -88,6 +104,20 @@ class ExpenseAuthController(
                     val role = fetchCurrentUserRole()
                     withContext(Dispatchers.Main) {
                         callback(true, body.email, role)
+                    }
+                } else if (response.code() == 401 && allowRefreshRetry) {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.w(tag, "Entra login rejected id token (401) $errorBody; refreshing MSAL id token and retrying once")
+                    withContext(Dispatchers.Main) {
+                        refreshMsalIdToken { refreshedIdToken ->
+                            if (refreshedIdToken.isNullOrBlank()) {
+                                Log.w(tag, "Could not refresh MSAL id token after 401")
+                                callback(false, "Expense login failed (401)", null)
+                            } else {
+                                Log.d(tag, "Retrying Entra login with refreshed MSAL id token")
+                                loginWithEntraIdToken(refreshedIdToken, callback, allowRefreshRetry = false)
+                            }
+                        }
                     }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()

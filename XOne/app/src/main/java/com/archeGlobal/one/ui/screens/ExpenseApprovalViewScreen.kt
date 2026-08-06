@@ -788,6 +788,7 @@ private fun TravelApprovalCard(
         modifier.clickable { onRequestClick(travel) }
     } else {
         modifier
+
     }
 
     ApprovalCardContainer(modifier = cardModifier) {

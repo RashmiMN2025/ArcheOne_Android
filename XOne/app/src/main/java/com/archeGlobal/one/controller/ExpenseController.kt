@@ -25,7 +25,6 @@ import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import com.archeGlobal.one.network.ApiValidationErrorResponse
 
 class ExpenseController(private val context: Context) {
     private val tag = "ExpenseController"
@@ -179,7 +178,7 @@ class ExpenseController(private val context: Context) {
                     val errorBody = detailResponse.errorBody()?.string().orEmpty()
                     Log.e(tag, "Failed to fetch expense for download: HTTP ${detailResponse.code()} $errorBody")
                     withContext(Dispatchers.Main) {
-                        onError("Failed to get file URL (${detailResponse.code()})")
+                        onError(parseErrorMessage(errorBody, "Failed to get file URL (${detailResponse.code()})"))
                     }
                     return@launch
                 }
@@ -248,7 +247,7 @@ class ExpenseController(private val context: Context) {
                     val errorBody = response.errorBody()?.string().orEmpty()
                     Log.e(tag, "Failed to fetch expense detail: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
-                        onError("Failed to load expense details (${response.code()})")
+                        onError(parseErrorMessage(errorBody, "Failed to load expense details (${response.code()})"))
                     }
                 }
             } catch (e: Exception) {
@@ -407,7 +406,7 @@ class ExpenseController(private val context: Context) {
                     val errorBody = response.errorBody()?.string().orEmpty()
                     Log.e(tag, "Failed to upload expense: HTTP ${response.code()} $errorBody")
                     withContext(Dispatchers.Main) {
-                        onError("Failed to upload expense (${response.code()})")
+                        onError(parseErrorMessage(errorBody, "Failed to upload expense (${response.code()})"))
                     }
                 }
             } catch (e: Exception) {
@@ -483,19 +482,8 @@ class ExpenseController(private val context: Context) {
         }
     }
 
-    private fun parseErrorMessage(errorBody: String, fallback: String): String {
-        if (errorBody.isBlank()) return fallback
-        return try {
-            val parsed = Gson().fromJson(errorBody, ApiValidationErrorResponse::class.java)
-            val messages = parsed.detail?.mapNotNull { detail ->
-                detail.message?.takeIf { it.isNotBlank() }
-                    ?: detail.msg?.takeIf { it.isNotBlank() }
-            }.orEmpty()
-            if (messages.isNotEmpty()) messages.joinToString("\n") else fallback
-        } catch (_: Exception) {
-            fallback
-        }
-    }
+    private fun parseErrorMessage(errorBody: String, fallback: String): String =
+        com.archeGlobal.one.network.parseApiErrorMessage(errorBody, fallback)
 
     companion object {
         const val KEY_EXPENSE_USER_ID = "expense_user_id"

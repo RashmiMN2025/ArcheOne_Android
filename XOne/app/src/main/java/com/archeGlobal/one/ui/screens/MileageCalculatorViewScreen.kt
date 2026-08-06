@@ -865,26 +865,23 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
             return@LaunchedEffect
         }
 
-        if (vehicleOwner.equals("COMPANY", ignoreCase = true)) {
-            tripController.fetchMileageRate(
-                vehicleId = selectedVehicle.id,
-                vehicleOwnershipType = "company",
-                vehicleType = vehicleType,
-                onSuccess = { rateValue ->
-                    val rate = rateValue.toBigDecimalOrNull()
-                    if (rate != null) {
-                        calculatedPrice = formatCurrencyValue(rate * parsedDistance)
-                    } else {
-                        calculatedPrice = ""
-                    }
-                },
-                onError = {
-                    calculatedPrice = ""
+        tripController.fetchMileageRate(
+            vehicleId = selectedVehicle.id,
+            vehicleOwnershipType = vehicleOwner,
+            vehicleType = vehicleType,
+            onSuccess = { rateValue ->
+                val rate = rateValue.toBigDecimalOrNull()
+                calculatedPrice = if (rate != null) {
+                    formatCurrencyValue(rate * parsedDistance)
+                } else {
+                    ""
                 }
-            )
-        } else {
-            calculatedPrice = ""
-        }
+            },
+            onError = { message ->
+                calculatedPrice = ""
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            }
+        )
     }
 
     ModalBottomSheet(
@@ -1001,7 +998,9 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                     options = projectIdOptions,
                     onValueChange = { code ->
                         selectedProjectCode = code
-                        selectedProjectId = projectOptions.firstOrNull { it.code == code }?.id
+                        val selected = projectOptions.firstOrNull { it.code == code }
+                        selectedProjectId = selected?.id
+                        customerName = selected?.customerName.orEmpty()
                     },
                     enabled = projectOptions.isNotEmpty(),
                 )
