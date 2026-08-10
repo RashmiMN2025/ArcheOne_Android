@@ -1,0 +1,107 @@
+{
+  "id": 0,
+  "documents": [
+    {
+      "filetype": "meals_food",
+      "sub_category": null,
+      "overall_document_confidence": 0.0,
+      "verifiability_message": "string",
+      "processed_data": {
+        "document_id": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "vendor_name": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "grand_total_After_GST": {
+          "value": "0.00",
+          "confidence_score": 0
+        },
+        "currency": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "date": {
+          "value": "dd/mm/yyyy",
+          "confidence_score": 0
+        },
+        "project_id": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "supplier_details": {
+          "gstin": {
+            "value": "string",
+            "confidence_score": 0
+          }
+        },
+        "billing_details": {
+          "date_of_issue": {
+            "value": "string",
+            "confidence_score": 0
+          }
+        },
+        "table_contents": [
+          {
+            "description": {
+              "value": "string",
+              "confidence_score": 0
+            },
+            "quantity": {
+              "value": "0",
+              "confidence_score": 0
+            },
+            "unit_price": {
+              "value": "0.00",
+              "confidence_score": 0
+            },
+            "amount": {
+              "value": "0.00",
+              "confidence_score": 0
+            }
+          }
+        ],
+        "tax_details": {
+          "sgst_percent": {
+            "value": "0.00",
+            "confidence_score": 0
+          },
+          "cgst_percent": {
+            "value": "0.00",
+            "confidence_score": 0
+          },
+          "igst_percent": {
+            "value": "0.00",
+            "confidence_score": 0
+          },
+          "sgst_amount": {
+            "value": "0.00",
+            "confidence_score": 0
+          },
+          "cgst_amount": {
+            "value": "0.00",
+            "confidence_score": 0
+          },
+          "igst_amount": {
+            "value": "0.00",
+            "confidence_score": 0
+          },
+          "tax_amount": {
+            "value": "0.00",
+            "confidence_score": 0
+          }
+        },
+        "subtotal": {
+          "value": "0.00",
+          "confidence_score": 0
+        },
+        "service_charge": {
+          "value": "0.00",
+          "confidence_score": 0
+        }
+      }
+    }
+  ]
+}

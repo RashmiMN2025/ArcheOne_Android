@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.Visibility
 import androidx.activity.compose.BackHandler
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.ExpenseController
 import com.archeGlobal.one.controller.TravelExpenseController
+import com.archeGlobal.one.network.ExpenseDetailUi
 import com.archeGlobal.one.network.MileageExpenseItemUi
 import com.archeGlobal.one.network.SubmittedExpenseUi
 import com.archeGlobal.one.network.TeamMileageDashboardMetricsResponse
@@ -87,6 +89,24 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
     var approvalAmountText by rememberSaveable { mutableStateOf("") }
     var reviewComment by rememberSaveable { mutableStateOf("") }
     var isReviewSubmitting by rememberSaveable { mutableStateOf(false) }
+    var selectedExpenseDetail by remember { mutableStateOf<ExpenseDetailUi?>(null) }
+
+    if (selectedExpenseDetail != null) {
+        BackHandler {
+            selectedExpenseDetail = null
+            expenseController.fetchApprovalExpenses()
+        }
+        ExpenseExtractionDetailViewScreen(
+            expense = selectedExpenseDetail!!,
+            isReadOnly = true,
+            approvalMode = true,
+            onBack = {
+                selectedExpenseDetail = null
+                expenseController.fetchApprovalExpenses()
+            },
+        )
+        return
+    }
 
     LaunchedEffect(selectedTab) {
         when (selectedTab) {
@@ -194,7 +214,29 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
                 ApprovalTab.Expenses -> ExpenseApprovalList(
                     expenses = approvalExpenses,
                     isLoading = expenseController.approvalExpensesLoading.value,
-                    errorMessage = expenseController.approvalExpensesError.value
+                    errorMessage = expenseController.approvalExpensesError.value,
+                    onViewDetails = { expense ->
+                        val userExpenseId = expense.userExpenseId
+                        if (userExpenseId == null) {
+                            Toast.makeText(context, "Unable to identify this expense", Toast.LENGTH_LONG).show()
+                        } else {
+                            expenseController.fetchExpenseDetail(
+                                expenseId = userExpenseId.toString(),
+                                onSuccess = { detail -> selectedExpenseDetail = detail },
+                                onError = { message ->
+                                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                },
+                            )
+                        }
+                    },
+                    onDownload = { expense ->
+                        expenseController.downloadExpenseFile(
+                            expenseId = expense.userExpenseId?.toString() ?: expense.id,
+                            fallbackFileName = expense.name,
+                            onSuccess = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() },
+                            onError = { message -> Toast.makeText(context, message, Toast.LENGTH_LONG).show() },
+                        )
+                    },
                 )
                 ApprovalTab.TravelRequest -> TravelApprovalList(
                     travels = teamTrips,
@@ -221,6 +263,17 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = PrimaryRed)
+            }
+        }
+
+        if (expenseController.detailLoading.value || expenseController.downloadLoading.value) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x88000000)),
+                contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(color = PrimaryRed)
             }
@@ -290,7 +343,7 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
                     )
                     ApprovalDetailPairRow(
                         leftTitle = "Travel Dates",
-                        leftValue = request.travelDates,
+                        leftValue = "${request.startDate} - ${request.endDate}",
                         rightTitle = "Submitted Date",
                         rightValue = formatDisplayDate(request.startDate)
                     )
@@ -390,6 +443,10 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
                         }
                         Button(
                             onClick = {
+                                if (reviewComment.trim().isBlank()) {
+                                    Toast.makeText(context, "Comments is required", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
                                 val parsedAmount = approvalAmountText.toDoubleOrNull()
                                 isReviewSubmitting = true
                                 travelExpenseController.updateTripStatus(
@@ -552,6 +609,8 @@ private fun ApprovalTabButton(
 @Composable
 private fun ExpenseApprovalList(
     expenses: List<SubmittedExpenseUi>,
+    onViewDetails: (SubmittedExpenseUi) -> Unit,
+    onDownload: (SubmittedExpenseUi) -> Unit,
     isLoading: Boolean,
     errorMessage: String?,
 ) {
@@ -593,6 +652,8 @@ private fun ExpenseApprovalList(
             items(expenses) { expense ->
                 ExpenseApprovalCard(
                     expense = expense,
+                    onViewDetails = { onViewDetails(expense) },
+                    onDownload = { onDownload(expense) },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
@@ -740,6 +801,8 @@ private fun MileageApprovalList(
 @Composable
 private fun ExpenseApprovalCard(
     expense: SubmittedExpenseUi,
+    onViewDetails: () -> Unit,
+    onDownload: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     ApprovalCardContainer(modifier = modifier) {
@@ -750,17 +813,11 @@ private fun ExpenseApprovalCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = expense.name,
+                    text = "EXP-${expense.userExpenseId}",
                     fontFamily = GraphikFontFamily,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
-                )
-                Text(
-                    text = "${expense.category} • ${expense.billDate}",
-                    fontFamily = GraphikFontFamily,
-                    fontSize = 14.sp,
-                    color = Color.Gray
                 )
             }
             TravelStatusBadge(status = expense.status)
@@ -768,12 +825,17 @@ private fun ExpenseApprovalCard(
 
         Divider(color = Color(0xFFEAEAEA))
 
-        ApprovalDetailRow("Vendor", expense.vendorName)
+        ApprovalDetailRow("Employee Name", expense.employeeName)
+        ApprovalDetailRow("Employee ID", expense.employeeCode)
+        ApprovalDetailRow("Category", expense.category)
+        ApprovalDetailRow("Bill Date", formatDisplayDate(expense.billDate))
+        ApprovalDetailRow("Description", expense.vendorName)
         ApprovalDetailRow("Amount", expense.amount, isBold = true)
-        ApprovalDetailRow("Status", expense.status)
-        ApprovalDetailRow("ID", expense.id)
+        ApprovalDetailRow("Submission Date", formatDisplayDate(expense.submittedAt))
 
-        ReviewActionRow(actionText = "Review")
+        Divider(color = Color(0xFFEAEAEA))
+
+        ExpenseReviewActionRow(onViewDetails = onViewDetails, onDownload = onDownload)
     }
 }
 
@@ -805,6 +867,18 @@ private fun TravelApprovalCard(
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
                 )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                if (travel.status.equals("approved", ignoreCase = true)) {
+                    Text(
+                        text = "Trip ID: ${travel.tripCode}",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
             }
             TravelStatusBadge(status = travel.status)
         }
@@ -812,11 +886,13 @@ private fun TravelApprovalCard(
         Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
 
         ApprovalDetailRow("Request ID", travel.requestId)
-        ApprovalDetailRow("Trip ID", travel.tripCode)
+        if (travel.status.equals("approved", ignoreCase = true)) {
+            ApprovalDetailRow("Trip ID", travel.tripCode)
+        }
         ApprovalDetailRow("Project", travel.projectId)
         ApprovalDetailRow("Submitted By", travel.employeeName)
         ApprovalDetailRow("Destination", travel.destination)
-        ApprovalDetailRow("Travel Dates", travel.travelDates)
+        ApprovalDetailRow("Travel Dates", "${travel.startDate} - ${travel.endDate}")
         ApprovalDetailRow("Estimated Cost", travel.estimatedCost, isBold = true)
         ApprovalDetailRow("Mode of Travel", travel.modeOfTravel)
         ApprovalDetailRow("Hotel", travel.hotelNeeded)
@@ -825,16 +901,16 @@ private fun TravelApprovalCard(
         ApprovalDetailRow("Requested Amount", travel.firstAdvanceRequestedAmount)
         ApprovalDetailRow("Approved Amount", travel.approvedAmount)
 
-        Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
-
         if (shouldShowDetailAction) {
+            Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
             ReviewActionRow(actionText = "View", onClick = { onRequestClick(travel) })
         }
     }
 }
 
 fun shouldShowTravelDetailAction(status: String?): Boolean {
-    return status?.equals("approved", ignoreCase = true) != true
+    return status?.equals("approved", ignoreCase = true) != true &&
+        status?.equals("rejected", ignoreCase = true) != true
 }
 
 @Composable
@@ -951,6 +1027,36 @@ private fun ReviewActionRow(actionText: String, onClick: () -> Unit = {}) {
             fontFamily = GraphikFontFamily,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+private fun ExpenseReviewActionRow(
+    onViewDetails: () -> Unit,
+    onDownload: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Visibility,
+            contentDescription = "View Details",
+            tint = PrimaryRed,
+            modifier = Modifier
+                .size(22.dp)
+                .clickable { onViewDetails() },
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Icon(
+            imageVector = Icons.Default.Download,
+            contentDescription = "Download",
+            tint = PrimaryRed,
+            modifier = Modifier
+                .size(22.dp)
+                .clickable { onDownload() },
         )
     }
 }

@@ -1,0 +1,12 @@
+{
+  "id": 0,
+  "documents": [
+    {
+      "filetype": "others",
+      "sub_category": null,
+      "overall_document_confidence": 0.0,
+      "verifiability_message": "string",
+      "processed_data": {}
+    }
+  ]
+}

@@ -62,6 +62,13 @@ interface ExpenseTripService {
         @Query("vehicle_type") vehicleType: String,
     ): Response<VehicleAssetsResponse>
 
+    @GET("v1/vehicles")
+    suspend fun getVehicles(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 10,
+        @Query("type") type: String,
+    ): Response<VehicleListResponse>
+
     @POST("v1/travel-expenses/mileage-rate")
     suspend fun getMileageRate(
         @Body request: MileageRateRequest,

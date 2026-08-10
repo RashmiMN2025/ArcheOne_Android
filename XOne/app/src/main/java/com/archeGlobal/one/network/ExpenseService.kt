@@ -19,6 +19,7 @@ interface ExpenseService {
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 10,
         @Query("status") statuses: List<String>? = null,
+        @Query("category") category: String? = null,
     ): Response<ExpensesListResponse>
 
     @GET("v1/expenses/list")
@@ -62,4 +63,10 @@ interface ExpenseService {
         @Part file: MultipartBody.Part,
         @Part("filename") filename: RequestBody? = null,
     ): Response<UploadExpenseResponse>
+
+    @POST("v1/user-expenses/{user_expense_id}/status")
+    suspend fun updateUserExpenseStatus(
+        @Path("user_expense_id") userExpenseId: Int,
+        @Body request: UserExpenseStatusUpdateRequest,
+    ): Response<UserExpenseStatusUpdateResponse>
 }

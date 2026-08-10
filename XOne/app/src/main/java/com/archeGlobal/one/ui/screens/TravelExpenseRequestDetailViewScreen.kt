@@ -131,7 +131,7 @@ fun TravelExpenseRequestDetailViewScreen(
                     requestId = request.requestId,
                     destination = request.destination,
                     status = request.status,
-                    travelDates = request.travelDates,
+                    travelDates = "${request.startDate} - ${request.endDate}",
                 )
 
                 ExpenseRequestDetailCard(title = "Employee Details") {

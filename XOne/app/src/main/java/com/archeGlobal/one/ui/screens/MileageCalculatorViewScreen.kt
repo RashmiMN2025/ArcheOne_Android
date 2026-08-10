@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -54,6 +55,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -66,6 +68,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -73,6 +76,7 @@ import androidx.compose.runtime.Composable
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -85,6 +89,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.unit.dp
@@ -168,17 +173,25 @@ private data class MileageTripUi(
     val status: String
 )
 
+private data class RouteStop(
+    val name: String = "",
+    val point: GeoPoint? = null,
+)
+
 internal fun buildVehicleDropdownOptions(
     vehicleOwner: String,
     vehicleAssets: List<VehicleAssetItem>,
+    personalVehicles: List<com.archeGlobal.one.network.VehicleItem> = emptyList(),
 ): List<String> {
-    if (!vehicleOwner.equals("COMPANY", ignoreCase = true)) {
-        return emptyList()
+    return when {
+        vehicleOwner.equals("COMPANY", ignoreCase = true) -> vehicleAssets
+            .mapNotNull { it.makeModel?.takeIf(String::isNotBlank) }
+            .distinct()
+        vehicleOwner.equals("PERSONAL", ignoreCase = true) -> personalVehicles
+            .mapNotNull { it.makeModel?.takeIf(String::isNotBlank) }
+            .distinct()
+        else -> emptyList()
     }
-
-    return vehicleAssets
-        .mapNotNull { it.makeModel?.takeIf(String::isNotBlank) }
-        .distinct()
 }
 
 private fun buildAddressDisplayName(address: Address?, fallbackPoint: GeoPoint? = null): String {
@@ -300,11 +313,18 @@ private fun getCurrentGeoPoint(context: Context, onResult: (GeoPoint?) -> Unit) 
     }
 }
 
-private fun calculateDistanceInKm(startPoint: GeoPoint?, endPoint: GeoPoint?): String {
-    if (startPoint == null || endPoint == null) {
-        return ""
+@OptIn(ExperimentalMaterial3Api::class)
+private fun notAfterTodaySelectableDates(minMillis: Long? = null): SelectableDates {
+    val maxMillis = System.currentTimeMillis()
+    return object : SelectableDates {
+        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+            if (minMillis != null && utcTimeMillis < minMillis) return false
+            return utcTimeMillis <= maxMillis
+        }
     }
+}
 
+private fun haversineKm(startPoint: GeoPoint, endPoint: GeoPoint): Double {
     val earthRadiusKm = 6371.0
     val latDistance = Math.toRadians(endPoint.latitude - startPoint.latitude)
     val lonDistance = Math.toRadians(endPoint.longitude - startPoint.longitude)
@@ -315,9 +335,16 @@ private fun calculateDistanceInKm(startPoint: GeoPoint?, endPoint: GeoPoint?): S
         Math.cos(startLat) * Math.cos(endLat) *
         Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2)
     val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    val distance = earthRadiusKm * c
+    return earthRadiusKm * c
+}
 
-    return BigDecimal(distance).setScale(1, RoundingMode.HALF_UP).toPlainString()
+private fun calculateRouteDistanceInKm(points: List<GeoPoint>): String {
+    if (points.size < 2) {
+        return ""
+    }
+
+    val totalKm = points.zipWithNext().sumOf { (a, b) -> haversineKm(a, b) }
+    return BigDecimal(totalKm).setScale(1, RoundingMode.HALF_UP).toPlainString()
 }
 
 private fun searchGeoPoint(context: Context, query: String, onResult: (GeoPoint?, String) -> Unit) {
@@ -454,6 +481,7 @@ fun MileageCalculatorViewScreen(onBack: () -> Unit) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(IntrinsicSize.Min)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -464,19 +492,19 @@ fun MileageCalculatorViewScreen(onBack: () -> Unit) {
                         title = "Total distance logged",
                         value = "$totalDistance km",
                         icon = Icons.Default.DirectionsCar,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                     MileageStatCard(
                         title = "Total Carbon Emission",
                         value = "$totalCarbonEmission Kg CO₂e",
                         icon = Icons.Default.Eco,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                     MileageStatCard(
                         title = "Total claim amount",
                         value = "Rs $totalAmount",
                         icon = Icons.Default.Add,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                 }
             }
@@ -583,7 +611,7 @@ private fun MileageStatCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.height(125.dp),
+        modifier = modifier.heightIn(min = 125.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = 2.dp,
         backgroundColor = Color.White
@@ -604,6 +632,8 @@ private fun MileageStatCard(
                     fontFamily = GraphikFontFamily,
                     fontSize = 12.sp,
                     color = Color.Gray,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 4.dp)
@@ -620,7 +650,9 @@ private fun MileageStatCard(
                 fontFamily = GraphikFontFamily,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black
+                color = Color.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -772,6 +804,9 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
     val vehicleAssets by tripController.vehicleAssets
     val vehicleAssetsLoading by tripController.vehicleAssetsLoading
     val vehicleAssetsError by tripController.vehicleAssetsError
+    val personalVehicles by tripController.personalVehicles
+    val personalVehiclesLoading by tripController.personalVehiclesLoading
+    val personalVehiclesError by tripController.personalVehiclesError
     val mileageRate by tripController.mileageRate
     val mileageRateLoading by tripController.mileageRateLoading
     val mileageRateError by tripController.mileageRateError
@@ -787,7 +822,6 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
     var showFromDatePicker by rememberSaveable { mutableStateOf(false) }
     var showToDatePicker by rememberSaveable { mutableStateOf(false) }
     var startLocation by rememberSaveable { mutableStateOf("") }
-    var destination by rememberSaveable { mutableStateOf("") }
     var distance by rememberSaveable { mutableStateOf("") }
     var vehicleOwner by rememberSaveable { mutableStateOf("") }
     var vehicleType by rememberSaveable { mutableStateOf("") }
@@ -795,8 +829,9 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
     var calculatedPrice by rememberSaveable { mutableStateOf("") }
     var showMapPicker by rememberSaveable { mutableStateOf(false) }
     var locationFieldMode by rememberSaveable { mutableStateOf("start") }
+    var activeDestinationIndex by rememberSaveable { mutableStateOf(0) }
     var startPoint by rememberSaveable { mutableStateOf<GeoPoint?>(null) }
-    var destinationPoint by rememberSaveable { mutableStateOf<GeoPoint?>(null) }
+    val destinationStops = remember { mutableStateListOf(RouteStop()) }
     val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) {
@@ -811,22 +846,30 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
         listOf("No project options available")
     }
     val selectedProject = projectOptions.firstOrNull { it.code == selectedProjectCode }
-    val vehicleDropdownOptions = buildVehicleDropdownOptions(vehicleOwner, vehicleAssets)
+    val vehicleDropdownOptions = buildVehicleDropdownOptions(vehicleOwner, vehicleAssets, personalVehicles)
+    val destinationPoints = destinationStops.map { it.point }
+    val destinationNames = destinationStops.map { it.name }
 
     LaunchedEffect(vehicleOwner, vehicleType) {
-        if (vehicleOwner.equals("COMPANY", ignoreCase = true) && vehicleType.isNotBlank()) {
-            tripController.fetchVehicleAssets(vehicleType)
-        } else {
-            tripController.vehicleAssets.value = emptyList()
+        when {
+            vehicleOwner.equals("COMPANY", ignoreCase = true) && vehicleType.isNotBlank() -> {
+                tripController.fetchVehicleAssets(vehicleType)
+                tripController.personalVehicles.value = emptyList()
+            }
+            vehicleOwner.equals("PERSONAL", ignoreCase = true) && vehicleType.isNotBlank() -> {
+                tripController.fetchPersonalVehicles(vehicleType)
+                tripController.vehicleAssets.value = emptyList()
+            }
+            else -> {
+                tripController.vehicleAssets.value = emptyList()
+                tripController.personalVehicles.value = emptyList()
+            }
         }
     }
 
-    LaunchedEffect(startPoint, destinationPoint) {
-        if (startPoint != null && destinationPoint != null) {
-            distance = calculateDistanceInKm(startPoint, destinationPoint)
-        } else {
-            distance = ""
-        }
+    LaunchedEffect(startPoint, destinationPoints) {
+        val routePoints = listOfNotNull(startPoint) + destinationPoints.filterNotNull()
+        distance = if (routePoints.size >= 2) calculateRouteDistanceInKm(routePoints) else ""
     }
 
     LaunchedEffect(
@@ -835,19 +878,20 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
         fromDateMillis,
         toDateMillis,
         startLocation,
-        destination,
+        destinationNames,
         distance,
         vehicleOwner,
         vehicleType,
         vehicle,
         vehicleAssets,
+        personalVehicles,
     ) {
         val hasRequiredFields = customerName.isNotBlank() &&
             selectedProjectCode.isNotBlank() &&
             fromDateMillis != null &&
             toDateMillis != null &&
             startLocation.isNotBlank() &&
-            destination.isNotBlank() &&
+            destinationNames.all { it.isNotBlank() } &&
             distance.isNotBlank() &&
             vehicleOwner.isNotBlank() &&
             vehicleType.isNotBlank() &&
@@ -858,15 +902,21 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
             return@LaunchedEffect
         }
 
-        val selectedVehicle = vehicleAssets.firstOrNull { it.makeModel.equals(vehicle, ignoreCase = true) }
+        val selectedVehicleId = when {
+            vehicleOwner.equals("COMPANY", ignoreCase = true) ->
+                vehicleAssets.firstOrNull { it.makeModel.equals(vehicle, ignoreCase = true) }?.id
+            vehicleOwner.equals("PERSONAL", ignoreCase = true) ->
+                personalVehicles.firstOrNull { it.makeModel.equals(vehicle, ignoreCase = true) }?.id
+            else -> null
+        }
         val parsedDistance = distance.toBigDecimalOrNull()
-        if (selectedVehicle?.id == null || parsedDistance == null) {
+        if (selectedVehicleId == null || parsedDistance == null) {
             calculatedPrice = ""
             return@LaunchedEffect
         }
 
         tripController.fetchMileageRate(
-            vehicleId = selectedVehicle.id,
+            vehicleId = selectedVehicleId,
             vehicleOwnershipType = vehicleOwner,
             vehicleType = vehicleType,
             onSuccess = { rateValue ->
@@ -1032,15 +1082,37 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                         showMapPicker = true
                     },
                 )
-                MileageLocationField(
-                    label = "Destination",
-                    placeholder = "Select destination",
-                    value = destination,
-                    onClick = {
-                        locationFieldMode = "destination"
-                        showMapPicker = true
-                    },
-                )
+                destinationStops.forEachIndexed { index, stop ->
+                    MileageLocationField(
+                        label = if (index == 0) "Destination" else "Destination ${index + 1}",
+                        placeholder = "Select destination",
+                        value = stop.name,
+                        onClick = {
+                            locationFieldMode = "destination"
+                            activeDestinationIndex = index
+                            showMapPicker = true
+                        },
+                        trailingIcon = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (index > 0) {
+                                    IconButton(onClick = {
+                                        destinationStops.removeAt(index)
+                                        if (activeDestinationIndex >= destinationStops.size) {
+                                            activeDestinationIndex = destinationStops.lastIndex.coerceAtLeast(0)
+                                        }
+                                    }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Remove location", tint = PrimaryRed)
+                                    }
+                                }
+                                if (index == destinationStops.lastIndex) {
+                                    IconButton(onClick = { destinationStops.add(RouteStop()) }) {
+                                        Icon(Icons.Default.Add, contentDescription = "Add location", tint = PrimaryRed)
+                                    }
+                                }
+                            }
+                        },
+                    )
+                }
                 MileageFormInput(
                     label = "Distance (km)",
                     placeholder = "Enter distance in km",
@@ -1067,7 +1139,9 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                         modifier = Modifier.weight(1f)
                     )
                 }
-                if (vehicleAssetsLoading) {
+                val vehicleListLoading = if (vehicleOwner.equals("PERSONAL", ignoreCase = true)) personalVehiclesLoading else vehicleAssetsLoading
+                val vehicleListError = if (vehicleOwner.equals("PERSONAL", ignoreCase = true)) personalVehiclesError else vehicleAssetsError
+                if (vehicleListLoading) {
                     Text(
                         text = "Loading vehicles...",
                         fontFamily = GraphikFontFamily,
@@ -1075,9 +1149,9 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                         color = Color.Gray,
                     )
                 }
-                if (!vehicleAssetsError.isNullOrBlank()) {
+                if (!vehicleListError.isNullOrBlank()) {
                     Text(
-                        text = vehicleAssetsError!!,
+                        text = vehicleListError,
                         fontFamily = GraphikFontFamily,
                         fontSize = 14.sp,
                         color = PrimaryRed,
@@ -1089,6 +1163,7 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                     options = vehicleDropdownOptions,
                     onValueChange = { vehicle = it },
                     enabled = vehicleDropdownOptions.isNotEmpty(),
+                    placeholder = if (vehicleDropdownOptions.isEmpty()) "No vehicles available" else "Select",
                 )
 
                 if (mileageRateLoading) {
@@ -1122,7 +1197,13 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                 onClick = {
                     val parsedDistance = distance.toDoubleOrNull()
                     val parsedProjectId = selectedProjectId
-                    val selectedVehicle = vehicleAssets.firstOrNull { it.makeModel.equals(vehicle, ignoreCase = true) }
+                    val selectedVehicleId = when {
+                        vehicleOwner.equals("COMPANY", ignoreCase = true) ->
+                            vehicleAssets.firstOrNull { it.makeModel.equals(vehicle, ignoreCase = true) }?.id
+                        vehicleOwner.equals("PERSONAL", ignoreCase = true) ->
+                            personalVehicles.firstOrNull { it.makeModel.equals(vehicle, ignoreCase = true) }?.id
+                        else -> null
+                    }
 
                     if (customerName.isBlank()) {
                         Toast.makeText(context, "Please enter customer name", Toast.LENGTH_SHORT).show()
@@ -1136,7 +1217,7 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                         Toast.makeText(context, "Please select both dates", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-                    if (startLocation.isBlank() || destination.isBlank()) {
+                    if (startLocation.isBlank() || destinationStops.any { it.name.isBlank() }) {
                         Toast.makeText(context, "Please select start and destination locations", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
@@ -1144,7 +1225,7 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                         Toast.makeText(context, "Please enter a valid distance", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-                    if (selectedVehicle?.id == null) {
+                    if (selectedVehicleId == null) {
                         Toast.makeText(context, "Please select a valid vehicle", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
@@ -1161,13 +1242,14 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                                 latitude = startPoint?.latitude ?: 0.0,
                                 longitude = startPoint?.longitude ?: 0.0,
                             ),
+                        ) + destinationStops.map { stop ->
                             com.archeGlobal.one.network.MileageExpenseRoutePoint(
-                                name = destination,
-                                latitude = destinationPoint?.latitude ?: 0.0,
-                                longitude = destinationPoint?.longitude ?: 0.0,
+                                name = stop.name,
+                                latitude = stop.point?.latitude ?: 0.0,
+                                longitude = stop.point?.longitude ?: 0.0,
                             )
-                        ),
-                        vehicleId = selectedVehicle?.id,
+                        },
+                        vehicleId = selectedVehicleId,
                         vehicleOwnershipType = if (vehicleOwner.equals("COMPANY", ignoreCase = true)) "company" else "personal",
                         vehicleType = vehicleType.lowercase(Locale.getDefault()),
                         distance = parsedDistance,
@@ -1199,18 +1281,18 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
     }
 
     if (showMapPicker) {
+        val activeStop = destinationStops.getOrNull(activeDestinationIndex)
         LocationPickerBottomSheet(
             title = if (locationFieldMode == "start") "Select start location" else "Select destination",
-            initialLocation = if (locationFieldMode == "start") startLocation else destination,
-            initialPoint = if (locationFieldMode == "start") startPoint else destinationPoint,
+            initialLocation = if (locationFieldMode == "start") startLocation else activeStop?.name.orEmpty(),
+            initialPoint = if (locationFieldMode == "start") startPoint else activeStop?.point,
             onDismiss = { showMapPicker = false },
             onSelectLocation = { locationName, point ->
                 if (locationFieldMode == "start") {
                     startLocation = locationName
                     startPoint = point
-                } else {
-                    destination = locationName
-                    destinationPoint = point
+                } else if (activeDestinationIndex in destinationStops.indices) {
+                    destinationStops[activeDestinationIndex] = RouteStop(name = locationName, point = point)
                 }
                 showMapPicker = false
             }
@@ -1220,7 +1302,8 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
     if (showFromDatePicker) {
         val datePickerState = rememberDatePickerState(
             initialDisplayMode = DisplayMode.Picker,
-            initialSelectedDateMillis = fromDateMillis ?: System.currentTimeMillis()
+            initialSelectedDateMillis = fromDateMillis ?: System.currentTimeMillis(),
+            selectableDates = remember { notAfterTodaySelectableDates() },
         )
         DatePickerDialog(
             onDismissRequest = { showFromDatePicker = false },
@@ -1250,7 +1333,8 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
     if (showToDatePicker) {
         val datePickerState = rememberDatePickerState(
             initialDisplayMode = DisplayMode.Picker,
-            initialSelectedDateMillis = toDateMillis ?: fromDateMillis ?: System.currentTimeMillis()
+            initialSelectedDateMillis = toDateMillis ?: fromDateMillis ?: System.currentTimeMillis(),
+            selectableDates = remember(fromDateMillis) { notAfterTodaySelectableDates(minMillis = fromDateMillis) },
         )
         DatePickerDialog(
             onDismissRequest = { showToDatePicker = false },
@@ -1283,6 +1367,7 @@ private fun MileageLocationField(
     placeholder: String,
     value: String,
     onClick: () -> Unit,
+    trailingIcon: (@Composable () -> Unit)? = null,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -1307,6 +1392,7 @@ private fun MileageLocationField(
                     tint = PrimaryRed,
                 )
             },
+            trailingIcon = trailingIcon,
             placeholder = {
                 Text(
                     text = placeholder,
@@ -1668,6 +1754,7 @@ private fun MileageDropdownField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    placeholder: String = "Select",
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -1682,7 +1769,7 @@ private fun MileageDropdownField(
         )
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
-                value = value.ifBlank { "Select" },
+                value = value.ifBlank { placeholder },
                 onValueChange = {},
                 readOnly = true,
                 enabled = false,

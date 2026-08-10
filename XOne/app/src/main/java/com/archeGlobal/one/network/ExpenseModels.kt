@@ -1,5 +1,6 @@
 package com.archeGlobal.one.network
 
+import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 
 data class ExpensesListResponse(
@@ -309,7 +310,8 @@ data class ExpenseDetailUi(
     val ownerUserId: Int? = null,
     val ownerUserEmail: String? = null,
     /** Original extracted `data` object from GET expense — required by split API. */
-    val extractedData: com.google.gson.JsonObject? = null,
+    val extractedData: JsonObject? = null,
+    val userExpenseId: Int?,
 )
 
 private fun String?.formatExpenseCategory(): String =
@@ -405,6 +407,7 @@ fun ExpenseDetailResponse.toDetailUi(): ExpenseDetailUi {
         customerName = project?.customerName?.takeIf { it.isNotBlank() }.orEmpty(),
         ownerUserId = users?.firstOrNull()?.id,
         ownerUserEmail = users?.firstOrNull()?.email,
+        userExpenseId = userExpenseId,
         extractedData = extracted?.deepCopy(),
     )
 }
@@ -516,6 +519,23 @@ data class ExpenseSubmitErrorDetail(
     @SerializedName("approval_limit") val approvalLimit: Double? = null,
     @SerializedName("remaining_daily") val remainingDaily: Double? = null,
     @SerializedName("remaining_monthly") val remainingMonthly: Double? = null,
+    @SerializedName("daily_limit") val dailyLimit: Double? = null,
+    @SerializedName("daily_spent") val dailySpent: Double? = null,
+    @SerializedName("monthly_limit") val monthlyLimit: Double? = null,
+    @SerializedName("monthly_spent") val monthlySpent: Double? = null,
+    @SerializedName("existing_expense_id") val existingExpenseId: Int? = null,
+)
+
+data class UserExpenseStatusUpdateRequest(
+    val status: String,
+)
+
+data class UserExpenseStatusUpdateResponse(
+    val id: Int? = null,
+    @SerializedName("user_expense_id") val userExpenseId: Int? = null,
+    val status: String? = null,
+    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("updated_at") val updatedAt: String? = null,
 )
 
 data class ApiValidationErrorResponse(

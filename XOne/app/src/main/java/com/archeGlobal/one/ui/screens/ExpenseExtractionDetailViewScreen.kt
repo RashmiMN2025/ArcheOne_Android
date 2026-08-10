@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
+import androidx.compose.material.Checkbox
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
@@ -41,6 +42,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.LaunchedEffect
@@ -109,6 +111,7 @@ fun ExpenseExtractionDetailViewScreen(
     expense: ExpenseDetailUi,
     onBack: () -> Unit,
     isReadOnly: Boolean = false,
+    approvalMode: Boolean = false,
 ) {
     val context = LocalContext.current
     val tripController = remember { TravelExpenseController(context) }
@@ -129,6 +132,19 @@ fun ExpenseExtractionDetailViewScreen(
     var showLimitExceededDialog by rememberSaveable { mutableStateOf(false) }
     var limitExceededDetail by rememberSaveable { mutableStateOf<ExpenseSubmitErrorDetail?>(null) }
     var limitDialogNote by rememberSaveable(expense.id) { mutableStateOf(expense.note) }
+    var showSubmitConfirmDialog by rememberSaveable { mutableStateOf(false) }
+    var showSubmitSuccessDialog by rememberSaveable { mutableStateOf(false) }
+    var submitSuccessMessage by rememberSaveable { mutableStateOf("") }
+    var duplicateExpenseDetail by rememberSaveable { mutableStateOf<ExpenseSubmitErrorDetail?>(null) }
+    var viewedDuplicateExpense by remember { mutableStateOf<ExpenseDetailUi?>(null) }
+    var showApproveConfirmDialog by rememberSaveable { mutableStateOf(false) }
+    var showRejectConfirmDialog by rememberSaveable { mutableStateOf(false) }
+    var showApprovalResultDialog by rememberSaveable { mutableStateOf(false) }
+    var approvalResultTitle by rememberSaveable { mutableStateOf("") }
+    var approvalResultMessage by rememberSaveable { mutableStateOf("") }
+    val userExpenseStatusLoading by expenseController.userExpenseStatusLoading
+    val isApprovalDecided = expense.status.equals("approved", ignoreCase = true) ||
+        expense.status.equals("rejected", ignoreCase = true)
 
     var category by rememberSaveable(expense.id) { mutableStateOf(expense.category) }
     var mode by rememberSaveable(expense.id) { mutableStateOf(expense.subCategory) }
@@ -151,6 +167,15 @@ fun ExpenseExtractionDetailViewScreen(
     var showDocumentViewer by rememberSaveable { mutableStateOf(false) }
     var showSplitDialog by rememberSaveable { mutableStateOf(false) }
 
+    if (viewedDuplicateExpense != null) {
+        ExpenseExtractionDetailViewScreen(
+            expense = viewedDuplicateExpense!!,
+            onBack = { viewedDuplicateExpense = null },
+            isReadOnly = true,
+        )
+        return
+    }
+
     BackHandler {
         onBack()
     }
@@ -171,7 +196,7 @@ fun ExpenseExtractionDetailViewScreen(
     }
     val tripCodes = trips.map { it.tripCode }.filter { it.isNotBlank() && it != "-" }
 
-    fun buildSubmitRequest(submitBehavior: String? = null): ExpenseSubmitRequest {
+    fun buildSubmitRequest(submitBehavior: String? = null, noteOverride: String? = null): ExpenseSubmitRequest {
         val payloadData = expense.extractedData?.deepCopy() ?: JsonObject()
         return ExpenseSubmitRequest(
             projectId = selectedProjectNumericId,
@@ -185,7 +210,7 @@ fun ExpenseExtractionDetailViewScreen(
             accommodationType = accommodationType.lowercase(Locale.getDefault())
                 .takeIf { it == "domestic" || it == "international" },
             data = payloadData,
-            note = limitDialogNote.ifBlank { note.ifBlank { null } },
+            note = (noteOverride ?: note).ifBlank { null },
             submitBehavior = submitBehavior,
         )
     }
@@ -241,7 +266,7 @@ fun ExpenseExtractionDetailViewScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(
-                    text = "EXP-${expense.id}",
+                    text = "EXP-${expense.userExpenseId}",
                     fontFamily = GraphikFontFamily,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -525,7 +550,59 @@ fun ExpenseExtractionDetailViewScreen(
                     }
                 }
 
-                if (!isReadOnly) {
+                if (approvalMode && !isApprovalDecided) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Button(
+                        onClick = { showRejectConfirmDialog = true },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = Color(0xFFF3E8E8),
+                            contentColor = PrimaryRed,
+                        ),
+                        shape = RoundedCornerShape(14.dp),
+                        enabled = !userExpenseStatusLoading,
+                    ) {
+                        Text(
+                            text = "Reject",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                        )
+                    }
+                    Button(
+                        onClick = { showApproveConfirmDialog = true },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = PrimaryRed,
+                            contentColor = Color.White,
+                        ),
+                        shape = RoundedCornerShape(14.dp),
+                        enabled = !userExpenseStatusLoading,
+                    ) {
+                        if (userExpenseStatusLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            Text(
+                                text = "Approve",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                            )
+                        }
+                    }
+                }
+                } else if (!isReadOnly) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -578,22 +655,7 @@ fun ExpenseExtractionDetailViewScreen(
                                 Toast.makeText(context, "SO Number is required", Toast.LENGTH_SHORT).show()
                                 return@Button
                             }
-                            expenseController.submitExpense(
-                                expenseId = expense.id,
-                                request = buildSubmitRequest(),
-                                onSuccess = { response ->
-                                    Toast.makeText(context, "Expense submitted successfully", Toast.LENGTH_LONG).show()
-                                    onBack()
-                                },
-                                onLimitExceeded = { detail ->
-                                    limitExceededDetail = detail
-                                    limitDialogNote = note
-                                    showLimitExceededDialog = true
-                                },
-                                onError = { message ->
-                                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                                },
-                            )
+                            showSubmitConfirmDialog = true
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -625,6 +687,128 @@ fun ExpenseExtractionDetailViewScreen(
         )
     }
 
+    if (showSubmitConfirmDialog) {
+        ExpenseConfirmationDialog(
+            title = "Submit Expense",
+            message = "Are you sure you want to submit this expense for approval?",
+            confirmText = "Submit",
+            onConfirm = {
+                showSubmitConfirmDialog = false
+                expenseController.submitExpense(
+                    expenseId = expense.id,
+                    request = buildSubmitRequest(),
+                    onSuccess = { response ->
+                        submitSuccessMessage = "Expense submitted successfully"
+                        showSubmitSuccessDialog = true
+                    },
+                    onLimitExceeded = { detail ->
+                        limitExceededDetail = detail
+                        limitDialogNote = note
+                        showLimitExceededDialog = true
+                    },
+                    onDuplicateExpense = { detail ->
+                        duplicateExpenseDetail = detail
+                    },
+                    onError = { message ->
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                    },
+                )
+            },
+            onDismiss = { showSubmitConfirmDialog = false },
+        )
+    }
+
+    if (showSubmitSuccessDialog) {
+        ExpenseConfirmationDialog(
+            title = "Success",
+            message = submitSuccessMessage,
+            confirmText = "OK",
+            showDismissButton = false,
+            onConfirm = {
+                showSubmitSuccessDialog = false
+                onBack()
+            },
+            onDismiss = {
+                showSubmitSuccessDialog = false
+                onBack()
+            },
+        )
+    }
+
+    if (showApproveConfirmDialog) {
+        ExpenseConfirmationDialog(
+            title = "Approve Expense?",
+            message = "This expense exceeds the allowed limit. Do you want to proceed with approval?",
+            confirmText = "Approve",
+            onConfirm = {
+                showApproveConfirmDialog = false
+                val userExpenseId = expense.userExpenseId ?: expense.id.toIntOrNull()
+                if (userExpenseId == null) {
+                    Toast.makeText(context, "Unable to identify this expense", Toast.LENGTH_LONG).show()
+                } else {
+                    expenseController.updateUserExpenseStatus(
+                        userExpenseId = userExpenseId,
+                        status = "APPROVED",
+                        onSuccess = {
+                            approvalResultTitle = "Expense approved"
+                            approvalResultMessage = "The full amount has been approved successfully. This request is now complete."
+                            showApprovalResultDialog = true
+                        },
+                        onError = { message ->
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        },
+                    )
+                }
+            },
+            onDismiss = { showApproveConfirmDialog = false },
+        )
+    }
+
+    if (showRejectConfirmDialog) {
+        ExpenseConfirmationDialog(
+            title = "Do you want to reject this expense?",
+            message = "You're about to reject the expense. This action cannot be undone.",
+            confirmText = "Reject",
+            onConfirm = {
+                showRejectConfirmDialog = false
+                val userExpenseId = expense.userExpenseId ?: expense.id.toIntOrNull()
+                if (userExpenseId == null) {
+                    Toast.makeText(context, "Unable to identify this expense", Toast.LENGTH_LONG).show()
+                } else {
+                    expenseController.updateUserExpenseStatus(
+                        userExpenseId = userExpenseId,
+                        status = "REJECTED",
+                        onSuccess = {
+                            Toast.makeText(context, "Expense rejected", Toast.LENGTH_SHORT).show()
+                            onBack()
+                        },
+                        onError = { message ->
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        },
+                    )
+                }
+            },
+            onDismiss = { showRejectConfirmDialog = false },
+        )
+    }
+
+    if (showApprovalResultDialog) {
+        ExpenseConfirmationDialog(
+            title = approvalResultTitle,
+            message = approvalResultMessage,
+            confirmText = "OK",
+            showDismissButton = false,
+            onConfirm = {
+                showApprovalResultDialog = false
+                onBack()
+            },
+            onDismiss = {
+                showApprovalResultDialog = false
+                onBack()
+            },
+        )
+    }
+
     if (showLimitExceededDialog && limitExceededDetail != null) {
         ExpenseLimitExceededDialog(
             detail = limitExceededDetail!!,
@@ -635,12 +819,15 @@ fun ExpenseExtractionDetailViewScreen(
                 showLimitExceededDialog = false
                 expenseController.submitExpense(
                     expenseId = expense.id,
-                    request = buildSubmitRequest(submitBehavior = "submit_to_manager"),
+                    request = buildSubmitRequest(submitBehavior = "submit_to_manager", noteOverride = limitDialogNote),
                     onSuccess = { response ->
-                        Toast.makeText(context, "Expense submitted to manager", Toast.LENGTH_LONG).show()
-                        onBack()
+                        submitSuccessMessage = "Expense submitted to manager"
+                        showSubmitSuccessDialog = true
                     },
                     onLimitExceeded = { _ -> },
+                    onDuplicateExpense = { detail ->
+                        duplicateExpenseDetail = detail
+                    },
                     onError = { message ->
                         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                     },
@@ -650,12 +837,15 @@ fun ExpenseExtractionDetailViewScreen(
                 showLimitExceededDialog = false
                 expenseController.submitExpense(
                     expenseId = expense.id,
-                    request = buildSubmitRequest(),
+                    request = buildSubmitRequest(noteOverride = limitDialogNote),
                     onSuccess = { response ->
-                        Toast.makeText(context, "Expense submitted within limit", Toast.LENGTH_LONG).show()
-                        onBack()
+                        submitSuccessMessage = "Expense submitted within limit"
+                        showSubmitSuccessDialog = true
                     },
                     onLimitExceeded = { _ -> },
+                    onDuplicateExpense = { detail ->
+                        duplicateExpenseDetail = detail
+                    },
                     onError = { message ->
                         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                     },
@@ -663,6 +853,37 @@ fun ExpenseExtractionDetailViewScreen(
             },
             onDismiss = {
                 showLimitExceededDialog = false
+            },
+        )
+    }
+
+    if (duplicateExpenseDetail != null) {
+        val detail = duplicateExpenseDetail!!
+        ExpenseDuplicateDialog(
+            fileName = expense.name,
+            billDate = formatDuplicateBillDate(expense.billDate),
+            onViewExisting = {
+                val existingId = detail.existingExpenseId
+                if (existingId == null) {
+                    duplicateExpenseDetail = null
+                    Toast.makeText(context, "Existing expense could not be found", Toast.LENGTH_LONG).show()
+                } else {
+                    expenseController.fetchExpenseDetail(
+                        expenseId = existingId.toString(),
+                        onSuccess = { existing ->
+                            duplicateExpenseDetail = null
+                            viewedDuplicateExpense = existing
+                        },
+                        onError = { message ->
+                            duplicateExpenseDetail = null
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        },
+                    )
+                }
+            },
+            onSkip = {
+                duplicateExpenseDetail = null
+                onBack()
             },
         )
     }
@@ -688,7 +909,7 @@ fun ExpenseExtractionDetailViewScreen(
                 ?: "You",
             isSubmitting = splitLoading,
             onDismiss = { showSplitDialog = false },
-            onSplit = { currentUser, selectedUser, currentAmount, selectedAmount ->
+            onSplit = { currentUser, currentAmount, selectedUsers, selectedAmounts ->
                 if (currentUser.id <= 0) {
                     Toast.makeText(
                         context,
@@ -738,10 +959,9 @@ fun ExpenseExtractionDetailViewScreen(
                                     null
                                 },
                             ),
-                            users = listOf(
-                                SplitUserAmount(userId = currentUser.id, amount = currentAmount),
-                                SplitUserAmount(userId = selectedUser.id, amount = selectedAmount),
-                            ),
+                            users = selectedUsers.zip(selectedAmounts).map { (user, share) ->
+                                SplitUserAmount(userId = user.id, amount = share)
+                            },
                         )
                         expenseController.splitExpense(
                             expenseId = expense.id,
@@ -763,6 +983,181 @@ fun ExpenseExtractionDetailViewScreen(
 }
 
 @Composable
+private fun ExpenseConfirmationDialog(
+    title: String,
+    message: String,
+    confirmText: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    showDismissButton: Boolean = true,
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.88f)
+                .padding(vertical = 24.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = 8.dp,
+            backgroundColor = Color.White,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Text(
+                    text = title,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    color = Color.Black,
+                )
+                Text(
+                    text = message,
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (showDismissButton) {
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = Color(0xFFF0F0F0),
+                                contentColor = Color.Black,
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            Text(text = "Cancel", fontFamily = GraphikFontFamily, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = PrimaryRed,
+                            contentColor = Color.White,
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                    ) {
+                        Text(text = confirmText, fontFamily = GraphikFontFamily, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExpenseDuplicateDialog(
+    fileName: String,
+    billDate: String,
+    onViewExisting: () -> Unit,
+    onSkip: () -> Unit,
+) {
+    val details = listOfNotNull(
+        fileName.takeIf { it.isNotBlank() },
+        billDate.takeIf { it.isNotBlank() },
+    ).joinToString(", ")
+
+    Dialog(
+        onDismissRequest = onSkip,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .padding(vertical = 24.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = 8.dp,
+            backgroundColor = Color.White,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = PrimaryRed,
+                    modifier = Modifier.size(36.dp),
+                )
+                Text(
+                    text = "Duplicate bill detected",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    color = Color.Black,
+                )
+                Text(
+                    text = "A bill with the details — $details already exists. You can either view the existing bill or skip this one.",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Button(
+                        onClick = onViewExisting,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = Color(0xFFF0F0F0),
+                            contentColor = Color.Black,
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                    ) {
+                        Text(
+                            text = "View existing bill",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    Button(
+                        onClick = onSkip,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = PrimaryRed,
+                            contentColor = Color.White,
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                    ) {
+                        Text(
+                            text = "Skip duplicate",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun ExpenseLimitExceededDialog(
     detail: ExpenseSubmitErrorDetail,
     currency: String,
@@ -774,6 +1169,23 @@ private fun ExpenseLimitExceededDialog(
 ) {
     val totalAmount = detail.totalAmount ?: 0.0
     val approvalLimit = detail.approvalLimit ?: 0.0
+    fun money(value: Double) = "$currency ${String.format(Locale.getDefault(), "%.2f", value)}"
+    val explanation = when {
+        detail.totalAmount != null -> "Your expense of ${money(totalAmount)} exceeds your grade limit of " +
+            "${money(approvalLimit)}. You can auto-approve ${money(approvalLimit)} within your limit, " +
+            "or send the full amount to your manager for review."
+        detail.dailyLimit != null || detail.monthlyLimit != null -> buildString {
+            append(detail.message?.takeIf { it.isNotBlank() } ?: "Your available spending limit has been fully used.")
+            if (detail.dailyLimit != null) {
+                append(" Daily: ${money(detail.dailySpent ?: 0.0)} of ${money(detail.dailyLimit)} used.")
+            }
+            if (detail.monthlyLimit != null) {
+                append(" Monthly: ${money(detail.monthlySpent ?: 0.0)} of ${money(detail.monthlyLimit)} used.")
+            }
+            append(" You can send this expense to your manager for review.")
+        }
+        else -> detail.message?.takeIf { it.isNotBlank() } ?: "Your reimbursement amount exceeds your limit."
+    }
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -806,7 +1218,7 @@ private fun ExpenseLimitExceededDialog(
                     color = Color.Black,
                 )
                 Text(
-                    text = "Your expense of ${currency} ${String.format(Locale.getDefault(), "%.2f", totalAmount)} exceeds your grade limit of ${currency} ${String.format(Locale.getDefault(), "%.2f", approvalLimit)}. You can auto-approve ${currency} ${String.format(Locale.getDefault(), "%.2f", approvalLimit)} within your limit, or send the full amount to your manager for review.",
+                    text = explanation,
                     fontFamily = GraphikFontFamily,
                     fontSize = 14.sp,
                     color = Color.Gray,
@@ -859,23 +1271,6 @@ private fun ExpenseLimitExceededDialog(
                             textAlign = TextAlign.Center,
                         )
                     }
-                    Button(
-                        onClick = onSubmitLimit,
-                        modifier = Modifier.weight(1f).height(50.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = Color(0xFFF6F4EE),
-                            contentColor = Color.Black,
-                        ),
-                    ) {
-                        Text(
-                            text = "Submit only limit amount",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
                 }
             }
         }
@@ -893,14 +1288,13 @@ private fun SplitExpensesDialog(
     onDismiss: () -> Unit,
     onSplit: (
         currentUser: ExpenseUserOption,
-        selectedUser: ExpenseUserOption,
         currentAmount: Double,
-        selectedAmount: Double,
+        selectedUsers: List<ExpenseUserOption>,
+        selectedAmounts: List<Double>,
     ) -> Unit,
 ) {
     var searchText by rememberSaveable { mutableStateOf("") }
-    var selectedMember by remember { mutableStateOf<ExpenseUserOption?>(null) }
-    var showSuggestions by remember { mutableStateOf(false) }
+    var selectedMembers by remember { mutableStateOf<List<ExpenseUserOption>>(emptyList()) }
 
     val currentUser = remember(userOptions, currentUserId, currentUserFallbackName) {
         userOptions.firstOrNull { it.id == currentUserId }
@@ -922,11 +1316,17 @@ private fun SplitExpensesDialog(
         }
     }
 
-    val (currentShare, selectedShare) = remember(totalAmount, selectedMember) {
-        if (selectedMember == null) {
-            totalAmount to 0.0
+    val shares = remember(totalAmount, selectedMembers) {
+        splitAmountEqually(totalAmount, selectedMembers.size + 1)
+    }
+    val currentShare = shares.firstOrNull() ?: totalAmount
+    val selectedShares = if (shares.isEmpty()) emptyList() else shares.drop(1)
+
+    fun toggleMember(member: ExpenseUserOption) {
+        selectedMembers = if (selectedMembers.any { it.id == member.id }) {
+            selectedMembers.filterNot { it.id == member.id }
         } else {
-            splitAmountEqually(totalAmount)
+            selectedMembers + member
         }
     }
 
@@ -981,15 +1381,7 @@ private fun SplitExpensesDialog(
                 )
                 OutlinedTextField(
                     value = searchText,
-                    onValueChange = {
-                        searchText = it
-                        showSuggestions = true
-                        if (selectedMember != null &&
-                            !selectedMember!!.displayName.equals(it, ignoreCase = true)
-                        ) {
-                            selectedMember = null
-                        }
-                    },
+                    onValueChange = { searchText = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     placeholder = {
@@ -1007,7 +1399,7 @@ private fun SplitExpensesDialog(
                     ),
                 )
 
-                if (showSuggestions && filteredMembers.isNotEmpty() && selectedMember == null) {
+                if (filteredMembers.isNotEmpty()) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1018,33 +1410,29 @@ private fun SplitExpensesDialog(
                     ) {
                         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                             filteredMembers.forEach { member ->
-                                Text(
-                                    text = member.displayName,
-                                    fontFamily = GraphikFontFamily,
-                                    fontSize = 15.sp,
-                                    color = Color.Black,
+                                val isSelected = selectedMembers.any { it.id == member.id }
+                                Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable {
-                                            selectedMember = member
-                                            searchText = member.displayName
-                                            showSuggestions = false
-                                        }
-                                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                                )
+                                        .clickable { toggleMember(member) }
+                                        .padding(horizontal = 8.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Checkbox(
+                                        checked = isSelected,
+                                        onCheckedChange = { toggleMember(member) },
+                                    )
+                                    Text(
+                                        text = member.displayName,
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 15.sp,
+                                        color = Color.Black,
+                                        modifier = Modifier.padding(start = 4.dp),
+                                    )
+                                }
                             }
                         }
                     }
-                }
-
-                if (selectedMember != null) {
-                    Text(
-                        text = "Selected: ${selectedMember!!.displayName}",
-                        fontFamily = GraphikFontFamily,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = PrimaryRed,
-                    )
                 }
 
                 SplitMemberAmountRow(
@@ -1053,27 +1441,27 @@ private fun SplitExpensesDialog(
                     subtitle = "You",
                 )
 
-                if (selectedMember != null) {
+                selectedMembers.forEachIndexed { index, member ->
                     SplitMemberAmountRow(
-                        name = selectedMember!!.displayName,
-                        amountText = formatMoney(selectedShare, currency),
+                        name = member.displayName,
+                        amountText = formatMoney(selectedShares.getOrElse(index) { 0.0 }, currency),
                         subtitle = "Shared",
+                        onRemove = { toggleMember(member) },
                     )
                 }
 
                 Button(
                     onClick = {
-                        val member = selectedMember
                         when {
                             currentUser.id <= 0 -> Unit
-                            member == null -> Unit
-                            else -> onSplit(currentUser, member, currentShare, selectedShare)
+                            selectedMembers.isEmpty() -> Unit
+                            else -> onSplit(currentUser, currentShare, selectedMembers, selectedShares)
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
-                    enabled = selectedMember != null && currentUser.id > 0 && !isSubmitting && totalAmount > 0,
+                    enabled = selectedMembers.isNotEmpty() && currentUser.id > 0 && !isSubmitting && totalAmount > 0,
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = PrimaryRed,
                         contentColor = Color.White,
@@ -1106,6 +1494,7 @@ private fun SplitMemberAmountRow(
     name: String,
     amountText: String,
     subtitle: String,
+    onRemove: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
@@ -1130,13 +1519,25 @@ private fun SplitMemberAmountRow(
                 color = Color.Gray,
             )
         }
-        Text(
-            text = amountText,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 15.sp,
-            color = Color.Black,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = amountText,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = Color.Black,
+            )
+            if (onRemove != null) {
+                IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Remove member",
+                        tint = PrimaryRed,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -1194,11 +1595,28 @@ private fun formatSplitDisplayDate(raw: String?): String? {
     }
 }
 
-private fun splitAmountEqually(total: Double): Pair<Double, Double> {
-    val cents = (total * 100).roundToLong()
-    val first = cents / 2
-    val second = cents - first
-    return (first / 100.0) to (second / 100.0)
+private fun formatDuplicateBillDate(raw: String?): String {
+    val value = raw?.trim().orEmpty()
+    if (value.isBlank() || value == "-") return ""
+    val iso = normalizeExpenseDate(value) ?: return value
+    return try {
+        val parser = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = parser.parse(iso) ?: return value
+        java.text.SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(date)
+    } catch (_: Exception) {
+        value
+    }
+}
+
+private fun splitAmountEqually(total: Double, parts: Int): List<Double> {
+    if (parts <= 0) return emptyList()
+    val totalCents = (total * 100).roundToLong()
+    val baseCents = totalCents / parts
+    val remainder = totalCents - (baseCents * parts)
+    return (0 until parts).map { index ->
+        val cents = if (index < remainder) baseCents + 1 else baseCents
+        cents / 100.0
+    }
 }
 
 private fun formatMoney(amount: Double, currency: String): String {

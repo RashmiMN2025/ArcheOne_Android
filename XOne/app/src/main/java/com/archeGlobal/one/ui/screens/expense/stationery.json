@@ -1,0 +1,53 @@
+{
+  "id": 0,
+  "documents": [
+    {
+      "filetype": "stationery",
+      "sub_category": null,
+      "overall_document_confidence": 0.0,
+      "verifiability_message": "string",
+      "processed_data": {
+        "document_id": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "vendor_name": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "grand_total_After_GST": {
+          "value": "0.00",
+          "confidence_score": 0
+        },
+        "currency": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "date": {
+          "value": "dd/mm/yyyy",
+          "confidence_score": 0
+        },
+        "project_id": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "table_contents": [
+          {
+            "description": {
+              "value": "string",
+              "confidence_score": 0
+            },
+            "quantity": {
+              "value": "0",
+              "confidence_score": 0
+            },
+            "unit_price": {
+              "value": "0.00",
+              "confidence_score": 0
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

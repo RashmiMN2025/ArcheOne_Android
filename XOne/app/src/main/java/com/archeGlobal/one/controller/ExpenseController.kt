@@ -36,6 +36,9 @@ class ExpenseController(private val context: Context) {
     var submittedExpenses = mutableStateOf<List<SubmittedExpenseUi>>(emptyList())
     var submittedLoading = mutableStateOf(false)
     var submittedError = mutableStateOf<String?>(null)
+    var otherExpenses = mutableStateOf<List<ExpenseUi>>(emptyList())
+    var otherLoading = mutableStateOf(false)
+    var otherError = mutableStateOf<String?>(null)
     var approvalExpenses = mutableStateOf<List<SubmittedExpenseUi>>(emptyList())
     var approvalExpensesLoading = mutableStateOf(false)
     var approvalExpensesError = mutableStateOf<String?>(null)
@@ -44,6 +47,7 @@ class ExpenseController(private val context: Context) {
     var userOptions = mutableStateOf<List<ExpenseUserOption>>(emptyList())
     var userOptionsLoading = mutableStateOf(false)
     var splitLoading = mutableStateOf(false)
+    var userExpenseStatusLoading = mutableStateOf(false)
 
     fun getStoredExpenseUserId(): Int = preferencesManager.getInt(KEY_EXPENSE_USER_ID, -1)
 
@@ -81,6 +85,48 @@ class ExpenseController(private val context: Context) {
             } finally {
                 withContext(Dispatchers.Main) {
                     isLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun fetchOtherExpenses(page: Int = 1, perPage: Int = 10) {
+        otherLoading.value = true
+        otherError.value = null
+
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.expenseService.getExpenses(
+                    page = page,
+                    perPage = perPage,
+                    statuses = listOf("Extracted"),
+                    category = "others",
+                )
+                if (response.isSuccessful) {
+                    val items = response.body()?.data?.map { it.toUi() }.orEmpty()
+                    withContext(Dispatchers.Main) {
+                        otherExpenses.value = items
+                        otherError.value = null
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch other expenses: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        otherExpenses.value = emptyList()
+                        otherError.value = parseErrorMessage(errorBody, "Failed to load expenses (${response.code()})")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching other expenses: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    otherExpenses.value = emptyList()
+                    otherError.value = e.message ?: "Failed to load expenses"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    otherLoading.value = false
                 }
             }
         }
@@ -334,6 +380,50 @@ class ExpenseController(private val context: Context) {
         }
     }
 
+    fun updateUserExpenseStatus(
+        userExpenseId: Int,
+        status: String,
+        onSuccess: (com.archeGlobal.one.network.UserExpenseStatusUpdateResponse) -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        userExpenseStatusLoading.value = true
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.expenseService.updateUserExpenseStatus(
+                    userExpenseId = userExpenseId,
+                    request = com.archeGlobal.one.network.UserExpenseStatusUpdateRequest(status = status),
+                )
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    withContext(Dispatchers.Main) {
+                        if (body != null) {
+                            onSuccess(body)
+                        } else {
+                            onError("Empty response")
+                        }
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to update user expense status: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        onError(parseErrorMessage(errorBody, "Failed to update status (${response.code()})"))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception updating user expense status: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to update status")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    userExpenseStatusLoading.value = false
+                }
+            }
+        }
+    }
+
     fun splitExpense(
         expenseId: String,
         request: SplitExpenseRequest,
@@ -427,6 +517,7 @@ class ExpenseController(private val context: Context) {
         request: com.archeGlobal.one.network.ExpenseSubmitRequest,
         onSuccess: (com.archeGlobal.one.network.ExpenseSubmitResponse) -> Unit,
         onLimitExceeded: (com.archeGlobal.one.network.ExpenseSubmitErrorDetail) -> Unit,
+        onDuplicateExpense: (com.archeGlobal.one.network.ExpenseSubmitErrorDetail) -> Unit,
         onError: (String) -> Unit,
     ) {
         isLoading.value = true
@@ -454,18 +545,26 @@ class ExpenseController(private val context: Context) {
                     }
                     val detail = parsed?.detail
                     val fallbackError = "Failed to submit expense (${response.code()})"
-                    if (detail != null &&
-                        (detail.errorCode == "LIMIT_EXCEEDED" ||
-                            detail.message?.contains("Amount exceeds available spending limit.", ignoreCase = true) == true)
-                    ) {
-                        withContext(Dispatchers.Main) {
-                            onLimitExceeded(detail)
+                    when {
+                        detail != null &&
+                            (detail.errorCode == "LIMIT_EXCEEDED" ||
+                                detail.errorCode == "LIMIT_EXHAUSTED" ||
+                                detail.message?.contains("spending limit", ignoreCase = true) == true) -> {
+                            withContext(Dispatchers.Main) {
+                                onLimitExceeded(detail)
+                            }
                         }
-                    } else {
-                        val errorMessage = detail?.message?.takeIf { it.isNotBlank() }
-                            ?: parseErrorMessage(errorBody, fallbackError)
-                        withContext(Dispatchers.Main) {
-                            onError(errorMessage)
+                        detail != null && detail.errorCode == "DUPLICATE_EXPENSE" -> {
+                            withContext(Dispatchers.Main) {
+                                onDuplicateExpense(detail)
+                            }
+                        }
+                        else -> {
+                            val errorMessage = detail?.message?.takeIf { it.isNotBlank() }
+                                ?: parseErrorMessage(errorBody, fallbackError)
+                            withContext(Dispatchers.Main) {
+                                onError(errorMessage)
+                            }
                         }
                     }
                 }

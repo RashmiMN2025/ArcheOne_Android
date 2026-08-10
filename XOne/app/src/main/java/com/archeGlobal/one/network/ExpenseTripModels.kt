@@ -444,3 +444,20 @@ data class VehicleAssetOperator(
     @SerializedName("first_name") val firstName: String?,
     @SerializedName("last_name") val lastName: String?,
 )
+
+data class VehicleListResponse(
+    val total: Int,
+    val page: Int,
+    @SerializedName("per_page") val perPage: Int,
+    @SerializedName("has_next_page") val hasNextPage: Boolean,
+    val vehicles: List<VehicleItem>,
+)
+
+data class VehicleItem(
+    val id: Int,
+    val type: String?,
+    @SerializedName("engine_cc") val engineCc: Int?,
+    @SerializedName("registration_number") val registrationNumber: String?,
+    @SerializedName("make_model") val makeModel: String?,
+    @SerializedName("fuel_type") val fuelType: String?,
+)

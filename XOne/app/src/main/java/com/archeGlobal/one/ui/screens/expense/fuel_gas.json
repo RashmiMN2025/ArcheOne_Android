@@ -1,0 +1,101 @@
+{
+  "id": 0,
+  "documents": [
+    {
+      "filetype": "fuel_gas",
+      "sub_category": null,
+      "overall_document_confidence": 0.0,
+      "verifiability_message": "string",
+      "processed_data": {
+        "document_id": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "vendor_name": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "grand_total_After_GST": {
+          "value": "0.00",
+          "confidence_score": 0
+        },
+        "currency": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "date": {
+          "value": "dd/mm/yyyy",
+          "confidence_score": 0
+        },
+        "project_id": {
+          "value": "string",
+          "confidence_score": 0
+        },
+        "vendor_details": {
+          "gstin": {
+            "value": "string",
+            "confidence_score": 0
+          },
+          "bunk_name": {
+            "value": "string",
+            "confidence_score": 0
+          },
+          "bunk_address": {
+            "value": "string",
+            "confidence_score": 0
+          }
+        },
+        "transaction_details": {
+          "fuel_type": {
+            "value": "string",
+            "confidence_score": 0
+          },
+          "bill_no": {
+            "value": "string",
+            "confidence_score": 0
+          },
+          "transaction_id": {
+            "value": "string",
+            "confidence_score": 0
+          },
+          "date": {
+            "value": "dd/mm/yyyy",
+            "confidence_score": 0
+          },
+          "time": {
+            "value": "string",
+            "confidence_score": 0
+          },
+          "vehicle_no": {
+            "value": "string",
+            "confidence_score": 0
+          },
+          "volume_liters": {
+            "value": "0.00",
+            "confidence_score": 0
+          },
+          "rate_per_litre": {
+            "value": "0.00",
+            "confidence_score": 0
+          },
+          "payment_mode": {
+            "value": "string",
+            "confidence_score": 0
+          },
+          "nozzle_no": {
+            "value": "string",
+            "confidence_score": 0
+          },
+          "bay_no": {
+            "value": "string",
+            "confidence_score": 0
+          }
+        },
+        "total_gst": {
+          "value": "0.00",
+          "confidence_score": 0
+        }
+      }
+    }
+  ]
+}

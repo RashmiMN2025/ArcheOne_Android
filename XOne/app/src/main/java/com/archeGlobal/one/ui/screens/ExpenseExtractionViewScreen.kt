@@ -68,6 +68,7 @@ import android.net.Uri
 import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.icons.filled.Close
@@ -136,7 +137,7 @@ private fun dateFormate(dateString: String): String {
     }
 }
 
-private enum class ExpenseTab { Drafts, Submitted }
+private enum class ExpenseTab { Drafts, Submitted, Other }
 
 private data class DraftExpenseItem(
     val id: String,
@@ -147,6 +148,7 @@ private data class DraftExpenseItem(
     val status: String,
     val uploadedAt: String,
     val source: ExpenseUi,
+    val userExpenseId: String = "EXP-${source.userExpenseId}",
 )
 
 @Composable
@@ -165,22 +167,28 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
 
     val allExpenses by controller.expenses
     val submittedExpenses by controller.submittedExpenses
+    val otherExpenses by controller.otherExpenses
     val projectOptions by travelController.projectOptions
     val tripOptions by travelController.tripOptions
     val isLoading by controller.isLoading
     val submittedLoading by controller.submittedLoading
+    val otherLoading by controller.otherLoading
     val detailLoading by controller.detailLoading
     val downloadLoading by controller.downloadLoading
+
+    fun refetchForSelectedTab() {
+        when (selectedTab) {
+            ExpenseTab.Drafts -> controller.fetchExpenses()
+            ExpenseTab.Submitted -> controller.fetchSubmittedExpenses()
+            ExpenseTab.Other -> controller.fetchOtherExpenses()
+        }
+    }
 
     if (selectedExpenseDetail != null) {
         BackHandler {
             selectedExpenseDetail = null
             isDetailReadOnly = false
-            if (selectedTab == ExpenseTab.Drafts) {
-                controller.fetchExpenses()
-            } else {
-                controller.fetchSubmittedExpenses()
-            }
+            refetchForSelectedTab()
         }
         ExpenseExtractionDetailViewScreen(
             expense = selectedExpenseDetail!!,
@@ -188,11 +196,7 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
             onBack = {
                 selectedExpenseDetail = null
                 isDetailReadOnly = false
-                if (selectedTab == ExpenseTab.Drafts) {
-                    controller.fetchExpenses()
-                } else {
-                    controller.fetchSubmittedExpenses()
-                }
+                refetchForSelectedTab()
             },
         )
         return
@@ -209,8 +213,10 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
     }
 
     LaunchedEffect(selectedTab) {
-        if (selectedTab == ExpenseTab.Submitted) {
-            controller.fetchSubmittedExpenses()
+        when (selectedTab) {
+            ExpenseTab.Submitted -> controller.fetchSubmittedExpenses()
+            ExpenseTab.Other -> controller.fetchOtherExpenses()
+            ExpenseTab.Drafts -> Unit
         }
     }
 
@@ -232,7 +238,7 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
 
     fun deleteExpense(expense: ExpenseUi) {
         controller.deleteExpense(
-            expenseId = expense.id,
+            expenseId = expense.userExpenseId?.toString() ?: expense.id,
             onSuccess = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() },
             onError = { message -> Toast.makeText(context, message, Toast.LENGTH_LONG).show() },
         )
@@ -303,13 +309,15 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
     }
 
     val draftStatuses = setOf("Uploaded", "Extracted", "Extracting")
+    val otherCategories = setOf("other", "others")
     val filteredDrafts = allExpenses.filter { expense ->
-        expense.status in draftStatuses && (
-            searchText.isBlank() ||
-                expense.id.contains(searchText, ignoreCase = true) ||
-                expense.vendorName.contains(searchText, ignoreCase = true) ||
-                expense.name.contains(searchText, ignoreCase = true)
-            )
+        expense.status in draftStatuses &&
+            expense.category.lowercase(Locale.getDefault()) !in otherCategories && (
+                searchText.isBlank() ||
+                    expense.id.contains(searchText, ignoreCase = true) ||
+                    expense.vendorName.contains(searchText, ignoreCase = true) ||
+                    expense.name.contains(searchText, ignoreCase = true)
+                )
     }
     val filteredSubmitted = submittedExpenses.filter { expense ->
         searchText.isBlank() ||
@@ -318,6 +326,12 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
             expense.category.contains(searchText, ignoreCase = true) ||
             expense.name.contains(searchText, ignoreCase = true) ||
             expense.status.contains(searchText, ignoreCase = true)
+    }
+    val filteredOther = otherExpenses.filter { expense ->
+        searchText.isBlank() ||
+            expense.id.contains(searchText, ignoreCase = true) ||
+            expense.vendorName.contains(searchText, ignoreCase = true) ||
+            expense.name.contains(searchText, ignoreCase = true)
     }
 
     Box(
@@ -401,7 +415,8 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 ExpenseTabButton(
@@ -413,6 +428,11 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
                     title = "Submitted",
                     isSelected = selectedTab == ExpenseTab.Submitted,
                     onClick = { selectedTab = ExpenseTab.Submitted }
+                )
+                ExpenseTabButton(
+                    title = "Other",
+                    isSelected = selectedTab == ExpenseTab.Other,
+                    onClick = { selectedTab = ExpenseTab.Other }
                 )
             }
 
@@ -431,7 +451,7 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
                                 source = exp,
                             )
                         },
-                        onViewDetails = { openExpenseDetail(it.id, readOnly = false) },
+                        onViewDetails = { openExpenseDetail(it.userExpenseId?.toString() ?: "", readOnly = false) },
                         onDelete = { expensePendingDelete = it },
                         modifier = Modifier.weight(1f)
                     )
@@ -455,6 +475,36 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
                         )
                     }
                 }
+                ExpenseTab.Other -> {
+                    if (otherLoading && filteredOther.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(color = PrimaryRed)
+                        }
+                    } else {
+                        DraftsListContent(
+                            expenses = filteredOther.map { exp ->
+                                DraftExpenseItem(
+                                    id = "EXP-${exp.id}",
+                                    billDate = exp.billDate,
+                                    vendorName = exp.vendorName,
+                                    category = exp.category,
+                                    amount = exp.totalAmount,
+                                    status = exp.status,
+                                    uploadedAt = exp.createdAt,
+                                    source = exp,
+                                )
+                            },
+                            onViewDetails = {},
+                            onDelete = { expensePendingDelete = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
         }
 
@@ -469,25 +519,27 @@ fun ExpenseExtractionViewScreen(onBack: () -> Unit) {
             }
         }
 
-        Button(
-            onClick = { showAddPopup = true },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(20.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = PrimaryRed,
-                contentColor = Color.White
-            )
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Expense", tint = Color.White)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Add Expense",
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.SemiBold
-            )
+        if (selectedTab == ExpenseTab.Drafts) {
+            Button(
+                onClick = { showAddPopup = true },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(20.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(28.dp),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = PrimaryRed,
+                    contentColor = Color.White
+                )
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Expense", tint = Color.White)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Add Expense",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 
@@ -656,7 +708,7 @@ private fun DraftExpenseCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = expense.id,
+                text = expense.userExpenseId,
                 fontFamily = GraphikFontFamily,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -695,7 +747,7 @@ private fun SubmittedExpenseCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "EXP-${expense.id}",
+                text = "EXP-${expense.userExpenseId}",
                 fontFamily = GraphikFontFamily,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold,

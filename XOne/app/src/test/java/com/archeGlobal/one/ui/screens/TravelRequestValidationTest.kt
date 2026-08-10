@@ -39,4 +39,9 @@ class TravelRequestValidationTest {
         assertFalse(shouldShowTravelDetailAction("Approved"))
         assertTrue(shouldShowTravelDetailAction("Pending"))
     }
+
+    @Test
+    fun `travel detail action is hidden for rejected status`() {
+        assertFalse(shouldShowTravelDetailAction("Rejected"))
+    }
 }

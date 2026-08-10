@@ -36,6 +36,9 @@ class TravelExpenseController(
     var vehicleAssets = mutableStateOf<List<com.archeGlobal.one.network.VehicleAssetItem>>(emptyList())
     var vehicleAssetsLoading = mutableStateOf(false)
     var vehicleAssetsError = mutableStateOf<String?>(null)
+    var personalVehicles = mutableStateOf<List<com.archeGlobal.one.network.VehicleItem>>(emptyList())
+    var personalVehiclesLoading = mutableStateOf(false)
+    var personalVehiclesError = mutableStateOf<String?>(null)
     var mileageRate = mutableStateOf<String?>(null)
     var mileageRateLoading = mutableStateOf(false)
     var mileageRateError = mutableStateOf<String?>(null)
@@ -392,6 +395,45 @@ class TravelExpenseController(
             } finally {
                 withContext(Dispatchers.Main) {
                     vehicleAssetsLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun fetchPersonalVehicles(vehicleType: String) {
+        personalVehiclesLoading.value = true
+        personalVehiclesError.value = null
+
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getVehicles(
+                    type = vehicleType.lowercase(Locale.getDefault()),
+                )
+                if (response.isSuccessful) {
+                    val vehicles = response.body()?.vehicles.orEmpty()
+                    withContext(Dispatchers.Main) {
+                        personalVehicles.value = vehicles
+                        personalVehiclesError.value = null
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch personal vehicles: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        personalVehicles.value = emptyList()
+                        personalVehiclesError.value = parseErrorMessage(errorBody, "Failed to load vehicles (${response.code()})")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching personal vehicles: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    personalVehicles.value = emptyList()
+                    personalVehiclesError.value = e.message ?: "Failed to load vehicles"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    personalVehiclesLoading.value = false
                 }
             }
         }
