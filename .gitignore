@@ -1,0 +1,50 @@
+# Workspace/editor noise
+.idea/
+.vscode/
+.claude/
+.agents/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Sensitive / signing files
+AndroidSignedIn/
+*.jks
+*.keystore
+*.p12
+*.bks
+*.pem
+*.p8
+google-services.json
+
+# Android build output and local config
+XOne/.gradle/
+XOne/**/build/
+XOne/.externalNativeBuild/
+XOne/.cxx/
+XOne/.kotlin/
+XOne/kotlin-profile/
+XOne/release/
+XOne/local.properties
+XOne/.idea/
+XOne/**/*.iml
+XOne/gradle.properties
+XOne/gradlew
+XOne/gradlew.bat
+XOne/compile_output.txt
+XOne/compile-output.txt
+XOne/gradle_compile_log.txt
+XOne/handle_output.txt
+XOne/handle_result.txt
+XOne/build_out.txt
+XOne/compile_output.txt
+XOne/compile-output.txt
+XOne/compile_ouput.txt
+XOne/gradle_compile_log.txt
+XOne/handle_output.txt
+XOne/handle_result.txt
+XOne/build_out.txt
+
+# Logs and profiling
+*.log
+*.hprof
