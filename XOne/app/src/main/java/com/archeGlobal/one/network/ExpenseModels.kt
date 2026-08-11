@@ -383,8 +383,9 @@ fun ExpenseDetailResponse.toDetailUi(): ExpenseDetailUi {
         accommodationType = accommodationType.formatAccommodationType()
             .ifBlank { subCategory.formatExpenseCategory() },
         hotelName = vendorName?.takeIf { it.isNotBlank() }
-            ?: extracted.confidenceText("vendor_name"),
-        gstinOfHotel = extracted.confidenceText("hotel_details", "gst_number"),
+            ?: extracted.confidenceText("vendor_name").ifBlank { extracted.confidenceText("hotel_details", "hotel_name") },
+        gstinOfHotel = extracted.confidenceText("hotel_details", "gst_number")
+            .ifBlank { extracted.confidenceText("hotel_details", "hotel_gstin") },
         currency = currency?.takeIf { it.isNotBlank() }
             ?: extracted.confidenceText("currency").ifBlank { "INR" },
         checkIn = extracted.confidenceText("booking_details", "arrival_date"),

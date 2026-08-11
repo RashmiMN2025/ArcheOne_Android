@@ -73,7 +73,6 @@ import com.archeGlobal.one.controller.TravelExpenseController
 import com.archeGlobal.one.network.ExpenseDetailUi
 import com.archeGlobal.one.network.ExpenseSubmitErrorDetail
 import com.archeGlobal.one.network.ExpenseSubmitRequest
-import com.archeGlobal.one.network.ExpenseSubmitResponse
 import com.archeGlobal.one.network.ExpenseUserOption
 import com.archeGlobal.one.network.SplitExpenseRequest
 import com.google.gson.JsonObject
@@ -88,8 +87,7 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import java.util.Locale
 import kotlin.math.roundToLong
 
-private fun shouldShowDetailField(isReadOnly: Boolean, value: String): Boolean =
-    !isReadOnly || value.isNotBlank()
+private fun shouldShowDetailField(isReadOnly: Boolean, value: String): Boolean = true
 
 private fun String.normalizeExpenseCategory(): String = trim().lowercase(Locale.getDefault())
 
@@ -491,6 +489,12 @@ fun ExpenseExtractionDetailViewScreen(
                             )
                         }
                     }
+                        RenderManualCategoryFields(
+                        category = category,
+                        subCategory = mode,
+                        expense = expense,
+                        isReadOnly = isReadOnly,
+                    )
 
                     if (shouldShowDetailField(isReadOnly, serviceCharges)) {
                         DetailLabeledField(
@@ -695,7 +699,7 @@ fun ExpenseExtractionDetailViewScreen(
             onConfirm = {
                 showSubmitConfirmDialog = false
                 expenseController.submitExpense(
-                    expenseId = expense.id,
+                    expenseId = expense.userExpenseId?.toString(),
                     request = buildSubmitRequest(),
                     onSuccess = { response ->
                         submitSuccessMessage = "Expense submitted successfully"
@@ -742,7 +746,7 @@ fun ExpenseExtractionDetailViewScreen(
             confirmText = "Approve",
             onConfirm = {
                 showApproveConfirmDialog = false
-                val userExpenseId = expense.userExpenseId ?: expense.id.toIntOrNull()
+                val userExpenseId = expense.userExpenseId
                 if (userExpenseId == null) {
                     Toast.makeText(context, "Unable to identify this expense", Toast.LENGTH_LONG).show()
                 } else {
@@ -771,7 +775,7 @@ fun ExpenseExtractionDetailViewScreen(
             confirmText = "Reject",
             onConfirm = {
                 showRejectConfirmDialog = false
-                val userExpenseId = expense.userExpenseId ?: expense.id.toIntOrNull()
+                val userExpenseId = expense.userExpenseId
                 if (userExpenseId == null) {
                     Toast.makeText(context, "Unable to identify this expense", Toast.LENGTH_LONG).show()
                 } else {
@@ -818,7 +822,7 @@ fun ExpenseExtractionDetailViewScreen(
             onSubmitManager = {
                 showLimitExceededDialog = false
                 expenseController.submitExpense(
-                    expenseId = expense.id,
+                    expenseId = expense.userExpenseId?.toString(),
                     request = buildSubmitRequest(submitBehavior = "submit_to_manager", noteOverride = limitDialogNote),
                     onSuccess = { response ->
                         submitSuccessMessage = "Expense submitted to manager"
@@ -836,7 +840,7 @@ fun ExpenseExtractionDetailViewScreen(
             onSubmitLimit = {
                 showLimitExceededDialog = false
                 expenseController.submitExpense(
-                    expenseId = expense.id,
+                    expenseId = expense.userExpenseId?.toString(),
                     request = buildSubmitRequest(noteOverride = limitDialogNote),
                     onSuccess = { response ->
                         submitSuccessMessage = "Expense submitted within limit"
@@ -964,7 +968,7 @@ fun ExpenseExtractionDetailViewScreen(
                             },
                         )
                         expenseController.splitExpense(
-                            expenseId = expense.id,
+                            expenseId = expense.userExpenseId?.toString(),
                             request = request,
                             onSuccess = {
                                 showSplitDialog = false
@@ -1623,6 +1627,299 @@ private fun formatMoney(amount: Double, currency: String): String {
     return String.format(Locale.getDefault(), "%s %.2f", currency.ifBlank { "INR" }, amount)
 }
 
+
+private fun com.google.gson.JsonObject?.confidenceTextLocal(vararg path: String): String {
+    if (this == null || path.isEmpty()) return ""
+    var current: com.google.gson.JsonElement? = this
+    for (key in path) {
+        current = when {
+            current == null || current.isJsonNull -> return ""
+            current.isJsonObject -> current.asJsonObject.get(key)
+            current.isJsonArray -> {
+                val array = current.asJsonArray
+                val index = key.toIntOrNull()
+                if (index != null) {
+                    if (index in 0 until array.size()) array.get(index) else null
+                } else {
+                    array.firstOrNull()?.takeIf { it.isJsonObject }?.asJsonObject?.get(key)
+                }
+            }
+            else -> return ""
+        }
+    }
+    return when {
+        current == null || current.isJsonNull -> ""
+        current.isJsonObject -> current.asJsonObject.get("value")?.takeUnless { it.isJsonNull }?.asString.orEmpty()
+        current.isJsonPrimitive -> current.asString
+        else -> ""
+    }.trim()
+}
+
+private fun com.google.gson.JsonObject?.jsonArrayAt(vararg path: String): com.google.gson.JsonArray? {
+    if (this == null || path.isEmpty()) return null
+    var current: com.google.gson.JsonElement? = this
+    for (key in path) {
+        current = when {
+            current == null || current.isJsonNull -> return null
+            current.isJsonObject -> current.asJsonObject.get(key)
+            current.isJsonArray -> {
+                val array = current.asJsonArray
+                val index = key.toIntOrNull()
+                if (index != null) {
+                    if (index in 0 until array.size()) array.get(index) else null
+                } else {
+                    array.firstOrNull()?.takeIf { it.isJsonObject }?.asJsonObject?.get(key)
+                }
+            }
+            else -> return null
+        }
+    }
+    return current?.takeIf { it.isJsonArray }?.asJsonArray
+}
+
+private fun com.google.gson.JsonElement?.asDisplayText(): String {
+    return when {
+        this == null || isJsonNull -> "--"
+        isJsonObject -> asJsonObject.get("value")?.takeUnless { it.isJsonNull }?.asString.orEmpty().ifBlank { "--" }
+        isJsonPrimitive -> asString.ifBlank { "--" }
+        else -> "--"
+    }
+}
+
+private data class ManualFieldDescriptor(
+    val label: String,
+    val value: String,
+)
+
+private fun ExpenseDetailUi.manualFieldValue(
+    vararg paths: String,
+    fallback: String = "",
+): String {
+    val extracted = extractedData
+    val value = extracted.confidenceTextLocal(*paths)
+    return value.ifBlank { fallback }.trim()
+}
+
+private fun buildManualFields(
+    category: String,
+    subCategory: String,
+    expense: ExpenseDetailUi,
+): List<ManualFieldDescriptor> {
+    val normalizedCategory = category.normalizeExpenseCategory()
+    val normalizedSubCategory = subCategory.normalizeExpenseCategory()
+    val fields = mutableListOf<ManualFieldDescriptor>()
+
+    fun add(label: String, value: String) {
+        fields.add(ManualFieldDescriptor(label, value.ifBlank { "--" }))
+    }
+
+    fun addPath(label: String, vararg path: String, fallback: String = "") {
+        add(label, expense.manualFieldValue(*path, fallback = fallback))
+    }
+
+    when (normalizedCategory) {
+        "travel" -> {
+            when (normalizedSubCategory) {
+                "bus" -> {
+                    addPath("Travel name", "Ticket_Details", "travels_name", fallback = expense.hotelName)
+                    addPath("Booking platform", "booking_platform", fallback = expense.mode)
+                    addPath("Boarding date", "Boarding_Point_Details", "boarding_date", fallback = expense.checkIn)
+                    addPath("Boarding time", "Boarding_Point_Details", "boarding_time")
+                    addPath("Boarding address", "Boarding_Point_Details", "boarding_address")
+                    addPath("Dropping date", "Dropping_Point_Details", "dropping_date", fallback = expense.checkOut)
+                    addPath("Dropping time", "Dropping_Point_Details", "dropping_time")
+                    addPath("Dropping address", "Dropping_Point_Details", "dropping_address")
+                    addPath("GST", "total_gst")
+                }
+                "train" -> {
+                    addPath("Train class", "transaction_details", "class", fallback = expense.mode)
+                    add("Vendor name", expense.hotelName)
+                    addPath("Train name", "transaction_details", "train_name")
+                    addPath("Train number", "transaction_details", "train_number")
+                    addPath("PNR number", "transaction_details", "pnr_number")
+                    addPath("Departure", "transaction_details", "departure_date", fallback = expense.checkIn)
+                    addPath("Boarding", "transaction_details", "from_station")
+                    addPath("Destination", "transaction_details", "to_station")
+                    addPath("Dropping", "journey_segments", "0", "arrival_date", fallback = expense.checkOut)
+                    addPath("SGST Percentage", "taxes", "sgst_percent")
+                    addPath("CGST Percentage", "taxes", "cgst_percent")
+                    addPath("IGST Percentage", "taxes", "igst_percent")
+                    addPath("GST", "total_gst")
+                }
+                "flight receipt" -> {
+                    addPath("Flight class", "flight_segments", "0", "class", fallback = expense.mode)
+                }
+                "flight invoice" -> {
+                    addPath("Flight class", "table_contents", "0", "class", fallback = expense.mode)
+                }
+                else -> Unit
+            }
+        }
+        "hotel accommodation" -> Unit
+        "meals food" -> {
+            add("Vendor name", expense.hotelName)
+            addPath("GSTIN", "supplier_details", "gstin", fallback = expense.gstinOfHotel)
+            addPath("Date", "billing_details", "date_of_issue", fallback = expense.billDate)
+            addPath("SGST Percentage", "tax_details", "sgst_percent")
+            addPath("CGST Percentage", "tax_details", "cgst_percent")
+            addPath("IGST Percentage", "tax_details", "igst_percent")
+            addPath("Tax amount", "tax_details", "tax_amount")
+        }
+        "flight receipt", "flight invoice", "stationery", "fuel gas", "entertainment", "information technology", "other" -> Unit
+        else -> Unit
+    }
+    return fields
+}
+
+@Composable
+private fun RenderManualCategoryFields(
+    category: String,
+    subCategory: String,
+    expense: ExpenseDetailUi,
+    isReadOnly: Boolean,
+) {
+    val fields = remember(category, subCategory, expense) {
+        buildManualFields(category, subCategory, expense)
+    }
+    if (fields.isEmpty()) return
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        fields.forEach { field ->
+            DetailLabeledField(
+                label = field.label,
+                value = field.value,
+                onValueChange = {},
+                placeholder = "",
+                enabled = false,
+            )
+        }
+        RenderManualCategoryItems(category, subCategory, expense, isReadOnly)
+    }
+}
+
+@Composable
+private fun RenderManualCategoryItems(
+    category: String,
+    subCategory: String,
+    expense: ExpenseDetailUi,
+    isReadOnly: Boolean,
+) {
+    val normalizedCategory = category.normalizeExpenseCategory()
+    val normalizedSubCategory = subCategory.normalizeExpenseCategory()
+    when (normalizedCategory) {
+        "travel" -> when (normalizedSubCategory) {
+            "bus" -> {
+                val passengers = expense.extractedData.jsonArrayAt("Passenger_Details")
+                passengers?.takeIf { it.size() > 0 }?.let { array ->
+                    DetailLabeledField(
+                        label = "Items",
+                        value = "",
+                        onValueChange = {},
+                        placeholder = "",
+                        enabled = false,
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        array.forEachIndexed { index, item ->
+                            val passengerName = item.asJsonObject.get("name")?.asDisplayText() ?: "--"
+                            val seatNumber = item.asJsonObject.get("seat_number")?.asDisplayText() ?: "--"
+                            DetailSectionCard(title = "Item ${index + 1}") {
+                                DetailLabeledField(
+                                    label = "Passenger name",
+                                    value = passengerName,
+                                    onValueChange = {},
+                                    placeholder = "",
+                                    enabled = false,
+                                )
+                                DetailLabeledField(
+                                    label = "Seat number",
+                                    value = seatNumber,
+                                    onValueChange = {},
+                                    placeholder = "",
+                                    enabled = false,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            "train" -> {
+                val passengers = expense.extractedData.jsonArrayAt("passenger_details")
+                passengers?.takeIf { it.size() > 0 }?.let { array ->
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        array.forEachIndexed { index, item ->
+                            val passengerName = item.asJsonObject.get("passenger_name")?.asDisplayText() ?: "--"
+                            val purpose = item.asJsonObject.get("project_id")?.asDisplayText()
+                                ?: item.asJsonObject.get("passenger_type")?.asDisplayText()
+                                ?: "--"
+                            DetailSectionCard(title = "Item ${index + 1}") {
+                                DetailLabeledField(
+                                    label = "Passenger name",
+                                    value = passengerName,
+                                    onValueChange = {},
+                                    placeholder = "",
+                                    enabled = false,
+                                )
+                                DetailLabeledField(
+                                    label = "Purpose / Project ID",
+                                    value = purpose,
+                                    onValueChange = {},
+                                    placeholder = "",
+                                    enabled = false,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            else -> Unit
+        }
+        "meals food" -> {
+            val items = expense.extractedData.jsonArrayAt("table_contents")
+            items?.takeIf { it.size() > 0 }?.let { array ->
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    array.forEachIndexed { index, item ->
+                        val description = item.asJsonObject.get("description")?.asDisplayText() ?: "--"
+                        val quantity = item.asJsonObject.get("quantity")?.asDisplayText() ?: "--"
+                        val price = item.asJsonObject.get("unit_price")?.asDisplayText() ?: "--"
+                        val total = item.asJsonObject.get("amount")?.asDisplayText() ?: "--"
+                        DetailSectionCard(title = "Item ${index + 1}") {
+                            DetailLabeledField(
+                                label = "Item",
+                                value = description,
+                                onValueChange = {},
+                                placeholder = "",
+                                enabled = false,
+                            )
+                            DetailLabeledField(
+                                label = "Quantity",
+                                value = quantity,
+                                onValueChange = {},
+                                placeholder = "",
+                                enabled = false,
+                            )
+                            DetailLabeledField(
+                                label = "Price",
+                                value = price,
+                                onValueChange = {},
+                                placeholder = "",
+                                enabled = false,
+                            )
+                            DetailLabeledField(
+                                label = "Total",
+                                value = total,
+                                onValueChange = {},
+                                placeholder = "",
+                                enabled = false,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        else -> Unit
+    }
+}
+
 @Composable
 private fun ExpenseDocumentViewerDialog(
     fileUrl: String,
@@ -1856,7 +2153,7 @@ private fun DetailLabeledField(
             modifier = Modifier.padding(bottom = 6.dp),
         )
         OutlinedTextField(
-            value = value,
+            value = if (!enabled && value.isBlank()) "--" else value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             singleLine = singleLine,
@@ -1904,7 +2201,7 @@ private fun DetailDropdownField(
         )
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
-                value = value.ifBlank { "Select" },
+                value = if (!enabled && value.isBlank()) "--" else value.ifBlank { "Select" },
                 onValueChange = {},
                 readOnly = true,
                 enabled = false,

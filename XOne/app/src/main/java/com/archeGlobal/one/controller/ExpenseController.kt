@@ -25,6 +25,9 @@ import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import com.archeGlobal.one.network.ExpenseSubmitErrorDetail
+import com.archeGlobal.one.network.ExpenseSubmitRequest
+import com.archeGlobal.one.network.ExpenseSubmitResponse
 
 class ExpenseController(private val context: Context) {
     private val tag = "ExpenseController"
@@ -425,7 +428,7 @@ class ExpenseController(private val context: Context) {
     }
 
     fun splitExpense(
-        expenseId: String,
+        expenseId: String?,
         request: SplitExpenseRequest,
         onSuccess: (SplitExpenseResponse) -> Unit,
         onError: (String) -> Unit,
@@ -513,11 +516,11 @@ class ExpenseController(private val context: Context) {
     }
 
     fun submitExpense(
-        expenseId: String,
-        request: com.archeGlobal.one.network.ExpenseSubmitRequest,
-        onSuccess: (com.archeGlobal.one.network.ExpenseSubmitResponse) -> Unit,
-        onLimitExceeded: (com.archeGlobal.one.network.ExpenseSubmitErrorDetail) -> Unit,
-        onDuplicateExpense: (com.archeGlobal.one.network.ExpenseSubmitErrorDetail) -> Unit,
+        expenseId: String?,
+        request: ExpenseSubmitRequest,
+        onSuccess: (ExpenseSubmitResponse) -> Unit,
+        onLimitExceeded: (ExpenseSubmitErrorDetail) -> Unit,
+        onDuplicateExpense: (ExpenseSubmitErrorDetail) -> Unit,
         onError: (String) -> Unit,
     ) {
         isLoading.value = true

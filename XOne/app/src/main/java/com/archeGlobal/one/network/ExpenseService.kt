@@ -39,7 +39,7 @@ interface ExpenseService {
 
     @PATCH("v1/expenses/{expense_id}/submit")
     suspend fun submitExpense(
-        @Path("expense_id") expenseId: String,
+        @Path("expense_id") expenseId: String?,
         @Body request: ExpenseSubmitRequest,
     ): Response<ExpenseSubmitResponse>
 
@@ -53,7 +53,7 @@ interface ExpenseService {
 
     @PATCH("v1/expenses/{expense_id}/split")
     suspend fun splitExpense(
-        @Path("expense_id") expenseId: String,
+        @Path("expense_id") expenseId: String?,
         @Body request: SplitExpenseRequest,
     ): Response<SplitExpenseResponse>
 
