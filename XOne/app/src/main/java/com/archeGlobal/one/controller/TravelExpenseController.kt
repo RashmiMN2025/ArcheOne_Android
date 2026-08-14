@@ -1,5 +1,6 @@
 package com.archeGlobal.one.controller
 
+import android.R.attr.tag
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
@@ -470,6 +471,251 @@ class TravelExpenseController(
             } finally {
                 withContext(Dispatchers.Main) {
                     createRequestLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun updateMileageExpense(
+        expenseId: Int,
+        request: com.archeGlobal.one.network.CreateMileageExpenseRequest,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        createRequestLoading.value = true
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.updateMileageExpense(expenseId, request)
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Travel expense updated successfully.", Toast.LENGTH_SHORT).show()
+                        onSuccess()
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to update mileage expense: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        onError(parseErrorMessage(errorBody, "Failed to update travel expense (${response.code()})"))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception updating mileage expense: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to update travel expense")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    createRequestLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun withdrawMileageExpense(
+        expenseId: Int,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        createRequestLoading.value = true
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.withdrawMileageExpense(expenseId)
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Travel expense notes withdrawn successfully.", Toast.LENGTH_SHORT).show()
+                        onSuccess()
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to withdraw mileage expense: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        onError(parseErrorMessage(errorBody, "Failed to withdraw travel expense (${response.code()})"))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception withdrawing mileage expense: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to withdraw travel expense")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    createRequestLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun deleteMileageExpense(
+        expenseId: Int,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        createRequestLoading.value = true
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.deleteMileageExpense(expenseId)
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Travel expense notes deleted successfully.", Toast.LENGTH_SHORT).show()
+                        onSuccess()
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to delete mileage expense: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        onError(parseErrorMessage(errorBody, "Failed to delete travel expense (${response.code()})"))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception deleting mileage expense: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to delete travel expense")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    createRequestLoading.value = false
+                }
+            }
+        }
+    }
+
+    fun fetchMileageExpenseDetail(
+        expenseId: Int,
+        onSuccess: (com.archeGlobal.one.network.MileageExpenseDetailResponse) -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getMileageExpenseDetail(expenseId)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    withContext(Dispatchers.Main) {
+                        if (body != null) {
+                            onSuccess(body)
+                        } else {
+                            onError("Empty response")
+                        }
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch mileage expense detail: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        onError(parseErrorMessage(errorBody, "Failed to load travel expense (${response.code()})"))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching mileage expense detail: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to load travel expense")
+                }
+            }
+        }
+    }
+
+    fun fetchMileageExpenseNotes(
+        expenseId: Int,
+        onSuccess: (List<com.archeGlobal.one.network.MileageExpenseNoteResponse>) -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.getMileageExpenseNotes(expenseId)
+                if (response.isSuccessful) {
+                    val notes = response.body().orEmpty()
+                    withContext(Dispatchers.Main) {
+                        onSuccess(notes)
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to fetch mileage expense notes: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        onError(parseErrorMessage(errorBody, "Failed to load notes (${response.code()})"))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception fetching mileage expense notes: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to load notes")
+                }
+            }
+        }
+    }
+
+    fun addMileageExpenseNote(
+        expenseId: Int,
+        notes: String,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.addMileageExpenseNote(
+                    com.archeGlobal.one.network.AddMileageExpenseNoteRequest(
+                        notes = notes,
+                        expenseId = expenseId,
+                    )
+                )
+                if (response.isSuccessful) {
+                    val message = response.body()?.message?.takeIf { it.isNotBlank() }
+                        ?: "Travel expense notes added successfully."
+                    withContext(Dispatchers.Main) {
+                        onSuccess(message)
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to add mileage expense note: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        onError(parseErrorMessage(errorBody, "Failed to add note (${response.code()})"))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception adding mileage expense note: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to add note")
+                }
+            }
+        }
+    }
+
+    fun submitMileageExpense(
+        expenseId: Int,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        ExpenseRetrofitClient.initialize(context.applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ExpenseRetrofitClient.tripService.submitMileageExpense(expenseId)
+                if (response.isSuccessful) {
+                    val message = response.body()?.message?.takeIf { it.isNotBlank() }
+                        ?: "Travel expense updated successfully."
+                    withContext(Dispatchers.Main) {
+                        onSuccess(message)
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string().orEmpty()
+                    Log.e(tag, "Failed to submit mileage expense: HTTP ${response.code()} $errorBody")
+                    withContext(Dispatchers.Main) {
+                        onError(parseErrorMessage(errorBody, "Failed to request reimbursement (${response.code()})"))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Exception submitting mileage expense: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to request reimbursement")
                 }
             }
         }

@@ -193,6 +193,13 @@ data class CreateMileageExpenseRequest(
     @SerializedName("duration_seconds") val durationSeconds: Int,
 )
 
+data class MileageExpenseVehicle(
+    val id: Int,
+    @SerializedName("vehicle_type") val vehicleType: String,
+    @SerializedName("make_model") val makeModel: String? = null,
+    @SerializedName("asset_code") val assetCode: String? = null,
+)
+
 data class MileageExpenseRecord(
     val id: Int,
     val route: List<MileageExpenseRoutePoint>,
@@ -205,6 +212,63 @@ data class MileageExpenseRecord(
     val distance: String,
     @SerializedName("customer_name") val customerName: String,
     @SerializedName("project_id") val projectId: Int,
+    @SerializedName("company_vehicle") val companyVehicle: MileageExpenseVehicle? = null,
+    @SerializedName("personal_vehicle") val personalVehicle: MileageExpenseVehicle? = null,
+)
+
+data class MileageExpenseVehicleDetail(
+    val id: Int? = null,
+    val category: String? = null,
+    @SerializedName("fuel_type") val fuelType: String? = null,
+    @SerializedName("asset_code") val assetCode: String? = null,
+    @SerializedName("make_model") val makeModel: String? = null,
+    @SerializedName("vehicle_cc") val vehicleCc: Int? = null,
+    @SerializedName("vehicle_type") val vehicleType: String? = null,
+    @SerializedName("generator_type") val generatorType: String? = null,
+    val operator: VehicleAssetOperator? = null,
+)
+
+data class MileageExpenseDetailResponse(
+    val id: Int,
+    val route: List<MileageExpenseRoutePoint>,
+    @SerializedName("from_date") val fromDate: String?,
+    @SerializedName("to_date") val toDate: String?,
+    val vehicle: String?,
+    @SerializedName("vehicle_type") val vehicleType: String?,
+    val status: String?,
+    val amount: String?,
+    val distance: String?,
+    @SerializedName("customer_name") val customerName: String?,
+    @SerializedName("project_id") val projectId: Int?,
+    @SerializedName("duration_seconds") val durationSeconds: String?,
+    @SerializedName("project_name") val projectName: String?,
+    @SerializedName("carbon_emission") val carbonEmission: String?,
+    @SerializedName("map_image_url") val mapImageUrl: String?,
+    @SerializedName("personal_vehicle") val personalVehicle: MileageExpenseVehicleDetail? = null,
+    @SerializedName("company_vehicle") val companyVehicle: MileageExpenseVehicleDetail? = null,
+    val comment: String? = null,
+)
+
+data class MileageExpenseNoteResponse(
+    val notes: String? = null,
+    @SerializedName("file_name") val fileName: String? = null,
+    @SerializedName("file_url") val fileUrl: String? = null,
+    @SerializedName("created_by") val createdBy: String? = null,
+    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("created_by_id") val createdById: Int? = null,
+)
+
+data class AddMileageExpenseNoteRequest(
+    val notes: String,
+    @SerializedName("expense_id") val expenseId: Int,
+)
+
+data class AddMileageExpenseNoteResponse(
+    val message: String? = null,
+)
+
+data class SubmitMileageExpenseResponse(
+    val message: String? = null,
 )
 
 data class MileageExpensesResponse(
@@ -216,39 +280,71 @@ data class MileageExpensesResponse(
 )
 
 data class MileageExpenseItemUi(
+    val expenseId: Int,
     val id: String,
     val customerName: String,
+    val fromDate: String,
+    val toDate: String,
     val date: String,
     val startPoint: String,
     val endPoint: String,
     val type: String,
     val vehicle: String,
+    val vehicleName: String,
     val amount: String,
     val distance: String,
     val status: String,
+    val routePoints: List<MileageExpenseRoutePoint>,
+    val projectId: Int,
+    val vehicleOwnershipType: String,
+    val vehicleTypeValue: String,
+    val vehicleId: Int?,
 )
 
 fun MileageExpenseRecord.toMileageExpenseItemUi(): MileageExpenseItemUi {
     val routePoints = route.filter { it.name.isNotBlank() }
     val startPoint = routePoints.firstOrNull()?.name ?: "-"
     val endPoint = routePoints.lastOrNull()?.name ?: "-"
+    val fromDateText = if (fromDate.isNotBlank()) dateFormate(fromDate) else "-"
+    val toDateText = if (toDate.isNotBlank()) dateFormate(toDate) else "-"
     val displayDate = if (fromDate.isNotBlank() && toDate.isNotBlank()) {
-        "$fromDate to $toDate"
+        "${dateFormate(fromDate)} to ${dateFormate(toDate)}"
     } else {
-        "-"
+        fromDateText
     }
+    val ownershipType = when {
+        companyVehicle != null -> "company"
+        personalVehicle != null -> "personal"
+        else -> ""
+    }
+    val vehicleTypeValue = vehicle.lowercase(Locale.getDefault())
+    val assetVehicleName = companyVehicle?.makeModel ?: personalVehicle?.makeModel ?: ""
+    val assetVehicleId = companyVehicle?.id ?: personalVehicle?.id
 
     return MileageExpenseItemUi(
+        expenseId = id,
         id = "MLG-$id",
         customerName = customerName.takeIf { it.isNotBlank() } ?: "-",
+        fromDate = fromDateText,
+        toDate = toDateText,
         date = displayDate,
         startPoint = startPoint,
         endPoint = endPoint,
-        type = vehicleType.replaceFirstChar { it.uppercase() }.takeIf { it.isNotBlank() } ?: "Mileage",
-        vehicle = vehicle.replaceFirstChar { it.uppercase() }.takeIf { it.isNotBlank() } ?: "-",
+        type = vehicleType.replaceFirstChar { c: Char -> c.uppercaseChar().toString() }.takeIf { it.isNotBlank() } ?: "Mileage",
+        vehicle = vehicle.replaceFirstChar { c: Char -> c.uppercaseChar().toString() }.takeIf { it.isNotBlank() } ?: "-",
+        vehicleName = assetVehicleName,
         amount = amount.takeIf { it.isNotBlank() } ?: "0.00",
         distance = distance.takeIf { it.isNotBlank() } ?: "0",
-        status = status.replaceFirstChar { it.uppercase() }.takeIf { it.isNotBlank() } ?: "Pending",
+        status = when {
+            status.equals("pending", ignoreCase = true) -> "Submitted"
+            status.equals("draft", ignoreCase = true) -> "Draft"
+            else -> status.replaceFirstChar { c: Char -> c.uppercaseChar().toString() }
+        },
+        routePoints = routePoints,
+        projectId = projectId,
+        vehicleOwnershipType = ownershipType,
+        vehicleTypeValue = vehicleTypeValue,
+        vehicleId = assetVehicleId,
     )
 }
 
@@ -338,7 +434,7 @@ fun TripItemResponse.toTravelRequestItemUi(): TravelRequestItemUi {
         endDate = dateFormate(endDate),
         travelDates = formatTravelDates(startDate, endDate),
         estimatedCost = formatCurrency(estimatedAmount),
-        modeOfTravel = modeOfTravel.replaceFirstChar { it.uppercase() },
+        modeOfTravel = modeOfTravel.replaceFirstChar { c: Char -> c.uppercaseChar().toString() },
         hotelNeeded = if (hotelAccommodationNeeded) "Yes" else "No",
         vehicleNeeded = if (vehicleNeeded) "Yes" else "No",
         advanceNeeded = if (advanceNeeded) "Yes" else "No",

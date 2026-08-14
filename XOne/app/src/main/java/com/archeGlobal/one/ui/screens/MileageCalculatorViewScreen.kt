@@ -21,6 +21,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,6 +44,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
@@ -55,12 +57,15 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
@@ -97,6 +102,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.archeGlobal.one.controller.TravelExpenseController
+import com.archeGlobal.one.network.MileageExpenseDetailResponse
+import com.archeGlobal.one.network.MileageExpenseNoteResponse
+import com.archeGlobal.one.network.MileageExpenseRoutePoint
 import com.archeGlobal.one.network.VehicleAssetItem
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
@@ -161,16 +169,25 @@ private suspend fun probeMapplsAvailability(): Boolean = withContext(Dispatchers
 }
 
 private data class MileageTripUi(
+    val expenseId: Int,
     val id: String,
     val customerName: String,
+    val fromDate: String,
+    val toDate: String,
     val date: String,
     val startPoint: String,
     val endPoint: String,
     val type: String,
     val vehicle: String,
+    val vehicleName: String,
     val amount: String,
     val distance: String,
-    val status: String
+    val status: String,
+    val routePoints: List<MileageExpenseRoutePoint>,
+    val projectId: Int,
+    val vehicleOwnershipType: String,
+    val vehicleTypeValue: String,
+    val vehicleId: Int?
 )
 
 private data class RouteStop(
@@ -382,6 +399,22 @@ fun MileageCalculatorViewScreen(onBack: () -> Unit) {
 
     var searchText by rememberSaveable { mutableStateOf("") }
     var showAddMileageSheet by rememberSaveable { mutableStateOf(false) }
+    var selectedExpenseForEdit by remember { mutableStateOf<MileageTripUi?>(null) }
+    var selectedExpenseForAction by remember { mutableStateOf<MileageTripUi?>(null) }
+    var showWithdrawConfirm by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    var selectedExpenseForDetail by remember { mutableStateOf<Int?>(null) }
+
+    if (selectedExpenseForDetail != null) {
+        MileageExpenseDetailScreen(
+            expenseId = selectedExpenseForDetail!!,
+            onBack = {
+                selectedExpenseForDetail = null
+                expenseController.fetchMileageExpenses()
+            },
+        )
+        return
+    }
 
     LaunchedEffect(Unit) {
         expenseController.fetchMileageExpenses()
@@ -395,16 +428,25 @@ fun MileageCalculatorViewScreen(onBack: () -> Unit) {
     val trips = remember(mileageExpenses) {
         mileageExpenses.map { expense ->
             MileageTripUi(
+                expenseId = expense.expenseId,
                 id = expense.id,
                 customerName = expense.customerName,
+                fromDate = expense.fromDate,
+                toDate = expense.toDate,
                 date = expense.date,
                 startPoint = expense.startPoint,
                 endPoint = expense.endPoint,
                 type = expense.type,
                 vehicle = expense.vehicle,
+                vehicleName = expense.vehicleName,
                 amount = expense.amount,
                 distance = expense.distance,
                 status = expense.status,
+                routePoints = expense.routePoints,
+                projectId = expense.projectId,
+                vehicleOwnershipType = expense.vehicleOwnershipType,
+                vehicleTypeValue = expense.vehicleTypeValue,
+                vehicleId = expense.vehicleId,
             )
         }
     }
@@ -566,7 +608,20 @@ fun MileageCalculatorViewScreen(onBack: () -> Unit) {
                 items(filteredTrips) { trip ->
                     MileageTripCard(
                         trip = trip,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        onView = { selectedExpenseForDetail = trip.expenseId },
+                        onEdit = {
+                            selectedExpenseForEdit = trip
+                            showAddMileageSheet = true
+                        },
+                        onDelete = {
+                            selectedExpenseForAction = trip
+                            showDeleteConfirm = true
+                        },
+                        onWithdraw = {
+                            selectedExpenseForAction = trip
+                            showWithdrawConfirm = true
+                        }
                     )
                 }
             }
@@ -595,12 +650,538 @@ fun MileageCalculatorViewScreen(onBack: () -> Unit) {
     }
 
     if (showAddMileageSheet) {
-        AddMileageExpenseBottomSheet(onDismiss = { showAddMileageSheet = false })
+        AddMileageExpenseBottomSheet(
+            expense = selectedExpenseForEdit,
+            onDismiss = {
+                selectedExpenseForEdit = null
+                showAddMileageSheet = false
+            },
+            onSuccess = {
+                expenseController.fetchMileageExpenses()
+                expenseController.fetchMileageDashboardMetrics()
+                selectedExpenseForEdit = null
+                showAddMileageSheet = false
+            }
+        )
+    }
+
+    if (showWithdrawConfirm && selectedExpenseForAction != null) {
+        val trip = selectedExpenseForAction!!
+        AlertDialog(
+            onDismissRequest = {
+                showWithdrawConfirm = false
+                selectedExpenseForAction = null
+            },
+            title = {
+                Text(
+                    text = "Withdraw selected Mileage Expense?",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold
+                )
+            },
+            text = {
+                Text(
+                    text = "You're about to withdraw Mileage Expense-${trip.expenseId}.",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    expenseController.withdrawMileageExpense(
+                        trip.expenseId,
+                        onSuccess = {
+                            showWithdrawConfirm = false
+                            selectedExpenseForAction = null
+                            expenseController.fetchMileageExpenses()
+                            expenseController.fetchMileageDashboardMetrics()
+                        },
+                        onError = { message ->
+                            showWithdrawConfirm = false
+                            selectedExpenseForAction = null
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        }
+                    )
+                }) {
+                    Text("Withdraw", color = PrimaryRed, fontFamily = GraphikFontFamily)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showWithdrawConfirm = false
+                    selectedExpenseForAction = null
+                }) {
+                    Text("Cancel", color = PrimaryRed, fontFamily = GraphikFontFamily)
+                }
+            }
+        )
+    }
+
+    if (showDeleteConfirm && selectedExpenseForAction != null) {
+        val trip = selectedExpenseForAction!!
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteConfirm = false
+                selectedExpenseForAction = null
+            },
+            title = {
+                Text(
+                    text = "Delete selected Mileage Expense?",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold
+                )
+            },
+            text = {
+                Text(
+                    text = "You're about to delete Mileage Expense-${trip.expenseId}. This action cannot be undone.",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    expenseController.deleteMileageExpense(
+                        trip.expenseId,
+                        onSuccess = {
+                            showDeleteConfirm = false
+                            selectedExpenseForAction = null
+                            expenseController.fetchMileageExpenses()
+                            expenseController.fetchMileageDashboardMetrics()
+                        },
+                        onError = { message ->
+                            showDeleteConfirm = false
+                            selectedExpenseForAction = null
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        }
+                    )
+                }) {
+                    Text("Delete", color = PrimaryRed, fontFamily = GraphikFontFamily)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                    selectedExpenseForAction = null
+                }) {
+                    Text("Cancel", color = PrimaryRed, fontFamily = GraphikFontFamily)
+                }
+            }
+        )
+    }
+}
+
+private fun formatMileageDate(raw: String?): String {
+    val value = raw?.trim().orEmpty()
+    if (value.isBlank()) return "-"
+    return try {
+        val parser = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = parser.parse(value) ?: return value
+        SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(date)
+    } catch (_: Exception) {
+        value
+    }
+}
+
+private fun formatNoteTimestamp(raw: String?): String {
+    val value = raw?.trim().orEmpty()
+    if (value.isBlank()) return ""
+    return try {
+        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        val date = parser.parse(value.take(19)) ?: return value
+        SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault()).format(date)
+    } catch (_: Exception) {
+        value
+    }
+}
+
+@Composable
+private fun MileageExpenseDetailScreen(
+    expenseId: Int,
+    onBack: () -> Unit,
+) {
+    val context = LocalContext.current
+    val tripController = remember { TravelExpenseController(context) }
+    val scrollState = rememberScrollState()
+
+    var detail by remember { mutableStateOf<MileageExpenseDetailResponse?>(null) }
+    var notes by remember { mutableStateOf<List<MileageExpenseNoteResponse>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var noteText by rememberSaveable { mutableStateOf("") }
+    var isSendingNote by remember { mutableStateOf(false) }
+    var isSubmittingReimbursement by remember { mutableStateOf(false) }
+
+    fun loadNotes() {
+        tripController.fetchMileageExpenseNotes(
+            expenseId = expenseId,
+            onSuccess = { notes = it },
+            onError = { message -> Toast.makeText(context, message, Toast.LENGTH_LONG).show() },
+        )
+    }
+
+    LaunchedEffect(expenseId) {
+        isLoading = true
+        tripController.fetchMileageExpenseDetail(
+            expenseId = expenseId,
+            onSuccess = {
+                detail = it
+                isLoading = false
+            },
+            onError = { message ->
+                isLoading = false
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            },
+        )
+        loadNotes()
+    }
+
+    fun sendNote() {
+        val text = noteText.trim()
+        if (text.isBlank()) {
+            Toast.makeText(context, "Please enter a note", Toast.LENGTH_SHORT).show()
+            return
+        }
+        isSendingNote = true
+        tripController.addMileageExpenseNote(
+            expenseId = expenseId,
+            notes = text,
+            onSuccess = { message ->
+                isSendingNote = false
+                noteText = ""
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                loadNotes()
+            },
+            onError = { message ->
+                isSendingNote = false
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            },
+        )
+    }
+
+    fun submitReimbursement() {
+        isSubmittingReimbursement = true
+        tripController.submitMileageExpense(
+            expenseId = expenseId,
+            onSuccess = { message ->
+                isSubmittingReimbursement = false
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                onBack()
+            },
+            onError = { message ->
+                isSubmittingReimbursement = false
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            },
+        )
+    }
+
+    BackHandler { onBack() }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        WelcomeBackgroundTop,
+                        WelcomeBackgroundMiddle,
+                        WelcomeBackgroundBottom,
+                    )
+                )
+            )
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(modifier = Modifier.height(48.dp))
+            TopAppBar(
+                title = {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "Mileage Details",
+                            color = Color.Black,
+                            fontSize = 18.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black)
+                    }
+                },
+                backgroundColor = Color.Transparent,
+                elevation = 0.dp,
+                actions = { Spacer(modifier = Modifier.size(48.dp)) }
+            )
+
+            if (isLoading || detail == null) {
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = PrimaryRed)
+                }
+            } else {
+                val record = detail!!
+                val routePoints = record.route.filter { it.name.isNotBlank() }
+                val startAddress = routePoints.firstOrNull()?.name ?: "-"
+                val endAddress = routePoints.lastOrNull()?.name ?: "-"
+                val travelDate = if (record.fromDate == record.toDate || record.toDate.isNullOrBlank()) {
+                    formatMileageDate(record.fromDate)
+                } else {
+                    "${formatMileageDate(record.fromDate)} - ${formatMileageDate(record.toDate)}"
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(scrollState)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        Column {
+                            Text(
+                                text = "MLG-${record.id}",
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Black,
+                            )
+                            Text(
+                                text = record.projectName?.takeIf { it.isNotBlank() } ?: "-",
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                            )
+                        }
+                        val (badgeBg, badgeText) = statusColors(record.status ?: "-")
+                        Text(
+                            text = (record.status?.takeIf { it.isNotBlank() } ?: "-")
+                                .replaceFirstChar { it.uppercase() },
+                            color = badgeText,
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier
+                                .background(badgeBg, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
+
+                    MileageSectionCard(title = "Trip Details") {
+                        MileageDetailRow("Distance", "${formatMetricValue(record.distance)} km")
+                        MileageDetailRow("From Address", startAddress)
+                        MileageDetailRow("To Address", endAddress)
+                        MileageDetailRow("Date of Travel", travelDate)
+                        MileageDetailRow("Travel Distance", "${formatMetricValue(record.distance)} km")
+                        MileageDetailRow("Carbon Emission", "${formatMetricValue(record.carbonEmission)} Kg CO₂e")
+                    }
+
+                    MileageSectionCard(title = null) {
+                        MileageDetailRow("Started From", startAddress)
+                        MileageDetailRow("Arrived At", endAddress)
+                    }
+
+                    MileageSectionCard(title = "Notes") {
+                        if (notes.isEmpty()) {
+                            Text(
+                                text = "No notes yet",
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 13.sp,
+                                color = Color.Gray,
+                            )
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                notes.forEach { note ->
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(Color(0xFFF6F4EE), RoundedCornerShape(10.dp))
+                                            .padding(10.dp),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                        ) {
+                                            Text(
+                                                text = note.createdBy?.takeIf { it.isNotBlank() } ?: "-",
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 13.sp,
+                                                color = Color.Black,
+                                            )
+                                            Text(
+                                                text = formatNoteTimestamp(note.createdAt),
+                                                fontFamily = GraphikFontFamily,
+                                                fontSize = 11.sp,
+                                                color = Color.Gray,
+                                            )
+                                        }
+                                        Text(
+                                            text = note.notes?.takeIf { it.isNotBlank() } ?: "-",
+                                            fontFamily = GraphikFontFamily,
+                                            fontSize = 13.sp,
+                                            color = Color.Black,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            OutlinedTextField(
+                                value = noteText,
+                                onValueChange = { noteText = it },
+                                modifier = Modifier.weight(1f),
+                                placeholder = {
+                                    Text(
+                                        text = "Enter a note",
+                                        color = Color.Gray,
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 14.sp,
+                                    )
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = TextFieldDefaults.outlinedTextFieldColors(
+                                    backgroundColor = Color.White,
+                                    focusedBorderColor = Color.LightGray,
+                                    unfocusedBorderColor = Color(0xFFD4D4D4),
+                                ),
+                                enabled = !isSendingNote,
+                            )
+                            IconButton(onClick = { sendNote() }, enabled = !isSendingNote) {
+                                if (isSendingNote) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = PrimaryRed,
+                                        strokeWidth = 2.dp,
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Send,
+                                        contentDescription = "Send note",
+                                        tint = PrimaryRed,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Button(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = Color(0xFFF6F4EE),
+                                contentColor = Color.Black,
+                            ),
+                            shape = RoundedCornerShape(14.dp),
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                            )
+                        }
+                        Button(
+                            onClick = { submitReimbursement() },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = PrimaryRed,
+                                contentColor = Color.White,
+                            ),
+                            shape = RoundedCornerShape(14.dp),
+                            enabled = !isSubmittingReimbursement,
+                        ) {
+                            if (isSubmittingReimbursement) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
+                                Text(
+                                    text = "Request Reimbursement",
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MileageSectionCard(
+    title: String?,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = 2.dp,
+        backgroundColor = Color.White,
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (title != null) {
+                Text(
+                    text = title,
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black,
+                )
+                Divider(color = Color(0xFFEAEAEA))
+            }
+            content()
+        }
     }
 }
 
 private fun formatMetricValue(value: String?): String {
     return value?.takeIf { it.isNotBlank() } ?: "0"
+}
+
+private fun statusColors(status: String): Pair<Color, Color> {
+    return when (status.lowercase(Locale.getDefault())) {
+        "draft" -> Pair(Color(0xFFFFF9C4), Color(0xFF827717))
+        "submitted" -> Pair(Color(0xFFF5F5F5), Color(0xFF616161))
+        "rejected" -> Pair(Color(0xFFFFEBEE), Color(0xFFC62828))
+        "approved" -> Pair(Color(0xFFE8F5E9), Color(0xFF2E7D32))
+        else -> Pair(Color(0xFFE8F5E9), Color(0xFF2E7D32))
+    }
 }
 
 @Composable
@@ -661,7 +1242,11 @@ private fun MileageStatCard(
 @Composable
 private fun MileageTripCard(
     trip: MileageTripUi,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onView: () -> Unit = {},
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    onWithdraw: () -> Unit = {},
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -685,14 +1270,15 @@ private fun MileageTripCard(
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
                 )
+                val (badgeBg, badgeText) = statusColors(trip.status)
                 Text(
                     text = trip.status,
-                    color = Color(0xFF2E7D32),
+                    color = badgeText,
                     fontFamily = GraphikFontFamily,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
-                        .background(Color(0xFFE8F5E9), RoundedCornerShape(8.dp))
+                        .background(badgeBg, RoundedCornerShape(8.dp))
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
@@ -700,8 +1286,10 @@ private fun MileageTripCard(
             Divider(color = Color(0xFFEAEAEA))
 
             MileageDetailRow("Customer Name", trip.customerName)
-            MileageDetailRow("Date", trip.date)
-            MileageDetailRow("Route", "${trip.startPoint} → ${trip.endPoint}")
+            MileageDetailRow("From", trip.fromDate)
+            MileageDetailRow("To", trip.toDate)
+            MileageDetailRow("Start", trip.startPoint)
+            MileageDetailRow("End", trip.endPoint)
             MileageDetailRow("Type", trip.type)
             MileageDetailRow("Vehicle", trip.vehicle)
             MileageDetailRow("Amount", trip.amount)
@@ -711,22 +1299,28 @@ private fun MileageTripCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Visibility,
-                    contentDescription = null,
-                    tint = PrimaryRed,
-                    modifier = Modifier.size(16.dp)
+                MileageActionButton(
+                    icon = Icons.Default.Visibility,
+                    label = "View",
+                    onClick = onView
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "View Details",
-                    color = PrimaryRed,
-                    fontFamily = GraphikFontFamily,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
+                MileageActionButton(
+                    icon = Icons.Default.Edit,
+                    label = "Edit",
+                    onClick = onEdit
+                )
+                MileageActionButton(
+                    icon = Icons.Default.Delete,
+                    label = "Delete",
+                    onClick = onDelete
+                )
+                MileageActionButton(
+                    icon = Icons.Default.Cancel,
+                    label = "Withdraw",
+                    onClick = onWithdraw
                 )
             }
         }
@@ -746,7 +1340,7 @@ private fun MileageDetailRow(label: String, value: String) {
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = Color.Gray,
-            modifier = Modifier.width(130.dp)
+            modifier = Modifier.width(120.dp)
         )
         Text(
             text = value,
@@ -757,6 +1351,44 @@ private fun MileageDetailRow(label: String, value: String) {
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f)
         )
+    }
+}
+
+@Composable
+private fun MileageActionButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .height(40.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        elevation = 0.dp,
+        backgroundColor = Color(0xFFF8F8F8)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 10.dp)
+                .fillMaxHeight(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = PrimaryRed,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = label,
+                color = PrimaryRed,
+                fontFamily = GraphikFontFamily,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
@@ -795,7 +1427,11 @@ private fun MileageEmptyState(message: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
+private fun AddMileageExpenseBottomSheet(
+    expense: MileageTripUi? = null,
+    onDismiss: () -> Unit,
+    onSuccess: () -> Unit,
+) {
     val context = LocalContext.current
     val tripController = remember { TravelExpenseController(context) }
     val projectOptions by tripController.projectOptions
@@ -812,7 +1448,7 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
     val mileageRateError by tripController.mileageRateError
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+    val dateFormatter = remember { SimpleDateFormat("MM dd, yyyy", Locale.getDefault()) }
 
     var customerName by rememberSaveable { mutableStateOf("") }
     var selectedProjectCode by rememberSaveable { mutableStateOf("") }
@@ -849,6 +1485,49 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
     val vehicleDropdownOptions = buildVehicleDropdownOptions(vehicleOwner, vehicleAssets, personalVehicles)
     val destinationPoints = destinationStops.map { it.point }
     val destinationNames = destinationStops.map { it.name }
+    val isEditMode = expense != null
+
+    LaunchedEffect(expense) {
+        expense?.let { currentExpense ->
+            customerName = currentExpense.customerName
+            fromDateMillis = try {
+                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(currentExpense.fromDate)?.time
+            } catch (_: Exception) {
+                null
+            }
+            toDateMillis = try {
+                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(currentExpense.toDate)?.time
+            } catch (_: Exception) {
+                null
+            }
+            startLocation = currentExpense.startPoint
+            startPoint = currentExpense.routePoints.firstOrNull()?.let { GeoPoint(it.latitude, it.longitude) }
+            destinationStops.clear()
+            if (currentExpense.routePoints.size > 1) {
+                currentExpense.routePoints.drop(1).forEach { point ->
+                    destinationStops.add(RouteStop(point.name, GeoPoint(point.latitude, point.longitude)))
+                }
+            }
+            if (destinationStops.isEmpty()) {
+                destinationStops.add(RouteStop())
+            }
+            distance = currentExpense.distance
+            vehicleOwner = currentExpense.vehicleOwnershipType.uppercase(Locale.getDefault())
+            vehicleType = currentExpense.vehicleTypeValue.uppercase(Locale.getDefault())
+            vehicle = currentExpense.vehicleName.ifBlank { currentExpense.vehicle }
+            selectedProjectId = currentExpense.projectId
+            selectedProjectCode = ""
+        }
+    }
+
+    LaunchedEffect(projectOptions, expense) {
+        if (expense != null && selectedProjectCode.isBlank()) {
+            selectedProjectCode = projectOptions.firstOrNull { it.id == expense.projectId }?.code.orEmpty()
+        }
+    }
+
+    val sheetTitle = if (isEditMode) "Edit Mileage Expense" else "Add Mileage Expense"
+    val submitButtonText = if (isEditMode) "Edit Expense" else "Save Expense"
 
     LaunchedEffect(vehicleOwner, vehicleType) {
         when {
@@ -957,7 +1636,7 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Add Mileage Expense",
+                    text = sheetTitle,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 19.sp,
@@ -1003,7 +1682,7 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Add Mileage Expense",
+                            text = sheetTitle,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 24.sp,
@@ -1258,13 +1937,24 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                         durationSeconds = 1,
                     )
 
-                    tripController.createMileageExpense(
-                        request = requestPayload,
-                        onSuccess = { onDismiss() },
-                        onError = { message ->
-                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                        }
-                    )
+                    if (isEditMode && expense != null) {
+                        tripController.updateMileageExpense(
+                            expense.expenseId,
+                            requestPayload,
+                            onSuccess = { onSuccess() },
+                            onError = { message ->
+                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    } else {
+                        tripController.createMileageExpense(
+                            request = requestPayload,
+                            onSuccess = { onSuccess() },
+                            onError = { message ->
+                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1275,7 +1965,7 @@ private fun AddMileageExpenseBottomSheet(onDismiss: () -> Unit) {
                 ),
                 shape = RoundedCornerShape(14.dp)
             ) {
-                Text("Save Expense", fontFamily = GraphikFontFamily, fontSize = 16.sp)
+                Text(submitButtonText, fontFamily = GraphikFontFamily, fontSize = 16.sp)
             }
         }
     }

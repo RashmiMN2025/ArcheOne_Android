@@ -96,4 +96,40 @@ interface ExpenseTripService {
     suspend fun createMileageExpense(
         @Body request: CreateMileageExpenseRequest,
     ): Response<Any>
+
+    @PUT("v1/travel-expenses/{expense_id}")
+    suspend fun updateMileageExpense(
+        @Path("expense_id") expenseId: Int,
+        @Body request: CreateMileageExpenseRequest,
+    ): Response<Any>
+
+    @PATCH("v1/travel-expenses/{expense_id}/withdraw")
+    suspend fun withdrawMileageExpense(
+        @Path("expense_id") expenseId: Int,
+    ): Response<Any>
+
+    @DELETE("v1/travel-expenses/{expense_id}")
+    suspend fun deleteMileageExpense(
+        @Path("expense_id") expenseId: Int,
+    ): Response<Any>
+
+    @GET("v1/travel-expenses/{expense_id}")
+    suspend fun getMileageExpenseDetail(
+        @Path("expense_id") expenseId: Int,
+    ): Response<MileageExpenseDetailResponse>
+
+    @GET("v1/travel-expenses/notes/{expense_id}")
+    suspend fun getMileageExpenseNotes(
+        @Path("expense_id") expenseId: Int,
+    ): Response<List<MileageExpenseNoteResponse>>
+
+    @POST("v1/travel-expenses/notes")
+    suspend fun addMileageExpenseNote(
+        @Body request: AddMileageExpenseNoteRequest,
+    ): Response<AddMileageExpenseNoteResponse>
+
+    @POST("v1/travel-expenses/{expense_id}/submit")
+    suspend fun submitMileageExpense(
+        @Path("expense_id") expenseId: Int,
+    ): Response<SubmitMileageExpenseResponse>
 }
