@@ -1352,12 +1352,16 @@ class HomeController(
                     Log.d("HomeController", "TravelExpense clicked — calling entra login")
                     ExpenseAuthController(context).loginWithStoredIdToken { success, message, role ->
                         if (success) {
-                            Log.d("HomeController", "Expense entra login successful")
+                            Log.d("HomeController", "Expense entra login successful, role=$role")
                             if (context is com.archeGlobal.one.HomeActivity) {
                                 context.travelController.setExpenseApprovalVisibility(role)
                             }
                         } else {
                             Log.w("HomeController", "Expense entra login failed: $message")
+                            // No verified role — never leave the Approvals tile visible from an earlier session.
+                            if (context is com.archeGlobal.one.HomeActivity) {
+                                context.travelController.setExpenseApprovalVisibility(null)
+                            }
                             android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
                         }
                         navigator.navigateToTravelExpenseDesk()

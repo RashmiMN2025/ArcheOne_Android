@@ -7,12 +7,15 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,7 +40,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.FlightTakeoff
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.filled.Download
@@ -58,6 +63,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.ExpenseController
@@ -67,6 +73,9 @@ import com.archeGlobal.one.network.MileageExpenseItemUi
 import com.archeGlobal.one.network.SubmittedExpenseUi
 import com.archeGlobal.one.network.TeamMileageDashboardMetricsResponse
 import com.archeGlobal.one.network.TravelRequestItemUi
+import com.archeGlobal.one.network.isTravelExpenseDraft
+import com.archeGlobal.one.network.isTravelExpenseSubmitted
+import com.archeGlobal.one.network.travelExpenseStatusLabel
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -90,6 +99,19 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
     var reviewComment by rememberSaveable { mutableStateOf("") }
     var isReviewSubmitting by rememberSaveable { mutableStateOf(false) }
     var selectedExpenseDetail by remember { mutableStateOf<ExpenseDetailUi?>(null) }
+    var selectedMileageExpenseId by rememberSaveable { mutableStateOf<Int?>(null) }
+
+    if (selectedMileageExpenseId != null) {
+        MileageApprovalDetailScreen(
+            expenseId = selectedMileageExpenseId!!,
+            onBack = {
+                selectedMileageExpenseId = null
+                travelExpenseController.fetchTeamMileageDashboardMetrics()
+                travelExpenseController.fetchTeamMileageExpenses()
+            },
+        )
+        return
+    }
 
     if (selectedExpenseDetail != null) {
         BackHandler {
@@ -254,7 +276,8 @@ fun ExpenseApprovalViewScreen(onBack: () -> Unit) {
                     metrics = teamMileageMetrics,
                     mileages = mileageExpenses,
                     isLoading = travelExpenseController.teamMileageExpensesLoading.value,
-                    errorMessage = travelExpenseController.teamMileageExpensesError.value
+                    errorMessage = travelExpenseController.teamMileageExpensesError.value,
+                    onViewMileage = { mileage -> selectedMileageExpenseId = mileage.expenseId }
                 )
             }
         }
@@ -720,7 +743,17 @@ private fun MileageApprovalList(
     mileages: List<MileageExpenseItemUi>,
     isLoading: Boolean,
     errorMessage: String?,
+    onViewMileage: (MileageExpenseItemUi) -> Unit,
 ) {
+    var searchText by rememberSaveable { mutableStateOf("") }
+    val filteredMileages = mileages.filter { mileage ->
+        searchText.isBlank() ||
+            mileage.id.contains(searchText, ignoreCase = true) ||
+            mileage.customerName.contains(searchText, ignoreCase = true) ||
+            mileage.startPoint.contains(searchText, ignoreCase = true) ||
+            mileage.endPoint.contains(searchText, ignoreCase = true)
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp)
@@ -729,43 +762,76 @@ private fun MileageApprovalList(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ApprovalStatCard(
-                    title = "Team Claims",
-                    value = (metrics?.pendingCount ?: mileages.size).toString(),
+                MileageApprovalStatCard(
+                    title = "Pending claims",
+                    value = (metrics?.pendingCount ?: filteredMileages.size).toString(),
                     icon = Icons.Default.DirectionsCar,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 )
-                ApprovalStatCard(
-                    title = "Total Distance",
+                MileageApprovalStatCard(
+                    title = "Total distance logged",
                     value = "${formatMetricValue(metrics?.totalDistance)} km",
-                    icon = Icons.Default.DirectionsCar,
-                    modifier = Modifier.weight(1f)
+                    icon = Icons.Default.Eco,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 )
-                ApprovalStatCard(
-                    title = "Total Claim",
+                MileageApprovalStatCard(
+                    title = "Total claim amount",
                     value = "Rs ${formatMetricValue(metrics?.totalClaimAmount)}",
                     icon = Icons.Default.Description,
-                    modifier = Modifier.weight(1f)
-                )
-                ApprovalStatCard(
-                    title = "Approved",
-                    value = "Rs ${formatMetricValue(metrics?.totalApprovedAmount)}",
-                    icon = Icons.Default.Visibility,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 )
             }
+        }
 
-            Text(
-                text = "Team mileage expenses",
-                fontFamily = GraphikFontFamily,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Team mileage submissions",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.Gray)
+                    },
+                    placeholder = {
+                        Text(
+                            text = "Search claims...",
+                            color = Color.Gray,
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 15.sp
+                        )
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        backgroundColor = Color.White,
+                        focusedBorderColor = Color.LightGray,
+                        unfocusedBorderColor = Color(0xFFD4D4D4)
+                    )
+                )
+            }
         }
 
         if (isLoading && mileages.isEmpty()) {
@@ -779,19 +845,29 @@ private fun MileageApprovalList(
                     CircularProgressIndicator(color = PrimaryRed)
                 }
             }
-        } else if (mileages.isEmpty()) {
+        } else if (filteredMileages.isEmpty()) {
             item {
                 ApprovalEmptyState(
                     icon = Icons.Default.DirectionsCar,
-                    title = if (errorMessage.isNullOrBlank()) "No mileage claims" else "Unable to load mileage claims",
-                    message = errorMessage ?: "No mileage claims were returned for the team."
+                    title = when {
+                        !errorMessage.isNullOrBlank() -> "Unable to load mileage claims"
+                        mileages.isNotEmpty() -> "No matching claims"
+                        else -> "No mileage claims"
+                    },
+                    message = errorMessage
+                        ?: if (mileages.isNotEmpty()) {
+                            "No claims match \"$searchText\"."
+                        } else {
+                            "No mileage claims were returned for the team."
+                        }
                 )
             }
         } else {
-            items(mileages) { mileage ->
+            items(filteredMileages) { mileage ->
                 MileageApprovalCard(
                     mileage = mileage,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    onView = { onViewMileage(mileage) }
                 )
             }
         }
@@ -913,45 +989,207 @@ fun shouldShowTravelDetailAction(status: String?): Boolean {
         status?.equals("rejected", ignoreCase = true) != true
 }
 
+/** Mirrors the trip card on the mileage overview screen, with review as the only action. */
 @Composable
 private fun MileageApprovalCard(
     mileage: MileageExpenseItemUi,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onView: () -> Unit = {},
 ) {
-    ApprovalCardContainer(modifier = modifier) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = 2.dp,
+        backgroundColor = Color.White
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = mileage.customerName,
+                    text = mileage.id,
                     fontFamily = GraphikFontFamily,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
                 )
-                Text(
-                    text = "${mileage.startPoint} → ${mileage.endPoint}",
-                    fontFamily = GraphikFontFamily,
-                    fontSize = 14.sp,
-                    color = Color.Gray
+                MileageApprovalStatusBadge(status = mileage.status)
+            }
+
+            Divider(color = Color(0xFFEAEAEA))
+
+            MileageApprovalDetailRow("Customer Name", mileage.customerName)
+            MileageApprovalDetailRow("From", mileage.fromDate)
+            MileageApprovalDetailRow("To", mileage.toDate)
+            MileageApprovalDetailRow("Start", mileage.startPoint)
+            MileageApprovalDetailRow("End", mileage.endPoint)
+            MileageApprovalDetailRow("Type", mileage.type)
+            MileageApprovalDetailRow("Vehicle", mileage.vehicle)
+            MileageApprovalDetailRow("Amount", mileage.amount)
+            MileageApprovalDetailRow("Distance", mileage.distance)
+
+            Divider(color = Color(0xFFEAEAEA))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                MileageApprovalActionButton(
+                    icon = Icons.Default.Visibility,
+                    label = "Review",
+                    onClick = onView
                 )
             }
-            TravelStatusBadge(status = mileage.status)
         }
+    }
+}
 
-        Divider(color = Color(0xFFEAEAEA))
+@Composable
+private fun MileageApprovalDetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = label,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            color = Color.Gray,
+            modifier = Modifier.width(120.dp)
+        )
+        Text(
+            text = value,
+            fontFamily = GraphikFontFamily,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
 
-        ApprovalDetailRow("Date", mileage.date)
-        ApprovalDetailRow("Distance", mileage.distance)
-        ApprovalDetailRow("Vehicle", mileage.vehicle)
-        ApprovalDetailRow("Type", mileage.type)
-        ApprovalDetailRow("Amount", mileage.amount, isBold = true)
-        ApprovalDetailRow("Status", mileage.status)
+@Composable
+private fun MileageApprovalActionButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .height(40.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        elevation = 0.dp,
+        backgroundColor = Color(0xFFF8F8F8)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 10.dp)
+                .fillMaxHeight(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = PrimaryRed,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = label,
+                color = PrimaryRed,
+                fontFamily = GraphikFontFamily,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
 
-        ReviewActionRow(actionText = "Review")
+@Composable
+private fun MileageApprovalStatusBadge(status: String) {
+    val label = travelExpenseStatusLabel(status.takeIf { it.isNotBlank() } ?: "pending")
+    val normalized = label.lowercase(Locale.getDefault())
+    val (background, textColor) = when {
+        isTravelExpenseDraft(normalized) -> Pair(Color(0xFFFFF9C4), Color(0xFF827717))
+        isTravelExpenseSubmitted(normalized) -> Pair(Color(0xFFF5F5F5), Color(0xFF616161))
+        normalized.contains("reject") -> Pair(Color(0xFFFFEBEE), Color(0xFFC62828))
+        else -> Pair(Color(0xFFE8F5E9), Color(0xFF2E7D32))
+    }
+
+    Text(
+        text = label,
+        color = textColor,
+        fontFamily = GraphikFontFamily,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier
+            .background(background, RoundedCornerShape(8.dp))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    )
+}
+
+@Composable
+private fun MileageApprovalStatCard(
+    title: String,
+    value: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.heightIn(min = 125.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = 2.dp,
+        backgroundColor = Color.White
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = title,
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 4.dp)
+                )
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(25.dp)
+                )
+            }
+            Text(
+                text = value,
+                fontFamily = GraphikFontFamily,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
@@ -1085,53 +1323,6 @@ private fun TravelStatusBadge(status: String) {
             .background(color.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp, vertical = 6.dp)
     )
-}
-
-@Composable
-private fun ApprovalStatCard(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        elevation = 2.dp,
-        backgroundColor = Color.White
-    ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Text(
-                    text = title,
-                    fontFamily = GraphikFontFamily,
-                    fontSize = 13.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.weight(1f)
-                )
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = Color.Gray,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-            Text(
-                text = value,
-                fontFamily = GraphikFontFamily,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            )
-        }
-    }
 }
 
 private fun formatMetricValue(value: String?): String {

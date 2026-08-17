@@ -258,16 +258,23 @@ data class MileageExpenseNoteResponse(
     @SerializedName("created_by_id") val createdById: Int? = null,
 )
 
-data class AddMileageExpenseNoteRequest(
-    val notes: String,
-    @SerializedName("expense_id") val expenseId: Int,
-)
-
 data class AddMileageExpenseNoteResponse(
     val message: String? = null,
 )
 
 data class SubmitMileageExpenseResponse(
+    val message: String? = null,
+)
+
+data class TravelExpenseApproveRequest(
+    val comment: String? = null,
+)
+
+data class TravelExpenseRejectRequest(
+    val comment: String,
+)
+
+data class TravelExpenseActionResponse(
     val message: String? = null,
 )
 
@@ -300,6 +307,35 @@ data class MileageExpenseItemUi(
     val vehicleTypeValue: String,
     val vehicleId: Int?,
 )
+
+/**
+ * Display label for a `TravelExpenseStatus` — the API sends
+ * `drafted | pending | approved | rejected | finance_approved | finance_rejected`.
+ */
+fun travelExpenseStatusLabel(status: String?): String {
+    val normalized = status?.trim()?.lowercase(Locale.getDefault()).orEmpty()
+    return when {
+        normalized.isBlank() -> "-"
+        isTravelExpenseDraft(normalized) -> "Draft"
+        normalized == "pending" || normalized == "submitted" -> "Submitted"
+        else -> normalized
+            .split('_')
+            .filter { it.isNotBlank() }
+            .joinToString(" ") { word -> word.replaceFirstChar { c: Char -> c.uppercaseChar() } }
+    }
+}
+
+/** True for the API's draft status, which is spelled `drafted`. */
+fun isTravelExpenseDraft(status: String?): Boolean {
+    val normalized = status?.trim()?.lowercase(Locale.getDefault()) ?: return false
+    return normalized == "draft" || normalized == "drafted"
+}
+
+/** True while the claim is awaiting a decision, i.e. the employee can only withdraw it. */
+fun isTravelExpenseSubmitted(status: String?): Boolean {
+    val normalized = status?.trim()?.lowercase(Locale.getDefault()) ?: return false
+    return normalized == "pending" || normalized == "submitted"
+}
 
 fun MileageExpenseRecord.toMileageExpenseItemUi(): MileageExpenseItemUi {
     val routePoints = route.filter { it.name.isNotBlank() }
@@ -335,11 +371,7 @@ fun MileageExpenseRecord.toMileageExpenseItemUi(): MileageExpenseItemUi {
         vehicleName = assetVehicleName,
         amount = amount.takeIf { it.isNotBlank() } ?: "0.00",
         distance = distance.takeIf { it.isNotBlank() } ?: "0",
-        status = when {
-            status.equals("pending", ignoreCase = true) -> "Submitted"
-            status.equals("draft", ignoreCase = true) -> "Draft"
-            else -> status.replaceFirstChar { c: Char -> c.uppercaseChar().toString() }
-        },
+        status = travelExpenseStatusLabel(status),
         routePoints = routePoints,
         projectId = projectId,
         vehicleOwnershipType = ownershipType,

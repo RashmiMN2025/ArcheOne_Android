@@ -4,9 +4,11 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -24,7 +26,10 @@ interface ExpenseTripService {
     ): Response<TripsListResponse>
 
     @GET("v1/projects/options/my")
-    suspend fun getProjectOptions(): Response<ProjectOptionsResponse>
+    suspend fun getProjectOptions(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 10,
+    ): Response<ProjectOptionsResponse>
 
     @GET("v1/trips/options")
     suspend fun getTripOptions(): Response<List<TripOptionResponse>>
@@ -123,13 +128,29 @@ interface ExpenseTripService {
         @Path("expense_id") expenseId: Int,
     ): Response<List<MileageExpenseNoteResponse>>
 
+    // Server expects multipart/form-data (expense_id required, notes and file optional).
+    @Multipart
     @POST("v1/travel-expenses/notes")
     suspend fun addMileageExpenseNote(
-        @Body request: AddMileageExpenseNoteRequest,
+        @Part("expense_id") expenseId: okhttp3.RequestBody,
+        @Part("notes") notes: okhttp3.RequestBody? = null,
+        @Part file: okhttp3.MultipartBody.Part? = null,
     ): Response<AddMileageExpenseNoteResponse>
 
     @POST("v1/travel-expenses/{expense_id}/submit")
     suspend fun submitMileageExpense(
         @Path("expense_id") expenseId: Int,
     ): Response<SubmitMileageExpenseResponse>
+
+    @PATCH("v1/travel-expenses/approve/{expense_id}")
+    suspend fun approveMileageExpense(
+        @Path("expense_id") expenseId: Int,
+        @Body request: TravelExpenseApproveRequest,
+    ): Response<TravelExpenseActionResponse>
+
+    @PATCH("v1/travel-expenses/reject/{expense_id}")
+    suspend fun rejectMileageExpense(
+        @Path("expense_id") expenseId: Int,
+        @Body request: TravelExpenseRejectRequest,
+    ): Response<TravelExpenseActionResponse>
 }

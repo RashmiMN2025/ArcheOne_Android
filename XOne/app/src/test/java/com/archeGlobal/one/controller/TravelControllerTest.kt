@@ -6,18 +6,26 @@ import org.junit.Test
 
 class TravelControllerTest {
     @Test
-    fun treatsAdminLikeRolesAsAdmin() {
-        assertTrue(TravelController.isAdminRole("Admin"))
-        assertTrue(TravelController.isAdminRole("ADMIN"))
-        assertTrue(TravelController.isAdminRole("admin"))
-        assertTrue(TravelController.isAdminRole("Finance Admin"))
+    fun treatsAdminLikeRolesAsApprovers() {
+        assertTrue(TravelController.canApproveExpensesRole("Admin"))
+        assertTrue(TravelController.canApproveExpensesRole("ADMIN"))
+        assertTrue(TravelController.canApproveExpensesRole("admin"))
+        assertTrue(TravelController.canApproveExpensesRole("Finance Admin"))
     }
 
     @Test
-    fun treatsNonAdminRolesAsNonAdmin() {
-        assertFalse(TravelController.isAdminRole(null))
-        assertFalse(TravelController.isAdminRole(""))
-        assertFalse(TravelController.isAdminRole("user"))
-        assertFalse(TravelController.isAdminRole("manager"))
+    fun treatsManagerLikeRolesAsApprovers() {
+        assertTrue(TravelController.canApproveExpensesRole("manager"))
+        assertTrue(TravelController.canApproveExpensesRole("Manager"))
+        assertTrue(TravelController.canApproveExpensesRole("MANAGER"))
+        assertTrue(TravelController.canApproveExpensesRole("Reporting Manager"))
+    }
+
+    @Test
+    fun treatsOtherRolesAsNonApprovers() {
+        assertFalse(TravelController.canApproveExpensesRole(null))
+        assertFalse(TravelController.canApproveExpensesRole(""))
+        assertFalse(TravelController.canApproveExpensesRole("user"))
+        assertFalse(TravelController.canApproveExpensesRole("employee"))
     }
 }

@@ -290,6 +290,8 @@ data class ExpenseDetailUi(
     val subCategory: String,
     val mode: String,
     val accommodationType: String,
+    /** Extracted travel class for train bookings, e.g. `tier_3`. */
+    val trainClass: String = "",
     val hotelName: String,
     val gstinOfHotel: String,
     val currency: String,
@@ -382,6 +384,8 @@ fun ExpenseDetailResponse.toDetailUi(): ExpenseDetailUi {
             .ifBlank { extracted.confidenceText("booking_details", "booking_channel") },
         accommodationType = accommodationType.formatAccommodationType()
             .ifBlank { subCategory.formatExpenseCategory() },
+        trainClass = extracted.confidenceText("transaction_details", "class")
+            .ifBlank { extracted.confidenceText("booking_details", "class") },
         hotelName = vendorName?.takeIf { it.isNotBlank() }
             ?: extracted.confidenceText("vendor_name").ifBlank { extracted.confidenceText("hotel_details", "hotel_name") },
         gstinOfHotel = extracted.confidenceText("hotel_details", "gst_number")

@@ -97,15 +97,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import coil.compose.AsyncImage
 import com.archeGlobal.one.controller.TravelExpenseController
 import com.archeGlobal.one.network.MileageExpenseDetailResponse
 import com.archeGlobal.one.network.MileageExpenseNoteResponse
 import com.archeGlobal.one.network.MileageExpenseRoutePoint
 import com.archeGlobal.one.network.VehicleAssetItem
+import com.archeGlobal.one.network.isTravelExpenseDraft
+import com.archeGlobal.one.network.isTravelExpenseSubmitted
+import com.archeGlobal.one.network.travelExpenseStatusLabel
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -963,8 +969,7 @@ private fun MileageExpenseDetailScreen(
                         }
                         val (badgeBg, badgeText) = statusColors(record.status ?: "-")
                         Text(
-                            text = (record.status?.takeIf { it.isNotBlank() } ?: "-")
-                                .replaceFirstChar { it.uppercase() },
+                            text = travelExpenseStatusLabel(record.status),
                             color = badgeText,
                             fontFamily = GraphikFontFamily,
                             fontSize = 13.sp,
@@ -975,18 +980,55 @@ private fun MileageExpenseDetailScreen(
                         )
                     }
 
+                    MileageSectionCard(title = "Claim Summary") {
+                        MileageDetailRow("Customer", record.customerName?.takeIf { it.isNotBlank() } ?: "-")
+                        MileageDetailRow("Project", record.projectName?.takeIf { it.isNotBlank() } ?: "-")
+                        MileageDetailRow("Date of Travel", travelDate)
+                        MileageDetailRow("Claim Amount", "Rs ${record.amount ?: "0.00"}")
+                    }
+
                     MileageSectionCard(title = "Trip Details") {
-                        MileageDetailRow("Distance", "${formatMetricValue(record.distance)} km")
                         MileageDetailRow("From Address", startAddress)
                         MileageDetailRow("To Address", endAddress)
-                        MileageDetailRow("Date of Travel", travelDate)
                         MileageDetailRow("Travel Distance", "${formatMetricValue(record.distance)} km")
+                        MileageDetailRow("Duration", formatMileageDuration(record.durationSeconds))
                         MileageDetailRow("Carbon Emission", "${formatMetricValue(record.carbonEmission)} Kg CO₂e")
                     }
 
-                    MileageSectionCard(title = null) {
-                        MileageDetailRow("Started From", startAddress)
-                        MileageDetailRow("Arrived At", endAddress)
+                    val vehicleDetail = record.companyVehicle ?: record.personalVehicle
+                    MileageSectionCard(title = "Vehicle") {
+                        MileageDetailRow(
+                            "Ownership",
+                            record.vehicleType?.replaceFirstChar { it.uppercase() } ?: "-",
+                        )
+                        MileageDetailRow(
+                            "Vehicle",
+                            record.vehicle?.replaceFirstChar { it.uppercase() } ?: "-",
+                        )
+                        MileageDetailRow("Make / Model", vehicleDetail?.makeModel ?: "-")
+                        MileageDetailRow("Asset Code", vehicleDetail?.assetCode ?: "-")
+                        MileageDetailRow(
+                            "Fuel Type",
+                            vehicleDetail?.fuelType?.replaceFirstChar { it.uppercase() } ?: "-",
+                        )
+                        MileageDetailRow(
+                            "Engine CC",
+                            vehicleDetail?.vehicleCc?.let { "$it cc" } ?: "-",
+                        )
+                    }
+
+                    if (!record.mapImageUrl.isNullOrBlank()) {
+                        MileageSectionCard(title = "Route") {
+                            AsyncImage(
+                                model = record.mapImageUrl,
+                                contentDescription = "Route map",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                            )
+                        }
                     }
 
                     MileageSectionCard(title = "Notes") {
@@ -1081,6 +1123,8 @@ private fun MileageExpenseDetailScreen(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
+                    val reimbursementAllowed = canRequestReimbursement(record.status)
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -1103,32 +1147,34 @@ private fun MileageExpenseDetailScreen(
                                 fontSize = 16.sp,
                             )
                         }
-                        Button(
-                            onClick = { submitReimbursement() },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = PrimaryRed,
-                                contentColor = Color.White,
-                            ),
-                            shape = RoundedCornerShape(14.dp),
-                            enabled = !isSubmittingReimbursement,
-                        ) {
-                            if (isSubmittingReimbursement) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp,
-                                )
-                            } else {
-                                Text(
-                                    text = "Request Reimbursement",
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp,
-                                    textAlign = TextAlign.Center,
-                                )
+                        if (reimbursementAllowed) {
+                            Button(
+                                onClick = { submitReimbursement() },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(52.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = PrimaryRed,
+                                    contentColor = Color.White,
+                                ),
+                                shape = RoundedCornerShape(14.dp),
+                                enabled = !isSubmittingReimbursement,
+                            ) {
+                                if (isSubmittingReimbursement) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp,
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Request Reimbursement",
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                }
                             }
                         }
                     }
@@ -1174,12 +1220,62 @@ private fun formatMetricValue(value: String?): String {
     return value?.takeIf { it.isNotBlank() } ?: "0"
 }
 
+private fun formatMileageDuration(durationSeconds: String?): String {
+    val seconds = durationSeconds?.toDoubleOrNull() ?: return "-"
+    val totalMinutes = (seconds / 60).toInt()
+    return when {
+        totalMinutes < 60 -> "$totalMinutes min"
+        totalMinutes % 60 == 0 -> "${totalMinutes / 60} hr"
+        else -> "${totalMinutes / 60} hr ${totalMinutes % 60} min"
+    }
+}
+
+private data class MileageActionAvailability(
+    val canView: Boolean,
+    val canEdit: Boolean,
+    val canDelete: Boolean,
+    val canWithdraw: Boolean,
+)
+
+/**
+ * Draft: everything except withdraw. Submitted/pending: view and withdraw only.
+ * Rejected and approved records are read-only.
+ *
+ * Accepts both the raw API status (`drafted`, `pending`) and the display label
+ * ([travelExpenseStatusLabel] turns those into `Draft` and `Submitted`).
+ */
+private fun mileageActionAvailability(status: String): MileageActionAvailability {
+    return when {
+        isTravelExpenseDraft(status) -> MileageActionAvailability(
+            canView = true,
+            canEdit = true,
+            canDelete = true,
+            canWithdraw = false,
+        )
+        isTravelExpenseSubmitted(status) -> MileageActionAvailability(
+            canView = true,
+            canEdit = false,
+            canDelete = false,
+            canWithdraw = true,
+        )
+        else -> MileageActionAvailability(
+            canView = true,
+            canEdit = false,
+            canDelete = false,
+            canWithdraw = false,
+        )
+    }
+}
+
+/** Reimbursement can only be requested while the expense is still a draft. */
+private fun canRequestReimbursement(status: String?): Boolean = isTravelExpenseDraft(status)
+
 private fun statusColors(status: String): Pair<Color, Color> {
-    return when (status.lowercase(Locale.getDefault())) {
-        "draft" -> Pair(Color(0xFFFFF9C4), Color(0xFF827717))
-        "submitted" -> Pair(Color(0xFFF5F5F5), Color(0xFF616161))
-        "rejected" -> Pair(Color(0xFFFFEBEE), Color(0xFFC62828))
-        "approved" -> Pair(Color(0xFFE8F5E9), Color(0xFF2E7D32))
+    val normalized = status.trim().lowercase(Locale.getDefault())
+    return when {
+        isTravelExpenseDraft(normalized) -> Pair(Color(0xFFFFF9C4), Color(0xFF827717))
+        isTravelExpenseSubmitted(normalized) -> Pair(Color(0xFFF5F5F5), Color(0xFF616161))
+        normalized.contains("reject") -> Pair(Color(0xFFFFEBEE), Color(0xFFC62828))
         else -> Pair(Color(0xFFE8F5E9), Color(0xFF2E7D32))
     }
 }
@@ -1297,6 +1393,8 @@ private fun MileageTripCard(
 
             Divider(color = Color(0xFFEAEAEA))
 
+            val actions = mileageActionAvailability(trip.status)
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -1305,22 +1403,26 @@ private fun MileageTripCard(
                 MileageActionButton(
                     icon = Icons.Default.Visibility,
                     label = "View",
-                    onClick = onView
+                    onClick = onView,
+                    enabled = actions.canView
                 )
                 MileageActionButton(
                     icon = Icons.Default.Edit,
                     label = "Edit",
-                    onClick = onEdit
+                    onClick = onEdit,
+                    enabled = actions.canEdit
                 )
                 MileageActionButton(
                     icon = Icons.Default.Delete,
                     label = "Delete",
-                    onClick = onDelete
+                    onClick = onDelete,
+                    enabled = actions.canDelete
                 )
                 MileageActionButton(
                     icon = Icons.Default.Cancel,
                     label = "Withdraw",
-                    onClick = onWithdraw
+                    onClick = onWithdraw,
+                    enabled = actions.canWithdraw
                 )
             }
         }
@@ -1358,15 +1460,17 @@ private fun MileageDetailRow(label: String, value: String) {
 private fun MileageActionButton(
     icon: ImageVector,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    enabled: Boolean = true,
 ) {
+    val contentColor = if (enabled) PrimaryRed else Color(0xFFBDBDBD)
     Card(
         modifier = Modifier
             .height(40.dp)
-            .clickable(onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         elevation = 0.dp,
-        backgroundColor = Color(0xFFF8F8F8)
+        backgroundColor = if (enabled) Color(0xFFF8F8F8) else Color(0xFFF1F1F1)
     ) {
         Row(
             modifier = Modifier
@@ -1378,12 +1482,12 @@ private fun MileageActionButton(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = PrimaryRed,
+                tint = contentColor,
                 modifier = Modifier.size(16.dp)
             )
             Text(
                 text = label,
-                color = PrimaryRed,
+                color = contentColor,
                 fontFamily = GraphikFontFamily,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium

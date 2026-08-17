@@ -233,12 +233,17 @@ class TravelController(
     }
 
     fun setExpenseApprovalVisibility(role: String?) {
-        canViewExpenseApprovals = isAdminRole(role)
+        canViewExpenseApprovals = canApproveExpensesRole(role)
     }
 
     companion object {
-        fun isAdminRole(role: String?): Boolean {
-            return role?.trim()?.lowercase()?.contains("admin") == true
+        /**
+         * Role reported by `GET expense/v1/users/me`. Managers and admins are the
+         * reviewers, so they are the only roles that see the expense Approvals tile.
+         */
+        fun canApproveExpensesRole(role: String?): Boolean {
+            val normalizedRole = role?.trim()?.lowercase() ?: return false
+            return normalizedRole.contains("admin") || normalizedRole.contains("manager")
         }
     }
 

@@ -91,6 +91,36 @@ private fun shouldShowDetailField(isReadOnly: Boolean, value: String): Boolean =
 
 private fun String.normalizeExpenseCategory(): String = trim().lowercase(Locale.getDefault())
 
+/** Display labels for the API's `TrainClassEnum` (`tier_1 | tier_2 | tier_3`). */
+private val TRAIN_CLASS_LABELS = listOf("Tier 1", "Tier 2", "Tier 3")
+
+/** True when the expense is a train booking, named either by category or by mode. */
+private fun isTrainExpense(category: String, mode: String): Boolean =
+    category.normalizeExpenseCategory().contains("train") ||
+        mode.normalizeExpenseCategory().contains("train")
+
+/**
+ * Maps an extracted class value (`tier_2`, `2A`, `Tier II`, …) onto a dropdown label.
+ * Falls back to Tier 3, which is what the app sent before the field was selectable.
+ */
+private fun trainClassLabel(rawTrainClass: String?): String {
+    val normalized = rawTrainClass?.trim()?.lowercase(Locale.getDefault()).orEmpty()
+    return when {
+        normalized.isBlank() -> "Tier 3"
+        normalized.contains("1") || normalized.contains("first") -> "Tier 1"
+        normalized.contains("2") || normalized.contains("second") -> "Tier 2"
+        else -> "Tier 3"
+    }
+}
+
+/** Maps a dropdown label back onto the `TrainClassEnum` value the API expects. */
+private fun trainClassValue(label: String): String =
+    when (trainClassLabel(label)) {
+        "Tier 1" -> "tier_1"
+        "Tier 2" -> "tier_2"
+        else -> "tier_3"
+    }
+
 fun isPdfUrl(fileUrl: String?): Boolean {
     val normalized = fileUrl?.trim().orEmpty().lowercase(Locale.getDefault())
     return normalized.endsWith(".pdf") || normalized.contains(".pdf?") || normalized.contains(".pdf#")
@@ -149,6 +179,9 @@ fun ExpenseExtractionDetailViewScreen(
     var accommodationType by rememberSaveable(expense.id) {
         mutableStateOf(expense.accommodationType)
     }
+    var trainClass by rememberSaveable(expense.id) {
+        mutableStateOf(trainClassLabel(expense.trainClass))
+    }
     var hotelName by rememberSaveable(expense.id) { mutableStateOf(expense.hotelName) }
     var gstinOfHotel by rememberSaveable(expense.id) { mutableStateOf(expense.gstinOfHotel) }
     var currency by rememberSaveable(expense.id) { mutableStateOf(expense.currency.ifBlank { "INR" }) }
@@ -200,8 +233,8 @@ fun ExpenseExtractionDetailViewScreen(
             projectId = selectedProjectNumericId,
             tripId = if (selectedProjectNumericId == null) selectedTripNumericId else null,
             flightClass = "economy",
-            trainClass = if (expense.category.contains("train", ignoreCase = true)) {
-                "tier_3"
+            trainClass = if (isTrainExpense(category, mode)) {
+                trainClassValue(trainClass)
             } else {
                 null
             },
@@ -406,6 +439,16 @@ fun ExpenseExtractionDetailViewScreen(
                                 enabled = !isReadOnly,
                             )
                         }
+                    }
+
+                    if (isTrainExpense(category, mode)) {
+                        DetailDropdownField(
+                            label = "Train Class",
+                            value = trainClass,
+                            options = TRAIN_CLASS_LABELS,
+                            onValueChange = { trainClass = it },
+                            enabled = !isReadOnly,
+                        )
                     }
 
                     if (shouldShowDetailField(isReadOnly, currency)) {
@@ -957,8 +1000,8 @@ fun ExpenseExtractionDetailViewScreen(
                                 tripId = splitTripId,
                                 accommodationType = accommodationType.lowercase(Locale.getDefault())
                                     .takeIf { it == "domestic" || it == "international" },
-                                trainClass = if (expense.category.contains("train", ignoreCase = true)) {
-                                    "tier_3"
+                                trainClass = if (isTrainExpense(category, mode)) {
+                                    trainClassValue(trainClass)
                                 } else {
                                     null
                                 },
@@ -1599,6 +1642,29 @@ private fun formatSplitDisplayDate(raw: String?): String? {
     }
 }
 
+/**
+ * `created_at` arrives as an ISO-8601 UTC timestamp (`2026-08-12T08:33:28.512719Z`).
+ * Renders it in the device's local time as `Aug 12, 2026, 02:03 PM`.
+ */
+private fun formatUploadedTimestamp(raw: String?): String {
+    val value = raw?.trim().orEmpty()
+    if (value.isBlank() || value == "-") return "-"
+
+    val hasZone = value.endsWith("Z", ignoreCase = true) ||
+        value.length > 19 && value.substring(19).contains(Regex("""[+-]\d{2}:?\d{2}"""))
+    val timestamp = value.take(19)
+    return try {
+        val parser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        if (hasZone) {
+            parser.timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }
+        val parsed = parser.parse(timestamp) ?: return value
+        java.text.SimpleDateFormat("MMM dd, yyyy, hh:mm a", Locale.getDefault()).format(parsed)
+    } catch (_: Exception) {
+        value
+    }
+}
+
 private fun formatDuplicateBillDate(raw: String?): String {
     val value = raw?.trim().orEmpty()
     if (value.isBlank() || value == "-") return ""
@@ -1732,7 +1798,7 @@ private fun buildManualFields(
                     addPath("GST", "total_gst")
                 }
                 "train" -> {
-                    addPath("Train class", "transaction_details", "class", fallback = expense.mode)
+                    // Train class is rendered as an editable dropdown in the Extracted Data section.
                     add("Vendor name", expense.hotelName)
                     addPath("Train name", "transaction_details", "train_name")
                     addPath("Train number", "transaction_details", "train_number")
@@ -2077,7 +2143,7 @@ private fun OriginalFileBlock(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Uploaded: $uploadedAt",
+                        text = "Uploaded: ${formatUploadedTimestamp(uploadedAt)}",
                         fontFamily = GraphikFontFamily,
                         fontSize = 12.sp,
                         color = Color.Gray,
